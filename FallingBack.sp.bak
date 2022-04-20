@@ -1,0 +1,91 @@
+#include <sourcemod>
+//#include <sdktools>
+
+#pragma semicolon 1
+
+public Plugin myinfo =
+{
+	name = "Falling Back Framework",
+	author = "DovahKingWarrior#0001",
+	description = "Framework for Falling Back",
+	version = "1.0.0",
+	url = "https://forums.firehostredux.com"
+};
+
+public void OnPluginStart()
+{	
+	RegAdminCmd("fb_wave1", Command_WaveOne, ADMFLAG_ROOT, "Wave one started."),
+	RegAdminCmd("fb_wave1_bmbavail", Command_WaveOneBombUp, ADMFLAG_ROOT, "Wave one - bomb available."),
+	RegAdminCmd("fb_wave2", Command_WaveTwo, ADMFLAG_ROOT, "Wave two started."),
+	RegAdminCmd("fb_wave3", Command_WaveThree, ADMFLAG_ROOT, "Wave three started."),
+	RegAdminCmd("fb_wave4", Command_WaveFour, ADMFLAG_ROOT, "Wave four started."),
+	RegAdminCmd("fb_wave5", Command_WaveFive, ADMFLAG_ROOT, "Wave five started."),
+	RegAdminCmd("fb_wave6", Command_WaveSix, ADMFLAG_ROOT, "Wave six started."),
+	RegAdminCmd("fb_wave7", Command_WaveSeven, ADMFLAG_ROOT, "Wave seven started."),
+	HookEvent("player_death", EventDeath);
+//	RegAdminCmd("fb_failed", Command_KeyEntryfailed, ADMFLAG_ROOT, "Client %s failed key entry."); //WORK IN PROGRESS
+}
+
+public Action Command_WaveOne(int client, int args)
+{
+	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFFWave 1: Locus");
+}
+
+public Action Command_WaveOneBombUp(int client, int args)
+{
+	PrintToChatAll("\x070000AA[\x0700AA00LOCUS\x070000AA] \x0700AA55RED's \x07FF0000WARHEAD \x0700AA55is now available for deployment!");
+}
+
+public Action Command_WaveTwo(int client, int args)
+{
+	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 2: Grandma Destruction");
+}
+
+public Action Command_WaveTwoBombUp(int client, int args)
+{
+	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55RED's \x07FF0000#BOMBNAME# \x0700AA55is now available for deployment!");
+}
+
+public Action Command_WaveThree(int client, int args)
+{
+	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 3: Exponential Entropy");
+}
+
+public Action Command_WaveFour(int client, int args)
+{
+	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 4: Torn From The Heavens");
+}
+
+public Action Command_WaveFive(int client, int args)
+{
+	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 5: Metal - Brute Justice Mode");
+}
+
+public Action Command_WaveSix(int client, int args)
+{
+	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 6: Under The Weight");
+}
+
+public Action Command_WaveSeven(int client, int args)
+{
+	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 7: Revenge Twofold");
+}
+
+//Check who died by what, missing some data however.
+public Action EventDeath(Handle:Spawn_Event, String:Spawn_Name[], bool:Spawn_Broadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(Spawn_Event, "userid"));
+//	new attacker = GetClientOfUserId(GetEventInt(Spawn_Event, "attacker")); //UNUSED RIGHT NOW, MAY BE USED LATER.
+	new String:weapon[32];
+	GetEventString(Spawn_Event, "weapon", weapon, 32);
+	if (!(client == 0))
+	{
+//		new customkill = GetEventInt(Spawn_Event, "customkill"); // if (customkill == 6) // Unknown what this really is or does, so removed for now.
+		new damagebits = GetEventInt(Spawn_Event, "damagebits");
+		if (damagebits == 256)
+		{
+			PrintToChatAll("Client %N has humliated themself with an incorrect key entry!", client);
+		}
+	}
+	return Plugin_Handled;
+}
