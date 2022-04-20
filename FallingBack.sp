@@ -810,7 +810,7 @@ public Action SacrificePointsUpdater(Handle timer){
 			ServerCommand("fb_fire BTN.Sacrificial* Lock; fb_fire BTN.Sacrificial* Color 0; fb_fire BTN.Sacrificial01 Unlock; fb_fire BTN.Sacrificial01 Color 255; fb_fire BTN.Sacrificial02 Unlock; fb_fire BTN.Sacrificial02 Color 255; fb_fire BTN.Sacrificial03 Unlock; fb_fire BTN.Sacrificial03 Color 255; fb_fire BTN.Sacrificial04 Unlock; fb_fire BTN.Sacrificial04 Color 255; fb_fire BTN.Sacrificial05 Unlock; fb_fire BTN.Sacrificial05 Color 255; fb_fire BTN.Sacrificial06 Unlock; fb_fire BTN.Sacrificial06 Color 255; fb_fire BTN.Sacrificial07 Unlock; fb_fire BTN.Sacrificial07 Color 255");
 
 		}
-		else if (sacPoints >= 100){
+		else if (sacPoints == 100){
 				ServerCommand("fb_fire BTN.Sacrificial* Lock; fb_fire BTN.Sacrificial* Color 0; fb_fire BTN.Sacrificial01 Unlock; fb_fire BTN.Sacrificial01 Color 255; fb_fire BTN.Sacrificial02 Unlock; fb_fire BTN.Sacrificial02 Color 255; fb_fire BTN.Sacrificial03 Unlock; fb_fire BTN.Sacrificial03 Color 255; fb_fire BTN.Sacrificial04 Unlock; fb_fire BTN.Sacrificial04 Color 255; fb_fire BTN.Sacrificial05 Unlock; fb_fire BTN.Sacrificial05 Color 255; fb_fire BTN.Sacrificial06 Unlock; fb_fire BTN.Sacrificial06 Color 255; fb_fire BTN.Sacrificial07 Unlock; fb_fire BTN.Sacrificial07 Color 255; fb_fire BTN.Sacrificial08 Unlock; fb_fire BTN.Sacrificial08 Color 255");
 
 		}
