@@ -238,7 +238,7 @@ public Action SelectBGM()
 			EmitSoundToAll(DEFAULTBGM2, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = DEFAULTBGM2;
 			PrintToServer("Creating timer for Knowledge Never Sleeps. Enjoy the music!");
-			CreateTimer(235.5, RefireBGM);
+			CreateTimer(235.5, RefireBGMAlt);
 		}
 	}
 }
@@ -255,6 +255,15 @@ public Action StopCurSong(){
 
 //BGM (Defaults)
 public Action RefireBGM(Handle timer)
+{
+	if (!isWave){
+		SelectBGM();
+		return Plugin_Stop;
+	}
+	return Plugin_Stop;
+}
+//BGM Default2
+public Action RefireBGMAlt(Handle timer)
 {
 	if (!isWave){
 		SelectBGM();
@@ -371,6 +380,9 @@ public Action RefireStorm(Handle timer){
 		float f = GetRandomFloat(7.0, 17.0);
 		CreateTimer(f, RefireStorm);
 		ServerCommand("fb_fire lightning TurnOn; fb_fire weather Skin 4; fb_fire value TurnOff; fb_fire LightningLaser TurnOn");
+		ServerCommand("fb_fire lightning TurnOff 0 0.1; fb_fire weather Skin 3 0.1; fb_fire LightningLaser TurnOff 0 0.1");
+		ServerCommand("fb_fire lightning TurnOn 0 0.17; fb_fire weather Skin 4 0.17; fb_fire LightningLaser TurnOn 0 0.17");
+		ServerCommand("fb_fire lightning TurnOff 0 0.25; fb_fire weather Skin 3 0.25; fb_fire LightningLaser TurnOff 0 0.25");
 		int Thunder = GetRandomInt(1, 16);
 		switch (Thunder){
 			case 1:{
@@ -438,9 +450,6 @@ public Action RefireStorm(Handle timer){
 				ServerCommand("fb_fire LightningHurt0F Enable; fb_fire LightningHurt0F Disable 0 0.07");
 			}
 		}
-		ServerCommand("fb_fire lightning TurnOff 0 0.1; fb_fire weather Skin 3 0.1; fb_fire LightningLaser TurnOff 0 0.1");
-		ServerCommand("fb_fire lightning TurnOn 0 0.17; fb_fire weather Skin 4 0.17; fb_fire LightningLaser TurnOn 0 0.17");
-		ServerCommand("fb_fire lightning TurnOff 0 0.25; fb_fire weather Skin 3 0.25; fb_fire LightningLaser TurnOff 0 0.25");
 	}
 }
 
