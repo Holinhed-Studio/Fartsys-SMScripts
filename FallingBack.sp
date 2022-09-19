@@ -452,7 +452,6 @@ public Action RefireStorm(Handle timer){
 		}
 	}
 }
-
 //Allow Tornadoes to Spawn
 public Action ActivateTornadoTimer(){
 	if (isWave && canTornado){
