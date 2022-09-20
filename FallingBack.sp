@@ -3,10 +3,11 @@
 #pragma newdecls required
 #pragma semicolon 1
 bool canHWBoss = false;
-bool canTornado = false;
 bool canSENTMeteors = false;
 bool canSENTNukes = false;
+bool canSENTShark = false;
 bool canSENTStars = false;
+bool canTornado = false;
 bool isWave = false;
 bool tornado = false;
 bool bgmlock1 = true;
@@ -18,22 +19,22 @@ bool bgmlock6 = true;
 bool bgmlock7 = true;
 bool bgmlock8 = true;
 char BELL[32] = "fartsy/misc/bell.wav";
-char BGM1[64] = "fartsy/ffxiv/bgm/locus.mp3";
-char BGM2[64] = "fartsy/ffxiv/bgm/metal.mp3";
+char BGM1[32] = "fartsy/ffxiv/bgm/locus.mp3";
+char BGM2[32] = "fartsy/ffxiv/bgm/metal.mp3";
 char BGM3[64] = "fartsy/ffxiv/bgm/exponentialentropy.mp3";
 char BGM4[64] = "fartsy/ffxiv/bgm/tornfromtheheavens.mp3";
 char BGM5[64] = "fartsy/ffxiv/bgm/metalbrutejusticemode.mp3";
 char BGM6[64] = "fartsy/ffxiv/bgm/grandmadestruction.mp3";
 char BGM7[64] = "fartsy/ffxiv/bgm/revengetwofold.mp3";
 char BGM8[64] = "fartsy/ffxiv/bgm/undertheweight.mp3";
-char BGM1Title[64] = "FFXIV - Locus";
-char BGM2Title[64] = "FFXIV - Metal";
-char BGM3Title[64] = "FFXIV - Exponential Entropy";
-char BGM4Title[64] = "FFXIV - Torn From the Heavens";
+char BGM1Title[32] = "FFXIV - Locus";
+char BGM2Title[32] = "FFXIV - Metal";
+char BGM3Title[32] = "FFXIV - Exponential Entropy";
+char BGM4Title[32] = "FFXIV - Torn From the Heavens";
 char BGM5Title[64] = "FFXIV - Metal: Brute Justice Mode";
-char BGM6Title[64] = "FFXIV - Grandma (Destruction)";
-char BGM7Title[64] = "FFXIV - Revenge Twofold";
-char BGM8Title[64] = "FFXIV - Under the Weight";
+char BGM6Title[32] = "FFXIV - Grandma (Destruction)";
+char BGM7Title[32] = "FFXIV - Revenge Twofold";
+char BGM8Title[32] = "FFXIV - Under the Weight";
 char CLOCKTICK[32] = "fartsy/misc/clock_tick.wav";
 char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
 char CRUSADERATTACK[32] = "fartsy/fallingback/attack.mp3";
@@ -66,6 +67,14 @@ char GLOBALTHUNDER05[32] = "fartsy/weather/thunder5.wav";
 char GLOBALTHUNDER06[32] = "fartsy/weather/thunder6.wav";
 char GLOBALTHUNDER07[32] = "fartsy/weather/thunder7.wav";
 char GLOBALTHUNDER08[32] = "fartsy/weather/thunder8.wav";
+char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
+char SHARKSND02[64] = "fartsy/memes/babyshark/baby02.mp3";
+char SHARKSND03[64] = "fartsy/memes/babyshark/doot01.mp3";
+char SHARKSND04[64] = "fartsy/memes/babyshark/doot02.mp3";
+char SHARKSND05[64] = "fartsy/memes/babyshark/doot03.mp3";
+char SHARKSND06[64] = "fartsy/memes/babyshark/doot04.mp3";
+char SHARKSND07[64] = "fartsy/memes/babyshark/shark.mp3";
+char SHARKSND08[64] = "fartsy/memes/babyshark/shark02.mp3";
 char STRONGMAN[32] = "fartsy/misc/strongman_bell.wav";
 char TRIGGERSCORE[32] = "fartsy/misc/triggerscore.wav";
 char WTFBOOM[32] = "fartsy/wtfboom.mp3";
@@ -87,7 +96,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.1.1",
+	version = "3.1.2",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -131,6 +140,14 @@ public void OnPluginStart()
 	PrecacheSound(GLOBALTHUNDER06, true),
 	PrecacheSound(GLOBALTHUNDER07, true),
 	PrecacheSound(GLOBALTHUNDER08, true),
+	PrecacheSound(SHARKSND01, true),
+	PrecacheSound(SHARKSND02, true),
+	PrecacheSound(SHARKSND03, true),
+	PrecacheSound(SHARKSND04, true),
+	PrecacheSound(SHARKSND05, true),
+	PrecacheSound(SHARKSND06, true),
+	PrecacheSound(SHARKSND07, true),
+	PrecacheSound(SHARKSND08, true),
 	PrecacheSound(STRONGMAN, true),
 	PrecacheSound(TRIGGERSCORE, true),
 	PrecacheSound(WTFBOOM, true),
@@ -144,7 +161,6 @@ public void OnPluginStart()
 	RegServerCmd("fb_getwave", GetWave, "Get Current Wave"),
 	RegServerCmd("fb_codeentry", FBCodeEntry, "Code entry."),
 	RegServerCmd("fb_hydrogenup", Command_HydrogenUp, "Hydrogen available."),
-	RegServerCmd("fb_wave8", Command_WaveEight, "Wave eight started."),
 	RegServerCmd("fb_burgup", Command_WaveSevenBurgUp, "Wave seven - burg up!"),
 	RegServerCmd("fb_foundgoob", Command_FoundGoob, "ALL HAIL GOOBBUE!"),
 	RegServerCmd("fb_foundwaffle", Command_FoundWaffle, "Why do they call it the waffle of mass destruction if it does nothing!?"),
@@ -351,6 +367,44 @@ public Action RefireUnderTW(Handle timer){
 		EmitSoundToAll(BGM8, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM8;
 		CreateTimer(313.85, RefireUnderTW);
+	}
+	return Plugin_Stop;
+}
+
+//Shark Timer
+public Action SharkTimer(Handle timer){
+	if (canSENTShark){
+		FireEntityInput("SentSharkTorpedo", "ForceSpawn", "", 0.0);
+		float f = GetRandomFloat(2.0, 5.0);
+		CreateTimer(f, SharkTimer);
+		int i = GetRandomInt(1, 8);
+		switch(i){
+			case 1:{
+				EmitSoundToAll(SHARKSND01);
+			}
+			case 2:{
+				EmitSoundToAll(SHARKSND02);
+			}
+			case 3:{
+				EmitSoundToAll(SHARKSND03);
+			}
+			case 4:{
+				EmitSoundToAll(SHARKSND04);
+			}
+			case 5:{
+				EmitSoundToAll(SHARKSND05);
+			}
+			case 6:{
+				EmitSoundToAll(SHARKSND06);
+			}
+			case 7:{
+				EmitSoundToAll(SHARKSND07);
+			}
+			case 8:{
+				EmitSoundToAll(SHARKSND08);
+			}
+		}
+		return Plugin_Handled;
 	}
 	return Plugin_Stop;
 }
@@ -798,6 +852,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 8;
 					bombCache = 0;
 					explodeType = 1;
+					canSENTShark = false;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
@@ -809,6 +864,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 16;
 					bombCache = 0;
 					explodeType = 2;
+					canSENTShark = false;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.ElonBust", "Enable", "", 0.0),
@@ -820,6 +876,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 24;
 					bombCache = 0;
 					explodeType = 2;
+					canSENTShark = false;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.BathSalts", "Enable", "", 0.0),
@@ -831,6 +888,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 32;
 					bombCache = 0;
 					explodeType = 3;
+					canSENTShark = false;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.FallingStar", "Enable", "", 0.0),
@@ -842,6 +900,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 40;
 					bombCache = 0;
 					explodeType = 4;
+					canSENTShark = false;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.MajorKong", "Enable", "", 0.0),
@@ -853,6 +912,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 48;
 					bombCache = 0;
 					explodeType = 5;
+					canSENTShark = true;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.SharkTorpedo", "Enable", "", 0.0),
@@ -865,6 +925,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 56;
 					bombCache = 0;
 					explodeType = 6;
+					canSENTShark = false;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.FatMan", "Enable", "", 0.0),
@@ -1310,90 +1371,7 @@ public Action Command_DovahsAss(int args)
 {
 	PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000DOVAH'S ASS\x07FFFFFF v0x13. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
 }
-//Wave One
-public Action Command_WaveOne(int args)
-{
-	bgmlock1 = false;
-	bgmlock2 = true;
-	bgmlock3 = true;
-	bgmlock4 = true;
-	bgmlock5 = true;
-	bgmlock6 = true;
-	bgmlock7 = true;
-	bgmlock8 = true;
-	canHWBoss = true;
-	canTornado = true;
-	isWave = true;
-	bombStatus = 0;
-	bombsPushed = 0;
-	bombStatusMax = 10;
-	sacPointsMax = 90;
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 1: Locus");
-	StopCurSong();
-	EmitSoundToAll(BGM1, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
-	curSong = BGM1;
-	CreateTimer(229.25, RefireLocus);
-	CreateTimer(1.0, BombStatusAddTimer);
-	CreateTimer(0.1, BombStatusUpdater);
-	CreateTimer(1.0, RobotLaunchTimer);
-	CreateTimer(1.0, SacrificePointsTimer);
-	CreateTimer(1.0, SacrificePointsUpdater);
-	CreateTimer(1.0, RefireStorm);
-	FireEntityInput("rain", "Alpha", "200", 0.0);
-	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
-	FireEntityInput("OldSpawn", "Enable", "", 0.0);
-	FireEntityInput("NewSpawn", "Disable", "", 0.0);
-	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-	ChooseBombPath();
-	ActivateTornadoTimer();
-	float hwn = GetRandomFloat(HWNMin, HWNMax);
-	CreateTimer(hwn, HWBosses);
-}
-//Wave Two
-public Action Command_WaveTwo(int args)
-{
-	bgmlock1 = true;
-	bgmlock2 = false;
-	bgmlock3 = true;
-	bgmlock4 = true;
-	bgmlock5 = true;
-	bgmlock6 = true;
-	bgmlock7 = true;
-	bgmlock8 = true;
-	canHWBoss = true;
-	canTornado = true;
-	isWave = true;
-	bombStatus = 4;
-	bombsPushed = 0;
-	bombStatusMax = 18;
-	sacPointsMax = 90;
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 2: Metal");
-	StopCurSong();
-	EmitSoundToAll(BGM2, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
-	curSong = BGM2;
-	CreateTimer(153.95, RefireMetal);
-	CreateTimer(1.0, BombStatusAddTimer);
-	CreateTimer(0.1, BombStatusUpdater);
-	CreateTimer(1.0, RobotLaunchTimer);
-	CreateTimer(1.0, SacrificePointsTimer);
-	CreateTimer(1.0, SacrificePointsUpdater);
-	CreateTimer(1.0, RefireStorm);
-	FireEntityInput("rain", "Alpha", "200", 0.0);
-	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
-	FireEntityInput("OldSpawn", "Enable", "", 0.0);
-	FireEntityInput("NewSpawn", "Disable", "", 0.0);
-	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-	ChooseBombPath();
-	ActivateTornadoTimer();
-	float hwn = GetRandomFloat(HWNMin, HWNMax);
-	CreateTimer(hwn, HWBosses);
-}
+
 //Wave Three
 public Action Command_WaveThree(int args)
 {
@@ -2328,10 +2306,84 @@ public Action GetWave(int args){
 	int current_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
 	switch (current_wave){
 		case 1:{
-			Command_WaveOne(0);
+			bgmlock1 = false;
+			bgmlock2 = true;
+			bgmlock3 = true;
+			bgmlock4 = true;
+			bgmlock5 = true;
+			bgmlock6 = true;
+			bgmlock7 = true;
+			bgmlock8 = true;
+			canHWBoss = true;
+			canTornado = true;
+			isWave = true;
+			bombStatus = 0;
+			bombsPushed = 0;
+			bombStatusMax = 10;
+			sacPointsMax = 90;
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 1: Locus");
+			StopCurSong();
+			EmitSoundToAll(BGM1, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			curSong = BGM1;
+			CreateTimer(229.25, RefireLocus);
+			CreateTimer(1.0, BombStatusAddTimer);
+			CreateTimer(0.1, BombStatusUpdater);
+			CreateTimer(1.0, RobotLaunchTimer);
+			CreateTimer(1.0, SacrificePointsTimer);
+			CreateTimer(1.0, SacrificePointsUpdater);
+			CreateTimer(1.0, RefireStorm);
+			FireEntityInput("rain", "Alpha", "200", 0.0);
+			FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+			FireEntityInput("OldSpawn", "Enable", "", 0.0);
+			FireEntityInput("NewSpawn", "Disable", "", 0.0);
+			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			ChooseBombPath();
+			ActivateTornadoTimer();
+			float hwn = GetRandomFloat(HWNMin, HWNMax);
+			CreateTimer(hwn, HWBosses);
 		}
 		case 2:{
-			Command_WaveTwo(0);
+			bgmlock1 = true;
+			bgmlock2 = false;
+			bgmlock3 = true;
+			bgmlock4 = true;
+			bgmlock5 = true;
+			bgmlock6 = true;
+			bgmlock7 = true;
+			bgmlock8 = true;
+			canHWBoss = true;
+			canTornado = true;
+			isWave = true;
+			bombStatus = 4;
+			bombsPushed = 0;
+			bombStatusMax = 18;
+			sacPointsMax = 90;
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 2: Metal");
+			StopCurSong();
+			EmitSoundToAll(BGM2, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			curSong = BGM2;
+			CreateTimer(153.95, RefireMetal);
+			CreateTimer(1.0, BombStatusAddTimer);
+			CreateTimer(0.1, BombStatusUpdater);
+			CreateTimer(1.0, RobotLaunchTimer);
+			CreateTimer(1.0, SacrificePointsTimer);
+			CreateTimer(1.0, SacrificePointsUpdater);
+			CreateTimer(1.0, RefireStorm);
+			FireEntityInput("rain", "Alpha", "200", 0.0);
+			FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+			FireEntityInput("OldSpawn", "Enable", "", 0.0);
+			FireEntityInput("NewSpawn", "Disable", "", 0.0);
+			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			ChooseBombPath();
+			ActivateTornadoTimer();
+			float hwn = GetRandomFloat(HWNMin, HWNMax);
+			CreateTimer(hwn, HWBosses);
 		}
 		case 3:{
 			Command_WaveThree(0);
