@@ -82,9 +82,9 @@ float HWNMax = 380.0;
 public Plugin myinfo =
 {
 	name = "Dovah's Ass - Framework",
-	author = "Fartsy#0001",
+	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.0.0",
+	version = "3.0.1",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -1021,67 +1021,71 @@ public Action Command_GetCurrentSong(int client, int args){
 
 //Deploy a bomb for RED
 public Action Command_Deploy(int args){
-	if(explodeType == 0){
-		PrintToServer("Tried to detonate with a bomb size of zero!");
+	switch (explodeType){
+			//Invalid
+		case 0:{
+			PrintToServer("Tried to detonate with a bomb size of zero!");
+		}
+		//Small Explosion
+		case 1:{
+			FireEntityInput("Murica", "PlaySound", "", 0.0),
+			FireEntityInput("SmallExplosion", "Explode", "", 0.0),
+			FireEntityInput("SmallExploShake", "StartShake", "", 0.0),
+			BombPushed(5),
+			EmitSoundToAll(COUNTDOWN);
+		}
+		//Medium Explosion
+		case 2:{
+			FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
+			FireEntityInput("MediumExplosion", "Explode", "", 0.0),
+			FireEntityInput("MedExploShake", "StartShake", "", 0.0),
+			BombPushed(5);
+			EmitSoundToAll(COUNTDOWN);
+		}
+		//Falling Star
+		case 3:{
+			FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
+			FireEntityInput("MediumExplosion", "Explode", "", 0.0),
+			FireEntityInput("MedExploShake", "StartShake", "", 0.0),
+			BombPushed(10),
+			EmitSoundToAll(COUNTDOWN);
+			CreateTimer(1.0, SENTStarTimer);
+			CreateTimer(60.0, SENTStarDisable);
+		}
+		//Major Kong
+		case 4:{
+			FireEntityInput("MajorKongSND", "PlaySound", "", 0.0),
+			FireEntityInput("FB.Fade", "Fade", "", 1.7),
+			FireEntityInput("LargeExplosion", "Explode", "", 1.7),
+			FireEntityInput("LargeExplosionSound", "PlaySound", "", 1.7),
+			FireEntityInput("LargeExploShake", "StartShake", "", 1.7),
+			FireEntityInput("NukeAll", "Enable", "", 1.7),
+			FireEntityInput("NukeAll", "Disable", "", 3.0),
+			BombPushed(25),
+			EmitSoundToAll(COUNTDOWN);
+		}
+		//Large (shark)
+		case 5:{
+			FireEntityInput("LargeExploSound", "PlaySound", "", 0.0),
+			FireEntityInput("LargeExplosion", "Explode", "", 0.0),
+			FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
+			BombPushed(15),
+			EmitSoundToAll(COUNTDOWN);
+		}
+		//FatMan
+		case 6:{
+			FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
+			FireEntityInput("LargeExplosion", "Explode", "", 0.0),
+			FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
+			FireEntityInput("", "PlaySound", "", 0.0),
+			FireEntityInput("NukeAll", "Enable", "", 0.0),
+			FireEntityInput("FB.Fade", "Fade", "", 0.0),
+			FireEntityInput("NukeAll", "Disable", "", 3.0),
+			BombPushed(25),
+			EmitSoundToAll(COUNTDOWN);
+		}
 	}
-	//Small Explosion
-	else if (explodeType == 1){
-		FireEntityInput("Murica", "PlaySound", "", 0.0),
-		FireEntityInput("SmallExplosion", "Explode", "", 0.0),
-		FireEntityInput("SmallExploShake", "StartShake", "", 0.0),
-		BombPushed(5),
-		EmitSoundToAll(COUNTDOWN);
-	}
-	//Medium Explosion
-	else if (explodeType == 2){
-		FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
-		FireEntityInput("MediumExplosion", "Explode", "", 0.0),
-		FireEntityInput("MedExploShake", "StartShake", "", 0.0),
-		BombPushed(5);
-		EmitSoundToAll(COUNTDOWN);
-	}
-	//Falling Star
-	else if (explodeType == 3){
-		FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
-		FireEntityInput("MediumExplosion", "Explode", "", 0.0),
-		FireEntityInput("MedExploShake", "StartShake", "", 0.0),
-		BombPushed(10),
-		EmitSoundToAll(COUNTDOWN);
-		CreateTimer(1.0, SENTStarTimer);
-		CreateTimer(60.0, SENTStarDisable);
-	}
-	//Major Kong
-	else if (explodeType == 4){
-		FireEntityInput("MajorKongSND", "PlaySound", "", 0.0),
-		FireEntityInput("FB.Fade", "Fade", "", 1.7),
-		FireEntityInput("LargeExplosion", "Explode", "", 1.7),
-		FireEntityInput("LargeExplosionSound", "PlaySound", "", 1.7),
-		FireEntityInput("LargeExploShake", "StartShake", "", 1.7),
-		FireEntityInput("NukeAll", "Enable", "", 1.7),
-		FireEntityInput("NukeAll", "Disable", "", 3.0),
-		BombPushed(25),
-		EmitSoundToAll(COUNTDOWN);
-	}
-	//large (shark)
-	else if (explodeType == 5){
-		FireEntityInput("LargeExploSound", "PlaySound", "", 0.0),
-		FireEntityInput("LargeExplosion", "Explode", "", 0.0),
-		FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
-		BombPushed(15),
-		EmitSoundToAll(COUNTDOWN);
-	}
-	//FatMan
-	else if (explodeType == 6){
-		FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
-		FireEntityInput("LargeExplosion", "Explode", "", 0.0),
-		FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
-		FireEntityInput("", "PlaySound", "", 0.0),
-		FireEntityInput("NukeAll", "Enable", "", 0.0),
-		FireEntityInput("FB.Fade", "Fade", "", 0.0),
-		FireEntityInput("NukeAll", "Disable", "", 3.0),
-		BombPushed(25),
-		EmitSoundToAll(COUNTDOWN);
-	}
+	return Plugin_Handled;
 }
 
 public Action BombPushed(int arg1){
