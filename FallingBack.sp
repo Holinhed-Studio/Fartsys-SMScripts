@@ -213,11 +213,6 @@ public void OnMapStart()
 	SelectBGM();
 }
 
-//Custom definitions
-public Action EndWaveBGM(){
-	ServerCommand("fb_fire Music.Locus StopSound; fb_fire Music.Metal StopSound; fb_fire Music.ExponentialEntropy StopSound; fb_fire Music.TornFromTheHeavens StopSound; fb_fire Music.MetalBruteJusticeMode StopSound; fb_fire Music.GrandmaDestruction StopSound; fb_fire Music.RevengeTwofold StopSound; fb_fire Music.UnderTheWeight StopSound");
-}
-
 public Action SelectBGM()
 {
 	StopCurSong();
@@ -605,7 +600,7 @@ public Action DisableSENTMeteors(Handle timer){
 //SENTNukes (Scripted Entity Nukes)
 public Action SENTNukeTimer(Handle timer){
 	if(canSENTNukes){
-		ServerCommand("fb_fire FB.DropNuke PlaySound");
+		FireEntityInput("FB.DropNuke", "PlaySound", "", 0.0);
 		int i = GetRandomInt(1, 8);
 		switch(i){
 			case 1:{
@@ -1040,29 +1035,52 @@ public Action Command_Deploy(int args){
 	}
 	//Medium Explosion
 	else if (explodeType == 2){
-		ServerCommand("fb_bombpushplus5; fb_fire MediumExplosion Explode; fb_fire MedExplosionSND PlaySound; fb_fire MedExploShake StartShake");
+		FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
+		FireEntityInput("MediumExplosion", "Explode", "", 0.0),
+		FireEntityInput("MedExploShake", "StartShake", "", 0.0),
+		BombPushed(5);
 		EmitSoundToAll(COUNTDOWN);
 	}
 	//Falling Star
 	else if (explodeType == 3){
-		ServerCommand("fb_bombpushplus5; fb_fire MediumExplosion Explode; fb_fire MedExplosionSND PlaySound; fb_fire MedExploShake StartShake");
+		FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
+		FireEntityInput("MediumExplosion", "Explode", "", 0.0),
+		FireEntityInput("MedExploShake", "StartShake", "", 0.0),
+		BombPushed(10),
 		EmitSoundToAll(COUNTDOWN);
 		CreateTimer(1.0, SENTStarTimer);
 		CreateTimer(60.0, SENTStarDisable);
 	}
 	//Major Kong
 	else if (explodeType == 4){
-		ServerCommand("fb_bombpushplus5; fb_fire MajorKongSND PlaySound; fb_fire FB.Fade Fade; fb_fire LargeExplosion Explode 0 1.7; fb_fire LargeExplosionSound PlaySound 0 1.7; fb_fire LargeExploShake StartShake 0 1.7; fb_fire NukeAll Enable 0 1.7; fb_fire NukeAll Disable 0 3");
+		FireEntityInput("MajorKongSND", "PlaySound", "", 0.0),
+		FireEntityInput("FB.Fade", "Fade", "", 1.7),
+		FireEntityInput("LargeExplosion", "Explode", "", 1.7),
+		FireEntityInput("LargeExplosionSound", "PlaySound", "", 1.7),
+		FireEntityInput("LargeExploShake", "StartShake", "", 1.7),
+		FireEntityInput("NukeAll", "Enable", "", 1.7),
+		FireEntityInput("NukeAll", "Disable", "", 3.0),
+		BombPushed(25),
 		EmitSoundToAll(COUNTDOWN);
 	}
 	//large (shark)
 	else if (explodeType == 5){
-		ServerCommand("fb_bombpushplus5; fb_fire LargeExploShake StartShake 0 1.5; fb_fire LargeExplosion Explode 0 1.5; fb_fire LargeExploSound PlaySound 0 1.5");
+		FireEntityInput("LargeExploSound", "PlaySound", "", 0.0),
+		FireEntityInput("LargeExplosion", "Explode", "", 0.0),
+		FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
+		BombPushed(15),
 		EmitSoundToAll(COUNTDOWN);
 	}
 	//FatMan
 	else if (explodeType == 6){
-		ServerCommand("fb_bombpushplus5; fb_fire LargeExplosion Explode; fb_fire LargeExploShake StartShake; fb_fire HindenburgBoom PlaySound; fb_fire NukeAll Enable; fb_fire FB.Fade Fade; fb_fire NukeAll Disable 0 2");
+		FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
+		FireEntityInput("LargeExplosion", "Explode", "", 0.0),
+		FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
+		FireEntityInput("", "PlaySound", "", 0.0),
+		FireEntityInput("NukeAll", "Enable", "", 0.0),
+		FireEntityInput("FB.Fade", "Fade", "", 0.0),
+		FireEntityInput("NukeAll", "Disable", "", 3.0),
+		BombPushed(25),
 		EmitSoundToAll(COUNTDOWN);
 	}
 }
@@ -1838,67 +1856,53 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			switch (i){
 				case 1:{
 					EmitSoundToAll(FALLSND01);
-					//ServerCommand("fb_fire FallSND01 PlaySound");
 				}
 				case 2:{
 					EmitSoundToAll(FALLSND02);
-					//ServerCommand("fb_fire FallSND02 PlaySound");
 				}
 				case 3:{
 					EmitSoundToAll(FALLSND03);
-					//ServerCommand("fb_fire FallSND03 PlaySound");
 				}
 				case 4:{
 					EmitSoundToAll(FALLSND04);
-					//ServerCommand("fb_fire FallSND04 PlaySound");
 				}
 				case 5:{
 					EmitSoundToAll(FALLSND05);
-					//ServerCommand("fb_fire FallSND05 PlaySound");
 				}
 				case 6:{
 					EmitSoundToAll(FALLSND06);
-					//ServerCommand("fb_fire FallSND06 PlaySound");
 				}
 				case 7:{
 					EmitSoundToAll(FALLSND07);
-					//ServerCommand("fb_fire FallSND07 PlaySound");
 				}
 				case 8:{
 					EmitSoundToAll(FALLSND08);
-					//ServerCommand("fb_fire FallSND08 PlaySound");
 				}
 				case 9:{
 					EmitSoundToAll(FALLSND09);
-					//ServerCommand("fb_fire FallSND09 PlaySound");
 				}
 				case 10:{
 					EmitSoundToAll(FALLSND0A);
-					//ServerCommand("fb_fire FallSND0A PlaySound");
 				}
 				case 11:{
-					EmitSoundToAll(FALLSND0B);
-					//ServerCommand("fb_fire FallSND0B PlaySound; fb_fire FB.BlueKirbTemplate ForceSpawn");
+					EmitSoundToAll(FALLSND0B),
+					FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 0.0),
+					Command_FoundBall(0);
 				}
 				case 12:{
 					EmitSoundToAll(FALLSND0C);
-					//ServerCommand("fb_fire FallSND0C PlaySound");
 				}
 				case 13:{
 					EmitSoundToAll(FALLSND0D);
-					//ServerCommand("fb_fire FallSND0D PlaySound");
 				}
 				case 14:{
 					EmitSoundToAll(FALLSND0E);
-					//ServerCommand("fb_fire FallSND0E PlaySound");
 				}
 				case 15:{
 					EmitSoundToAll(FALLSND0F);
-					//ServerCommand("fb_fire FallSND0F PlaySound");
 				}
 				case 16:{
 					EmitSoundToAll(FALLSND10);
-					//ServerCommand("fb_fire FallSND10 PlaySound");
 				}
 			}
 		}
@@ -2063,7 +2067,8 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
 	bombsPushed = 0;
 	SelectBGM();
 	PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFYou've defeated the wave!");
-	ServerCommand("fb_fire BTN.Sacrificial* Disable; fb_fire BTN.Sacrificial* Color 0");
+	FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
+	FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
 }
 
 //Announce when we are in danger.
@@ -2071,6 +2076,7 @@ public Action EventWarning(Event Spawn_Event, const char[] Spawn_Name, bool Spaw
 {
 	PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA]\x07AA0000 WARNING\x07FFFFFF: \x07AA0000DOVAH'S ASS IS ABOUT TO BE DEPLOYED!!!");
 }
+
 //When we fail
 public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
 	bgmlock1 = true;
@@ -2089,7 +2095,8 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
 	bombsPushed = 0;
 	SelectBGM();
 	PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFWave set/reset success!");
-	ServerCommand("fb_fire BTN.Sacrificial* Disable; fb_fire BTN.Sacrificial* Color 0");
+	FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
+	FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
 }
 //Announce the bomb has been reset by client %N.
 public Action EventReset(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast)
