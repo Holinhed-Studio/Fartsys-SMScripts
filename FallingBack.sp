@@ -18,9 +18,6 @@ bool bgmlock6 = true;
 bool bgmlock7 = true;
 bool bgmlock8 = true;
 char BELL[32] = "fartsy/misc/bell.wav";
-char CLOCKTICK[32] = "fartsy/misc/clock_tick.wav";
-char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-char STRONGMAN[32] = "fartsy/misc/strongman_bell.wav";
 char BGM1[64] = "fartsy/ffxiv/bgm/locus.mp3";
 char BGM2[64] = "fartsy/ffxiv/bgm/metal.mp3";
 char BGM3[64] = "fartsy/ffxiv/bgm/exponentialentropy.mp3";
@@ -29,7 +26,6 @@ char BGM5[64] = "fartsy/ffxiv/bgm/metalbrutejusticemode.mp3";
 char BGM6[64] = "fartsy/ffxiv/bgm/grandmadestruction.mp3";
 char BGM7[64] = "fartsy/ffxiv/bgm/revengetwofold.mp3";
 char BGM8[64] = "fartsy/ffxiv/bgm/undertheweight.mp3";
-int SNDCHAN = 6;
 char BGM1Title[64] = "FFXIV - Locus";
 char BGM2Title[64] = "FFXIV - Metal";
 char BGM3Title[64] = "FFXIV - Exponential Entropy";
@@ -38,11 +34,14 @@ char BGM5Title[64] = "FFXIV - Metal: Brute Justice Mode";
 char BGM6Title[64] = "FFXIV - Grandma (Destruction)";
 char BGM7Title[64] = "FFXIV - Revenge Twofold";
 char BGM8Title[64] = "FFXIV - Under the Weight";
+char CLOCKTICK[32] = "fartsy/misc/clock_tick.wav";
+char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
+char CRUSADERATTACK[32] = "fartsy/fallingback/attack.mp3";
+char curSong[64] = "null";
 char DEFAULTBGM1[64] = "fartsy/ffxiv/bgm/TheSilentRegardOfStars.mp3";
 char DEFAULTBGM2[64] = "fartsy/ffxiv/bgm/KnowledgeNeverSleeps.mp3";
 char DEFAULTBGM1Title[64] = "FFXIV - The Silent Regard of Stars";
 char DEFAULTBGM2Title[64] = "FFXIV - Knowledge Never Sleeps";
-char curSong[64] = "null";
 char FALLSND01[32] = "vo/l4d2/billfall02.mp3";
 char FALLSND02[32] = "vo/l4d2/coachfall02.mp3";
 char FALLSND03[32] = "vo/l4d2/ellisfall01.mp3";
@@ -67,24 +66,28 @@ char GLOBALTHUNDER05[32] = "fartsy/weather/thunder5.wav";
 char GLOBALTHUNDER06[32] = "fartsy/weather/thunder6.wav";
 char GLOBALTHUNDER07[32] = "fartsy/weather/thunder7.wav";
 char GLOBALTHUNDER08[32] = "fartsy/weather/thunder8.wav";
+char STRONGMAN[32] = "fartsy/misc/strongman_bell.wav";
 char TRIGGERSCORE[32] = "fartsy/misc/triggerscore.wav";
+char WTFBOOM[32] = "fartsy/wtfboom.mp3";
+float HWNMin = 210.0;
+float HWNMax = 380.0;
 int BGMSNDLVL = 90;
+int CodeEntry = 0;
 int DEFBGMSNDLVL = 40;
 int bombStatus = 0;
 int bombStatusMax = 0;
 int bombsPushed = 0;
 int bombCache = 0;
+int explodeType = 0;
 int sacPoints = 0;
 int sacPointsMax = 60;
-int explodeType = 0;
-float HWNMin = 210.0;
-float HWNMax = 380.0;
+int SNDCHAN = 6;
 public Plugin myinfo =
 {
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.0.2",
+	version = "3.1.1",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -101,6 +104,7 @@ public void OnPluginStart()
 	PrecacheSound(BGM8, true),
 	PrecacheSound(CLOCKTICK, true),
 	PrecacheSound(COUNTDOWN, true),
+	PrecacheSound(CRUSADERATTACK, true),
 	PrecacheSound(DEFAULTBGM1, true),
 	PrecacheSound(DEFAULTBGM2, true),
 	PrecacheSound(FALLSND01, true),
@@ -129,6 +133,7 @@ public void OnPluginStart()
 	PrecacheSound(GLOBALTHUNDER08, true),
 	PrecacheSound(STRONGMAN, true),
 	PrecacheSound(TRIGGERSCORE, true),
+	PrecacheSound(WTFBOOM, true),
 	RegServerCmd("fb_forcevictory", Command_ForceVictory, "FORCE victory - DO NOT TOUCH, WILL LIKELY MESS STUFF UP."),
 	RegServerCmd("fb_trainincoming", Command_TrainIncoming, "A train is incoming!"),
 	RegServerCmd("fb_atomicbmbrain", Command_AtomBmbRain, "Atom bombs are now raining from the sky!"),
@@ -136,13 +141,8 @@ public void OnPluginStart()
 	RegServerCmd("fb_meteorincoming", Command_MeteorIncoming, "Meteor incoming!"),
 	RegServerCmd("fb_meteorshower", Command_MeteorShower, "Meteor Shower incoming!"),
 	RegServerCmd("fb_prepareyourself", Command_DovahsAss, "You have chosen Dovah's Ass, prepare yourself..."),
-	RegServerCmd("fb_wave1", Command_WaveOne, "Wave one started."),
-	RegServerCmd("fb_wave2", Command_WaveTwo, "Wave two started."),
-	RegServerCmd("fb_wave3", Command_WaveThree, "Wave three started."),
-	RegServerCmd("fb_wave4", Command_WaveFour, "Wave four started."),
-	RegServerCmd("fb_wave5", Command_WaveFive, "Wave five started."),
-	RegServerCmd("fb_wave6", Command_WaveSix, "Wave six started."),
-	RegServerCmd("fb_wave7", Command_WaveSeven, "Wave seven started."),
+	RegServerCmd("fb_getwave", GetWave, "Get Current Wave"),
+	RegServerCmd("fb_codeentry", FBCodeEntry, "Code entry."),
 	RegServerCmd("fb_hydrogenup", Command_HydrogenUp, "Hydrogen available."),
 	RegServerCmd("fb_wave8", Command_WaveEight, "Wave eight started."),
 	RegServerCmd("fb_burgup", Command_WaveSevenBurgUp, "Wave seven - burg up!"),
@@ -545,7 +545,7 @@ public Action SpecTimer(Handle timer){
 		case 5:{
 			FireEntityInput("Spec.*", "Disable", "", 0.0),
 			FireEntityInput("Spec.BlueBall", "Enable", "", 0.1),
-			PrintToChatAll("A \x070000AABlue Ball \x07FFFFFFlurks from afar...");
+			PrintToChatAll("A \x070000AA Blue Ball \x07FFFFFF lurks from afar...");
 		}
 		case 6:{
 			FireEntityInput("Spec.*", "Enable", "", 0.0),
@@ -683,6 +683,18 @@ public Action FBCodeFailTankHornSND(Handle timer){
 	return Plugin_Stop;
 }
 
+//CRUSADERATTACKTimer for Crusader
+public Action CRUSADERATTACKTimer(Handle timer){
+	EmitSoundToAll(CRUSADERATTACK);
+	return Plugin_Handled;
+}
+
+//WTFBOOMTimer for Crusader
+public Action WTFBOOMTimer(Handle timer){
+	EmitSoundToAll(WTFBOOM);
+	return Plugin_Handled;
+}
+
 //Halloween Bosses
 public Action HWBosses(Handle timer){
 	if(isWave && canHWBoss){
@@ -780,86 +792,89 @@ public Action BombStatusAddTimer(Handle timer){
 public Action BombStatusUpdater(Handle timer){
 	if (isWave){
 		CreateTimer(0.1, BombStatusUpdater);
-		switch (bombStatus){
-			case 8:{
-				bombStatusMax = 8;
-				bombCache = 0;
-				explodeType = 1;
-				FireEntityInput("Bombs.*", "Disable", "", 0.0),
-				FireEntityInput("BombExplo*", "Disable", "", 0.0),
-				FireEntityInput("Delivery", "Unlock", "", 0.0),
-				FireEntityInput("Bombs.FreedomBomb", "Enable", "", 0.0),
-				EmitSoundToAll(TRIGGERSCORE),
-				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000FREEDOM BOMB \x0700AA55is now available for deployment!");
-			}
-			case 16:{
-				bombStatusMax = 16;
-				bombCache = 0;
-				explodeType = 2;
-				FireEntityInput("Bombs.*", "Disable", "", 0.0),
-				FireEntityInput("BombExplo*", "Disable", "", 0.0),
-				FireEntityInput("Bombs.ElonBust", "Enable", "", 0.0),
-				FireEntityInput("Delivery", "Unlock", "", 0.0),
-				EmitSoundToAll(TRIGGERSCORE),
-				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000ELON BUST \x0700AA55is now available for deployment!");
-			}
-			case 24:{
-				bombStatusMax = 24;
-				bombCache = 0;
-				explodeType = 2;
-				FireEntityInput("Bombs.*", "Disable", "", 0.0),
-				FireEntityInput("BombExplo*", "Disable", "", 0.0),
-				FireEntityInput("Bombs.BathSalts", "Enable", "", 0.0),
-				FireEntityInput("Delivery", "Unlock", "", 0.0),
-				EmitSoundToAll(TRIGGERSCORE),
-				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000BATH SALTS \x0700AA55are now available for deployment!");
-			}
-			case 32:{
-				bombStatusMax = 32;
-				bombCache = 0;
-				explodeType = 3;
-				FireEntityInput("Bombs.*", "Disable", "", 0.0),
-				FireEntityInput("BombExplo*", "Disable", "", 0.0),
-				FireEntityInput("Bombs.FallingStar", "Enable", "", 0.0),
-				FireEntityInput("Delivery", "Unlock", "", 0.0),
-				EmitSoundToAll(TRIGGERSCORE),
-				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FFFF00FALLING STAR\x0700AA55 is now available for deployment!");
-			}
-			case 40:{
-				bombStatusMax = 40;
-				bombCache = 0;
-				explodeType = 4;
-				FireEntityInput("Bombs.*", "Disable", "", 0.0),
-				FireEntityInput("BombExplo*", "Disable", "", 0.0),
-				FireEntityInput("Bombs.MajorKong", "Enable", "", 0.0),
-				FireEntityInput("Delivery", "Unlock", "", 0.0),
-				EmitSoundToAll(TRIGGERSCORE),
-				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000MAJOR KONG \x0700AA55is now available for deployment!");
-			}
-			case 48:{
-				bombStatusMax = 48;
-				bombCache = 0;
-				explodeType = 5;
-				FireEntityInput("Bombs.*", "Disable", "", 0.0),
-				FireEntityInput("BombExplo*", "Disable", "", 0.0),
-				FireEntityInput("Bombs.SharkTorpedo", "Enable", "", 0.0),
-				FireEntityInput("BombExploShark", "Enable", "", 0.0),
-				FireEntityInput("Delivery", "Unlock", "", 0.0),
-				EmitSoundToAll(TRIGGERSCORE),
-				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000SHARK \x0700AA55is now available for deployment!");
-			}
-			case 56:{
-				bombStatusMax = 56;
-				bombCache = 0;
-				explodeType = 6;
-				FireEntityInput("Bombs.*", "Disable", "", 0.0),
-				FireEntityInput("BombExplo*", "Disable", "", 0.0),
-				FireEntityInput("Bombs.FatMan", "Enable", "", 0.0),
-				FireEntityInput("Delivery", "Unlock", "", 0.0),
-				EmitSoundToAll(TRIGGERSCORE),
-				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000FAT MAN \x0700AA55is now available for deployment!");
+		if (bombStatus<bombStatusMax){
+			switch (bombStatus){
+				case 8:{
+					bombStatusMax = 8;
+					bombCache = 0;
+					explodeType = 1;
+					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("BombExplo*", "Disable", "", 0.0),
+					FireEntityInput("Delivery", "Unlock", "", 0.0),
+					FireEntityInput("Bombs.FreedomBomb", "Enable", "", 0.0),
+					EmitSoundToAll(TRIGGERSCORE),
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000FREEDOM BOMB \x0700AA55is now available for deployment!");
+				}
+				case 16:{
+					bombStatusMax = 16;
+					bombCache = 0;
+					explodeType = 2;
+					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("BombExplo*", "Disable", "", 0.0),
+					FireEntityInput("Bombs.ElonBust", "Enable", "", 0.0),
+					FireEntityInput("Delivery", "Unlock", "", 0.0),
+					EmitSoundToAll(TRIGGERSCORE),
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000ELON BUST \x0700AA55is now available for deployment!");
+				}
+				case 24:{
+					bombStatusMax = 24;
+					bombCache = 0;
+					explodeType = 2;
+					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("BombExplo*", "Disable", "", 0.0),
+					FireEntityInput("Bombs.BathSalts", "Enable", "", 0.0),
+					FireEntityInput("Delivery", "Unlock", "", 0.0),
+					EmitSoundToAll(TRIGGERSCORE),
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000BATH SALTS \x0700AA55are now available for deployment!");
+				}
+				case 32:{
+					bombStatusMax = 32;
+					bombCache = 0;
+					explodeType = 3;
+					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("BombExplo*", "Disable", "", 0.0),
+					FireEntityInput("Bombs.FallingStar", "Enable", "", 0.0),
+					FireEntityInput("Delivery", "Unlock", "", 0.0),
+					EmitSoundToAll(TRIGGERSCORE),
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FFFF00FALLING STAR\x0700AA55 is now available for deployment!");
+				}
+				case 40:{
+					bombStatusMax = 40;
+					bombCache = 0;
+					explodeType = 4;
+					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("BombExplo*", "Disable", "", 0.0),
+					FireEntityInput("Bombs.MajorKong", "Enable", "", 0.0),
+					FireEntityInput("Delivery", "Unlock", "", 0.0),
+					EmitSoundToAll(TRIGGERSCORE),
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000MAJOR KONG \x0700AA55is now available for deployment!");
+				}
+				case 48:{
+					bombStatusMax = 48;
+					bombCache = 0;
+					explodeType = 5;
+					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("BombExplo*", "Disable", "", 0.0),
+					FireEntityInput("Bombs.SharkTorpedo", "Enable", "", 0.0),
+					FireEntityInput("BombExploShark", "Enable", "", 0.0),
+					FireEntityInput("Delivery", "Unlock", "", 0.0),
+					EmitSoundToAll(TRIGGERSCORE),
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000SHARK \x0700AA55is now available for deployment!");
+				}
+				case 56:{
+					bombStatusMax = 56;
+					bombCache = 0;
+					explodeType = 6;
+					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("BombExplo*", "Disable", "", 0.0),
+					FireEntityInput("Bombs.FatMan", "Enable", "", 0.0),
+					FireEntityInput("Delivery", "Unlock", "", 0.0),
+					EmitSoundToAll(TRIGGERSCORE),
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000FAT MAN \x0700AA55is now available for deployment!");
+				}
 			}
 		}
+		return Plugin_Continue;
 	}
 	return Plugin_Stop;
 }
@@ -879,92 +894,92 @@ public Action SacrificePointsUpdater(Handle timer){
 			case 10,11,12,13,14,15,16,17,18,19:{
 				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
 				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1);
 			}
 			case 20,21,22,23,24,25,26,27,28,29:{
 				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
 				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.1);
 			}
 			case 30,31,32,33,34,35,36,37,383,39:{
 				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
 				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.1);
 			}
 			case 40,41,42,43,44,45,46,47,48,49:{
 				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
 				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.0);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.1);
 			}
 			case 50,51,52,53,54,55,56,57,58,59:{
 				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
 				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.0);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.1);
 			}
 			case 60,61,62,63,64,65,66,67,68,69:{
 				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
 				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Color", "0 255 0", 0.0);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.01),
+				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial06", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial06", "Color", "0 255 0", 0.1);
 			}
 			case 70,71,72,73,74,75,76,77,78,79:{
 				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
 				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Color", "0 255 0", 0.0);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial06", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial06", "Color", "0 255 0", 0.1),
+				FireEntityInput("BTN.Sacrificial07", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial07", "Color", "0 255 0", 0.1);
 			}
 			case 100:{
 				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
 				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial0*", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial0*", "Color", "0 255 0", 0.0);
+				FireEntityInput("BTN.Sacrificial0*", "Unlock", "", 0.1),
+				FireEntityInput("BTN.Sacrificial0*", "Color", "0 255 0", 0.1);
 			}
 		}
 	}
@@ -1044,12 +1059,13 @@ public Action Command_Deploy(int args){
 		}
 		//Falling Star
 		case 3:{
+			canSENTStars = true,
 			FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
 			FireEntityInput("MediumExplosion", "Explode", "", 0.0),
 			FireEntityInput("MedExploShake", "StartShake", "", 0.0),
 			BombPushed(10),
-			EmitSoundToAll(COUNTDOWN);
-			CreateTimer(1.0, SENTStarTimer);
+			EmitSoundToAll(COUNTDOWN),
+			CreateTimer(1.0, SENTStarTimer),
 			CreateTimer(60.0, SENTStarDisable);
 		}
 		//Major Kong
@@ -1093,7 +1109,7 @@ public Action BombPushed(int arg1){
 		case 5:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Small Bomb successfully pushed! (\x0700FF00+5 pts\x07FFFFFF)");
 			sacPoints+=5,
-			bombStatusMax+=8,
+			bombStatusMax+=10,
 			bombStatus+=2,
 			bombsPushed++,
 			bombCache = 1,
@@ -1102,7 +1118,7 @@ public Action BombPushed(int arg1){
 		case 10:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Average Bomb successfully pushed! (\x0700FF00+10 pts\x07FFFFFF)");
 			sacPoints+=10,
-			bombStatusMax+=8,
+			bombStatusMax+=10,
 			bombStatus+=2,
 			bombsPushed++,
 			bombCache = 1,
@@ -1111,16 +1127,16 @@ public Action BombPushed(int arg1){
 		case 15:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Heavy Bomb successfully pushed! (\x0700FF00+15 pts\x07FFFFFF)");
 			sacPoints+=15,
-			bombStatusMax+=8,
+			bombStatusMax+=10,
 			bombStatus+=4,
 			bombsPushed++,
 			bombCache = 1,
 			CreateTimer(3.0, BombStatusAddTimer);
 		}
 		case 25:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07AA NUCLEAR WARHEAD\x07FFFFFF successfully pushed! (\x0700FF00+25 pts\x07FFFFFF)");
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07AA0000 NUCLEAR WARHEAD\x07FFFFFF successfully pushed! (\x0700FF00+25 pts\x07FFFFFF)");
 			sacPoints+=25,
-			bombStatusMax+=8,
+			bombStatusMax+=10,
 			bombStatus+=4,
 			bombsPushed++,
 			bombCache = 1,
@@ -1310,7 +1326,7 @@ public Action Command_WaveOne(int args)
 	isWave = true;
 	bombStatus = 0;
 	bombsPushed = 0;
-	bombStatusMax = 8;
+	bombStatusMax = 10;
 	sacPointsMax = 90;
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 1: Locus");
 	StopCurSong();
@@ -1323,6 +1339,14 @@ public Action Command_WaveOne(int args)
 	CreateTimer(1.0, SacrificePointsTimer);
 	CreateTimer(1.0, SacrificePointsUpdater);
 	CreateTimer(1.0, RefireStorm);
+	FireEntityInput("rain", "Alpha", "200", 0.0);
+	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+	FireEntityInput("OldSpawn", "Enable", "", 0.0);
+	FireEntityInput("NewSpawn", "Disable", "", 0.0);
+	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+	ChooseBombPath();
 	ActivateTornadoTimer();
 	float hwn = GetRandomFloat(HWNMin, HWNMax);
 	CreateTimer(hwn, HWBosses);
@@ -1343,7 +1367,7 @@ public Action Command_WaveTwo(int args)
 	isWave = true;
 	bombStatus = 4;
 	bombsPushed = 0;
-	bombStatusMax = 16;
+	bombStatusMax = 18;
 	sacPointsMax = 90;
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 2: Metal");
 	StopCurSong();
@@ -1356,6 +1380,16 @@ public Action Command_WaveTwo(int args)
 	CreateTimer(1.0, SacrificePointsTimer);
 	CreateTimer(1.0, SacrificePointsUpdater);
 	CreateTimer(1.0, RefireStorm);
+	FireEntityInput("rain", "Alpha", "200", 0.0);
+	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+	FireEntityInput("OldSpawn", "Enable", "", 0.0);
+	FireEntityInput("NewSpawn", "Disable", "", 0.0);
+	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+	ChooseBombPath();
 	ActivateTornadoTimer();
 	float hwn = GetRandomFloat(HWNMin, HWNMax);
 	CreateTimer(hwn, HWBosses);
@@ -1377,7 +1411,7 @@ public Action Command_WaveThree(int args)
 	isWave = true;
 	bombStatus = 7;
 	bombsPushed = 0;
-	bombStatusMax = 24;
+	bombStatusMax = 26;
 	sacPointsMax = 90;
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 3: Exponential Entropy");
 	StopCurSong();
@@ -1390,6 +1424,18 @@ public Action Command_WaveThree(int args)
 	CreateTimer(1.0, SacrificePointsTimer);
 	CreateTimer(1.0, SacrificePointsUpdater);
 	CreateTimer(1.0, RefireStorm);
+	FireEntityInput("rain", "Alpha", "200", 0.0);
+	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
+	FireEntityInput("OldSpawn", "Enable", "", 0.0);
+	FireEntityInput("NewSpawn", "Disable", "", 0.0);
+	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+	ChooseBombPath();
 	ActivateTornadoTimer();
 	float f = GetRandomFloat(60.0, 180.0);
 	CreateTimer(f, UnlockTimer);
@@ -1413,7 +1459,7 @@ public Action Command_WaveFour(int args)
 	isWave = true;
 	bombStatus = 12;
 	bombsPushed = 1;
-	bombStatusMax = 32;
+	bombStatusMax = 34;
 	sacPointsMax = 90;
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 4: Torn From The Heavens");
 	StopCurSong();
@@ -1426,6 +1472,18 @@ public Action Command_WaveFour(int args)
 	CreateTimer(1.0, SacrificePointsTimer);
 	CreateTimer(1.0, SacrificePointsUpdater);
 	CreateTimer(1.0, RefireStorm);
+	FireEntityInput("rain", "Alpha", "200", 0.0);
+	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
+	FireEntityInput("OldSpawn", "Enable", "", 0.0);
+	FireEntityInput("NewSpawn", "Disable", "", 0.0);
+	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+	ChooseBombPath();
 	ActivateTornadoTimer();
 	float hwn = GetRandomFloat(HWNMin, HWNMax);
 	CreateTimer(hwn, HWBosses);
@@ -1448,7 +1506,7 @@ public Action Command_WaveFive(int args)
 	isWave = true;
 	bombStatus = 14;
 	bombsPushed = 1;
-	bombStatusMax = 40;
+	bombStatusMax = 42;
 	sacPointsMax = 100;
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 5: Metal - Brute Justice Mode");
 	StopCurSong();
@@ -1461,6 +1519,19 @@ public Action Command_WaveFive(int args)
 	CreateTimer(1.0, SacrificePointsTimer);
 	CreateTimer(1.0, SacrificePointsUpdater);
 	CreateTimer(1.0, RefireStorm);
+	FireEntityInput("rain", "Alpha", "200", 0.0);
+	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
+	FireEntityInput("OldSpawn", "Enable", "", 0.0);
+	FireEntityInput("NewSpawn", "Disable", "", 0.0);
+	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+	FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
+	ChooseBombPath();
 	ActivateTornadoTimer();
 	float f = GetRandomFloat(60.0, 180.0);
 	CreateTimer(f, UnlockTimer);
@@ -1485,7 +1556,7 @@ public Action Command_WaveSix(int args)
 	isWave = true;
 	bombStatus = 20;
 	bombsPushed = 2;
-	bombStatusMax = 48;
+	bombStatusMax = 50;
 	sacPointsMax = 100;
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 6: Grandma Destruction");
 	StopCurSong();
@@ -1498,6 +1569,18 @@ public Action Command_WaveSix(int args)
 	CreateTimer(1.0, SacrificePointsTimer);
 	CreateTimer(1.0, SacrificePointsUpdater);
 	CreateTimer(1.0, RefireStorm);
+	FireEntityInput("rain", "Alpha", "200", 0.0);
+	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
+	FireEntityInput("OldSpawn", "Enable", "", 0.0);
+	FireEntityInput("NewSpawn", "Disable", "", 0.0);
+	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+	ChooseBombPath();
 	ActivateTornadoTimer();
 	float hwn = GetRandomFloat(HWNMin, HWNMax);
 	CreateTimer(hwn, HWBosses);
@@ -1520,7 +1603,7 @@ public Action Command_WaveSeven(int args)
 	isWave = true;
 	bombStatus = 28;
 	bombsPushed = 3;
-	bombStatusMax = 56;
+	bombStatusMax = 58;
 	sacPointsMax = 100;
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 7: Revenge Twofold");
 	StopCurSong();
@@ -1533,6 +1616,19 @@ public Action Command_WaveSeven(int args)
 	CreateTimer(1.0, SacrificePointsTimer);
 	CreateTimer(1.0, SacrificePointsUpdater);
 	CreateTimer(1.0, RefireStorm);
+	FireEntityInput("rain", "Alpha", "200", 0.0);
+	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
+	FireEntityInput("OldSpawn", "Enable", "", 0.0);
+	FireEntityInput("NewSpawn", "Disable", "", 0.0);
+	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+	FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
+	ChooseBombPath();
 	ActivateTornadoTimer();
 	float hwn = GetRandomFloat(HWNMin, HWNMax);
 	CreateTimer(hwn, HWBosses);
@@ -1565,7 +1661,7 @@ public Action Command_WaveEight(int args)
 	isWave = true;
 	bombStatus = 30;
 	bombsPushed = 3;
-	bombStatusMax = 64;
+	bombStatusMax = 66;
 	sacPointsMax = 100;
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 8: Under The Weight");
 	StopCurSong();
@@ -1578,6 +1674,18 @@ public Action Command_WaveEight(int args)
 	CreateTimer(1.0, SacrificePointsTimer);
 	CreateTimer(1.0, SacrificePointsUpdater);
 	CreateTimer(1.0, RefireStorm);
+	FireEntityInput("rain", "Alpha", "200", 0.0);
+	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
+	FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
+	FireEntityInput("OldSpawn", "Enable", "", 0.0);
+	FireEntityInput("NewSpawn", "Disable", "", 0.0);
+	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+	ChooseBombPath();
 	ActivateTornadoTimer();
 	float hwn = GetRandomFloat(HWNMin, HWNMax);
 	CreateTimer(hwn, HWBosses);
@@ -1970,9 +2078,79 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			}
 		}
 
+//Crusader chain command omg this took forever to figure out!
 		if ((damagebits & (1 << 9)) && !attacker) //DMG_SONIC
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000EXTERMINATUS\x070000AA]\x07FFFFFF Client %N has sacrificed themselves with a \x0700AA00correct \x07FFFFFFkey entry! Prepare your anus!", client);
+			StopCurSong(),
+			CreateTimer(25.20, CRUSADERATTACKTimer),
+			CreateTimer(63.20, WTFBOOMTimer),
+			PrintToServer("Starting Crusader via plugin!"),
+			EmitSoundToAll("fartsy/fallingback/bgm.mp3"),
+			FireEntityInput("FB.INCOMINGTIMER", "Enable", "", 1.0),
+			FireEntityInput("FB.BOOM", "StopShake", "", 3.0),
+			FireEntityInput("FB.CRUSADER", "Enable", "", 25.20),
+			FireEntityInput("CrusaderTrain", "StartForward", "", 25.20),
+			FireEntityInput("CrusaderLaserBase*", "StartForward", "", 25.20),
+			FireEntityInput("FB.INCOMINGTIMER", "Disable", "", 30.0),
+			FireEntityInput("CrusaderTrain", "SetSpeed", "0.9", 38.0),
+			FireEntityInput("CrusaderTrain", "SetSpeed", "0.7", 38.60),
+			FireEntityInput("CrusaderTrain", "SetSpeed", "0.5", 39.20),
+			FireEntityInput("CrusaderTrain", "SetSpeed", "0.3", 40.40),
+			FireEntityInput("CrusaderTrain", "SetSpeed", "0.1", 41.40),
+			FireEntityInput("CrusaderTrain", "Stop", "", 42.60),
+			FireEntityInput("FB.CrusaderLaserKill01", "Disable", "", 42.60),
+			FireEntityInput("FB.CrusaderNukeTimer", "Disabled", "", 42.60),
+			FireEntityInput("FB.LaserCore", "TurnOn", "", 45.80),
+			FireEntityInput("CrusaderLaserBase*", "SetSpeed", "0.35", 45.80),
+			FireEntityInput("FB.ShakeCore", "StartShake", "", 45.80),
+			FireEntityInput("CrusaderSprite", "Color", "255 128 128", 45.80),
+			FireEntityInput("FB.ShakeCore", "StopShake", "", 48.80),
+			FireEntityInput("FB.LaserInnerMost", "TurnOn", "", 49.20),
+			FireEntityInput("FB.ShakeInner", "StartShake", "", 49.20),
+			FireEntityInput("CrusaderSprite", "Color", "255 230 230", 49.20),
+			FireEntityInput("CrusaderLaserBase*", "SetSpeed", "0.35", 50.20),
+			FireEntityInput("CrusaderLaserBase*", "SetSpeed", "0.45", 50.60),
+			FireEntityInput("CrusaderLaserBase*", "SetSpeed", "0.55", 51.0),
+			FireEntityInput("FB.ShakeInner", "StopShake", "", 52.10),
+			FireEntityInput("FB.ShakeInner", "StartShake", "", 52.20),
+			FireEntityInput("CrusaderLaserBase*", "SetSpeed", "0.45", 54.0),
+			FireEntityInput("CrusaderLaserBase*", "SetSpeed", "0.4", 54.40),
+			FireEntityInput("FB.ShakeInner", "StopShake", "", 55.0),
+			FireEntityInput("FB.ShakeInner", "StartShake", "", 55.10),
+			FireEntityInput("CrusaderLaserBase*", "SetSpeed", "0.75", 57.20),
+			FireEntityInput("FB.CrusaderSideLaser", "TurnOn", "", 57.20),
+			FireEntityInput("FB.ShakeInner", "StopShake", "", 58.0),
+			FireEntityInput("FB.ShakeInner", "StartShake", "", 58.10),
+			FireEntityInput("CrusaderLaserBase*", "SetSpeed", "1", 58.50),
+			FireEntityInput("CrusaderLaserBase*", "SetSpeed", "0.75", 60.80),
+			FireEntityInput("CrusaderLaserBase", "SetSpeed", "0.65", 61.10),
+			FireEntityInput("CrusaderLaserBase", "SetSpeed", "0.55", 61.40),
+			FireEntityInput("FB.LaserCore", "TurnOff", "", 61.40),
+			FireEntityInput("FB.LaserInnerMost", "TurnOff", "", 61.40),
+			FireEntityInput("CrusaderSprite", "Color", "0 0 0", 61.40),
+			FireEntityInput("CrusaderLaserBase", "SetSpeed", "0.45", 61.70),
+			FireEntityInput("CrusaderLaserBase", "SetSpeed", "0.3", 62.0),
+			FireEntityInput("CrusaderLaserBase", "SetSpeed", "0.15", 62.30),
+			FireEntityInput("FB.CrusaderSideLaser", "TurnOff", "", 62.30),
+			FireEntityInput("CrusaderLaserBase*", "Stop", "", 62.70),
+			FireEntityInput("FB.Laser*", "TurnOn", "", 65.20),
+			FireEntityInput("CrusaderLaserBase*", "StartForward", "", 65.20),
+			FireEntityInput("CrusaderLaserBase", "SetSpeed", "1", 65.20),
+			FireEntityInput("FB.ShakeBOOM", "StartShake", "", 65.20),
+			FireEntityInput("FB.Fade", "Fade", "", 65.20),
+			FireEntityInput("FB.CrusaderLaserKill02", "Enabled", "", 65.20),
+			FireEntityInput("FB.CrusaderSideLaser", "TurnOn", "", 65.20),
+			FireEntityInput("CrusaderSprite", "Color", "255 230 255", 65.20),
+			FireEntityInput("FB.Laser*", "TurnOff", "", 70.0),
+			FireEntityInput("CrusaderTrain", "StartForward", "", 70.0),
+			FireEntityInput("CrusaderLaserBase*", "Stop", "", 70.0),
+			FireEntityInput("FB.LaserKill02", "Disable", "", 70.0),
+			FireEntityInput("FB.CrusaderSideLaser", "TurnOff", "", 70.0),
+			FireEntityInput("CrusaderSprite", "Color", "0 0 0", 70.0),
+			FireEntityInput("FB.ShakeBOOM", "StopShake", "", 70.20),
+			FireEntityInput("CrusaderTrain", "Stop", "", 80.0),
+			FireEntityInput("FB.CRUSADER", "Disable", "", 80.0);
 		}
 
 		if ((damagebits & (1 << 10)) && !attacker) //DMG_ENERGYBEAM
@@ -2045,6 +2223,13 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
 	PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFYou've defeated the wave!");
 	FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
 	FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
+	FireEntityInput("Barricade_Rebuild_Relay", "Trigger", "", 0.0);
+	FireEntityInput("OldSpawn", "Disable", "", 0.0);
+	FireEntityInput("NewSpawn", "Enable", "", 0.0);
+	FireEntityInput("dovahsassprefer", "Disable", "", 0.0);
+	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.0);
+	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.0);
+	ChooseBombPath();
 }
 
 //Announce when we are in danger.
@@ -2133,6 +2318,43 @@ public Action Command_JumpToNextWave(int args)
 	JumpToWave(next_wave);
 }
 
+public Action GetWave(int args){
+	int ent = FindEntityByClassname(-1, "tf_objective_resource");
+	if(ent == -1){
+		LogMessage("tf_objective_resource not found");
+		return;
+	}
+
+	int current_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
+	switch (current_wave){
+		case 1:{
+			Command_WaveOne(0);
+		}
+		case 2:{
+			Command_WaveTwo(0);
+		}
+		case 3:{
+			Command_WaveThree(0);
+		}
+		case 4:{
+			Command_WaveFour(0);
+		}
+		case 5:{
+			Command_WaveFive(0);
+		}
+		case 6:{
+			Command_WaveSix(0);
+		}
+		case 7:{
+			Command_WaveSeven(0);
+		}
+		case 8:{
+			Command_WaveEight(0);
+		}
+	}
+	return;
+}
+
 //Jump to the wave.
 public Action JumpToWave(int wave_number)
 {
@@ -2174,4 +2396,109 @@ public Action DeleteEdict(Handle timer, any entity)
 {
 	if(IsValidEdict(entity)) RemoveEdict(entity);
 	return Plugin_Stop;
+}
+
+//Choose Bomb Path
+public Action ChooseBombPath(){
+	FireEntityInput("Nest_EN060", "Disable", "", 0.0),
+	FireEntityInput("Nest_EN050", "Disable", "", 0.0),
+	FireEntityInput("Nest_EN040", "Disable", "", 0.0),
+	FireEntityInput("Nest_EN030", "Disable", "", 0.0),
+	FireEntityInput("Nest_EN020", "Disable", "", 0.0),
+	FireEntityInput("Nest_EN010", "Disable", "", 0.0),
+	FireEntityInput("Nest_L050", "Disable", "", 0.0),
+	FireEntityInput("Nest_L040", "Disable", "", 0.0),
+	FireEntityInput("Nest_L030", "Disable", "", 0.0),
+	FireEntityInput("Nest_L020", "Disable", "", 0.0),
+	FireEntityInput("Nest_L010", "Disable", "", 0.0),
+	FireEntityInput("Nest_R040", "Disable", "", 0.0),
+	FireEntityInput("Nest_R030", "Disable", "", 0.0),
+	FireEntityInput("Nest_R020", "Disable", "", 0.0),
+	FireEntityInput("Nest_R010", "Disable", "", 0.0),
+	FireEntityInput("bombpath_right_prefer_flankers", "Disable", "", 0.0),
+	FireEntityInput("bombpath_left_prefer_flankers", "Disable", "", 0.0),
+	FireEntityInput("bombpath_left_navavoid", "Disable", "", 0.0),
+	FireEntityInput("bombpath_right_navavoid", "Disable", "", 0.0),
+	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.0),
+	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.0);
+	int i = GetRandomInt(1, 3);
+	switch(i){
+		case 1:{
+			FireEntityInput("Nest_R040", "Enable", "", 0.25),
+			FireEntityInput("Nest_R030", "Enable", "", 0.25),
+			FireEntityInput("Nest_R020", "Enable", "", 0.25),
+			FireEntityInput("Nest_R010", "Enable", "", 0.25),
+			FireEntityInput("bombpath_right_prefer_flankers", "Enable", "", 0.25),
+			FireEntityInput("bombpath_right_navavoid", "Enable", "", 0.25),
+			FireEntityInput("bombpath_right_arrows", "Enable", "", 0.25);
+		}
+		case 2:{
+			FireEntityInput("Nest_L050", "Enable", "", 0.25),
+			FireEntityInput("Nest_L040", "Enable", "", 0.25),
+			FireEntityInput("Nest_L030", "Enable", "", 0.25),
+			FireEntityInput("Nest_L020", "Enable", "", 0.25),
+			FireEntityInput("Nest_L010", "Enable", "", 0.25),
+			FireEntityInput("bombpath_left_prefer_flankers", "Enable", "", 0.25),
+			FireEntityInput("bombpath_left_navavoid", "Enable", "", 0.25),
+			FireEntityInput("bombpath_left_arrows", "Enable", "", 0.25);
+		}
+		case 3:{
+			FireEntityInput("dovahsassprefer", "Enable", "", 0.25),
+			FireEntityInput("Nest_R040", "Enable", "", 0.25),
+			FireEntityInput("Nest_R030", "Enable", "", 0.25),
+			FireEntityInput("Nest_R020", "Enable", "", 0.25),
+			FireEntityInput("Nest_R010", "Enable", "", 0.25),
+			FireEntityInput("bombpath_right_prefer_flankers", "Enable", "", 0.25),
+			FireEntityInput("bombpath_right_navavoid", "Enable", "", 0.25),
+			FireEntityInput("bombpath_right_arrows", "Enable", "", 0.25);
+		}
+	}
+}
+
+//Code Entry logic from keypad
+public Action FBCodeEntry(int arg1){
+	switch (arg1){
+		case 1:{
+			CodeEntry++;
+		}
+		case 2:{
+			CodeEntry+=2;
+		}
+		case 3:{
+			CodeEntry+=3;
+		}
+		case 4:{
+			CodeEntry+=4;
+		}
+		case 5:{
+			CodeEntry+=5;
+		}
+		case 6:{
+			CodeEntry+=6;
+		}
+		case 7:{
+			CodeEntry+=7;
+		}
+		case 8:{
+			CodeEntry+=8;
+		}
+		case 9:{
+			CodeEntry+=9;
+		}
+		case 0:{
+			if (CodeEntry == 17){
+				FireEntityInput("FB.BOOM", "StartShake", "", 0.0),
+				FireEntityInput("FB.CodeCorrect", "PlaySound", "", 0.0),
+				FireEntityInput("FB.CodeCorrectKill", "Enable", "", 0.0),
+				FireEntityInput("FB.KP*", "Lock", "", 0.0),
+				FireEntityInput("FB.CodeCorrectKill", "Disable", "", 1.0);
+			}
+			else{
+				CodeEntry = 0;
+				FireEntityInput("FB.CodeFailedKill", "Enable", "", 0.0),
+				FireEntityInput("FB.CodeFailedKill", "Disable", "", 1.0),
+				FireEntityInput("FB.CodeFailedSND", "PlaySound", "", 0.0);
+			}
+		}
+	}
 }
