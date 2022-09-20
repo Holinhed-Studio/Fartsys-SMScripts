@@ -84,7 +84,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#0001",
 	description = "Framework for Dovah's Ass",
-	version = "2.4.0",
+	version = "3.0.0",
 	url = "https://forums.firehostredux.com"
 };
 
