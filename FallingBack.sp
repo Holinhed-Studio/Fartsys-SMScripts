@@ -84,7 +84,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#0001",
 	description = "Framework for Dovah's Ass",
-	version = "2.3.4",
+	version = "2.4.0",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -210,8 +210,7 @@ public void OnPluginStart()
 //Now that command definitions are done, lets make some things happen.
 public void OnMapStart()
 {
-	ServerCommand("fb_fire SNDSCPE_* disable"),
-	ServerCommand("fb_fire BombStatus disable"),
+	FireEntityInput("BombStatus", "disable", "", 0.0),
 	SelectBGM();
 }
 
@@ -222,19 +221,16 @@ public Action EndWaveBGM(){
 
 public Action SelectBGM()
 {
-	//ServerCommand("fb_fire Music.* StopSound"); //Legacy method of stopping sound
 	StopCurSong();
 	int BGM = GetRandomInt(1, 2);
 	switch(BGM){
 		case 1:{
-			//ServerCommand("fb_fire Music.TheSilentRegardOfStars PlaySound"); //Legacy method of playing sound
 			EmitSoundToAll(DEFAULTBGM1, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = DEFAULTBGM1;
 			PrintToServer("Creating timer for The Silent Regard of Stars. Enjoy the music!");
 			CreateTimer(137.75, RefireBGM);
 		}
 		case 2:{
-			//ServerCommand("fb_fire Music.KnowledgeNeverSleeps PlaySound"); //Legacy method of playing sound
 			EmitSoundToAll(DEFAULTBGM2, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = DEFAULTBGM2;
 			PrintToServer("Creating timer for Knowledge Never Sleeps. Enjoy the music!");
@@ -276,7 +272,6 @@ public Action RefireBGMAlt(Handle timer)
 public Action RefireLocus(Handle timer)
 {
 	if (!bgmlock1){
-		//ServerCommand("fb_fire Music.Locus StopSound; fb_fire Music.Locus PlaySound"); //Legacy method of playing Locus
 		StopCurSong();
 		EmitSoundToAll(BGM1, _, SNDCHAN, DEFBGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM1;
@@ -289,7 +284,6 @@ public Action RefireLocus(Handle timer)
 public Action RefireMetal(Handle timer)
 {
 	if (!bgmlock2){
-		//ServerCommand("fb_fire Music.Metal StopSound; fb_fire Music.Metal PlaySound"); //Legacy method of playing Metal
 		StopCurSong();
 		EmitSoundToAll(BGM2, _, SNDCHAN, DEFBGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM2;
@@ -302,7 +296,6 @@ public Action RefireMetal(Handle timer)
 public Action RefireEntropy(Handle timer)
 {
 	if (!bgmlock3){
-		//ServerCommand("fb_fire Music.ExponentialEntropy StopSound; fb_fire Music.ExponentialEntropy PlaySound"); //Legacy method of playing Metal
 		StopCurSong();
 		EmitSoundToAll(BGM3, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM3;
@@ -315,7 +308,6 @@ public Action RefireEntropy(Handle timer)
 public Action RefireTorn(Handle timer)
 {
 	if (!bgmlock4){
-		//ServerCommand("fb_fire Music.TornFromTheHeavens StopSound; fb_fire Music.TornFromTheHeavens PlaySound"); //Legacy method of playing Torn From the Heavens
 		StopCurSong();
 		EmitSoundToAll(BGM4, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM4;
@@ -328,7 +320,6 @@ public Action RefireTorn(Handle timer)
 public Action RefireBJMode(Handle timer)
 {
 	if (!bgmlock5){
-		//ServerCommand("fb_fire Music.MetalBruteJusticeMode StopSound; fb_fire Music.MetalBruteJusticeMode PlaySound"); //Legacy method of playing Brute Justice Mode
 		StopCurSong();
 		EmitSoundToAll(BGM5, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM5;
@@ -341,7 +332,6 @@ public Action RefireBJMode(Handle timer)
 public Action RefireGrandma(Handle timer)
 {
 	if (!bgmlock6){
-		//ServerCommand("fb_fire Music.GrandmaDestruction StopSound; fb_fire Music.GrandmaDestruction PlaySound"); //Legacy method of playing Grandma
 		StopCurSong();
 		EmitSoundToAll(BGM6, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM6;
@@ -353,7 +343,6 @@ public Action RefireGrandma(Handle timer)
 //BGM (Revenge Twofold)
 public Action RefireRevenge2F(Handle timer){
 	if (!bgmlock7){
-		//ServerCommand("fb_fire Music.RevengeTwofold StopSound; fb_fire Music.RevengeTwofold PlaySound"); //Legacy method of playing Revenge Twofold
 		StopCurSong();
 		EmitSoundToAll(BGM7, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM7;
@@ -365,7 +354,6 @@ public Action RefireRevenge2F(Handle timer){
 //BGM (Under The Weight)
 public Action RefireUnderTW(Handle timer){
 	if (!bgmlock8){
-		//ServerCommand("fb_fire Music.UnderTheWeight StopSound; fb_fire Music.UnderTheWeight PlaySound"); //Legacy method of playing Under The Weight
 		StopCurSong();
 		EmitSoundToAll(BGM8, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM8;
@@ -379,79 +367,110 @@ public Action RefireStorm(Handle timer){
 	if (isWave){
 		float f = GetRandomFloat(7.0, 17.0);
 		CreateTimer(f, RefireStorm);
-		ServerCommand("fb_fire lightning TurnOn; fb_fire weather Skin 4; fb_fire value TurnOff; fb_fire LightningLaser TurnOn");
-		ServerCommand("fb_fire lightning TurnOff 0 0.1; fb_fire weather Skin 3 0.1; fb_fire LightningLaser TurnOff 0 0.1");
-		ServerCommand("fb_fire lightning TurnOn 0 0.17; fb_fire weather Skin 4 0.17; fb_fire LightningLaser TurnOn 0 0.17");
-		ServerCommand("fb_fire lightning TurnOff 0 0.25; fb_fire weather Skin 3 0.25; fb_fire LightningLaser TurnOff 0 0.25");
+		StrikeLightning();
 		int Thunder = GetRandomInt(1, 16);
 		switch (Thunder){
 			case 1:{
 				EmitSoundToAll(GLOBALTHUNDER01);
-				ServerCommand("fb_fire LightningHurt00 Enable; fb_fire LightningHurt00 Disable 0 0.07");
+				FireEntityInput("LightningHurt00", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt00",  "Disable", "", 0.07);
 			}
 			case 2:{
 				EmitSoundToAll(GLOBALTHUNDER02);
-				ServerCommand("fb_fire LightningHurt01 Enable; fb_fire LightningHurt01 Disable 0 0.07");
+				FireEntityInput("LightningHurt01", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt01",  "Disable", "", 0.07);
 			}
 			case 3:{
 				EmitSoundToAll(GLOBALTHUNDER03);
-				ServerCommand("fb_fire LightningHurt02 Enable; fb_fire LightningHurt02 Disable 0 0.07");
+				FireEntityInput("LightningHurt02", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt02",  "Disable", "", 0.07);
 			}
 			case 4:{
 				EmitSoundToAll(GLOBALTHUNDER04);
-				ServerCommand("fb_fire LightningHurt03 Enable; fb_fire LightningHurt03 Disable 0 0.07");
+				FireEntityInput("LightningHurt03", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt03",  "Disable", "", 0.07);
 			}
 			case 5:{
 				EmitSoundToAll(GLOBALTHUNDER05);
-				ServerCommand("fb_fire LightningHurt04 Enable; fb_fire LightningHurt04 Disable 0 0.07");
+				FireEntityInput("LightningHurt04", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt04",  "Disable", "", 0.07);
 			}
 			case 6:{
 				EmitSoundToAll(GLOBALTHUNDER06);
-				ServerCommand("fb_fire LightningHurt05 Enable; fb_fire LightningHurt05 Disable 0 0.07");
+				FireEntityInput("LightningHurt05", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt05",  "Disable", "", 0.07);
 			}
 			case 7:{
 				EmitSoundToAll(GLOBALTHUNDER07);
-				ServerCommand("fb_fire LightningHurt06 Enable; fb_fire LightningHurt06 Disable 0 0.07");
+				FireEntityInput("LightningHurt06", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt06",  "Disable", "", 0.07);
 			}
 			case 8:{
 				EmitSoundToAll(GLOBALTHUNDER08);
-				ServerCommand("fb_fire LightningHurt07 Enable; fb_fire LightningHurt07 Disable 0 0.07");
+				FireEntityInput("LightningHurt07", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt07",  "Disable", "", 0.07);
 			}
 			case 9:{
 				EmitSoundToAll(GLOBALTHUNDER01);
-				ServerCommand("fb_fire LightningHurt08 Enable; fb_fire LightningHurt08 Disable 0 0.07");
+				FireEntityInput("LightningHurt08", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt08",  "Disable", "", 0.07);
 			}
 			case 10:{
 				EmitSoundToAll(GLOBALTHUNDER02);
-				ServerCommand("fb_fire LightningHurt09 Enable; fb_fire LightningHurt09 Disable 0 0.07");
+				FireEntityInput("LightningHurt09", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt09",  "Disable", "", 0.07);
 			}
 			case 11:{
 				EmitSoundToAll(GLOBALTHUNDER03);
-				ServerCommand("fb_fire LightningHurt0A Enable; fb_fire LightningHurt0A Disable 0 0.07");
+				FireEntityInput("LightningHurt0A", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt0A",  "Disable", "", 0.07);
 			}
 			case 12:{
 				EmitSoundToAll(GLOBALTHUNDER04);
-				ServerCommand("fb_fire LightningHurt0B Enable; fb_fire LightningHurt0B Disable 0 0.07");
+				FireEntityInput("LightningHurt0B", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt0B",  "Disable", "", 0.07);
 			}
 			case 13:{
 				EmitSoundToAll(GLOBALTHUNDER05);
-				ServerCommand("fb_fire LightningHurt0C Enable; fb_fire LightningHurt0C Disable 0 0.07");
+				FireEntityInput("LightningHurt0C", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt0C",  "Disable", "", 0.07);
 			}
 			case 14:{
 				EmitSoundToAll(GLOBALTHUNDER06);
-				ServerCommand("fb_fire LightningHurt0D Enable; fb_fire LightningHurt0D Disable 0 0.07");
+				FireEntityInput("LightningHurt0D", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt0D",  "Disable", "", 0.07);
 			}
 			case 15:{
 				EmitSoundToAll(GLOBALTHUNDER07);
-				ServerCommand("fb_fire LightningHurt0E Enable; fb_fire LightningHurt0E Disable 0 0.07");
+				FireEntityInput("LightningHurt0E", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt0E",  "Disable", "", 0.07);
 			}
 			case 16:{
 				EmitSoundToAll(GLOBALTHUNDER08);
-				ServerCommand("fb_fire LightningHurt0F Enable; fb_fire LightningHurt0F Disable 0 0.07");
+				FireEntityInput("LightningHurt0F", "Enable", "", 0.0),
+				FireEntityInput("LightningHurt0F",  "Disable", "", 0.07);
 			}
 		}
 	}
 }
+
+//Strike Lightning
+public Action StrikeLightning(){
+		FireEntityInput("lightning", "TurnOn", "", 0.0),
+		FireEntityInput("weather", "Skin", "4", 0.0),
+		FireEntityInput("value", "TurnOff", "", 0.0),
+		FireEntityInput("LightningLaser", "TurnOn", "", 0.0),
+		FireEntityInput("lightning", "TurnOff", "", 0.1),
+		FireEntityInput("weather", "Skin", "3", 0.1),
+		FireEntityInput("LightningLaser", "TurnOff", "", 0.1),
+		FireEntityInput("lightning", "TurnOn", "", 0.17),
+		FireEntityInput("weather", "Skin", "4", 0.17),
+		FireEntityInput("LightningLaser", "TurnOn", "", 0.17),
+		FireEntityInput("lightning", "TurnOff", "", 0.25),
+		FireEntityInput("weather", "Skin", "3", 0.25),
+		FireEntityInput("LightningLaser", "TurnOff", "", 0.25);
+}
+
 //Allow Tornadoes to Spawn
 public Action ActivateTornadoTimer(){
 	if (isWave && canTornado){
@@ -460,36 +479,52 @@ public Action ActivateTornadoTimer(){
 	}
 	return Plugin_Stop;
 }
+
 //Spawn the tornado.
 public Action SpawnTornado(Handle timer){
 	if (isWave && canTornado && !tornado){
-		ServerCommand("fb_fire TornadoKill Enable; fb_fire tornadobutton Lock; fb_fire tornadof1 start 0 20; fb_fire shaketriggerf1 Enable 0 20; fb_fire tornadowindf1 PlaySound 0 20; fb_fire tornadof1wind Enable 0 21.50");
+		FireEntityInput("TornadoKill", "Enable", "", 0.0),
+		FireEntityInput("tornadobutton", "Lock", "", 0.0),
+		FireEntityInput("tornadof1", "start", "", 20.0),
+		FireEntityInput("shaketriggerf1", "Enable", "", 20.0),
+		FireEntityInput("tornadowindf1", "PlaySound", "", 20.0),
+		FireEntityInput("tornadof1wind", "Enable", "", 21.50);
 		tornado = true;
 		float f = GetRandomFloat(60.0, 120.0);
 		CreateTimer(f, DespawnTornado);
 	}
 	return Plugin_Stop;
 }
+
 //After a predetermined time, despawn the tornado.
 public Action DespawnTornado(Handle timer){
 	KillTornado();
+	ActivateTornadoTimer();
 }
+
 //Despawns the tornado.
 public Action KillTornado(){
 	if (tornado){
-		ServerCommand("fb_fire tornadof1 stop; fb_fire TornadoKill Disable; fb_fire tornadof1wind Disable; fb_fire tornadowindf1 StopSound; fb_fire shaketriggerf1 Disable; fb_fire tornadobutton Unlock 0 20");
+		FireEntityInput("tornadof1", "stop", "", 0.0),
+		FireEntityInput("TornadoKill", "Disable", "", 0.0),
+		FireEntityInput("tornadof1wind", "Disable", "", 0.0),
+		FireEntityInput("tornadowindf1", "StopSound", "", 0.0),
+		FireEntityInput("shaketriggerf1", "Disable", "", 0.0),
+		FireEntityInput("tornadobutton", "Unlock", "", 20.0);
 		tornado = false;
 	}
-	return Plugin_Handled;
+	return Plugin_Stop;
 }
+
 //FB UnlockTimer (Unlocks FC Code Entry
 public Action UnlockTimer (Handle timer){
 	if(isWave){
-		ServerCommand("fb_fire FB.KP* Unlock");
+		FireEntityInput("FB.KP*", "Unlock", "", 0.0);
 		EmitSoundToAll(BELL);
 	}
 	return Plugin_Stop;
 }
+
 //BombStatus (Add points to Bomb Status occasionally)
 public Action BombStatusTimer(Handle timer){
 	if (isWave && (bombStatus < bombStatusMax)){
@@ -497,71 +532,87 @@ public Action BombStatusTimer(Handle timer){
 		float f = GetRandomFloat(10.0, 45.0);
 		PrintToServer("[DEBUG] Creating a %f timer to give bomb status an update. Current target is %i", f, bombStatus);
 		CreateTimer(f, BombStatusTimer);
-		switch (bombStatus){ //new bombstatus parser
+		switch (bombStatus){
 			case 8:{
 				bombStatusMax = 8;
 				bombCache = 0;
-				//removed fb_fire BombExploSmall Enable;
 				explodeType = 1;
-				ServerCommand("fb_fire Bombs.* Disable; fb_fire BombExplo* Disable; fb_fire Delivery Unlock; fb_fire Bombs.FreedomBomb Enable");
-				EmitSoundToAll(TRIGGERSCORE);
+				FireEntityInput("Bombs.*", "Disable", "", 0.0),
+				FireEntityInput("BombExplo*", "Disable", "", 0.0),
+				FireEntityInput("Delivery", "Unlock", "", 0.0),
+				FireEntityInput("Bombs.FreedomBomb", "Enable", "", 0.0),
+				EmitSoundToAll(TRIGGERSCORE),
 				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000FREEDOM BOMB \x0700AA55is now available for deployment!");
 			}
 			case 16:{
 				bombStatusMax = 16;
 				bombCache = 0;
-				//removed fb_fire BombExploMedium Enable;
 				explodeType = 2;
-				ServerCommand("fb_fire Bombs.* Disable; fb_fire BombExplo* Disable; fb_fire Delivery Unlock; fb_fire Bombs.ElonBust Enable");
-				EmitSoundToAll(TRIGGERSCORE);
+				FireEntityInput("Bombs.*", "Disable", "", 0.0),
+				FireEntityInput("BombExplo*", "Disable", "", 0.0),
+				FireEntityInput("Bombs.ElonBust", "Enable", "", 0.0),
+				FireEntityInput("Delivery", "Unlock", "", 0.0),
+				EmitSoundToAll(TRIGGERSCORE),
 				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000ELON BUST \x0700AA55is now available for deployment!");
 			}
 			case 24:{
 				bombStatusMax = 24;
 				bombCache = 0;
-				//removed fb_fire BombExploMedium Enable;
 				explodeType = 2;
-				ServerCommand("fb_fire Bombs.* Disable; fb_fire BombExplo* Disable; fb_fire Delivery Unlock; fb_fire Bombs.BathSalts Enable");
-				EmitSoundToAll(TRIGGERSCORE);
+				FireEntityInput("Bombs.*", "Disable", "", 0.0),
+				FireEntityInput("BombExplo*", "Disable", "", 0.0),
+				FireEntityInput("Bombs.BathSalts", "Enable", "", 0.0),
+				FireEntityInput("Delivery", "Unlock", "", 0.0),
+				EmitSoundToAll(TRIGGERSCORE),
 				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000BATH SALTS \x0700AA55are now available for deployment!");
 			}
 			case 32:{
 				bombStatusMax = 32;
 				bombCache = 0;
-				//removed ; fb_fire BombExploFallingStar Enable
 				explodeType = 3;
-				ServerCommand("fb_fire Bombs.* Disable; fb_fire BombExplo* Disable; fb_fire Delivery Unlock; fb_fire Bombs.FallingStar Enable");
-				EmitSoundToAll(TRIGGERSCORE);
+				FireEntityInput("Bombs.*", "Disable", "", 0.0),
+				FireEntityInput("BombExplo*", "Disable", "", 0.0),
+				FireEntityInput("Bombs.FallingStar", "Enable", "", 0.0),
+				FireEntityInput("Delivery", "Unlock", "", 0.0),
+				EmitSoundToAll(TRIGGERSCORE),
 				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FFFF00FALLING STAR\x0700AA55 is now available for deployment!");
 			}
 			case 40:{
 				bombStatusMax = 40;
 				bombCache = 0;
-				//removed ; fb_fire BombExploMajorKong Enable
 				explodeType = 4;
-				ServerCommand("fb_fire Bombs.* Disable; fb_fire BombExplo* Disable; fb_fire Delivery Unlock; fb_fire Bombs.MajorKong Enable");
-				EmitSoundToAll(TRIGGERSCORE);
+				FireEntityInput("Bombs.*", "Disable", "", 0.0),
+				FireEntityInput("BombExplo*", "Disable", "", 0.0),
+				FireEntityInput("Bombs.MajorKong", "Enable", "", 0.0),
+				FireEntityInput("Delivery", "Unlock", "", 0.0),
+				EmitSoundToAll(TRIGGERSCORE),
 				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000MAJOR KONG \x0700AA55is now available for deployment!");
 			}
 			case 48:{
 				bombStatusMax = 48;
 				bombCache = 0;
 				explodeType = 5;
-				//removed   fb_fire BombExploLarge Enable;
-				ServerCommand("fb_fire Bombs.* Disable; fb_fire BombExplo* Disable; fb_fire Delivery Unlock; fb_fire Bombs.SharkTorpedo Enable; fb_fire BombExploShark Enable");
-				EmitSoundToAll(TRIGGERSCORE);
+				FireEntityInput("Bombs.*", "Disable", "", 0.0),
+				FireEntityInput("BombExplo*", "Disable", "", 0.0),
+				FireEntityInput("Bombs.SharkTorpedo", "Enable", "", 0.0),
+				FireEntityInput("BombExploShark", "Enable", "", 0.0),
+				FireEntityInput("Delivery", "Unlock", "", 0.0),
+				EmitSoundToAll(TRIGGERSCORE),
 				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000SHARK \x0700AA55is now available for deployment!");
 			}
 			case 56:{
 				bombStatusMax = 56;
 				bombCache = 0;
-				//removed ; fb_fire BombExploFatMan Enable
 				explodeType = 6;
-				ServerCommand("fb_fire Bombs.* Disable; fb_fire BombExplo* Disable; fb_fire Bombs.FatMan Enable; fb_fire Delivery Unlock");
-				EmitSoundToAll(TRIGGERSCORE);
+				FireEntityInput("Bombs.*", "Disable", "", 0.0),
+				FireEntityInput("BombExplo*", "Disable", "", 0.0),
+				FireEntityInput("Bombs.FatMan", "Enable", "", 0.0),
+				FireEntityInput("Delivery", "Unlock", "", 0.0),
+				EmitSoundToAll(TRIGGERSCORE),
 				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000FAT MAN \x0700AA55is now available for deployment!");
 			}
 		}
+
 		//Loop back from the start with Freedom Bomb. This time, enable special stuff.
 		if (bombsPushed >= 7){
 			bombsPushed = 0;
@@ -575,61 +626,74 @@ public Action BombStatusTimer(Handle timer){
 	}
 	return Plugin_Stop;
 }
+
 //SpecTimer
 public Action SpecTimer(Handle timer){
 	int i = GetRandomInt(1, 6);
 	switch (i){
 		case 1:{
-			ServerCommand("fb_fire Spec.* Disable; fb_fire Spec.Goobbue Enable");
+			FireEntityInput("Spec.*", "Disable", "", 0.0),
+			FireEntityInput("Spec.Goobbue", "Enable", "", 0.1),
+			PrintToChatAll("\x070000AA Legend tells of a Goobbue sproutling somewhere nearby...");
 		}
 		case 2:{
-			ServerCommand("fb_fire Spec.* Disable; fb_fire Spec.Waffle Enable");
+			FireEntityInput("Spec.*", "Disable", "", 0.0),
+			FireEntityInput("Spec.Waffle", "Enable", "", 0.1),
+			PrintToChatAll("\x0700A0A0Don't eat THESE...");
 		}
 		case 3:{
-			ServerCommand("fb_fire Spec.* Disable; fb_fire Spec.Burrito Enable");
+			FireEntityInput("Spec.*", "Disable", "", 0.0),
+			FireEntityInput("Spec.Burrito", "Enable", "", 0.1),
+			PrintToChatAll("\x07A00000What's worse than Taco Bell?");
 		}
 		case 4:{
-			ServerCommand("fb_fire Spec.* Disable; fb_fire Spec.Shroom Enable");
+			FireEntityInput("Spec.*", "Disable", "", 0.0),
+			FireEntityInput("Spec.Shroom", "Enable", "", 0.1),
+			PrintToChatAll("\x07DD0000M\x07FFFFFFA\x07DD0000R\x07FFFFFFI\x07DD0000O\x07FFFFFF time!");
 		}
 		case 5:{
-			ServerCommand("fb_fire Spec.* Disable; fb_fire Spec.BlueBall Enable");
+			FireEntityInput("Spec.*", "Disable", "", 0.0),
+			FireEntityInput("Spec.BlueBall", "Enable", "", 0.1),
+			PrintToChatAll("A \x070000AABlue Ball \x07FFFFFFlurks from afar...");
 		}
 		case 6:{
-			ServerCommand("fb_fire Spec.* Enable");
+			FireEntityInput("Spec.*", "Enable", "", 0.0),
+			PrintToChatAll("\x07AA00AAIs it a miracle? Is it  chaos? WHO KNOWWWWWWS");
 		}
 	}
 	float spDelay = GetRandomFloat(10.0, 30.0);
 	CreateTimer(spDelay, SpecTimer);
 	return Plugin_Stop;
 }
+
 //SENTMeteor (Scripted Entity Meteors)
 public Action SENTMeteorTimer(Handle timer){
 	if(canSENTMeteors){
 		int i = GetRandomInt(1, 8);
 		switch(i){
 			case 1:{
-				ServerCommand("fb_fire FB.SentMeteor01 ForceSpawn");
+				FireEntityInput("FB.SentMeteor01", "ForceSpawn", "", 0.0);
 			}
 			case 2:{
-				ServerCommand("fb_fire FB.SentMeteor02 ForceSpawn");
+				FireEntityInput("FB.SentMeteor02", "ForceSpawn", "", 0.0);
 			}
 			case 3:{
-				ServerCommand("fb_fire FB.SentMeteor03 ForceSpawn");
+				FireEntityInput("FB.SentMeteor03", "ForceSpawn", "", 0.0);
 			}
 			case 4:{
-				ServerCommand("fb_fire FB.SentMeteor04 ForceSpawn");
+				FireEntityInput("FB.SentMeteor04", "ForceSpawn", "", 0.0);
 			}
 			case 5:{
-				ServerCommand("fb_fire FB.SentMeteor05 ForceSpawn");
+				FireEntityInput("FB.SentMeteor05", "ForceSpawn", "", 0.0);
 			}
 			case 6:{
-				ServerCommand("fb_fire FB.SentMeteor06 ForceSpawn");
+				FireEntityInput("FB.SentMeteor06", "ForceSpawn", "", 0.0);
 			}
 			case 7:{
-				ServerCommand("fb_fire FB.SentMeteor07 ForceSpawn");
+				FireEntityInput("FB.SentMeteor07", "ForceSpawn", "", 0.0);
 			}
 			case 8:{
-				ServerCommand("fb_fire FB.SentMeteor08 ForceSpawn");
+				FireEntityInput("FB.SentMeteor08", "ForceSpawn", "", 0.0);
 			}
 		}
 	}
@@ -648,28 +712,28 @@ public Action SENTNukeTimer(Handle timer){
 		int i = GetRandomInt(1, 8);
 		switch(i){
 			case 1:{
-				ServerCommand("fb_fire FB.SentNuke01 ForceSpawn");
+				FireEntityInput("FB.SentNuke01", "ForceSpawn", "", 0.0);
 			}
 			case 2:{
-				ServerCommand("fb_fire FB.SentNuke02 ForceSpawn");
+				FireEntityInput("FB.SentNuke02", "ForceSpawn", "", 0.0);
 			}
 			case 3:{
-				ServerCommand("fb_fire FB.SentNuke03 ForceSpawn");
+				FireEntityInput("FB.SentNuke03", "ForceSpawn", "", 0.0);
 			}
 			case 4:{
-				ServerCommand("fb_fire FB.SentNuke04 ForceSpawn");
+				FireEntityInput("FB.SentNuke04", "ForceSpawn", "", 0.0);
 			}
 			case 5:{
-				ServerCommand("fb_fire FB.SentNuke05 ForceSpawn");
+				FireEntityInput("FB.SentNuke05", "ForceSpawn", "", 0.0);
 			}
 			case 6:{
-				ServerCommand("fb_fire FB.SentNuke06 ForceSpawn");
+				FireEntityInput("FB.SentNuke06", "ForceSpawn", "", 0.0);
 			}
 			case 7:{
-				ServerCommand("fb_fire FB.SentNuke07 ForceSpawn");
+				FireEntityInput("FB.SentNuke07", "ForceSpawn", "", 0.0);
 			}
 			case 8:{
-				ServerCommand("fb_fire FB.SentNuke08 ForceSpawn");
+				FireEntityInput("FB.SentNuke08", "ForceSpawn", "", 0.0);
 			}
 		}
 		float f = GetRandomFloat(1.5, 3.0);
@@ -689,28 +753,28 @@ public Action SENTStarTimer(Handle timer){
 		int i = GetRandomInt(1, 8);
 		switch(i){
 			case 1:{
-				ServerCommand("fb_fire FB.SentStar01 ForceSpawn");
+				FireEntityInput("FB.SentStar01", "ForceSpawn", "", 0.0);
 			}
 			case 2:{
-				ServerCommand("fb_fire FB.SentStar02 ForceSpawn");
+				FireEntityInput("FB.SentStar02", "ForceSpawn", "", 0.0);
 			}
 			case 3:{
-				ServerCommand("fb_fire FB.SentStar03 ForceSpawn");
+				FireEntityInput("FB.SentStar03", "ForceSpawn", "", 0.0);
 			}
 			case 4:{
-				ServerCommand("fb_fire FB.SentStar04 ForceSpawn");
+				FireEntityInput("FB.SentStar04", "ForceSpawn", "", 0.0);
 			}
 			case 5:{
-				ServerCommand("fb_fire FB.SentStar05 ForceSpawn");
+				FireEntityInput("FB.SentStar05", "ForceSpawn", "", 0.0);
 			}
 			case 6:{
-				ServerCommand("fb_fire FB.SentStar06 ForceSpawn");
+				FireEntityInput("FB.SentStar06", "ForceSpawn", "", 0.0);
 			}
 			case 7:{
-				ServerCommand("fb_fire FB.SentStar07 ForceSpawn");
+				FireEntityInput("FB.SentStar07", "ForceSpawn", "", 0.0);
 			}
 			case 8:{
-				ServerCommand("fb_fire FB.SentStar08 ForceSpawn");
+				FireEntityInput("FB.SentStar08", "ForceSpawn", "", 0.0);
 			}
 		}
 		float f = GetRandomFloat(0.75, 1.5);
@@ -727,40 +791,55 @@ public Action FBCodeFailTankHornSND(Handle timer){
 	EmitSoundToAll("mvm/mvm_tank_horn.wav");
 	return Plugin_Stop;
 }
+
 //Halloween Bosses
 public Action HWBosses(Handle timer){
 	if(isWave && canHWBoss){
 		int i = GetRandomInt(1, 10);
 		switch(i){
 			case 1:{
-				ServerCommand("fb_fire hhh_maker ForceSpawn; fb_fire hhh_maker2 ForceSpawn");
+				FireEntityInput("hhh_maker", "ForceSpawn", "", 0.0),
+				FireEntityInput("hhh_maker2", "ForceSpawn", "", 0.0);
 			}
 			case 2:{
-				ServerCommand("fb_fire hhh_maker2 ForceSpawn");
+				FireEntityInput("hhh_maker2", "ForceSpawn", "", 0.0);
 			}
 			case 3:{
-				ServerCommand("fb_fire hhh_maker2 ForceSpawn; fb_fire SkeleSpawner Enable; fb_fire SkeleSpawner Disable 0 10");
+				
+				FireEntityInput("hhh_maker2", "ForceSpawn", "", 0.0),
+				FireEntityInput("SkeleSpawner", "Enable", "", 0.0),
+				FireEntityInput("SkeleSpawner", "Disable", "", 10.0);
 			}
 			case 4:{
-				ServerCommand("fb_fire SkeleSpawner Enable; fb_fire SkeleSpawner Disable 0 10");
+				FireEntityInput("SkeleSpawner", "Enable", "", 0.0),
+				FireEntityInput("SkeleSpawner", "Disable", "", 10.0);
 			}
 			case 5:{
-				ServerCommand("fb_fire merasmus_maker ForceSpawn; fb_fire hhh_maker2 ForceSpawn");
+				FireEntityInput("merasmus_maker", "ForceSpawn", "", 0.0),
+				FireEntityInput("hhh_maker2", "ForceSpawn", "", 0.0);
 			}
 			case 6:{
-				ServerCommand("fb_fire merasmus_maker ForceSpawn; fb_fire monoculus_maker ForceSpawn; fb_fire hhh_maker2 ForceSpawn");
+				FireEntityInput("merasmus_maker", "ForceSpawn", "", 0.0),
+				FireEntityInput("monoculus_maker", "ForceSpawn", "", 0.0),
+				FireEntityInput("hhh_maker2", "ForceSpawn", "", 0.0);
 			}
 			case 7:{
-				ServerCommand("fb_fire monoculus_maker ForceSpawn; fb_fire merasmus_maker ForceSpawn;");
+				FireEntityInput("monoculus_maker", "ForceSpawn", "", 0.0),
+				FireEntityInput("merasmus_maker", "ForceSpawn", "", 0.0);
 			}
 			case 8:{
-				ServerCommand("fb_fire SkeleSpawner Enable; fb_fire SkeleSpawner Disable 0 30");
+				FireEntityInput("SkeleSpawner", "Enable", "", 0.0),
+				FireEntityInput("SkeleSpawner", "Disable", "", 30.0);
 			}
 			case 9:{
-				ServerCommand("fb_fire SkeleSpawner Enable; fb_fire SkeleSpawner Disable 0 60; fb_fire merasmus_maker ForceSpawn; fb_fire monoculus_maker ForceSpawn; fb_fire hhh_maker2 ForceSpawn");
+				FireEntityInput("SkeleSpawner", "Enable", "", 0.0),
+				FireEntityInput("SkeleSpawner", "Disable", "", 60.0),
+				FireEntityInput("merasmus_maker", "ForceSpawn", "", 0.0),
+				FireEntityInput("monoculus_maker", "ForceSpawn", "", 0.0),
+				FireEntityInput("hhh_maker2", "ForceSpawn", "", 0.0);
 			}
 			case 10:{
-				ServerCommand("fb_fire monoculus_maker ForceSpawn");
+				FireEntityInput("monoculus_maker", "ForceSpawn", "", 0.0);
 			}
 		}
 		canHWBoss = false;
@@ -791,10 +870,14 @@ public Action SacrificePointsUpdater(Handle timer){
 	if (isWave){
 		CreateTimer(0.1, SacrificePointsUpdater);
 		if (sacPoints <=9){
-			ServerCommand("fb_fire BTN.Sacrificial* Lock; fb_fire BTN.Sacrificial* Color 0;");
+			FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
+			FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
 		}
 		else if (sacPoints >= 10 && sacPoints <= 19){
-			ServerCommand("fb_fire BTN.Sacrificial* Lock; fb_fire BTN.Sacrificial* Color 0; fb_fire BTN.Sacrificial01 Unlock; fb_fire BTN.Sacrificial01 Color 255");
+			FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
+			FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
+			FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
+			FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0);
 		}
 		else if (sacPoints >= 20 && sacPoints <= 29){
 				ServerCommand("fb_fire BTN.Sacrificial* Lock; fb_fire BTN.Sacrificial* Color 0; fb_fire BTN.Sacrificial01 Unlock; fb_fire BTN.Sacrificial01 Color 255; fb_fire BTN.Sacrificial02 Unlock; fb_fire BTN.Sacrificial02 Color 255");
@@ -1074,7 +1157,7 @@ public Action Command_MeteorShower(int args)
 
 public Action Command_DovahsAss(int args)
 {
-	PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000DOVAH'S ASS\x07FFFFFF v0x11. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
+	PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000DOVAH'S ASS\x07FFFFFF v0x13. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
 }
 //Wave One
 public Action Command_WaveOne(int args)
@@ -1998,7 +2081,7 @@ public Action FireEntityInput(char[] strTargetname, char[] strInput, char[] strP
 {
 	char strBuffer[255];
 	Format(strBuffer, sizeof(strBuffer), "OnUser1 %s:%s:%s:%f:1", strTargetname, strInput, strParameter, flDelay);
-	//PrintToChatAll("\x0700FF00[CORE] \x07FFFFFF Firing entity %s with input %s , a parameter override of %s , and delay of %f ...", strTargetname, strInput, strParameter, flDelay);
+	PrintToChatAll("\x0700FF00[CORE] \x07FFFFFF Firing entity %s with input %s , a parameter override of %s , and delay of %f ...", strTargetname, strInput, strParameter, flDelay);
 	int entity = CreateEntityByName("info_target");
 	if(IsValidEdict(entity))
 	{
