@@ -192,7 +192,6 @@ public void OnPluginStart()
 	RegServerCmd("tacobell_wave20", Command_TBWave20,"Taco Bell - Wave Twenty"),
 	RegServerCmd("tacobell_wave21", Command_TBWave21,"Taco Bell - Wave Twenty-One"),
 	RegServerCmd("tacobell_finished", Command_TacoBellFinished, "TacoBell has been completed!"),
-	RegServerCmd("fb_fire", Command_FBFire, "Operator for Professor's Ass."),
 	RegConsoleCmd("sm_bombstatus", Command_FBBombStatus, "Check bomb status"),
 	RegConsoleCmd("sm_sacstatus", Command_FBSacStatus, "Check sacrifice points status"),
 	RegServerCmd("fb_forcetornado", Command_ForceTornado, "Force Tornado"),
@@ -1922,74 +1921,47 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			PrintToChatAll("\x070000AA[\x07AA0000EXTERMINATUS\x070000AA]\x07FFFFFF Client %N has humliated themselves with an \x07AA0000incorrect \x07FFFFFFkey entry!", client);
 			int i = GetRandomInt(1, 16);
 			switch(i){
-				case 1:{
-					ServerCommand("fb_fire BG.Meteorites1 ForceSpawn; fb_meteorincoming; bg.meteorite1 StartForward 0 0.1");
+				case 1,3,10:{
+					FireEntityInput("BG.Meteorites1", "ForceSpawn", "", 0.0),
+					Command_MeteorIncoming(0),
+					FireEntityInput("bg.meteorite1", "StartForward", "", 0.1);
 				}
-				case 2:{
+				case 2,5,16:{
 					CreateTimer(0.5, FBCodeFailTankHornSND);
-					ServerCommand("fb_fire FB.TankTrain TeleportToPathTrack Tank01; fb_fire FB.TankTrain StartForward 0 0.25; fb_fire FB.TankTrain SetSpeed 1 0.35; fb_fire FB.Tank Enable 0 1");
+					FireEntityInput("FB.TankTrain", "TeleportToPathTrack", "Tank01", 0.0),
+					FireEntityInput("FB.TankTrain", "StartForward", "", 0.25),
+					FireEntityInput("FB.TankTrain", "SetSpeed", "1", 0.35),
+					FireEntityInput("FB.Tank", "Enable", "", 1.0);
 				}
-				case 3:{
-					ServerCommand("fb_fire BG.Meteorites1 ForceSpawn; fb_meteorincoming; bg.meteorite1 StartForward 0 0.1");
+				case 4,8,14:{
+					EmitSoundToAll("ambient/alarms/train_horn_distant1.wav"),
+					FireEntityInput("TrainSND", "PlaySound", "", 0.0),
+					FireEntityInput("TrainDamage", "Enable", "", 0.0),
+					FireEntityInput("Train01", "Enable", "", 0.0),
+					Command_TrainIncoming(0),
+					FireEntityInput("TrainTrain", "TeleportToPathTrack", "TrainTrack01", 0.0),
+					FireEntityInput("TrainTrain", "StartForward", "", 0.1);
 				}
-				case 4:{
-					EmitSoundToAll("ambient/alarms/train_horn_distant1.wav");
-					ServerCommand("fb_fire TrainSND PlaySound; fb_fire TrainDamage Enable; fb_fire Train01 Enable; fb_trainincoming; fb_fire TrainTrain TeleportToPathTrack TrainTrack01; fb_fire TrainTrain StartForward 0 0.1");
-				}
-				case 5:{
-					CreateTimer(0.5, FBCodeFailTankHornSND);
-					ServerCommand("fb_fire FB.TankTrain TeleportToPathTrack Tank01; fb_fire FB.TankTrain StartForward 0 0.25; fb_fire FB.TankTrain SetSpeed 1 0.35; fb_fire FB.Tank Enable 0 1");
-				}
-				case 6:{
-					canTornado = true;
+				case 6,9:{
+					canTornado = true,
 					CreateTimer(1.0, SpawnTornado);
 				}
-				case 7:{
-					ServerCommand("fb_meteorshower");
-					canSENTMeteors = true;
-					CreateTimer(1.0, SENTMeteorTimer);
+				case 7,13:{
+					Command_MeteorShower(0),
+					canSENTMeteors = true,
+					CreateTimer(1.0, SENTMeteorTimer),
 					CreateTimer(30.0, DisableSENTMeteors);
-				}
-				case 8:{
-					EmitSoundToAll("ambient/alarms/train_horn_distant1.wav");
-					ServerCommand("fb_fire TrainSND PlaySound; fb_fire TrainDamage Enable; fb_fire Train01 Enable; fb_trainincoming; fb_fire TrainTrain TeleportToPathTrack TrainTrack01; fb_fire TrainTrain StartForward 0 0.1");
-				}
-				case 9:{
-					canTornado = true;
-					CreateTimer(1.0, SpawnTornado);
-				}
-				case 10:{
-					ServerCommand("fb_fire BG.Meteorites1 ForceSpawn; fb_meteorincoming; bg.meteorite1 StartForward 0 0.1");
 				}
 				case 11:{
-					EmitSoundToAll("ambient/sawblade_impact1.wav");
-					ServerCommand("fb_fire FB.Slice Enable; fb_fire FB.Slice Disable 0 1.0");
+					FireEntityInput("FB.Slice", "Enable", "", 0.0),
+					EmitSoundToAll("ambient/sawblade_impact1.wav"),
+					FireEntityInput("FB.Slice", "Disable", "", 1.0);
 				}
-				case 12:{
-					ServerCommand("fb_atomicbmbrain");
-					canSENTNukes = true;
-					CreateTimer(1.0, SENTNukeTimer);
+				case 12,15:{
+					Command_AtomBmbRain(0),
+					canSENTNukes = true,
+					CreateTimer(1.0, SENTNukeTimer),
 					CreateTimer(30.0, DisableSENTNukes);
-				}
-				case 13:{
-					ServerCommand("fb_meteorshower");
-					canSENTMeteors = true;
-					CreateTimer(1.0, SENTMeteorTimer);
-					CreateTimer(30.0, DisableSENTMeteors);
-				}
-				case 14:{
-					EmitSoundToAll("ambient/alarms/train_horn_distant1.wav");
-					ServerCommand("fb_fire TrainSND PlaySound; fb_fire TrainDamage Enable; fb_fire Train01 Enable; fb_trainincoming; fb_fire TrainTrain TeleportToPathTrack TrainTrack01; fb_fire TrainTrain StartForward 0 0.1");
-				}
-				case 15:{
-					ServerCommand("fb_atomicbmbrain");
-					canSENTNukes = true;
-					CreateTimer(1.0, SENTNukeTimer);
-					CreateTimer(30.0, DisableSENTNukes);
-				}
-				case 16:{
-					CreateTimer(0.5, FBCodeFailTankHornSND);
-					ServerCommand("fb_fire FB.TankTrain TeleportToPathTrack Tank01; fb_fire FB.TankTrain StartForward 0 0.25; fb_fire FB.TankTrain SetSpeed 1 0.35; fb_fire FB.Tank Enable 0 1");
 				}
 			}
 		}
@@ -2171,20 +2143,6 @@ public Action JumpToWave(int wave_number)
 public Action Timer_RestartServer(Handle timer)
 {
 	ServerCommand("_restart");
-}
-
-//Handle FB Operator Requests via entfire
-public Action Command_FBFire(int args)
-{
-	char arg1[128], arg2[128], arg3[32], arg4[8];
-	float flDelay;
-	GetCmdArg(1, arg1, sizeof(arg1));
-	GetCmdArg(2, arg2, sizeof(arg2));
-	GetCmdArg(3, arg3, sizeof(arg3));
-	GetCmdArg(4, arg4, sizeof(arg4));
-	flDelay = StringToFloat(arg4);
-	FireEntityInput(arg1, arg2, arg3, flDelay);
-	return Plugin_Handled;
 }
 
 //Create a temp entity and fire an input
