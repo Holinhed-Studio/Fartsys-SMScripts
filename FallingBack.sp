@@ -84,7 +84,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.0.1",
+	version = "3.0.2",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -2154,7 +2154,7 @@ public Action FireEntityInput(char[] strTargetname, char[] strInput, char[] strP
 {
 	char strBuffer[255];
 	Format(strBuffer, sizeof(strBuffer), "OnUser1 %s:%s:%s:%f:1", strTargetname, strInput, strParameter, flDelay);
-	PrintToChatAll("\x0700FF00[CORE] \x07FFFFFF Firing entity %s with input %s , a parameter override of %s , and delay of %f ...", strTargetname, strInput, strParameter, flDelay);
+	//PrintToChatAll("\x0700FF00[CORE] \x07FFFFFF Firing entity %s with input %s , a parameter override of %s , and delay of %f ...", strTargetname, strInput, strParameter, flDelay);
 	int entity = CreateEntityByName("info_target");
 	if(IsValidEdict(entity))
 	{
