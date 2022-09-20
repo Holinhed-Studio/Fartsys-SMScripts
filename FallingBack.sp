@@ -96,7 +96,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.1.2",
+	version = "3.1.3",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -151,14 +151,13 @@ public void OnPluginStart()
 	PrecacheSound(STRONGMAN, true),
 	PrecacheSound(TRIGGERSCORE, true),
 	PrecacheSound(WTFBOOM, true),
-	RegServerCmd("fb_forcevictory", Command_ForceVictory, "FORCE victory - DO NOT TOUCH, WILL LIKELY MESS STUFF UP."),
+	RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client."),
 	RegServerCmd("fb_trainincoming", Command_TrainIncoming, "A train is incoming!"),
 	RegServerCmd("fb_atomicbmbrain", Command_AtomBmbRain, "Atom bombs are now raining from the sky!"),
 	RegServerCmd("fb_ohnoes", Command_OhNoes, "Oh noes, prepare your anus!"),
 	RegServerCmd("fb_meteorincoming", Command_MeteorIncoming, "Meteor incoming!"),
 	RegServerCmd("fb_meteorshower", Command_MeteorShower, "Meteor Shower incoming!"),
 	RegServerCmd("fb_prepareyourself", Command_DovahsAss, "You have chosen Dovah's Ass, prepare yourself..."),
-	RegServerCmd("fb_getwave", GetWave, "Get Current Wave"),
 	RegServerCmd("fb_codeentry", FBCodeEntry, "Code entry."),
 	RegServerCmd("fb_hydrogenup", Command_HydrogenUp, "Hydrogen available."),
 	RegServerCmd("fb_burgup", Command_WaveSevenBurgUp, "Wave seven - burg up!"),
@@ -167,11 +166,6 @@ public void OnPluginStart()
 	RegServerCmd("fb_foundburrito", Command_FoundBurrito, "Forbidden Burrito. Yum."),
 	RegServerCmd("fb_foundshroom", Command_FoundShroom, "What does this even do!?"),
 	RegServerCmd("fb_foundball", Command_FoundBall, "Incoming blue ball..."),
-	RegServerCmd("fb_tsplus1", Command_TSPlus1, "Tornado sacrifice -- plus one!"),
-	RegServerCmd("fb_dpsacplus1", Command_DPSacPlus1, "Death pit sacrifice -- plus one!"),
-	RegServerCmd("fb_ksacplus1", Command_KissoneSacPlus1, "KissoneTM sacrifice -- plus one!"),
-	RegServerCmd("fb_tankdest", Command_TankDestPlus1, "Tank destroyed! Plus one!");
-	RegServerCmd("fb_bresplus5", Command_BombResPlus5, "Bomb reset -- plus five!"),
 	RegServerCmd("fb_sbathsalts", Command_BathSaltsSacMinus10, "Bath salts, minus ten!"),
 	RegServerCmd("fb_sfatman", Command_FatManSacMinus20, "Fat man, minus twenty!"),
 	RegServerCmd("fb_sgoobbue", Command_GoobbueSacMinus30, "Goobbue, minus thirty!"),
@@ -182,9 +176,6 @@ public void OnPluginStart()
 	RegServerCmd("fb_snfo", Command_NFOSacMinus60, "Atomic bomb rain, minus sixty!"),
 	RegServerCmd("fb_smeteors", Command_MeteorsSacMinus70, "Meteors, minus seventy!"),
 	RegServerCmd("fb_sdovah", Command_DovahSacMinus100, "Professor Fartsalot, minus one hundred!"),
-	RegServerCmd("fb_prevwave", Command_JumpToPrevWave, "Jump to previous wave."),
-	RegServerCmd("fb_nextwave", Command_JumpToNextWave, "Jump to next wave."),
-	RegServerCmd("dovahsass_finished", Command_DovahsAssFinished, "DovahsAss has been completed!"),
 	RegServerCmd("fb_tacobell", Command_TacoBell, "Just why?"),
 	RegServerCmd("tacobell_wave01", Command_TBWave01,"Taco Bell - Wave One"),
 	RegServerCmd("tacobell_wave02", Command_TBWave02,"Taco Bell - Wave Two"),
@@ -1330,18 +1321,6 @@ public Action Command_FBSacStatus(int client, int args){
 	PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55The sacrificial points counter is currently at %i of %i maximum for this wave.", sacPoints, sacPointsMax);
 }
 
-//Force a victory, used by some entities in the map for quickly creating mass amounts of chaos.
-public Action Command_ForceVictory(int args)
-{
-	int flags = GetCommandFlags("tf_mvm_force_victory");
-	SetCommandFlags("tf_mvm_force_victory", flags & ~FCVAR_CHEAT);
-	ServerCommand("tf_mvm_force_victory 1");
-	FakeClientCommand(0, ""); //Not sure why, but this has to be here. Otherwise the specified commands simply refuse to work...
-	SetCommandFlags("tf_mvm_force_victory", flags|FCVAR_CHEAT);
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF VICTORY HAS BEEN FORCED! THE SERVER WILL RESTART IN 10 SECONDS.");
-	CreateTimer(10.0, Timer_RestartServer);
-}
-
 public Action Command_TrainIncoming(int args)
 {
 	PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07AA7000KISSONE'S TRAIN\x07FFFFFF is \x07AA0000INCOMING\x07FFFFFF. Look out!");
@@ -1372,245 +1351,8 @@ public Action Command_DovahsAss(int args)
 	PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000DOVAH'S ASS\x07FFFFFF v0x13. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
 }
 
-//Wave Three
-public Action Command_WaveThree(int args)
-{
-	bgmlock1 = true;
-	bgmlock2 = true;
-	bgmlock3 = false;
-	bgmlock4 = true;
-	bgmlock5 = true;
-	bgmlock6 = true;
-	bgmlock7 = true;
-	bgmlock8 = true;
-	canHWBoss = true;
-	canTornado = true;
-	HWNMax = 360.0;
-	isWave = true;
-	bombStatus = 7;
-	bombsPushed = 0;
-	bombStatusMax = 26;
-	sacPointsMax = 90;
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 3: Exponential Entropy");
-	StopCurSong();
-	EmitSoundToAll(BGM3, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
-	curSong = BGM3;
-	CreateTimer(166.85, RefireEntropy);
-	CreateTimer(1.0, BombStatusAddTimer);
-	CreateTimer(0.1, BombStatusUpdater);
-	CreateTimer(1.0, RobotLaunchTimer);
-	CreateTimer(1.0, SacrificePointsTimer);
-	CreateTimer(1.0, SacrificePointsUpdater);
-	CreateTimer(1.0, RefireStorm);
-	FireEntityInput("rain", "Alpha", "200", 0.0);
-	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
-	FireEntityInput("OldSpawn", "Enable", "", 0.0);
-	FireEntityInput("NewSpawn", "Disable", "", 0.0);
-	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-	ChooseBombPath();
-	ActivateTornadoTimer();
-	float f = GetRandomFloat(60.0, 180.0);
-	CreateTimer(f, UnlockTimer);
-	float hwn = GetRandomFloat(HWNMin, HWNMax);
-	CreateTimer(hwn, HWBosses);
-}
-//Wave Four
-public Action Command_WaveFour(int args)
-{
-	bgmlock1 = true;
-	bgmlock2 = true;
-	bgmlock3 = true;
-	bgmlock4 = false;
-	bgmlock5 = true;
-	bgmlock6 = true;
-	bgmlock7 = true;
-	bgmlock8 = true;
-	canHWBoss = true;
-	canTornado = true;
-	HWNMax = 360.0;
-	isWave = true;
-	bombStatus = 12;
-	bombsPushed = 1;
-	bombStatusMax = 34;
-	sacPointsMax = 90;
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 4: Torn From The Heavens");
-	StopCurSong();
-	EmitSoundToAll(BGM4, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
-	curSong = BGM4;
-	CreateTimer(122.25, RefireTorn);
-	CreateTimer(1.0, BombStatusAddTimer);
-	CreateTimer(0.1, BombStatusUpdater);
-	CreateTimer(1.0, RobotLaunchTimer);
-	CreateTimer(1.0, SacrificePointsTimer);
-	CreateTimer(1.0, SacrificePointsUpdater);
-	CreateTimer(1.0, RefireStorm);
-	FireEntityInput("rain", "Alpha", "200", 0.0);
-	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
-	FireEntityInput("OldSpawn", "Enable", "", 0.0);
-	FireEntityInput("NewSpawn", "Disable", "", 0.0);
-	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-	ChooseBombPath();
-	ActivateTornadoTimer();
-	float hwn = GetRandomFloat(HWNMin, HWNMax);
-	CreateTimer(hwn, HWBosses);
-}
-//Wave Five
-public Action Command_WaveFive(int args)
-{
-	bgmlock1 = true;
-	bgmlock2 = true;
-	bgmlock3 = true;
-	bgmlock4 = true;
-	bgmlock5 = false;
-	bgmlock6 = true;
-	bgmlock7 = true;
-	bgmlock8 = true;
-	canHWBoss = true;
-	canTornado = true;
-	HWNMax = 260.0;
-	HWNMin = 140.0;
-	isWave = true;
-	bombStatus = 14;
-	bombsPushed = 1;
-	bombStatusMax = 42;
-	sacPointsMax = 100;
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 5: Metal - Brute Justice Mode");
-	StopCurSong();
-	EmitSoundToAll(BGM5, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
-	curSong = BGM5;
-	CreateTimer(131.75, RefireBJMode);
-	CreateTimer(1.0, BombStatusAddTimer);
-	CreateTimer(0.1, BombStatusUpdater);
-	CreateTimer(1.0, RobotLaunchTimer);
-	CreateTimer(1.0, SacrificePointsTimer);
-	CreateTimer(1.0, SacrificePointsUpdater);
-	CreateTimer(1.0, RefireStorm);
-	FireEntityInput("rain", "Alpha", "200", 0.0);
-	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
-	FireEntityInput("OldSpawn", "Enable", "", 0.0);
-	FireEntityInput("NewSpawn", "Disable", "", 0.0);
-	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-	FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
-	ChooseBombPath();
-	ActivateTornadoTimer();
-	float f = GetRandomFloat(60.0, 180.0);
-	CreateTimer(f, UnlockTimer);
-	float hwn = GetRandomFloat(HWNMin, HWNMax);
-	CreateTimer(hwn, HWBosses);
-}
-//Wave Six
-public Action Command_WaveSix(int args)
-{
-	bgmlock1 = true;
-	bgmlock2 = true;
-	bgmlock3 = true;
-	bgmlock4 = true;
-	bgmlock5 = true;
-	bgmlock6 = false;
-	bgmlock7 = true;
-	bgmlock8 = true;
-	canHWBoss = true;
-	canTornado = true;
-	HWNMax = 260.0;
-	HWNMin = 140.0;
-	isWave = true;
-	bombStatus = 20;
-	bombsPushed = 2;
-	bombStatusMax = 50;
-	sacPointsMax = 100;
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 6: Grandma Destruction");
-	StopCurSong();
-	EmitSoundToAll(BGM6, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
-	curSong = BGM6;
-	CreateTimer(323.95, RefireGrandma);
-	CreateTimer(1.0, BombStatusAddTimer);
-	CreateTimer(0.1, BombStatusUpdater);
-	CreateTimer(1.0, RobotLaunchTimer);
-	CreateTimer(1.0, SacrificePointsTimer);
-	CreateTimer(1.0, SacrificePointsUpdater);
-	CreateTimer(1.0, RefireStorm);
-	FireEntityInput("rain", "Alpha", "200", 0.0);
-	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
-	FireEntityInput("OldSpawn", "Enable", "", 0.0);
-	FireEntityInput("NewSpawn", "Disable", "", 0.0);
-	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-	ChooseBombPath();
-	ActivateTornadoTimer();
-	float hwn = GetRandomFloat(HWNMin, HWNMax);
-	CreateTimer(hwn, HWBosses);
-}
-//Wave Seven
-public Action Command_WaveSeven(int args)
-{
-	bgmlock1 = true;
-	bgmlock2 = true;
-	bgmlock3 = true;
-	bgmlock4 = true;
-	bgmlock5 = true;
-	bgmlock6 = true;
-	bgmlock7 = false;
-	bgmlock8 = true;
-	canHWBoss = true;
-	canTornado = true;
-	HWNMax = 240.0;
-	HWNMin = 120.0;
-	isWave = true;
-	bombStatus = 28;
-	bombsPushed = 3;
-	bombStatusMax = 58;
-	sacPointsMax = 100;
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 7: Revenge Twofold");
-	StopCurSong();
-	EmitSoundToAll(BGM7, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
-	curSong = BGM7;
-	CreateTimer(133.25, RefireRevenge2F);
-	CreateTimer(1.0, BombStatusAddTimer);
-	CreateTimer(0.1, BombStatusUpdater);
-	CreateTimer(1.0, RobotLaunchTimer);
-	CreateTimer(1.0, SacrificePointsTimer);
-	CreateTimer(1.0, SacrificePointsUpdater);
-	CreateTimer(1.0, RefireStorm);
-	FireEntityInput("rain", "Alpha", "200", 0.0);
-	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
-	FireEntityInput("OldSpawn", "Enable", "", 0.0);
-	FireEntityInput("NewSpawn", "Disable", "", 0.0);
-	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-	FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
-	ChooseBombPath();
-	ActivateTornadoTimer();
-	float hwn = GetRandomFloat(HWNMin, HWNMax);
-	CreateTimer(hwn, HWBosses);
-}
+
+
 //Deprecated Functions that should be either reassigned or removed.
 public Action Command_HydrogenUp(int args)
 {
@@ -1620,53 +1362,6 @@ public Action Command_HydrogenUp(int args)
 public Action Command_WaveSevenBurgUp(int args)
 {
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has delivered Hydrogen! The \x07FF0000HINDENBURG \x0700AA55is now ready for flight!");
-}
-//Wave Eight
-public Action Command_WaveEight(int args)
-{
-	bgmlock1 = true;
-	bgmlock2 = true;
-	bgmlock3 = true;
-	bgmlock4 = true;
-	bgmlock5 = true;
-	bgmlock6 = true;
-	bgmlock7 = true;
-	bgmlock8 = false;
-	canHWBoss = true;
-	canTornado = true;
-	HWNMax = 240.0;
-	HWNMin = 120.0;
-	isWave = true;
-	bombStatus = 30;
-	bombsPushed = 3;
-	bombStatusMax = 66;
-	sacPointsMax = 100;
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 8: Under The Weight");
-	StopCurSong();
-	EmitSoundToAll(BGM8, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
-	curSong = BGM8;
-	CreateTimer(313.85, RefireUnderTW);
-	CreateTimer(1.0, BombStatusAddTimer);
-	CreateTimer(0.1, BombStatusUpdater);
-	CreateTimer(1.0, RobotLaunchTimer);
-	CreateTimer(1.0, SacrificePointsTimer);
-	CreateTimer(1.0, SacrificePointsUpdater);
-	CreateTimer(1.0, RefireStorm);
-	FireEntityInput("rain", "Alpha", "200", 0.0);
-	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
-	FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
-	FireEntityInput("OldSpawn", "Enable", "", 0.0);
-	FireEntityInput("NewSpawn", "Disable", "", 0.0);
-	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-	ChooseBombPath();
-	ActivateTornadoTimer();
-	float hwn = GetRandomFloat(HWNMin, HWNMax);
-	CreateTimer(hwn, HWBosses);
 }
 //Specials
 public Action Command_FoundGoob(int args)
@@ -1693,108 +1388,8 @@ public Action Command_FoundBall(int args)
 {
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55What on earth IS that? It appears to be a... \x075050FFBLUE BALL\x07FFFFFF!");
 }
-//Sacrifice Points Notifications
-public Action Command_TSPlus1(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Sacrificed a client into orbit. (\x0700FF00+1 pt\x07FFFFFF)");
-	sacPoints++;
-}
 
-public Action Command_DPSacPlus1(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Sent a client to their doom. (\x0700FF00+1 pt\x07FFFFFF)");
-	sacPoints++;
-}
 
-public Action Command_KissoneSacPlus1(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Dunked a client into liquid death. (\x0700FF00+1 pt\x07FFFFFF)");
-	sacPoints++;
-}
-
-public Action Command_TankDestPlus1(int args){
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A tank has been destroyed. (\x0700FF00+1 pt\x07FFFFFF)");
-	sacPoints++;
-}
-public Action Command_BombResPlus5(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Bomb has been reset. (\x0700FF00+5 pts\x07FFFFFF)");
-	sacPoints+=5;
-}
-
-public Action Command_BathSaltsSacMinus10(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF INSTANT BATH SALT DETONATION! (\x07FF0000-10 pts\x07FFFFFF)");
-	sacPoints = (sacPoints - 10);
-}
-
-public Action Command_FatManSacMinus20(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF INSTANT FAT MAN DETONATION! (\x07FF0000-20 pts\x07FFFFFF)");
-	sacPoints = (sacPoints - 20);
-}
-
-public Action Command_GoobbueSacMinus30(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF GOOBBUE COMING IN FROM ORBIT! (\x07FF0000-30 pts\x07FFFFFF)");
-	sacPoints = (sacPoints - 30);
-}
-
-public Action Command_BlueBallSacMinus30(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF BLUE KIRBY FALLING OUT OF THE SKY! (\x07FF0000-30 pts\x07FFFFFF)");
-	sacPoints = (sacPoints - 30);
-}
-
-public Action Command_GBoomSacMinus40(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF We're spending most our lives living in an EXPLOSIVE PARADISE! (\x07FF0000-40 pts\x07FFFFFF)");
-	sacPoints = (sacPoints - 40);
-}
-
-public Action Command_AssGasMinus40(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF NO NO NO, STOP THE SHARTS!!!! (\x07FF0000-40 pts\x07FFFFFF)");
-	sacPoints = (sacPoints - 40);
-}
-
-public Action Command_KirbyWardSacMinus50(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A PINK KIRBY HAS BANISHED TORNADOES FOR THIS WAVE! (\x07FF0000-50 pts\x07FFFFFF)");
-	KillTornado();
-	canTornado = false;
-	sacPoints = (sacPoints - 50);
-}
-
-public Action Command_NFOSacMinus60(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF TOTAL ATOMIC ANNIHILATION. (\x07FF0000-60 pts\x07FFFFFF)");
-	sacPoints = (sacPoints - 60);
-	canSENTNukes = true;
-	CreateTimer(1.0, SENTNukeTimer);
-	CreateTimer(30.0, DisableSENTNukes);
-}
-
-public Action Command_MeteorsSacMinus70(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF COSMIC DEVASTATION IMMINENT. (\x07FF0000-70 pts\x07FFFFFF)");
-	sacPoints = (sacPoints - 70);
-	canSENTMeteors = true;
-	CreateTimer(1.0, SENTMeteorTimer);
-	CreateTimer(30.0, DisableSENTMeteors);
-}
-
-public Action Command_DovahSacMinus100(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF NOW PRESENTING... PROFESSOR FARTSALOT OF THE HINDENBURG! (\x07FF0000-100 points\x07FFFFFF)");
-	sacPoints = (sacPoints - 100);
-}
-
-public Action Command_DovahsAssFinished(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF YOU HAVE SUCCESSFULLY COMPLETED DOVAH'S ASS ! THE SERVER WILL RESTART IN 10 SECONDS.");
-	CreateTimer(10.0, Timer_RestartServer);
-}
 
 //Taco Bell edition commands and features
 public Action Command_TacoBell(int args)
@@ -2129,6 +1724,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			FireEntityInput("FB.ShakeBOOM", "StopShake", "", 70.20),
 			FireEntityInput("CrusaderTrain", "Stop", "", 80.0),
 			FireEntityInput("FB.CRUSADER", "Disable", "", 80.0);
+			Command_Operator(99); //Jump to next wave
 		}
 
 		if ((damagebits & (1 << 10)) && !attacker) //DMG_ENERGYBEAM
@@ -2248,54 +1844,7 @@ public Action EventReset(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 	return Plugin_Handled;
 }
 
-//Used by various entities to jump us to the previous wave.
-public Action Command_JumpToPrevWave(int args)
-{
-	int ent = FindEntityByClassname(-1, "tf_objective_resource");
-	if(ent == -1)
-	{
-		LogMessage("tf_objective_resource not found");
-		return;
-	}
-
-	int current_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
-	int max_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineMaxWaveCount"));
-	int prev_wave = current_wave - 1;
-	if(prev_wave >= max_wave)
-    {
-		PrintToChatAll("\x07AA0000[ERROR] \x07FFFFFFHOW THE HELL DID WE GET HERE?!");
-		return;
-	}
-
-	if(prev_wave < 1)
-	{
-		PrintToChatAll("\x07AA0000[ERROR] \x07FFFFFFWE CAN'T JUMP TO WAVE 0, WHY WOULD YOU TRY THAT??");
-		return;
-	}
-	JumpToWave(prev_wave);
-}
-
-//Used by various entities to jump us to the next wave.
-public Action Command_JumpToNextWave(int args)
-{
-	int ent = FindEntityByClassname(-1, "tf_objective_resource");
-	if(ent == -1)
-	{
-		LogMessage("tf_objective_resource not found");
-		return;
-	}
-
-	int current_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
-	int max_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineMaxWaveCount"));
-	int next_wave = current_wave + 1;
-	if(next_wave > max_wave)
-    {
-		ServerCommand("fb_forcevictory");
-		return;
-	}
-	JumpToWave(next_wave);
-}
-
+//Waves
 public Action GetWave(int args){
 	int ent = FindEntityByClassname(-1, "tf_objective_resource");
 	if(ent == -1){
@@ -2386,27 +1935,282 @@ public Action GetWave(int args){
 			CreateTimer(hwn, HWBosses);
 		}
 		case 3:{
-			Command_WaveThree(0);
+			bgmlock1 = true;
+			bgmlock2 = true;
+			bgmlock3 = false;
+			bgmlock4 = true;
+			bgmlock5 = true;
+			bgmlock6 = true;
+			bgmlock7 = true;
+			bgmlock8 = true;
+			canHWBoss = true;
+			canTornado = true;
+			HWNMax = 360.0;
+			isWave = true;
+			bombStatus = 7;
+			bombsPushed = 0;
+			bombStatusMax = 26;
+			sacPointsMax = 90;
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 3: Exponential Entropy");
+			StopCurSong();
+			EmitSoundToAll(BGM3, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			curSong = BGM3;
+			CreateTimer(166.85, RefireEntropy);
+			CreateTimer(1.0, BombStatusAddTimer);
+			CreateTimer(0.1, BombStatusUpdater);
+			CreateTimer(1.0, RobotLaunchTimer);
+			CreateTimer(1.0, SacrificePointsTimer);
+			CreateTimer(1.0, SacrificePointsUpdater);
+			CreateTimer(1.0, RefireStorm);
+			FireEntityInput("rain", "Alpha", "200", 0.0);
+			FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
+			FireEntityInput("OldSpawn", "Enable", "", 0.0);
+			FireEntityInput("NewSpawn", "Disable", "", 0.0);
+			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			ChooseBombPath();
+			ActivateTornadoTimer();
+			float f = GetRandomFloat(60.0, 180.0);
+			CreateTimer(f, UnlockTimer);
+			float hwn = GetRandomFloat(HWNMin, HWNMax);
+			CreateTimer(hwn, HWBosses);
 		}
 		case 4:{
-			Command_WaveFour(0);
+			bgmlock1 = true;
+			bgmlock2 = true;
+			bgmlock3 = true;
+			bgmlock4 = false;
+			bgmlock5 = true;
+			bgmlock6 = true;
+			bgmlock7 = true;
+			bgmlock8 = true;
+			canHWBoss = true;
+			canTornado = true;
+			HWNMax = 360.0;
+			isWave = true;
+			bombStatus = 12;
+			bombsPushed = 1;
+			bombStatusMax = 34;
+			sacPointsMax = 90;
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 4: Torn From The Heavens");
+			StopCurSong();
+			EmitSoundToAll(BGM4, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			curSong = BGM4;
+			CreateTimer(122.25, RefireTorn);
+			CreateTimer(1.0, BombStatusAddTimer);
+			CreateTimer(0.1, BombStatusUpdater);
+			CreateTimer(1.0, RobotLaunchTimer);
+			CreateTimer(1.0, SacrificePointsTimer);
+			CreateTimer(1.0, SacrificePointsUpdater);
+			CreateTimer(1.0, RefireStorm);
+			FireEntityInput("rain", "Alpha", "200", 0.0);
+			FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
+			FireEntityInput("OldSpawn", "Enable", "", 0.0);
+			FireEntityInput("NewSpawn", "Disable", "", 0.0);
+			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			ChooseBombPath();
+			ActivateTornadoTimer();
+			float hwn = GetRandomFloat(HWNMin, HWNMax);
+			CreateTimer(hwn, HWBosses);
 		}
 		case 5:{
-			Command_WaveFive(0);
+			bgmlock1 = true;
+			bgmlock2 = true;
+			bgmlock3 = true;
+			bgmlock4 = true;
+			bgmlock5 = false;
+			bgmlock6 = true;
+			bgmlock7 = true;
+			bgmlock8 = true;
+			canHWBoss = true;
+			canTornado = true;
+			HWNMax = 260.0;
+			HWNMin = 140.0;
+			isWave = true;
+			bombStatus = 14;
+			bombsPushed = 1;
+			bombStatusMax = 42;
+			sacPointsMax = 100;
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 5: Metal - Brute Justice Mode");
+			StopCurSong();
+			EmitSoundToAll(BGM5, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			curSong = BGM5;
+			CreateTimer(131.75, RefireBJMode);
+			CreateTimer(1.0, BombStatusAddTimer);
+			CreateTimer(0.1, BombStatusUpdater);
+			CreateTimer(1.0, RobotLaunchTimer);
+			CreateTimer(1.0, SacrificePointsTimer);
+			CreateTimer(1.0, SacrificePointsUpdater);
+			CreateTimer(1.0, RefireStorm);
+			FireEntityInput("rain", "Alpha", "200", 0.0);
+			FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
+			FireEntityInput("OldSpawn", "Enable", "", 0.0);
+			FireEntityInput("NewSpawn", "Disable", "", 0.0);
+			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
+			ChooseBombPath();
+			ActivateTornadoTimer();
+			float f = GetRandomFloat(60.0, 180.0);
+			CreateTimer(f, UnlockTimer);
+			float hwn = GetRandomFloat(HWNMin, HWNMax);
+			CreateTimer(hwn, HWBosses);
 		}
 		case 6:{
-			Command_WaveSix(0);
+			bgmlock1 = true;
+			bgmlock2 = true;
+			bgmlock3 = true;
+			bgmlock4 = true;
+			bgmlock5 = true;
+			bgmlock6 = false;
+			bgmlock7 = true;
+			bgmlock8 = true;
+			canHWBoss = true;
+			canTornado = true;
+			HWNMax = 260.0;
+			HWNMin = 140.0;
+			isWave = true;
+			bombStatus = 20;
+			bombsPushed = 2;
+			bombStatusMax = 50;
+			sacPointsMax = 100;
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 6: Grandma Destruction");
+			StopCurSong();
+			EmitSoundToAll(BGM6, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			curSong = BGM6;
+			CreateTimer(323.95, RefireGrandma);
+			CreateTimer(1.0, BombStatusAddTimer);
+			CreateTimer(0.1, BombStatusUpdater);
+			CreateTimer(1.0, RobotLaunchTimer);
+			CreateTimer(1.0, SacrificePointsTimer);
+			CreateTimer(1.0, SacrificePointsUpdater);
+			CreateTimer(1.0, RefireStorm);
+			FireEntityInput("rain", "Alpha", "200", 0.0);
+			FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
+			FireEntityInput("OldSpawn", "Enable", "", 0.0);
+			FireEntityInput("NewSpawn", "Disable", "", 0.0);
+			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			ChooseBombPath();
+			ActivateTornadoTimer();
+			float hwn = GetRandomFloat(HWNMin, HWNMax);
+			CreateTimer(hwn, HWBosses);
 		}
 		case 7:{
-			Command_WaveSeven(0);
+			bgmlock1 = true;
+			bgmlock2 = true;
+			bgmlock3 = true;
+			bgmlock4 = true;
+			bgmlock5 = true;
+			bgmlock6 = true;
+			bgmlock7 = false;
+			bgmlock8 = true;
+			canHWBoss = true;
+			canTornado = true;
+			HWNMax = 240.0;
+			HWNMin = 120.0;
+			isWave = true;
+			bombStatus = 28;
+			bombsPushed = 3;
+			bombStatusMax = 58;
+			sacPointsMax = 100;
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 7: Revenge Twofold");
+			StopCurSong();
+			EmitSoundToAll(BGM7, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			curSong = BGM7;
+			CreateTimer(133.25, RefireRevenge2F);
+			CreateTimer(1.0, BombStatusAddTimer);
+			CreateTimer(0.1, BombStatusUpdater);
+			CreateTimer(1.0, RobotLaunchTimer);
+			CreateTimer(1.0, SacrificePointsTimer);
+			CreateTimer(1.0, SacrificePointsUpdater);
+			CreateTimer(1.0, RefireStorm);
+			FireEntityInput("rain", "Alpha", "200", 0.0);
+			FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
+			FireEntityInput("OldSpawn", "Enable", "", 0.0);
+			FireEntityInput("NewSpawn", "Disable", "", 0.0);
+			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
+			ChooseBombPath();
+			ActivateTornadoTimer();
+			float hwn = GetRandomFloat(HWNMin, HWNMax);
+			CreateTimer(hwn, HWBosses);
 		}
 		case 8:{
-			Command_WaveEight(0);
+			bgmlock1 = true;
+			bgmlock2 = true;
+			bgmlock3 = true;
+			bgmlock4 = true;
+			bgmlock5 = true;
+			bgmlock6 = true;
+			bgmlock7 = true;
+			bgmlock8 = false;
+			canHWBoss = true;
+			canTornado = true;
+			HWNMax = 240.0;
+			HWNMin = 120.0;
+			isWave = true;
+			bombStatus = 30;
+			bombsPushed = 3;
+			bombStatusMax = 66;
+			sacPointsMax = 100;
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 8: Under The Weight");
+			StopCurSong();
+			EmitSoundToAll(BGM8, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			curSong = BGM8;
+			CreateTimer(313.85, RefireUnderTW);
+			CreateTimer(1.0, BombStatusAddTimer);
+			CreateTimer(0.1, BombStatusUpdater);
+			CreateTimer(1.0, RobotLaunchTimer);
+			CreateTimer(1.0, SacrificePointsTimer);
+			CreateTimer(1.0, SacrificePointsUpdater);
+			CreateTimer(1.0, RefireStorm);
+			FireEntityInput("rain", "Alpha", "200", 0.0);
+			FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
+			FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
+			FireEntityInput("OldSpawn", "Enable", "", 0.0);
+			FireEntityInput("NewSpawn", "Disable", "", 0.0);
+			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
+			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			ChooseBombPath();
+			ActivateTornadoTimer();
+			float hwn = GetRandomFloat(HWNMin, HWNMax);
+			CreateTimer(hwn, HWBosses);
 		}
 	}
 	return;
 }
-
 //Jump to the wave.
 public Action JumpToWave(int wave_number)
 {
@@ -2510,34 +2314,170 @@ public Action ChooseBombPath(){
 //Code Entry logic from keypad
 public Action FBCodeEntry(int arg1){
 	switch (arg1){
-		case 1:{
-			CodeEntry++;
-		}
-		case 2:{
-			CodeEntry+=2;
-		}
-		case 3:{
-			CodeEntry+=3;
-		}
-		case 4:{
-			CodeEntry+=4;
-		}
-		case 5:{
-			CodeEntry+=5;
-		}
-		case 6:{
-			CodeEntry+=6;
-		}
-		case 7:{
-			CodeEntry+=7;
-		}
-		case 8:{
-			CodeEntry+=8;
-		}
-		case 9:{
-			CodeEntry+=9;
-		}
+
+	}
+}
+
+public Action Command_Operator(int arg1){
+	switch (arg1){
+		//When the wave is complete
 		case 0:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF YOU HAVE SUCCESSFULLY COMPLETED DOVAH'S ASS ! THE SERVER WILL RESTART IN 10 SECONDS.");
+			CreateTimer(10.0, Timer_RestartServer);
+		}
+		//Get current wave
+		case 1:{
+			GetWave(0);
+		}
+		//Tornado Sacrifice (+1)
+		case 10:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Sacrificed a client into orbit. (\x0700FF00+1 pt\x07FFFFFF)");
+			sacPoints++;
+			bombStatus++;
+		}
+		//Death pit sacrifice (+1)
+		case 11:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Sent a client to their doom. (\x0700FF00+1 pt\x07FFFFFF)");
+			sacPoints++;
+		}
+		//KissoneTM pit sacrifice (+1)
+		case 12:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Dunked a client into liquid death. (\x0700FF00+1 pt\x07FFFFFF)");
+			sacPoints++;
+		}
+		//Tank Destroyed (+1)
+		case 13:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A tank has been destroyed. (\x0700FF00+1 pt\x07FFFFFF)");
+			sacPoints++;
+		}
+		//Bomb Reset (+1)
+		case 14:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Bomb has been reset. (\x0700FF00+5 pts\x07FFFFFF)");
+			sacPoints+=5;
+		}
+		//Shark Enable
+		case 20:{
+			CreateTimer(3.0, SharkTimer);
+		}
+		//Shark Disable
+		case 21:{
+			canSENTShark = false;
+		}
+		//Bath Salts spend
+		case 30:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF INSTANT BATH SALT DETONATION! (\x07FF0000-10 pts\x07FFFFFF)");
+			sacPoints = (sacPoints - 10);
+		}
+		//Fat man spend
+		case 31:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF INSTANT FAT MAN DETONATION! (\x07FF0000-20 pts\x07FFFFFF)");
+			sacPoints = (sacPoints - 20);
+		}
+		//Goob/Kirb spend
+		case 32:{
+			int i = GetRandomInt(1,2);
+			switch (i){
+				case 1:{
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF GOOBBUE COMING IN FROM ORBIT! (\x07FF0000-30 pts\x07FFFFFF)");
+					sacPoints = (sacPoints - 30);
+				}
+			}
+		}
+		//Blue Ball spend
+		case 33:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF BLUE KIRBY FALLING OUT OF THE SKY! (\x07FF0000-30 pts\x07FFFFFF)");
+			sacPoints = (sacPoints - 30);
+		}
+		//Explosive paradise spend
+		case 34:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF We're spending most our lives living in an EXPLOSIVE PARADISE! (\x07FF0000-40 pts\x07FFFFFF)");
+			sacPoints = (sacPoints - 40);
+		}
+		//Ass Gas spend
+		case 35:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF NO NO NO, STOP THE SHARTS!!!! (\x07FF0000-40 pts\x07FFFFFF)");
+			sacPoints = (sacPoints - 40);
+		}
+		//Banish tornadoes for the wave
+		case 36:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A PINK KIRBY HAS BANISHED TORNADOES FOR THIS WAVE! (\x07FF0000-50 pts\x07FFFFFF)");
+			KillTornado();
+			canTornado = false;
+			sacPoints = (sacPoints - 50);
+		}
+		//Nuclear fallout spend
+		case 37:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF TOTAL ATOMIC ANNIHILATION. (\x07FF0000-60 pts\x07FFFFFF)");
+			sacPoints = (sacPoints - 60);
+			canSENTNukes = true;
+			CreateTimer(1.0, SENTNukeTimer);
+			CreateTimer(45.0, DisableSENTNukes);
+		}
+		//Meteor shower spend
+		case 38:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF COSMIC DEVASTATION IMMINENT. (\x07FF0000-70 pts\x07FFFFFF)");
+			sacPoints = (sacPoints - 70);
+			canSENTMeteors = true;
+			CreateTimer(1.0, SENTMeteorTimer);
+			CreateTimer(30.0, DisableSENTMeteors);
+		}
+		//Fartsy of the Seventh Taco Bell
+		case 39:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF NOW PRESENTING... PROFESSOR FARTSALOT OF THE SEVENTH TACO BELL! (\x07FF0000-100 points\x07FFFFFF)");
+			sacPoints = (sacPoints - 100);
+		}
+		//Prev wave
+		case 98:{
+			int ent = FindEntityByClassname(-1, "tf_objective_resource");
+			if(ent == -1)
+			{
+				LogMessage("tf_objective_resource not found");
+				return;
+			}
+
+			int current_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
+			int max_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineMaxWaveCount"));
+			int prev_wave = current_wave - 1;
+			if(prev_wave >= max_wave)
+			{
+				PrintToChatAll("\x07AA0000[ERROR] \x07FFFFFFHOW THE HELL DID WE GET HERE?!");
+				return;
+			}
+
+			if(prev_wave < 1)
+			{
+				PrintToChatAll("\x07AA0000[ERROR] \x07FFFFFFWE CAN'T JUMP TO WAVE 0, WHY WOULD YOU TRY THAT??");
+				return;
+			}
+			JumpToWave(prev_wave);
+		}
+		//Next wave
+		case 99:{
+			int ent = FindEntityByClassname(-1, "tf_objective_resource");
+			if(ent == -1)
+			{
+				LogMessage("tf_objective_resource not found");
+				return;
+			}
+
+			int current_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
+			int max_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineMaxWaveCount"));
+			int next_wave = current_wave + 1;
+			if(next_wave > max_wave)
+			{
+				int flags = GetCommandFlags("tf_mvm_force_victory");
+				SetCommandFlags("tf_mvm_force_victory", flags & ~FCVAR_CHEAT);
+				ServerCommand("tf_mvm_force_victory 1");
+				FakeClientCommand(0, ""); //Not sure why, but this has to be here. Otherwise the specified commands simply refuse to work...
+				SetCommandFlags("tf_mvm_force_victory", flags|FCVAR_CHEAT);
+				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF VICTORY HAS BEEN FORCED! THE SERVER WILL RESTART IN 10 SECONDS.");
+				CreateTimer(10.0, Timer_RestartServer);
+				return;
+			}
+			JumpToWave(next_wave);
+		}
+		//Code Entry from FC Keypad
+		case 100:{
 			if (CodeEntry == 17){
 				FireEntityInput("FB.BOOM", "StartShake", "", 0.0),
 				FireEntityInput("FB.CodeCorrect", "PlaySound", "", 0.0),
@@ -2551,6 +2491,33 @@ public Action FBCodeEntry(int arg1){
 				FireEntityInput("FB.CodeFailedKill", "Disable", "", 1.0),
 				FireEntityInput("FB.CodeFailedSND", "PlaySound", "", 0.0);
 			}
+		}
+		case 101:{
+			CodeEntry++;
+		}
+		case 102:{
+			CodeEntry+=2;
+		}
+		case 103:{
+			CodeEntry+=3;
+		}
+		case 104:{
+			CodeEntry+=4;
+		}
+		case 105:{
+			CodeEntry+=5;
+		}
+		case 106:{
+			CodeEntry+=6;
+		}
+		case 107:{
+			CodeEntry+=7;
+		}
+		case 108:{
+			CodeEntry+=8;
+		}
+		case 109:{
+			CodeEntry+=9;
 		}
 	}
 }
