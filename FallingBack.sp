@@ -97,7 +97,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.2.3",
+	version = "3.2.5",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -1561,7 +1561,7 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
 	bombStatus = 5;
 	bombsPushed = 0;
 	SelectBGM();
-	PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFWave set/reset success!");
+//	PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFWave set/reset success!");
 	FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
 	FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
 }
@@ -2050,8 +2050,7 @@ public Action Command_Operator(int args){
 	char arg1[16];
 	GetCmdArg(1, arg1, sizeof(arg1));
 	int i = StringToInt(arg1);
-	
-	PrintToChatAll("Calling on fb_operator because arg1 was %i, and was stored in memory position %i", i, arg1);
+//	PrintToChatAll("Calling on fb_operator because arg1 was %i, and was stored in memory position %i", i, arg1);
 	switch (i){
 		//When the map is complete
 		case 0:{
@@ -2170,6 +2169,7 @@ public Action Command_Operator(int args){
 					bombStatusMax = 64;
 					EmitSoundToAll(COUNTDOWN);
 				}
+				//Hydrogen
 				case 7:{
 					FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
 					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
@@ -2179,6 +2179,7 @@ public Action Command_Operator(int args){
 					FireEntityInput("FB.Fade", "Fade", "", 0.0),
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
 					BombPushed(30),
+					bombStatusMax = 8;
 					EmitSoundToAll(COUNTDOWN);
 				}
 				//Fartsy of the Seventh Taco Bell
@@ -2187,6 +2188,7 @@ public Action Command_Operator(int args){
 					FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
 					FireEntityInput("FB.Fade", "Fade", "", 0.0),
 					FireEntityInput("NukeAll", "Disable", "", 2.0),
+					bombStatusMax=64;
 					CreateTimer(5.0, NextWaveTimer);
 				}
 			}
