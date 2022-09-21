@@ -97,7 +97,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.2.9",
+	version = "3.3.2",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -865,7 +865,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("BombExploShark", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
 					EmitSoundToAll(TRIGGERSCORE),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000SHARK \x0700AA55is now available for deployment!");
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x0700FFFFSHARK \x0700AA55is now available for deployment!");
 				}
 				case 56:{
 					bombStatusMax = 56;
@@ -895,7 +895,7 @@ public Action BombStatusUpdater(Handle timer){
 		}
 		else if (bombStatus>bombStatusMax)
 		{
-			bombStatus = bombStatusMax;
+			bombStatus = bombStatusMax-4;
 		}
 		return Plugin_Continue;
 	}
@@ -1098,11 +1098,8 @@ public Action Command_GetCurrentSong(int client, int args){
 }
 
 //Handle the bomb push
-public Action BombPushed(int args){
-	char arg1[16];
-	GetCmdArg(1, arg1, sizeof(arg1));
-	int i = StringToInt(arg1);
-	switch (i){
+public Action BombPushed(int arg1){
+	switch (arg1){
 		case 5:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Small Bomb successfully pushed! (\x0700FF00+5 pts\x07FFFFFF)");
 			sacPoints+=5,
@@ -1157,9 +1154,9 @@ public Action Command_FBSacStatus(int client, int args){
 
 //Determine which bomb has been recently pushed and tell the client if a bomb is ready or not.
 public Action Command_FBBombStatus(int client, int args){
-	PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55The bomb status is currently %i", bombStatus);
+	PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55The bomb status is currently %i, with a max of %i", bombStatus, bombStatusMax);
 	//No bombs have yet been deployed nor have they been unlocked.
-	if (bombStatus <= 7){
+	if (bombStatus < 8){
 		PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Bombs are \x07FF0000NOT READY\x07FFFFFF!");
 	}
 	//Only execute if Freedom Bomb is available.
@@ -1496,7 +1493,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			FireEntityInput("FB.ShakeBOOM", "StopShake", "", 70.20),
 			FireEntityInput("CrusaderTrain", "Stop", "", 80.0),
 			FireEntityInput("FB.CRUSADER", "Disable", "", 80.0);
-			ServerCommand("fb_operator 99"); //Jump to next wave
+			CreateTimer(80.0, NextWaveTimer); //Jump to next wave
 		}
 
 		if ((damagebits & (1 << 10)) && !attacker) //DMG_ENERGYBEAM
@@ -1837,6 +1834,7 @@ public Action GetWave(int args){
 			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
 			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
 			FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
+			FireEntityInput("BruteJustice", "Trigger", "", 3.0);
 			ChooseBombPath();
 			ActivateTornadoTimer();
 			float f = GetRandomFloat(60.0, 180.0);
@@ -2206,7 +2204,6 @@ public Action Command_Operator(int args){
 					FireEntityInput("FB.Fade", "Fade", "", 0.0),
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
 					BombPushed(25),
-					bombStatusMax = 64;
 					EmitSoundToAll(COUNTDOWN);
 				}
 				//Hydrogen
@@ -2214,7 +2211,7 @@ public Action Command_Operator(int args){
 					FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
 					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
 					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
-					FireEntityInput("", "PlaySound", "", 0.0),
+					FireEntityInput("LargeExplosionSND", "PlaySound", "", 0.0),
 					FireEntityInput("NukeAll", "Enable", "", 0.0),
 					FireEntityInput("FB.Fade", "Fade", "", 0.0),
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
