@@ -97,7 +97,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.2.1",
+	version = "3.2.3",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -155,7 +155,6 @@ public void OnPluginStart()
 	PrecacheSound(WTFBOOM, true),
 	PrecacheSound("fartsy/fallingback/bgm.mp3", true),
 	RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client."),
-	RegServerCmd("fb_codeentry", FBCodeEntry, "Code entry."),
 	RegServerCmd("tacobell_wave01", Command_TBWave01,"Taco Bell - Wave One"),
 	RegServerCmd("tacobell_finished", Command_TacoBellFinished, "TacoBell has been completed!"),
 	RegConsoleCmd("sm_bombstatus", Command_FBBombStatus, "Check bomb status"),
@@ -175,7 +174,7 @@ public void OnMapStart()
 	FireEntityInput("BombStatus", "disable", "", 0.0),
 	SelectBGM();
 }
-
+//Select background music
 public Action SelectBGM()
 {
 	StopCurSong();
@@ -195,7 +194,7 @@ public Action SelectBGM()
 		}
 	}
 }
-
+//Stop current song
 public Action StopCurSong(){
 	for(int i=1;i<=MaxClients;i++)
     {
@@ -205,7 +204,6 @@ public Action StopCurSong(){
 }
 
 //Timers
-
 //BGM (Defaults)
 public Action RefireBGM(Handle timer)
 {
@@ -895,6 +893,10 @@ public Action BombStatusUpdater(Handle timer){
 				}
 			}
 		}
+		else if (bombStatus>bombStatusMax)
+		{
+			bombStatus = bombStatusMax;
+		}
 		return Plugin_Continue;
 	}
 	return Plugin_Stop;
@@ -926,7 +928,7 @@ public Action SacrificePointsUpdater(Handle timer){
 				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.1),
 				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.1);
 			}
-			case 30,31,32,33,34,35,36,37,383,39:{
+			case 30,31,32,33,34,35,36,37,38,39:{
 				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
 				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
 				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
@@ -1055,10 +1057,12 @@ public Action Command_GetCurrentSong(int client, int args){
 	return Plugin_Handled;
 }
 
-
-
-public Action BombPushed(int arg1){
-	switch (arg1){
+//Handle the bomb push
+public Action BombPushed(int args){
+	char arg1[16];
+	GetCmdArg(1, arg1, sizeof(arg1));
+	int i = StringToInt(arg1);
+	switch (i){
 		case 5:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Small Bomb successfully pushed! (\x0700FF00+5 pts\x07FFFFFF)");
 			sacPoints+=5,
@@ -2042,15 +2046,13 @@ public Action ChooseBombPath(){
 	}
 }
 
-//Code Entry logic from keypad
-public Action FBCodeEntry(int arg1){
-	switch (arg1){
-
-	}
-}
-
-public Action Command_Operator(int arg1){
-	switch (arg1){
+public Action Command_Operator(int args){
+	char arg1[16];
+	GetCmdArg(1, arg1, sizeof(arg1));
+	int i = StringToInt(arg1);
+	
+	PrintToChatAll("Calling on fb_operator because arg1 was %i, and was stored in memory position %i", i, arg1);
+	switch (i){
 		//When the map is complete
 		case 0:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF YOU HAVE SUCCESSFULLY COMPLETED DOVAH'S ASS ! THE SERVER WILL RESTART IN 10 SECONDS.");
@@ -2078,8 +2080,8 @@ public Action Command_Operator(int arg1){
 		//Tornado Sacrifice (+1)
 		case 10:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Sacrificed a client into orbit. (\x0700FF00+1 pt\x07FFFFFF)");
-			sacPoints++;
 			bombStatus++;
+			sacPoints++;
 		}
 		//Death pit sacrifice (+1)
 		case 11:{
@@ -2238,8 +2240,8 @@ public Action Command_Operator(int arg1){
 		}
 		//Goob/Kirb spend
 		case 32:{
-			int i = GetRandomInt(1, 2);
-			switch (i){
+			int x = GetRandomInt(1, 2);
+			switch (x){
 				case 1:{
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF GOOBBUE COMING IN FROM ORBIT! (\x07FF0000-30 pts\x07FFFFFF)");
 					sacPoints = (sacPoints - 30);
