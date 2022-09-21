@@ -67,7 +67,7 @@ char GLOBALTHUNDER05[32] = "fartsy/weather/thunder5.wav";
 char GLOBALTHUNDER06[32] = "fartsy/weather/thunder6.wav";
 char GLOBALTHUNDER07[32] = "fartsy/weather/thunder7.wav";
 char GLOBALTHUNDER08[32] = "fartsy/weather/thunder8.wav";
-char GOOBBUEINCOMING[32] = "vo/fartsy/goobbue.mp3"
+char GOOBBUEINCOMING[32] = "vo/fartsy/goobbue.mp3";
 char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
 char SHARKSND02[64] = "fartsy/memes/babyshark/baby02.mp3";
 char SHARKSND03[64] = "fartsy/memes/babyshark/doot01.mp3";
@@ -97,7 +97,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.1.4",
+	version = "3.2.0",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -154,57 +154,11 @@ public void OnPluginStart()
 	PrecacheSound(TRIGGERSCORE, true),
 	PrecacheSound(WTFBOOM, true),
 	RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client."),
-	RegServerCmd("fb_trainincoming", Command_TrainIncoming, "A train is incoming!"),
-	RegServerCmd("fb_atomicbmbrain", Command_AtomBmbRain, "Atom bombs are now raining from the sky!"),
-	RegServerCmd("fb_ohnoes", Command_OhNoes, "Oh noes, prepare your anus!"),
-	RegServerCmd("fb_meteorincoming", Command_MeteorIncoming, "Meteor incoming!"),
-	RegServerCmd("fb_meteorshower", Command_MeteorShower, "Meteor Shower incoming!"),
-	RegServerCmd("fb_prepareyourself", Command_DovahsAss, "You have chosen Dovah's Ass, prepare yourself..."),
 	RegServerCmd("fb_codeentry", FBCodeEntry, "Code entry."),
-	RegServerCmd("fb_hydrogenup", Command_HydrogenUp, "Hydrogen available."),
-	RegServerCmd("fb_burgup", Command_WaveSevenBurgUp, "Wave seven - burg up!"),
-	RegServerCmd("fb_foundgoob", Command_FoundGoob, "ALL HAIL GOOBBUE!"),
-	RegServerCmd("fb_foundwaffle", Command_FoundWaffle, "Why do they call it the waffle of mass destruction if it does nothing!?"),
-	RegServerCmd("fb_foundburrito", Command_FoundBurrito, "Forbidden Burrito. Yum."),
-	RegServerCmd("fb_foundshroom", Command_FoundShroom, "What does this even do!?"),
-	RegServerCmd("fb_foundball", Command_FoundBall, "Incoming blue ball..."),
-	RegServerCmd("fb_sbathsalts", Command_BathSaltsSacMinus10, "Bath salts, minus ten!"),
-	RegServerCmd("fb_sfatman", Command_FatManSacMinus20, "Fat man, minus twenty!"),
-	RegServerCmd("fb_sgoobbue", Command_GoobbueSacMinus30, "Goobbue, minus thirty!"),
-	RegServerCmd("fb_skirb", Command_BlueBallSacMinus30, "Blue ball, minus thirty!"),
-	RegServerCmd("fb_sgboom", Command_GBoomSacMinus40, "Explosive paradise, minus fourty!"),
-	RegServerCmd("fb_assgas", Command_AssGasMinus40, "Ass gas, minus fourty!"),
-	RegServerCmd("fb_skirbward", Command_KirbyWardSacMinus50, "KIRBY HAS BANISHED TORNADOES!"),
-	RegServerCmd("fb_snfo", Command_NFOSacMinus60, "Atomic bomb rain, minus sixty!"),
-	RegServerCmd("fb_smeteors", Command_MeteorsSacMinus70, "Meteors, minus seventy!"),
-	RegServerCmd("fb_sdovah", Command_DovahSacMinus100, "Professor Fartsalot, minus one hundred!"),
-	RegServerCmd("fb_tacobell", Command_TacoBell, "Just why?"),
 	RegServerCmd("tacobell_wave01", Command_TBWave01,"Taco Bell - Wave One"),
-	RegServerCmd("tacobell_wave02", Command_TBWave02,"Taco Bell - Wave Two"),
-	RegServerCmd("tacobell_wave03", Command_TBWave03,"Taco Bell - Wave Three"),
-	RegServerCmd("tacobell_wave04", Command_TBWave04,"Taco Bell - Wave Four"),
-	RegServerCmd("tacobell_wave05", Command_TBWave05,"Taco Bell - Wave Five"),
-	RegServerCmd("tacobell_wave06", Command_TBWave06,"Taco Bell - Wave Six"),
-	RegServerCmd("tacobell_wave07", Command_TBWave07,"Taco Bell - Wave Seven"),
-	RegServerCmd("tacobell_wave08", Command_TBWave08,"Taco Bell - Wave Eight"),
-	RegServerCmd("tacobell_wave09", Command_TBWave09,"Taco Bell - Wave Nine"),
-	RegServerCmd("tacobell_wave10", Command_TBWave10,"Taco Bell - Wave Ten"),
-	RegServerCmd("tacobell_wave11", Command_TBWave11,"Taco Bell - Wave Eleven"),
-	RegServerCmd("tacobell_wave12", Command_TBWave12,"Taco Bell - Wave Twelve"),
-	RegServerCmd("tacobell_wave13", Command_TBWave13,"Taco Bell - Wave Thirteen"),
-	RegServerCmd("tacobell_wave14", Command_TBWave14,"Taco Bell - Wave Fourteen"),
-	RegServerCmd("tacobell_wave15", Command_TBWave15,"Taco Bell - Wave Fifteen"),
-	RegServerCmd("tacobell_wave16", Command_TBWave16,"Taco Bell - Wave Sixteen"),
-	RegServerCmd("tacobell_wave17", Command_TBWave17,"Taco Bell - Wave Seventeen"),
-	RegServerCmd("tacobell_wave18", Command_TBWave18,"Taco Bell - Wave Eighteen"),
-	RegServerCmd("tacobell_wave19", Command_TBWave19,"Taco Bell - Wave Nineteen"),
-	RegServerCmd("tacobell_wave20", Command_TBWave20,"Taco Bell - Wave Twenty"),
-	RegServerCmd("tacobell_wave21", Command_TBWave21,"Taco Bell - Wave Twenty-One"),
 	RegServerCmd("tacobell_finished", Command_TacoBellFinished, "TacoBell has been completed!"),
 	RegConsoleCmd("sm_bombstatus", Command_FBBombStatus, "Check bomb status"),
 	RegConsoleCmd("sm_sacstatus", Command_FBSacStatus, "Check sacrifice points status"),
-	RegServerCmd("fb_forcetornado", Command_ForceTornado, "Force Tornado"),
-	RegServerCmd("fb_deploy", Command_Deploy, "Deploy an active bomb - do not touch, will break something."),
 	RegConsoleCmd("sm_song", Command_GetCurrentSong, "Get current song name"),
 	HookEvent("player_death", EventDeath),
 	HookEvent("server_cvar", Event_Cvar, EventHookMode_Pre),
@@ -550,7 +504,7 @@ public Action KillTornado(){
 		FireEntityInput("tornadof1wind", "Disable", "", 0.0),
 		FireEntityInput("tornadowindf1", "StopSound", "", 0.0),
 		FireEntityInput("shaketriggerf1", "Disable", "", 0.0),
-		FireEntityInput("tornadobutton", "Unlock", "", 20.0);
+		FireEntityInput("tornadobutton", "Unlock", "", 30.0);
 		tornado = false;
 	}
 	return Plugin_Stop;
@@ -822,7 +776,7 @@ public Action BombStatusAddTimer(Handle timer){
 		PrintToServer("[DEBUG] Creating a %f timer to give bomb status an update. Current target is %i", f, bombStatus);
 		CreateTimer(f, BombStatusAddTimer);
 		//Loop back from the start with Freedom Bomb. This time, enable special stuff.
-		if (bombsPushed >= 7){
+		if (bombsPushed >= 8){
 			bombsPushed = 0;
 			bombCache = 0;
 			bombStatus = 0;
@@ -925,6 +879,18 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
 					EmitSoundToAll(TRIGGERSCORE),
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000FAT MAN \x0700AA55is now available for deployment!");
+				}
+				case 64:{
+					bombStatusMax = 64;
+					bombCache = 0;
+					explodeType = 7;
+					canSENTShark = false;
+					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("BombExplo*", "Disable", "", 0.0),
+					FireEntityInput("Bombs.Hydrogen", "Enable", "", 0.0),
+					FireEntityInput("Delivery", "Unlock", "", 0.0),
+					EmitSoundToAll(TRIGGERSCORE),
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000HYDROGEN \x0700AA55is now available for deployment!");
 				}
 			}
 		}
@@ -1128,20 +1094,20 @@ public Action BombPushed(int arg1){
 			bombCache = 1,
 			CreateTimer(3.0, BombStatusAddTimer);
 		}
+		case 30:{
+			bombsPushed++;
+			bombCache = 1;
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07AA0000 HINDENBURG\x07FFFFFF successfully fueled! (\x0700FF00+30 pts\x07FFFFFF)");
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has delivered Hydrogen! The \x07FF0000HINDENBURG \x0700AA55is now ready for flight!");
+			FireEntityInput("DeliveryBurg", "Unlock", "", 0.0);
+		}
 	}
 	return Plugin_Handled;
 }
 
-//Force Tornado
-public Action Command_ForceTornado(int args){
-	if(isWave && canTornado && !tornado){
-		CreateTimer(0.1, SpawnTornado);
-		PrintCenterTextAll("OH NOES... PREPARE YOUR ANUS!");
-	}
-	else{
-		PrintToServer("Error spawning manual tornado... Perhaps we are not in a wave, tornadoes are banished, or a tornado has already spawned???");
-	}
-	return Plugin_Handled;
+//Tell the client the current sacrifice points earned.
+public Action Command_FBSacStatus(int client, int args){
+	PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55The sacrificial points counter is currently at %i of %i maximum for this wave.", sacPoints, sacPointsMax);
 }
 
 //Determine which bomb has been recently pushed and tell the client if a bomb is ready or not.
@@ -1237,185 +1203,31 @@ public Action Command_FBBombStatus(int client, int args){
 	else if (bombStatus >= 56 && bombStatus < 64){
 		//If we've pushed the Freedom Bomb, Elon Bust, Bath Salts, Falling Star, Major Kong, and Shark and the next bomb IS ready.
 		if (bombsPushed == 6 && bombCache == 0){
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFSHARK \x0700AA55. Your team's \x07FF0000FAT MAN \x0700AA55is available for deployment!");
+			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFSHARK \x0700AA55. Your team's \x07FF0000FAT MAN \x0700AA55is available for deployment!");
 		}
 		else if (bombsPushed == 7 && bombCache == 1){
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFAT MAN \x0700AA55. Bombs are automatically reset to preserve the replayable aspect of this game mode.");
+			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFAT MAN \x0700AA55. Please wait for the next bomb.");
 		}
 	}
 	//Only execute if I add another bomb or system for this...
 	else if (bombStatus >= 64 && bombStatus < 72){
-		PrintToChatAll("wowie you exceeded the legal value of this script!");
+		//If we've pushed the Freedom Bomb, Elon Bust, Bath Salts, Falling Star, Major Kong, Shark, Fat Man, and the next bomb IS ready.
+		if (bombsPushed == 7 && bombCache == 0){
+			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FF0000 FAT MAN \x0700AA55. Your team's \x07FFFF00HYDROGEN \x0700AA55is available for deployment!");
+		}
+		else if (bombsPushed == 8 && bombCache == 1){
+			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFHYDROGEN\x0700AA55. Bombs are automatically reset to preserve the replayable aspect of this game mode.");
+		}
+	}
+	else{
+		PrintToChatAll("Something exceeded a maximum value!!! Apparently the bomb status is %i, with %i bombs pushed and a maximum status of %i.", bombStatus, bombsPushed, bombStatusMax);
 	}
 	return Plugin_Handled;
 }
-
-//Tell the client the current sacrifice points earned.
-public Action Command_FBSacStatus(int client, int args){
-	PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55The sacrificial points counter is currently at %i of %i maximum for this wave.", sacPoints, sacPointsMax);
-}
-
-public Action Command_TrainIncoming(int args)
-{
-	PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07AA7000KISSONE'S TRAIN\x07FFFFFF is \x07AA0000INCOMING\x07FFFFFF. Look out!");
-}
-
-public Action Command_AtomBmbRain(int args)
-{
-	PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07FFFFFFUh oh, it's begun to rain \x07AA0000ATOM BOMBS\x07FFFFFF! TAKE COVER!");
-}
-
-public Action Command_OhNoes(int args)
-{
-	PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07FFFFFFOh noes, prepare your anus! A \x07AA0000TORNADO WARNING\x07FFFFFF has been issued! TAKE COVER NOW!!!");
-}
-
-public Action Command_MeteorIncoming(int args)
-{
-	PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07FFFFFFUh oh, a \x07AA0000METEOR\x07FFFFFF has been spotted coming towards Dovah's Ass!!!");
-}
-
-public Action Command_MeteorShower(int args)
-{
-	PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07FFFFFFUh oh, a \x07AA0000METEOR SHOWER\x07FFFFFF has been reported from Dovah's Ass!!!");
-}
-
-//Deprecated Functions that should be either reassigned or removed.
-public Action Command_HydrogenUp(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000HYDROGEN \x0700AA55is now available for deployment!");
-}
-
-public Action Command_WaveSevenBurgUp(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has delivered Hydrogen! The \x07FF0000HINDENBURG \x0700AA55is now ready for flight!");
-}
-
-
-public Action Command_FoundWaffle(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Oh no, someone has found and (probably) consumed a \x07FF0000WAFFLE OF MASS DESTRUCTION\x07FFFFFF!");
-}
-
-public Action Command_FoundBurrito(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Why would you even eat \x07FF0000The Forbidden Burrito\x07FFFFFF?");
-}
-
-public Action Command_FoundShroom(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Welp, someone is playing \x0700FF00Mario\x07FFFFFF...");
-}
-
-//Taco Bell edition commands and features
-public Action Command_TacoBell(int args)
-{
-	PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07FFFFFFYou have chosen \x07AA0000DOVAH'S ASS - TACO BELL EDITION\x07FFFFFF. Why... Why would you DO THIS?! Do you not realize what you've just done?????");
-}
-
+//Deprecated
 public Action Command_TBWave01(int args)
 {
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 01: Battle On The Big Bridge");
-}
-
-public Action Command_TBWave02(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 02: Locus");
-}
-
-public Action Command_TBWave03(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 03: Metal");
-}
-
-public Action Command_TBWave04(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 04: Torn From The Heavens");
-}
-
-public Action Command_TBWave05(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 05: Exponential Entropy");
-}
-
-public Action Command_TBWave06(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 06: Grandma Destruction");
-}
-
-public Action Command_TBWave07(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 07: Rise");
-}
-
-public Action Command_TBWave08(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 08: Metal - Brute Justice Mode");
-}
-
-public Action Command_TBWave09(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 09: Locus");
-}
-
-public Action Command_TBWave10(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 10: Exponential Entropy");
-}
-
-public Action Command_TBWave11(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 11: Revenge Twofold");
-}
-
-public Action Command_TBWave12(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 12: Metal");
-}
-
-public Action Command_TBWave13(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 13: Grandma Destruction");
-}
-
-public Action Command_TBWave14(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 14: Under The Weight");
-}
-
-public Action Command_TBWave15(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 15: Metal - Brute Justice Mode");
-}
-
-public Action Command_TBWave16(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 16: Exponential Entropy");
-}
-
-public Action Command_TBWave17(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 17: Locus");
-}
-
-public Action Command_TBWave18(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 18: Torn From The Heavens");
-}
-
-public Action Command_TBWave19(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 19: Metal");
-}
-
-public Action Command_TBWave20(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 20: Grandma Destruction");
-}
-
-public Action Command_TBWave21(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 21: Battle on the Big Bridge");
 }
 
 public Action Command_TacoBellFinished(int args)
@@ -1486,8 +1298,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 				}
 				case 11:{
 					EmitSoundToAll(FALLSND0B),
-					FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 0.0),
-					Command_FoundBall(0);
+					FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 0.0);
 				}
 				case 12:{
 					EmitSoundToAll(FALLSND0C);
@@ -1524,7 +1335,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			switch(i){
 				case 1,3,10:{
 					FireEntityInput("BG.Meteorites1", "ForceSpawn", "", 0.0),
-					Command_MeteorIncoming(0),
+						PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07FFFFFFUh oh, a \x07AA0000METEOR\x07FFFFFF has been spotted coming towards Dovah's Ass!!!"),
 					FireEntityInput("bg.meteorite1", "StartForward", "", 0.1);
 				}
 				case 2,5,16:{
@@ -1539,7 +1350,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 					FireEntityInput("TrainSND", "PlaySound", "", 0.0),
 					FireEntityInput("TrainDamage", "Enable", "", 0.0),
 					FireEntityInput("Train01", "Enable", "", 0.0),
-					Command_TrainIncoming(0),
+					PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07AA7000KISSONE'S TRAIN\x07FFFFFF is \x07AA0000INCOMING\x07FFFFFF. Look out!"),
 					FireEntityInput("TrainTrain", "TeleportToPathTrack", "TrainTrack01", 0.0),
 					FireEntityInput("TrainTrain", "StartForward", "", 0.1);
 				}
@@ -1548,7 +1359,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 					CreateTimer(1.0, SpawnTornado);
 				}
 				case 7,13:{
-					Command_MeteorShower(0),
+					PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07FFFFFFUh oh, a \x07AA0000METEOR SHOWER\x07FFFFFF has been reported from Dovah's Ass!!!");
 					canSENTMeteors = true,
 					CreateTimer(1.0, SENTMeteorTimer),
 					CreateTimer(30.0, DisableSENTMeteors);
@@ -1559,7 +1370,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 					FireEntityInput("FB.Slice", "Disable", "", 1.0);
 				}
 				case 12,15:{
-					Command_AtomBmbRain(0),
+					PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07FFFFFFUh oh, it's begun to rain \x07AA0000ATOM BOMBS\x07FFFFFF! TAKE COVER!"),
 					canSENTNukes = true,
 					CreateTimer(1.0, SENTNukeTimer),
 					CreateTimer(30.0, DisableSENTNukes);
@@ -2239,7 +2050,7 @@ public Action FBCodeEntry(int arg1){
 
 public Action Command_Operator(int arg1){
 	switch (arg1){
-		//When the wave is complete
+		//When the map is complete
 		case 0:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF YOU HAVE SUCCESSFULLY COMPLETED DOVAH'S ASS ! THE SERVER WILL RESTART IN 10 SECONDS.");
 			CreateTimer(10.0, Timer_RestartServer);
@@ -2251,6 +2062,17 @@ public Action Command_Operator(int arg1){
 		//Prepare yourself!
 		case 2:{
 			PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000DOVAH'S ASS\x07FFFFFF v0x13. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
+		}
+		//Force Tornado
+		case 3:{
+			if(isWave && canTornado && !tornado){
+				CreateTimer(0.1, SpawnTornado);
+				PrintCenterTextAll("OH NOES... PREPARE YOUR ANUS!");
+			}
+			else{
+				PrintToServer("Error spawning manual tornado... Perhaps we are not in a wave, tornadoes are banished, or a tornado has already spawned???");
+			}
+			return Plugin_Handled;
 		}
 		//Tornado Sacrifice (+1)
 		case 10:{
@@ -2342,12 +2164,24 @@ public Action Command_Operator(int arg1){
 					FireEntityInput("FB.Fade", "Fade", "", 0.0),
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
 					BombPushed(25),
+					bombStatusMax = 64;
+					EmitSoundToAll(COUNTDOWN);
+				}
+				case 7:{
+					FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
+					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
+					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
+					FireEntityInput("", "PlaySound", "", 0.0),
+					FireEntityInput("NukeAll", "Enable", "", 0.0),
+					FireEntityInput("FB.Fade", "Fade", "", 0.0),
+					FireEntityInput("NukeAll", "Disable", "", 3.0),
+					BombPushed(30),
 					EmitSoundToAll(COUNTDOWN);
 				}
 				//Fartsy of the Seventh Taco Bell
-				case 7:{
+				case 69:{
 					FireEntityInput("NukeAll", "Enable", "", 0.0),
-					FireEntityInput("HindenburgBoom", "PlaySound", 0.0),
+					FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
 					FireEntityInput("FB.Fade", "Fade", "", 0.0),
 					FireEntityInput("NukeAll", "Disable", "", 2.0),
 					CreateTimer(5.0, NextWaveTimer);
@@ -2362,6 +2196,21 @@ public Action Command_Operator(int arg1){
 		//Shark Disable
 		case 21:{
 			canSENTShark = false;
+		}
+		//HINDENBOOM!!!
+		case 29:{
+			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF OH GOD, THEY'RE \x07AA0000CRASHING THE HINDENBURG\x07FFFFFF!!!");
+			FireEntityInput("HindenburgInc2", "PlaySound", "", 5.0);
+			FireEntityInput("LargeExplosion", "Explode", "", 7.0);
+			FireEntityInput("LargeExploShake", "StartShake", "", 7.0);
+			FireEntityInput("NukeAll", "Enable", "", 7.0);
+			FireEntityInput("HindenburgBoom", "PlaySound", "", 7.0);
+			FireEntityInput("FB.Fade", "Fade", "", 7.0);
+			FireEntityInput("NukeAll", "Disable", "", 9.0);
+			FireEntityInput("Bombs.TheHindenburg", "Disable", "", 0.0);
+			FireEntityInput("HindenTrain", "TeleportToPathTrack", "Hinden01", 7.0);
+			FireEntityInput("HindenTrain", "Stop", "", 7.0);
+			bombStatusMax = 8;
 		}
 		//Bath Salts spend
 		case 30:{
@@ -2442,7 +2291,7 @@ public Action Command_Operator(int arg1){
 		case 38:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF NOW PRESENTING... PROFESSOR FARTSALOT OF THE SEVENTH TACO BELL! (\x07FF0000-100 points\x07FFFFFF)");
 			sacPoints = (sacPoints - 100);
-			explodeType = 7;
+			explodeType = 69;
 			FireEntityInput("Delivery", "Unlock", "", 0.0),
 			FireEntityInput("BombExplo*", "Disable", "", 0.0),
 			FireEntityInput("Bombs.*", "Disable", "", 0.0),
@@ -2451,13 +2300,28 @@ public Action Command_Operator(int arg1){
 		//Found blue ball
 		case 40:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55What on earth IS that? It appears to be a... \x075050FFBLUE BALL\x07FFFFFF!");
+			EmitSoundToAll(FALLSND0B);
+			FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 4.0);
+			FireEntityInput("HindenburgInc2", "PlaySound", "", 4.0);
+		}
+		//Found burrito
+		case 41:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Why would you even eat \x07FF0000The Forbidden Burrito\x07FFFFFF?");
 		}
 		//Found goobbue
-		case 41:{
+		case 42:{
 			EmitSoundToAll(GOOBBUEINCOMING);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55ALL HAIL \x07FF00FFGOOBBUE\x0700AA55!");
 			FireEntityInput("HindenburgInc2", "PlaySound", "", 1.5);
 			FireEntityInput("FB.GiantGoobTemplate", "ForceSpawn", "", 3.0);
+		}
+		//Found Mario
+		case 43:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Welp, someone is playing \x0700FF00Mario\x07FFFFFF...");
+		}
+		//Found Waffle
+		case 44:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Oh no, someone has found and (probably) consumed a \x07FF0000WAFFLE OF MASS DESTRUCTION\x07FFFFFF!");
 		}
 		//Prev wave
 		case 98:{
@@ -2465,7 +2329,7 @@ public Action Command_Operator(int arg1){
 			if(ent == -1)
 			{
 				LogMessage("tf_objective_resource not found");
-				return;
+				return Plugin_Handled;
 			}
 
 			int current_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
@@ -2474,13 +2338,13 @@ public Action Command_Operator(int arg1){
 			if(prev_wave >= max_wave)
 			{
 				PrintToChatAll("\x07AA0000[ERROR] \x07FFFFFFHOW THE HELL DID WE GET HERE?!");
-				return;
+				return Plugin_Handled;
 			}
 
 			if(prev_wave < 1)
 			{
 				PrintToChatAll("\x07AA0000[ERROR] \x07FFFFFFWE CAN'T JUMP TO WAVE 0, WHY WOULD YOU TRY THAT??");
-				return;
+				return Plugin_Handled;
 			}
 			JumpToWave(prev_wave);
 		}
@@ -2490,7 +2354,7 @@ public Action Command_Operator(int arg1){
 			if(ent == -1)
 			{
 				LogMessage("tf_objective_resource not found");
-				return;
+				return Plugin_Handled;
 			}
 
 			int current_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
@@ -2505,7 +2369,7 @@ public Action Command_Operator(int arg1){
 				SetCommandFlags("tf_mvm_force_victory", flags|FCVAR_CHEAT);
 				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF VICTORY HAS BEEN FORCED! THE SERVER WILL RESTART IN 10 SECONDS.");
 				CreateTimer(10.0, Timer_RestartServer);
-				return;
+				return Plugin_Handled;
 			}
 			JumpToWave(next_wave);
 		}
@@ -2552,5 +2416,18 @@ public Action Command_Operator(int arg1){
 		case 109:{
 			CodeEntry+=9;
 		}
+		//Taco Bell Edition
+		case 210:{
+			PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07FFFFFFYou have chosen \x07AA0000DOVAH'S ASS - TACO BELL EDITION\x07FFFFFF. Why... Why would you DO THIS?! Do you not realize what you've just done?????");
+		}
+		case 211:{
+			//GetTacoBellWave(0);
+			PrintToChatAll("WARNING, THIS IS NOT IMPLEMENTED YET. PLEASE DO NOT PLAY TACO BELL EDITION AT THIS POINT IN TIME.");
+		}
+		case 255:{
+			PrintToChatAll("WOWIE YOU DID IT! The server will restart in 30 seconds, prepare to do it again! LULW");
+			CreateTimer(30.0, Timer_RestartServer);
+		}
 	}
+	return Plugin_Handled;
 }
