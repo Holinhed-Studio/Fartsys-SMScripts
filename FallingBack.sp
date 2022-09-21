@@ -97,7 +97,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.2.8",
+	version = "3.2.9",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -2256,6 +2256,7 @@ public Action Command_Operator(int args){
 			FireEntityInput("Bombs.TheHindenburg", "Disable", "", 0.0);
 			FireEntityInput("HindenTrain", "TeleportToPathTrack", "Hinden01", 7.0);
 			FireEntityInput("HindenTrain", "Stop", "", 7.0);
+			CreateTimer(7.0, NextWaveTimer);
 			bombStatusMax = 8;
 		}
 		//Bath Salts spend
