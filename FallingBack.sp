@@ -2420,10 +2420,12 @@ public Action Command_Operator(int arg1){
 		case 210:{
 			PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07FFFFFFYou have chosen \x07AA0000DOVAH'S ASS - TACO BELL EDITION\x07FFFFFF. Why... Why would you DO THIS?! Do you not realize what you've just done?????");
 		}
+		//Taco Bell GetWave
 		case 211:{
 			//GetTacoBellWave(0);
 			PrintToChatAll("WARNING, THIS IS NOT IMPLEMENTED YET. PLEASE DO NOT PLAY TACO BELL EDITION AT THIS POINT IN TIME.");
 		}
+		//Taco Bell Victory
 		case 255:{
 			PrintToChatAll("WOWIE YOU DID IT! The server will restart in 30 seconds, prepare to do it again! LULW");
 			CreateTimer(30.0, Timer_RestartServer);
