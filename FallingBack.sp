@@ -95,7 +95,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.3.3",
+	version = "3.3.4",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -176,6 +176,7 @@ public void OnMapStart()
 public Action SelectBGM()
 {
 	StopCurSong();
+	CreateTimer(1.0, PerformAdverts);
 	int BGM = GetRandomInt(1, 2);
 	switch(BGM){
 		case 1:{
@@ -202,6 +203,30 @@ public Action StopCurSong(){
 }
 
 //Timers
+//Adverts for tips/tricks
+public Action PerformAdverts(Handle timer){
+	if (!isWave){
+		int i = GetRandomInt(1, 5);
+		switch (i){
+			case 1:{
+				PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF We have a Discord server: \x0700AA00https://discord.com/invite/SkHaeMH");
+			}
+			case 2:{
+				PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF Remember to buy your upgrades using \x0700AA00!buy");
+			}
+			case 3:{
+				PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF If this is your first time here, please run console command \x0700AA00snd_restart \x07FFFFFFfor safety. Otherwise, you might \x07FF0000crash\x07FFFFFF!");
+			}
+			case 4:{
+				PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF Advanced users may quick buy upgrades using \x0700AA00!qbuy");
+			}
+			case 5:{
+				PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF Don't forget to buy \x0700AA00protection upgrades\x07FFFFFF and \x0700AA00ammo regen\x07FFFFFF (if applicable)!");
+			}
+		}
+	}
+	return Plugin_Stop;
+}
 //BGM (Defaults)
 public Action RefireBGM(Handle timer)
 {
