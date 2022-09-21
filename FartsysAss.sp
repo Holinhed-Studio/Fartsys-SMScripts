@@ -92,10 +92,10 @@ int sacPointsMax = 60;
 int SNDCHAN = 6;
 public Plugin myinfo =
 {
-	name = "Dovah's Ass - Framework",
+	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
-	description = "Framework for Dovah's Ass",
-	version = "3.3.5",
+	description = "Framework for Fartsy's Ass (MvM Mods)",
+	version = "3.3.6",
 	url = "https://forums.firehostredux.com"
 };
 
