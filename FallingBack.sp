@@ -97,7 +97,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.2.5",
+	version = "3.2.8",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -915,94 +915,134 @@ public Action SacrificePointsUpdater(Handle timer){
 				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
 			}
 			case 10,11,12,13,14,15,16,17,18,19:{
-				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
 			}
 			case 20,21,22,23,24,25,26,27,28,29:{
-				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.1);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
 			}
 			case 30,31,32,33,34,35,36,37,38,39:{
-				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.1);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
 			}
 			case 40,41,42,43,44,45,46,47,48,49:{
-				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.1);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
 			}
 			case 50,51,52,53,54,55,56,57,58,59:{
-				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.1);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
 			}
 			case 60,61,62,63,64,65,66,67,68,69:{
-				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.01),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial06", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial06", "Color", "0 255 0", 0.1);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Color", "0", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
 			}
 			case 70,71,72,73,74,75,76,77,78,79:{
-				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial06", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial06", "Color", "0 255 0", 0.1),
-				FireEntityInput("BTN.Sacrificial07", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial07", "Color", "0 255 0", 0.1);
+				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial06", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial07", "Color", "0 255 0", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
 			}
 			case 100:{
-				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial0*", "Unlock", "", 0.1),
-				FireEntityInput("BTN.Sacrificial0*", "Color", "0 255 0", 0.1);
+				FireEntityInput("BTN.Sacrificial*", "Unlock", "", 0.0),
+				FireEntityInput("BTN.Sacrificial*", "Color", "0 255 0", 0.0);
 			}
 		}
 	}
@@ -1405,7 +1445,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			FireEntityInput("CrusaderTrain", "SetSpeed", "0.1", 41.40),
 			FireEntityInput("CrusaderTrain", "Stop", "", 42.60),
 			FireEntityInput("FB.CrusaderLaserKill01", "Disable", "", 42.60),
-			FireEntityInput("FB.CrusaderNukeTimer", "Disabled", "", 42.60),
+			FireEntityInput("FB.CrusaderNukeTimer", "Disable", "", 42.60),
 			FireEntityInput("FB.LaserCore", "TurnOn", "", 45.80),
 			FireEntityInput("CrusaderLaserBase*", "SetSpeed", "0.35", 45.80),
 			FireEntityInput("FB.ShakeCore", "StartShake", "", 45.80),
@@ -1456,7 +1496,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			FireEntityInput("FB.ShakeBOOM", "StopShake", "", 70.20),
 			FireEntityInput("CrusaderTrain", "Stop", "", 80.0),
 			FireEntityInput("FB.CRUSADER", "Disable", "", 80.0);
-			Command_Operator(99); //Jump to next wave
+			ServerCommand("fb_operator 99"); //Jump to next wave
 		}
 
 		if ((damagebits & (1 << 10)) && !attacker) //DMG_ENERGYBEAM
@@ -1954,7 +1994,7 @@ public Action JumpToWave(int wave_number)
 }
 //NextWaveTimer
 public Action NextWaveTimer(Handle timer){
-	Command_Operator(99);
+	ServerCommand("fb_operator 99");
 }
 //Timer to restart the server.
 public Action Timer_RestartServer(Handle timer)
@@ -2180,6 +2220,7 @@ public Action Command_Operator(int args){
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
 					BombPushed(30),
 					bombStatusMax = 8;
+					explodeType = 1;
 					EmitSoundToAll(COUNTDOWN);
 				}
 				//Fartsy of the Seventh Taco Bell
