@@ -97,7 +97,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.2.0",
+	version = "3.2.1",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -153,6 +153,7 @@ public void OnPluginStart()
 	PrecacheSound(STRONGMAN, true),
 	PrecacheSound(TRIGGERSCORE, true),
 	PrecacheSound(WTFBOOM, true),
+	PrecacheSound("fartsy/fallingback/bgm.mp3", true),
 	RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client."),
 	RegServerCmd("fb_codeentry", FBCodeEntry, "Code entry."),
 	RegServerCmd("tacobell_wave01", Command_TBWave01,"Taco Bell - Wave One"),
@@ -2312,7 +2313,7 @@ public Action Command_Operator(int arg1){
 		case 42:{
 			EmitSoundToAll(GOOBBUEINCOMING);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55ALL HAIL \x07FF00FFGOOBBUE\x0700AA55!");
-			FireEntityInput("HindenburgInc2", "PlaySound", "", 1.5);
+			FireEntityInput("HindenburgInc2", "PlaySound", "", 3.0);
 			FireEntityInput("FB.GiantGoobTemplate", "ForceSpawn", "", 3.0);
 		}
 		//Found Mario
