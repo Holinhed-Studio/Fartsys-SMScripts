@@ -67,6 +67,7 @@ char GLOBALTHUNDER05[32] = "fartsy/weather/thunder5.wav";
 char GLOBALTHUNDER06[32] = "fartsy/weather/thunder6.wav";
 char GLOBALTHUNDER07[32] = "fartsy/weather/thunder7.wav";
 char GLOBALTHUNDER08[32] = "fartsy/weather/thunder8.wav";
+char GOOBBUEINCOMING[32] = "vo/fartsy/goobbue.mp3"
 char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
 char SHARKSND02[64] = "fartsy/memes/babyshark/baby02.mp3";
 char SHARKSND03[64] = "fartsy/memes/babyshark/doot01.mp3";
@@ -96,7 +97,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.1.3",
+	version = "3.1.4",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -140,6 +141,7 @@ public void OnPluginStart()
 	PrecacheSound(GLOBALTHUNDER06, true),
 	PrecacheSound(GLOBALTHUNDER07, true),
 	PrecacheSound(GLOBALTHUNDER08, true),
+	PrecacheSound(GOOBBUEINCOMING, true),
 	PrecacheSound(SHARKSND01, true),
 	PrecacheSound(SHARKSND02, true),
 	PrecacheSound(SHARKSND03, true),
@@ -1086,75 +1088,7 @@ public Action Command_GetCurrentSong(int client, int args){
 	return Plugin_Handled;
 }
 
-//Deploy a bomb for RED
-public Action Command_Deploy(int args){
-	switch (explodeType){
-			//Invalid
-		case 0:{
-			PrintToServer("Tried to detonate with a bomb size of zero!");
-		}
-		//Small Explosion
-		case 1:{
-			FireEntityInput("Murica", "PlaySound", "", 0.0),
-			FireEntityInput("SmallExplosion", "Explode", "", 0.0),
-			FireEntityInput("SmallExploShake", "StartShake", "", 0.0),
-			BombPushed(5),
-			EmitSoundToAll(COUNTDOWN);
-		}
-		//Medium Explosion
-		case 2:{
-			FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
-			FireEntityInput("MediumExplosion", "Explode", "", 0.0),
-			FireEntityInput("MedExploShake", "StartShake", "", 0.0),
-			BombPushed(5);
-			EmitSoundToAll(COUNTDOWN);
-		}
-		//Falling Star
-		case 3:{
-			canSENTStars = true,
-			FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
-			FireEntityInput("MediumExplosion", "Explode", "", 0.0),
-			FireEntityInput("MedExploShake", "StartShake", "", 0.0),
-			BombPushed(10),
-			EmitSoundToAll(COUNTDOWN),
-			CreateTimer(1.0, SENTStarTimer),
-			CreateTimer(60.0, SENTStarDisable);
-		}
-		//Major Kong
-		case 4:{
-			FireEntityInput("MajorKongSND", "PlaySound", "", 0.0),
-			FireEntityInput("FB.Fade", "Fade", "", 1.7),
-			FireEntityInput("LargeExplosion", "Explode", "", 1.7),
-			FireEntityInput("LargeExplosionSound", "PlaySound", "", 1.7),
-			FireEntityInput("LargeExploShake", "StartShake", "", 1.7),
-			FireEntityInput("NukeAll", "Enable", "", 1.7),
-			FireEntityInput("NukeAll", "Disable", "", 3.0),
-			BombPushed(25),
-			EmitSoundToAll(COUNTDOWN);
-		}
-		//Large (shark)
-		case 5:{
-			FireEntityInput("LargeExploSound", "PlaySound", "", 0.0),
-			FireEntityInput("LargeExplosion", "Explode", "", 0.0),
-			FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
-			BombPushed(15),
-			EmitSoundToAll(COUNTDOWN);
-		}
-		//FatMan
-		case 6:{
-			FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
-			FireEntityInput("LargeExplosion", "Explode", "", 0.0),
-			FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
-			FireEntityInput("", "PlaySound", "", 0.0),
-			FireEntityInput("NukeAll", "Enable", "", 0.0),
-			FireEntityInput("FB.Fade", "Fade", "", 0.0),
-			FireEntityInput("NukeAll", "Disable", "", 3.0),
-			BombPushed(25),
-			EmitSoundToAll(COUNTDOWN);
-		}
-	}
-	return Plugin_Handled;
-}
+
 
 public Action BombPushed(int arg1){
 	switch (arg1){
@@ -1346,13 +1280,6 @@ public Action Command_MeteorShower(int args)
 	PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07FFFFFFUh oh, a \x07AA0000METEOR SHOWER\x07FFFFFF has been reported from Dovah's Ass!!!");
 }
 
-public Action Command_DovahsAss(int args)
-{
-	PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000DOVAH'S ASS\x07FFFFFF v0x13. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
-}
-
-
-
 //Deprecated Functions that should be either reassigned or removed.
 public Action Command_HydrogenUp(int args)
 {
@@ -1363,11 +1290,7 @@ public Action Command_WaveSevenBurgUp(int args)
 {
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has delivered Hydrogen! The \x07FF0000HINDENBURG \x0700AA55is now ready for flight!");
 }
-//Specials
-public Action Command_FoundGoob(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55ALL HAIL \x07FF00FFGOOBBUE\x0700AA55!");
-}
+
 
 public Action Command_FoundWaffle(int args)
 {
@@ -1383,13 +1306,6 @@ public Action Command_FoundShroom(int args)
 {
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Welp, someone is playing \x0700FF00Mario\x07FFFFFF...");
 }
-
-public Action Command_FoundBall(int args)
-{
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55What on earth IS that? It appears to be a... \x075050FFBLUE BALL\x07FFFFFF!");
-}
-
-
 
 //Taco Bell edition commands and features
 public Action Command_TacoBell(int args)
@@ -2220,7 +2136,10 @@ public Action JumpToWave(int wave_number)
 	FakeClientCommand(0, "");
 	SetCommandFlags("tf_mvm_jump_to_wave", flags|FCVAR_CHEAT);
 }
-
+//NextWaveTimer
+public Action NextWaveTimer(Handle timer){
+	Command_Operator(99);
+}
 //Timer to restart the server.
 public Action Timer_RestartServer(Handle timer)
 {
@@ -2329,6 +2248,10 @@ public Action Command_Operator(int arg1){
 		case 1:{
 			GetWave(0);
 		}
+		//Prepare yourself!
+		case 2:{
+			PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000DOVAH'S ASS\x07FFFFFF v0x13. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
+		}
 		//Tornado Sacrifice (+1)
 		case 10:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Sacrificed a client into orbit. (\x0700FF00+1 pt\x07FFFFFF)");
@@ -2350,10 +2273,87 @@ public Action Command_Operator(int arg1){
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A tank has been destroyed. (\x0700FF00+1 pt\x07FFFFFF)");
 			sacPoints++;
 		}
-		//Bomb Reset (+1)
+		//Bomb Reset (+5)
 		case 14:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Bomb has been reset. (\x0700FF00+5 pts\x07FFFFFF)");
 			sacPoints+=5;
+		}
+		//Bomb Deployed
+		case 15:{
+			switch (explodeType){
+				//Invalid
+				case 0:{
+					PrintToServer("Tried to detonate with a bomb size of zero!");
+				}
+				//Small Explosion
+				case 1:{
+					FireEntityInput("Murica", "PlaySound", "", 0.0),
+					FireEntityInput("SmallExplosion", "Explode", "", 0.0),
+					FireEntityInput("SmallExploShake", "StartShake", "", 0.0),
+					BombPushed(5),
+					EmitSoundToAll(COUNTDOWN);
+				}
+				//Medium Explosion
+				case 2:{
+					FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
+					FireEntityInput("MediumExplosion", "Explode", "", 0.0),
+					FireEntityInput("MedExploShake", "StartShake", "", 0.0),
+					BombPushed(5);
+					EmitSoundToAll(COUNTDOWN);
+				}
+				//Falling Star
+				case 3:{
+					canSENTStars = true,
+					FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
+					FireEntityInput("MediumExplosion", "Explode", "", 0.0),
+					FireEntityInput("MedExploShake", "StartShake", "", 0.0),
+					BombPushed(10),
+					EmitSoundToAll(COUNTDOWN),
+					CreateTimer(1.0, SENTStarTimer),
+					CreateTimer(60.0, SENTStarDisable);
+				}
+				//Major Kong
+				case 4:{
+					FireEntityInput("MajorKongSND", "PlaySound", "", 0.0),
+					FireEntityInput("FB.Fade", "Fade", "", 1.7),
+					FireEntityInput("LargeExplosion", "Explode", "", 1.7),
+					FireEntityInput("LargeExplosionSound", "PlaySound", "", 1.7),
+					FireEntityInput("LargeExploShake", "StartShake", "", 1.7),
+					FireEntityInput("NukeAll", "Enable", "", 1.7),
+					FireEntityInput("NukeAll", "Disable", "", 3.0),
+					BombPushed(25),
+					EmitSoundToAll(COUNTDOWN);
+				}
+				//Large (shark)
+				case 5:{
+					FireEntityInput("LargeExploSound", "PlaySound", "", 0.0),
+					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
+					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
+					BombPushed(15),
+					EmitSoundToAll(COUNTDOWN);
+				}
+				//FatMan
+				case 6:{
+					FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
+					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
+					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
+					FireEntityInput("", "PlaySound", "", 0.0),
+					FireEntityInput("NukeAll", "Enable", "", 0.0),
+					FireEntityInput("FB.Fade", "Fade", "", 0.0),
+					FireEntityInput("NukeAll", "Disable", "", 3.0),
+					BombPushed(25),
+					EmitSoundToAll(COUNTDOWN);
+				}
+				//Fartsy of the Seventh Taco Bell
+				case 7:{
+					FireEntityInput("NukeAll", "Enable", "", 0.0),
+					FireEntityInput("HindenburgBoom", "PlaySound", 0.0),
+					FireEntityInput("FB.Fade", "Fade", "", 0.0),
+					FireEntityInput("NukeAll", "Disable", "", 2.0),
+					CreateTimer(5.0, NextWaveTimer);
+				}
+			}
+			return Plugin_Handled;
 		}
 		//Shark Enable
 		case 20:{
@@ -2367,46 +2367,63 @@ public Action Command_Operator(int arg1){
 		case 30:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF INSTANT BATH SALT DETONATION! (\x07FF0000-10 pts\x07FFFFFF)");
 			sacPoints = (sacPoints - 10);
+			FireEntityInput("BTN.Sacrificial*", "Color", "0 0 0", 0.0),
+			FireEntityInput("BTN.Sacrificial01", "Lock", "", 0.0),
+			FireEntityInput("MedExploShake", "StartShake", "", 0.10),
+			FireEntityInput("MedExplosionSND", "PlaySound", "", 0.10),
+			FireEntityInput("MediumExplosion", "Explode", "", 0.10);
 		}
 		//Fat man spend
 		case 31:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF INSTANT FAT MAN DETONATION! (\x07FF0000-20 pts\x07FFFFFF)");
 			sacPoints = (sacPoints - 20);
+			FireEntityInput("BTN.Sacrificial*", "Color", "0 0 0", 0.0);
+			FireEntityInput("BTN.Sacrificial02", "Lock", "", 0.0);
+			FireEntityInput("LargeExplosion", "Explode", "", 0.0);
+			FireEntityInput("LargeExploShake", "StartShake", "", 0.0);
+			FireEntityInput("NukeAll", "Enable", "", 0.0);
+			FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0);
+			FireEntityInput("FB.Fade", "Fade", "", 0.0);
+			FireEntityInput("NukeAll", "Disable", "", 2.0);
 		}
 		//Goob/Kirb spend
 		case 32:{
-			int i = GetRandomInt(1,2);
+			int i = GetRandomInt(1, 2);
 			switch (i){
 				case 1:{
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF GOOBBUE COMING IN FROM ORBIT! (\x07FF0000-30 pts\x07FFFFFF)");
 					sacPoints = (sacPoints - 30);
+					EmitSoundToAll(GOOBBUEINCOMING);
+					FireEntityInput("HindenburgInc2", "PlaySound", "", 1.5);
+					FireEntityInput("FB.GiantGoobTemplate", "ForceSpawn", "", 3.0);
+				}
+				case 2:{
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF BLUE KIRBY FALLING OUT OF THE SKY! (\x07FF0000-30 pts\x07FFFFFF)");
+					sacPoints = (sacPoints - 30);
+					FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 0.0);
+					EmitSoundToAll(FALLSND0B);
 				}
 			}
 		}
-		//Blue Ball spend
-		case 33:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF BLUE KIRBY FALLING OUT OF THE SKY! (\x07FF0000-30 pts\x07FFFFFF)");
-			sacPoints = (sacPoints - 30);
-		}
 		//Explosive paradise spend
-		case 34:{
+		case 33:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF We're spending most our lives living in an EXPLOSIVE PARADISE! (\x07FF0000-40 pts\x07FFFFFF)");
 			sacPoints = (sacPoints - 40);
 		}
 		//Ass Gas spend
-		case 35:{
+		case 34:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF NO NO NO, STOP THE SHARTS!!!! (\x07FF0000-40 pts\x07FFFFFF)");
 			sacPoints = (sacPoints - 40);
 		}
 		//Banish tornadoes for the wave
-		case 36:{
+		case 35:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A PINK KIRBY HAS BANISHED TORNADOES FOR THIS WAVE! (\x07FF0000-50 pts\x07FFFFFF)");
 			KillTornado();
 			canTornado = false;
 			sacPoints = (sacPoints - 50);
 		}
 		//Nuclear fallout spend
-		case 37:{
+		case 36:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF TOTAL ATOMIC ANNIHILATION. (\x07FF0000-60 pts\x07FFFFFF)");
 			sacPoints = (sacPoints - 60);
 			canSENTNukes = true;
@@ -2414,7 +2431,7 @@ public Action Command_Operator(int arg1){
 			CreateTimer(45.0, DisableSENTNukes);
 		}
 		//Meteor shower spend
-		case 38:{
+		case 37:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF COSMIC DEVASTATION IMMINENT. (\x07FF0000-70 pts\x07FFFFFF)");
 			sacPoints = (sacPoints - 70);
 			canSENTMeteors = true;
@@ -2422,9 +2439,25 @@ public Action Command_Operator(int arg1){
 			CreateTimer(30.0, DisableSENTMeteors);
 		}
 		//Fartsy of the Seventh Taco Bell
-		case 39:{
+		case 38:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF NOW PRESENTING... PROFESSOR FARTSALOT OF THE SEVENTH TACO BELL! (\x07FF0000-100 points\x07FFFFFF)");
 			sacPoints = (sacPoints - 100);
+			explodeType = 7;
+			FireEntityInput("Delivery", "Unlock", "", 0.0),
+			FireEntityInput("BombExplo*", "Disable", "", 0.0),
+			FireEntityInput("Bombs.*", "Disable", "", 0.0),
+			FireEntityInput("Bombs.Professor", "Enable", "", 3.0);
+		}
+		//Found blue ball
+		case 40:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55What on earth IS that? It appears to be a... \x075050FFBLUE BALL\x07FFFFFF!");
+		}
+		//Found goobbue
+		case 41:{
+			EmitSoundToAll(GOOBBUEINCOMING);
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55ALL HAIL \x07FF00FFGOOBBUE\x0700AA55!");
+			FireEntityInput("HindenburgInc2", "PlaySound", "", 1.5);
+			FireEntityInput("FB.GiantGoobTemplate", "ForceSpawn", "", 3.0);
 		}
 		//Prev wave
 		case 98:{
