@@ -86,8 +86,6 @@ int CodeEntry = 0;
 int DEFBGMSNDLVL = 40;
 int bombStatus = 0;
 int bombStatusMax = 0;
-int bombsPushed = 0;
-int bombCache = 0;
 int explodeType = 0;
 int sacPoints = 0;
 int sacPointsMax = 60;
@@ -97,7 +95,7 @@ public Plugin myinfo =
 	name = "Dovah's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Dovah's Ass",
-	version = "3.3.2",
+	version = "3.3.3",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -774,16 +772,6 @@ public Action BombStatusAddTimer(Handle timer){
 		float f = GetRandomFloat(10.0, 45.0);
 		PrintToServer("[DEBUG] Creating a %f timer to give bomb status an update. Current target is %i", f, bombStatus);
 		CreateTimer(f, BombStatusAddTimer);
-		//Loop back from the start with Freedom Bomb. This time, enable special stuff.
-		if (bombsPushed >= 8){
-			bombsPushed = 0;
-			bombCache = 0;
-			bombStatus = 0;
-			explodeType = 0;
-			CreateTimer(3.0, BombStatusAddTimer);
-			float spDelay = GetRandomFloat(10.0, 30.0);
-			CreateTimer(spDelay, SpecTimer);
-		}
 	}
 	return Plugin_Stop;
 }
@@ -796,7 +784,6 @@ public Action BombStatusUpdater(Handle timer){
 			switch (bombStatus){
 				case 8:{
 					bombStatusMax = 8;
-					bombCache = 0;
 					explodeType = 1;
 					canSENTShark = false;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
@@ -808,7 +795,6 @@ public Action BombStatusUpdater(Handle timer){
 				}
 				case 16:{
 					bombStatusMax = 16;
-					bombCache = 0;
 					explodeType = 2;
 					canSENTShark = false;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
@@ -820,8 +806,7 @@ public Action BombStatusUpdater(Handle timer){
 				}
 				case 24:{
 					bombStatusMax = 24;
-					bombCache = 0;
-					explodeType = 2;
+					explodeType = 3;
 					canSENTShark = false;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
@@ -832,8 +817,7 @@ public Action BombStatusUpdater(Handle timer){
 				}
 				case 32:{
 					bombStatusMax = 32;
-					bombCache = 0;
-					explodeType = 3;
+					explodeType = 4;
 					canSENTShark = false;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
@@ -844,8 +828,7 @@ public Action BombStatusUpdater(Handle timer){
 				}
 				case 40:{
 					bombStatusMax = 40;
-					bombCache = 0;
-					explodeType = 4;
+					explodeType = 5;
 					canSENTShark = false;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
@@ -856,8 +839,7 @@ public Action BombStatusUpdater(Handle timer){
 				}
 				case 48:{
 					bombStatusMax = 48;
-					bombCache = 0;
-					explodeType = 5;
+					explodeType = 6;
 					canSENTShark = true;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
@@ -869,8 +851,7 @@ public Action BombStatusUpdater(Handle timer){
 				}
 				case 56:{
 					bombStatusMax = 56;
-					bombCache = 0;
-					explodeType = 6;
+					explodeType = 7;
 					canSENTShark = false;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
@@ -881,8 +862,7 @@ public Action BombStatusUpdater(Handle timer){
 				}
 				case 64:{
 					bombStatusMax = 64;
-					bombCache = 0;
-					explodeType = 7;
+					explodeType = 8;
 					canSENTShark = false;
 					FireEntityInput("Bombs.*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
@@ -1097,56 +1077,6 @@ public Action Command_GetCurrentSong(int client, int args){
 	return Plugin_Handled;
 }
 
-//Handle the bomb push
-public Action BombPushed(int arg1){
-	switch (arg1){
-		case 5:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Small Bomb successfully pushed! (\x0700FF00+5 pts\x07FFFFFF)");
-			sacPoints+=5,
-			bombStatusMax+=10,
-			bombStatus+=2,
-			bombsPushed++,
-			bombCache = 1,
-			CreateTimer(3.0, BombStatusAddTimer);
-		}
-		case 10:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Average Bomb successfully pushed! (\x0700FF00+10 pts\x07FFFFFF)");
-			sacPoints+=10,
-			bombStatusMax+=10,
-			bombStatus+=2,
-			bombsPushed++,
-			bombCache = 1,
-			CreateTimer(3.0, BombStatusAddTimer);
-		}
-		case 15:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Heavy Bomb successfully pushed! (\x0700FF00+15 pts\x07FFFFFF)");
-			sacPoints+=15,
-			bombStatusMax+=10,
-			bombStatus+=4,
-			bombsPushed++,
-			bombCache = 1,
-			CreateTimer(3.0, BombStatusAddTimer);
-		}
-		case 25:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07AA0000 NUCLEAR WARHEAD\x07FFFFFF successfully pushed! (\x0700FF00+25 pts\x07FFFFFF)");
-			sacPoints+=25,
-			bombStatusMax+=10,
-			bombStatus+=4,
-			bombsPushed++,
-			bombCache = 1,
-			CreateTimer(3.0, BombStatusAddTimer);
-		}
-		case 30:{
-			bombsPushed++;
-			bombCache = 1;
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07AA0000 HINDENBURG\x07FFFFFF successfully fueled! (\x0700FF00+30 pts\x07FFFFFF)");
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has delivered Hydrogen! The \x07FF0000HINDENBURG \x0700AA55is now ready for flight!");
-			FireEntityInput("DeliveryBurg", "Unlock", "", 0.0);
-		}
-	}
-	return Plugin_Handled;
-}
-
 //Tell the client the current sacrifice points earned.
 public Action Command_FBSacStatus(int client, int args){
 	PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55The sacrificial points counter is currently at %i of %i maximum for this wave.", sacPoints, sacPointsMax);
@@ -1155,117 +1085,65 @@ public Action Command_FBSacStatus(int client, int args){
 //Determine which bomb has been recently pushed and tell the client if a bomb is ready or not.
 public Action Command_FBBombStatus(int client, int args){
 	PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55The bomb status is currently %i, with a max of %i", bombStatus, bombStatusMax);
-	//No bombs have yet been deployed nor have they been unlocked.
-	if (bombStatus < 8){
-		PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Bombs are \x07FF0000NOT READY\x07FFFFFF!");
-	}
-	//Only execute if Freedom Bomb is available.
-	else if (bombStatus >= 8 && bombStatus < 16){
-		//If no bombs are pushed and next bomb IS ready.
-		if (bombsPushed == 0 && bombCache == 0){
+	switch(bombStatus){
+		case 0,1,2,3,4,5,6,7:{
+			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Bombs are \x07FF0000NOT READY\x07FFFFFF!");
+		}
+		case 8:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has not deployed any bombs, however: Your team's \x07FF0000FREEDOM BOMB \x0700AA55is available for deployment!");
 		}
-		//If the wave forces us to have a bomb pushed and 0 queue
-		else if(bombsPushed == 1 && bombCache == 0){
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55The wave has just begun or has been reset. Please wait for the next bomb.");
-		}
-		//If we've pushed the Freedom Bomb and next bomb is NOT ready.
-		else if(bombsPushed == 1 && bombCache == 1){
+		case 9,10,11,12,13,14,15:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFREEDOM BOMB \x0700AA55. Please wait for the next bomb.");
 		}
-		return Plugin_Continue;
-	}
-	//Only execute if Elon Bust is available.
-	else if(bombStatus >= 16 && bombStatus < 24){
-		//If we've pushed the Freedom Bomb and next bomb IS ready.
-		if (bombsPushed == 1 && bombCache == 0){
+		case 16:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFREEDOM BOMB \x0700AA55. Your team's \x07FF0000ELON BUST \x0700AA55is available for deployment!");
 		}
-		//If the wave forces us to have 2 bombs pushed and 0 queue
-		else if(bombsPushed == 2 && bombCache == 0){
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55The wave has just begun or has been reset. Please wait for the next bomb.");
-		}
-		//If we've pushed the Freedom Bomb and the Elon Bust and next bomb is NOT ready.
-		else if(bombsPushed == 2 && bombCache == 1){
+		case 17,18,19,20,21,22,23:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFELON BUST \x0700AA55. Please wait for the next bomb.");
 		}
-		return Plugin_Continue;
-	}
-	//Only execute if Bath Salts are available.
-	else if(bombStatus >= 24 && bombStatus < 32){
-		//If we've pushed the Freedom Bomb and the Elon Bust and the next bomb IS ready.
-		if (bombsPushed == 2 && bombCache == 0){
+		case 24:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFELON BUST \x0700AA55. Your team's \x07FF0000BATH SALTS \x0700AA55are available for deployment!");
 		}
-		//If the wave forces us to have 3 bombs pushed and 0 queue
-		else if(bombsPushed == 3 && bombCache == 0){
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55The wave has just begun or has been reset. Please wait for the next bomb.");
-		}
-		//If we've pushed the Freedom Bomb, Elon Bust, and Bath Salts and the next bomb is NOT ready.
-		else if (bombsPushed == 3 && bombCache == 1){
+		case 25,26,27,28,29,30,31:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFBATH SALTS \x0700AA55. Please wait for the next bomb.");
 		}
-		return Plugin_Continue;
-	}
-	//Only execute if Falling Star is available.
-	else if (bombStatus >= 32 && bombStatus < 40){
-		//If we've pushed the Freedom Bomb, Elon Bust, and Bath Salts, and the next bomb IS ready.
-		if (bombsPushed == 3 && bombCache == 0){
+		case 32:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFBATH SALTS \x0700AA55. Your team's \x07FF0000FALLING STAR \x0700AA55is available for deployment!");
 		}
-		//If we've pushed the Freedom Bomb, Elon Bust, Bath Salts, and Falling Star and the next bomb IS NOT ready.
-		else if (bombsPushed == 4 && bombCache == 1){
+		case 33,34,35,36,37,38,39:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFALLING STAR \x0700AA55. Please wait for the next bomb.");
 		}
-		return Plugin_Continue;
-	}
-	//Only execute if Major Kong is available.
-	else if (bombStatus >= 40 && bombStatus < 48){
-		//If we've pushed the Freedom Bomb, Elon Bust, Bath Salts, and Falling Star and the next bomb IS ready.
-		if (bombsPushed == 4 && bombCache == 0){
+		case 40:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFFALLING STAR \x0700AA55. Your team's \x07FF0000MAJOR KONG \x0700AA55is available for deployment!");
 		}
-		//If we've pushed the Freedom Bomb, Elon Bust, Bath Salts, Falling Star, and Major Kong and the next bomb is NOT ready.
-		else if (bombsPushed == 5 && bombCache == 1){
+		case 41,42,43,44,45,46,47:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFMAJOR KONG \x0700AA55. Please wait for the next bomb.");
 		}
-	}
-	//Only execute if Shark is available.
-	else if (bombStatus >= 48 && bombStatus < 56){
-		//If we've pushed the Freedom Bomb, Elon Bust, Bath Salts, Falling Star, and Major Kong and the next bomb IS ready.
-		if (bombsPushed == 5 && bombCache == 0){
+		case 48:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFMAJOR KONG \x0700AA55. Your team's \x07FF0000SHARK \x0700AA55is available for deployment!");
 		}
-		//If we've pushed the Freedom Bomb, Elon Bust, Bath Salts, Falling Star, Major Kong, and Shark and the next bomb IS NOT ready.
-		else if (bombsPushed == 6 && bombCache == 1){
+		case 49,50,51,52,53,54,55:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFSHARK \x0700AA55. Please wait for the next bomb.");
 		}
-	}
-	//Only execute if Fat Man is available.
-	else if (bombStatus >= 56 && bombStatus < 64){
-		//If we've pushed the Freedom Bomb, Elon Bust, Bath Salts, Falling Star, Major Kong, and Shark and the next bomb IS ready.
-		if (bombsPushed == 6 && bombCache == 0){
+		case 56:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFSHARK \x0700AA55. Your team's \x07FF0000FAT MAN \x0700AA55is available for deployment!");
 		}
-		else if (bombsPushed == 7 && bombCache == 1){
+		case 57,58,59,60,61,62,63:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFAT MAN \x0700AA55. Please wait for the next bomb.");
 		}
-	}
-	//Only execute if I add another bomb or system for this...
-	else if (bombStatus >= 64 && bombStatus < 72){
-		//If we've pushed the Freedom Bomb, Elon Bust, Bath Salts, Falling Star, Major Kong, Shark, Fat Man, and the next bomb IS ready.
-		if (bombsPushed == 7 && bombCache == 0){
+		case 64:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FF0000 FAT MAN \x0700AA55. Your team's \x07FFFF00HYDROGEN \x0700AA55is available for deployment!");
 		}
-		else if (bombsPushed == 8 && bombCache == 1){
+		case 65,66,67,68,69,70,71:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFHYDROGEN\x0700AA55. Bombs are automatically reset to preserve the replayable aspect of this game mode.");
 		}
-	}
-	else{
-		PrintToChatAll("Something exceeded a maximum value!!! Apparently the bomb status is %i, with %i bombs pushed and a maximum status of %i.", bombStatus, bombsPushed, bombStatusMax);
+		case 72:{
+			PrintToChatAll("Something exceeded a maximum value!!! Apparently the bomb status is %i, with a maximum status of %i.", bombStatus, bombStatusMax);
+		}
 	}
 	return Plugin_Handled;
 }
+
 //Deprecated
 public Action Command_TBWave01(int args)
 {
@@ -1561,7 +1439,7 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
 	isWave = false;
 	bombStatusMax = 7;
 	bombStatus = 5;
-	bombsPushed = 0;
+	explodeType = 0;
 	SelectBGM();
 	PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFYou've defeated the wave!");
 	FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
@@ -1596,7 +1474,7 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
 	isWave = false;
 	bombStatusMax = 7;
 	bombStatus = 5;
-	bombsPushed = 0;
+	explodeType = 0;
 	SelectBGM();
 //	PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFWave set/reset success!");
 	FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
@@ -1636,7 +1514,6 @@ public Action GetWave(int args){
 			canTornado = true;
 			isWave = true;
 			bombStatus = 0;
-			bombsPushed = 0;
 			bombStatusMax = 10;
 			sacPointsMax = 90;
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 1: Locus");
@@ -1675,7 +1552,6 @@ public Action GetWave(int args){
 			canTornado = true;
 			isWave = true;
 			bombStatus = 4;
-			bombsPushed = 0;
 			bombStatusMax = 18;
 			sacPointsMax = 90;
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 2: Metal");
@@ -1717,7 +1593,6 @@ public Action GetWave(int args){
 			HWNMax = 360.0;
 			isWave = true;
 			bombStatus = 7;
-			bombsPushed = 0;
 			bombStatusMax = 26;
 			sacPointsMax = 90;
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 3: Exponential Entropy");
@@ -1763,7 +1638,6 @@ public Action GetWave(int args){
 			HWNMax = 360.0;
 			isWave = true;
 			bombStatus = 12;
-			bombsPushed = 1;
 			bombStatusMax = 34;
 			sacPointsMax = 90;
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 4: Torn From The Heavens");
@@ -1808,7 +1682,6 @@ public Action GetWave(int args){
 			HWNMin = 140.0;
 			isWave = true;
 			bombStatus = 14;
-			bombsPushed = 1;
 			bombStatusMax = 42;
 			sacPointsMax = 100;
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 5: Metal - Brute Justice Mode");
@@ -1857,7 +1730,6 @@ public Action GetWave(int args){
 			HWNMin = 140.0;
 			isWave = true;
 			bombStatus = 20;
-			bombsPushed = 2;
 			bombStatusMax = 50;
 			sacPointsMax = 100;
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 6: Grandma Destruction");
@@ -1902,7 +1774,6 @@ public Action GetWave(int args){
 			HWNMin = 120.0;
 			isWave = true;
 			bombStatus = 28;
-			bombsPushed = 3;
 			bombStatusMax = 58;
 			sacPointsMax = 100;
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 7: Revenge Twofold");
@@ -1948,7 +1819,6 @@ public Action GetWave(int args){
 			HWNMin = 120.0;
 			isWave = true;
 			bombStatus = 30;
-			bombsPushed = 3;
 			bombStatusMax = 66;
 			sacPointsMax = 100;
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 8: Under The Weight");
@@ -2152,30 +2022,42 @@ public Action Command_Operator(int args){
 					FireEntityInput("Murica", "PlaySound", "", 0.0),
 					FireEntityInput("SmallExplosion", "Explode", "", 0.0),
 					FireEntityInput("SmallExploShake", "StartShake", "", 0.0),
-					BombPushed(5),
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Small Bomb successfully pushed! (\x0700FF00+2 pts\x07FFFFFF)");
+					sacPoints+=2,
+					bombStatusMax+=10,
+					bombStatus+=2,
+					CreateTimer(3.0, BombStatusAddTimer);
 					EmitSoundToAll(COUNTDOWN);
 				}
 				//Medium Explosion
-				case 2:{
+				case 2,3:{
 					FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
 					FireEntityInput("MediumExplosion", "Explode", "", 0.0),
 					FireEntityInput("MedExploShake", "StartShake", "", 0.0),
-					BombPushed(5);
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Medium Bomb successfully pushed! (\x0700FF00+5 pts\x07FFFFFF)");
+					sacPoints+=5,
+					bombStatusMax+=10,
+					bombStatus+=2,
+					CreateTimer(3.0, BombStatusAddTimer);
 					EmitSoundToAll(COUNTDOWN);
 				}
 				//Falling Star
-				case 3:{
+				case 4:{
 					canSENTStars = true,
 					FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
 					FireEntityInput("MediumExplosion", "Explode", "", 0.0),
 					FireEntityInput("MedExploShake", "StartShake", "", 0.0),
-					BombPushed(10),
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Average Bomb successfully pushed! (\x0700FF00+10 pts\x07FFFFFF)");
+					sacPoints+=10,
+					bombStatusMax+=10,
+					bombStatus+=2,
+					CreateTimer(3.0, BombStatusAddTimer);
 					EmitSoundToAll(COUNTDOWN),
 					CreateTimer(1.0, SENTStarTimer),
 					CreateTimer(60.0, SENTStarDisable);
 				}
 				//Major Kong
-				case 4:{
+				case 5:{
 					FireEntityInput("MajorKongSND", "PlaySound", "", 0.0),
 					FireEntityInput("FB.Fade", "Fade", "", 1.7),
 					FireEntityInput("LargeExplosion", "Explode", "", 1.7),
@@ -2183,19 +2065,27 @@ public Action Command_Operator(int args){
 					FireEntityInput("LargeExploShake", "StartShake", "", 1.7),
 					FireEntityInput("NukeAll", "Enable", "", 1.7),
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
-					BombPushed(25),
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07AA0000 NUCLEAR WARHEAD\x07FFFFFF successfully pushed! (\x0700FF00+25 pts\x07FFFFFF)");
+					sacPoints+=25,
+					bombStatusMax+=10,
+					bombStatus+=4,
+					CreateTimer(3.0, BombStatusAddTimer);
 					EmitSoundToAll(COUNTDOWN);
 				}
 				//Large (shark)
-				case 5:{
+				case 6:{
 					FireEntityInput("LargeExploSound", "PlaySound", "", 0.0),
 					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
 					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
-					BombPushed(15),
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Heavy Bomb successfully pushed! (\x0700FF00+15 pts\x07FFFFFF)");
+					sacPoints+=15,
+					bombStatusMax+=10,
+					bombStatus+=4,
+					CreateTimer(3.0, BombStatusAddTimer);
 					EmitSoundToAll(COUNTDOWN);
 				}
 				//FatMan
-				case 6:{
+				case 7:{
 					FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
 					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
 					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
@@ -2203,11 +2093,16 @@ public Action Command_Operator(int args){
 					FireEntityInput("NukeAll", "Enable", "", 0.0),
 					FireEntityInput("FB.Fade", "Fade", "", 0.0),
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
-					BombPushed(25),
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07AA0000 NUCLEAR WARHEAD\x07FFFFFF successfully pushed! (\x0700FF00+25 pts\x07FFFFFF)");
+					sacPoints+=25,
+					bombStatusMax+=10,
+					bombStatus+=4,
+					CreateTimer(3.0, BombStatusAddTimer);
+					CreateTimer(15.0, SpecTimer);
 					EmitSoundToAll(COUNTDOWN);
 				}
 				//Hydrogen
-				case 7:{
+				case 8:{
 					FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
 					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
 					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
@@ -2215,9 +2110,12 @@ public Action Command_Operator(int args){
 					FireEntityInput("NukeAll", "Enable", "", 0.0),
 					FireEntityInput("FB.Fade", "Fade", "", 0.0),
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
-					BombPushed(30),
-					bombStatusMax = 8;
-					explodeType = 1;
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07AA0000 HINDENBURG\x07FFFFFF successfully fueled! (\x0700FF00+30 pts\x07FFFFFF)");
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has delivered Hydrogen! The \x07FF0000HINDENBURG \x0700AA55is now ready for flight!");
+					FireEntityInput("DeliveryBurg", "Unlock", "", 0.0);
+					bombStatus = 0;
+					explodeType = 0;
+					CreateTimer(3.0, BombStatusAddTimer);
 					EmitSoundToAll(COUNTDOWN);
 				}
 				//Fartsy of the Seventh Taco Bell
@@ -2250,11 +2148,13 @@ public Action Command_Operator(int args){
 			FireEntityInput("HindenburgBoom", "PlaySound", "", 7.0);
 			FireEntityInput("FB.Fade", "Fade", "", 7.0);
 			FireEntityInput("NukeAll", "Disable", "", 9.0);
-			FireEntityInput("Bombs.TheHindenburg", "Disable", "", 0.0);
+			FireEntityInput("Bombs.TheHindenburg", "Disable", "", 7.0);
 			FireEntityInput("HindenTrain", "TeleportToPathTrack", "Hinden01", 7.0);
 			FireEntityInput("HindenTrain", "Stop", "", 7.0);
-			CreateTimer(7.0, NextWaveTimer);
+			CreateTimer(9.0, NextWaveTimer);
+			bombStatus= 4;
 			bombStatusMax = 8;
+			explodeType = 0;
 		}
 		//Bath Salts spend
 		case 30:{
