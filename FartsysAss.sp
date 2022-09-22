@@ -120,7 +120,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.4.7",
+	version = "3.4.8",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -1624,6 +1624,7 @@ public Action GetWave(int args){
 			bombStatus = 0;
 			bombStatusMax = 10;
 			sacPointsMax = 90;
+			songName = BGM1Title;
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 1: \x0700AA00%s", BGM1Title);
 			StopCurSong();
 			CreateTimer(2.5, PerformWaveAdverts);
@@ -1663,6 +1664,7 @@ public Action GetWave(int args){
 			bombStatus = 4;
 			bombStatusMax = 18;
 			sacPointsMax = 90;
+			songName = BGM2Title;
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 2: \x0700AA00%s", BGM2Title);
 			StopCurSong();
@@ -1705,6 +1707,7 @@ public Action GetWave(int args){
 			bombStatus = 7;
 			bombStatusMax = 26;
 			sacPointsMax = 90;
+			songName = BGM3Title;
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 3: \x0700AA00%s", BGM3Title);
 			StopCurSong();
@@ -1751,6 +1754,7 @@ public Action GetWave(int args){
 			bombStatus = 12;
 			bombStatusMax = 34;
 			sacPointsMax = 90;
+			songName = BGM4Title;
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 4: \x0700AA00%s", BGM4Title);
 			StopCurSong();
@@ -1796,6 +1800,7 @@ public Action GetWave(int args){
 			bombStatus = 14;
 			bombStatusMax = 42;
 			sacPointsMax = 100;
+			songName = BGM5Title;
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 5: \x0700AA00%s", BGM5Title);
 			StopCurSong();
 			EmitSoundToAll(BGM5, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
@@ -1844,6 +1849,7 @@ public Action GetWave(int args){
 			bombStatus = 20;
 			bombStatusMax = 50;
 			sacPointsMax = 100;
+			songName = BGM6Title;
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 6: \x0700AA00%s", BGM6Title);
 			StopCurSong();
 			EmitSoundToAll(BGM6, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
@@ -1888,6 +1894,7 @@ public Action GetWave(int args){
 			bombStatus = 28;
 			bombStatusMax = 58;
 			sacPointsMax = 100;
+			songName = BGM7Title;
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 7: \x0700AA00%s", BGM7Title);
 			StopCurSong();
 			EmitSoundToAll(BGM7, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
@@ -1933,6 +1940,7 @@ public Action GetWave(int args){
 			bombStatus = 30;
 			bombStatusMax = 66;
 			sacPointsMax = 100;
+			songName = BGM8Title;
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 8: \x0700AA00%s", BGM8Title);
 			StopCurSong();
 			EmitSoundToAll(BGM8, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
