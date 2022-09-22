@@ -1,7 +1,20 @@
+/*                         WELCOME TO FARTSY'S ASS ROTTENBURG.
+*
+*   A FEW THINGS TO KNOW: ONE.... THIS IS INTENDED TO BE USED WITH UBERUPGRADES.
+*   TWO..... THE MUSIC USED WITH THIS MOD MAY OR MAY NOT BE COPYRIGHTED. WE HAVE NO INTENTION ON INFRINGEMENT.
+*   THREE..... THIS MOD IS INTENDED FOR USE ON THE FIREHOSTREDUX SERVERS ONLY. SUPPORT IS LIMITED.
+*   FOUR..... THIS WAS A NIGHTMARE TO FIGURE OUT AND BUG FIX. I HOPE IT WAS WORTH IT.
+*   FIVE..... PLEASE HAVE FUN AND ENJOY YOURSELF!
+*   SIX..... THE DURATION OF MUSIC TIMERS SHOULD BE SET DEPENDING WHAT SONG IS USED. SET THIS USING THE FLOATS BGM<X>Dur BELOW.
+*   SEVEN..... TIPS AND TRICKS MAY BE ADDED TO THE TIMER, SEE PerformAdverts(Handle timer);
+*
+*                                       GL HF!!!
+*/
 #include <sourcemod>
 #include <sdktools>
 #pragma newdecls required
 #pragma semicolon 1
+bool bombProgression = false;
 bool canHWBoss = false;
 bool canSENTMeteors = false;
 bool canSENTNukes = false;
@@ -18,160 +31,171 @@ bool bgmlock5 = true;
 bool bgmlock6 = true;
 bool bgmlock7 = true;
 bool bgmlock8 = true;
-char BELL[32] = "fartsy/misc/bell.wav";
-char BGM1[32] = "fartsy/ffxiv/bgm/locus.mp3";
-char BGM2[32] = "fartsy/ffxiv/bgm/metal.mp3";
-char BGM3[64] = "fartsy/ffxiv/bgm/exponentialentropy.mp3";
-char BGM4[64] = "fartsy/ffxiv/bgm/tornfromtheheavens.mp3";
-char BGM5[64] = "fartsy/ffxiv/bgm/metalbrutejusticemode.mp3";
-char BGM6[64] = "fartsy/ffxiv/bgm/grandmadestruction.mp3";
-char BGM7[64] = "fartsy/ffxiv/bgm/revengetwofold.mp3";
-char BGM8[64] = "fartsy/ffxiv/bgm/undertheweight.mp3";
-char BGM1Title[32] = "FFXIV - Locus";
-char BGM2Title[32] = "FFXIV - Metal";
-char BGM3Title[32] = "FFXIV - Exponential Entropy";
-char BGM4Title[32] = "FFXIV - Torn From the Heavens";
-char BGM5Title[64] = "FFXIV - Metal: Brute Justice Mode";
-char BGM6Title[32] = "FFXIV - Grandma (Destruction)";
-char BGM7Title[32] = "FFXIV - Revenge Twofold";
-char BGM8Title[32] = "FFXIV - Under the Weight";
-char CLOCKTICK[32] = "fartsy/misc/clock_tick.wav";
-char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-char CRUSADERATTACK[32] = "fartsy/fallingback/attack.mp3";
+bool TornadoWarningIssued = false;
+static char BELL[32] = "fartsy/misc/bell.wav";
+static char BGM1[32] = "fartsy/ffxiv/bgm/locus.mp3";
+static char BGM2[32] = "fartsy/ffxiv/bgm/metal.mp3";
+static char BGM3[64] = "fartsy/ffxiv/bgm/exponentialentropy.mp3";
+static char BGM4[64] = "fartsy/ffxiv/bgm/tornfromtheheavens.mp3";
+static char BGM5[64] = "fartsy/ffxiv/bgm/metalbrutejusticemode.mp3";
+static char BGM6[64] = "fartsy/ffxiv/bgm/penitus.mp3";
+static char BGM7[64] = "fartsy/ffxiv/bgm/revengetwofold.mp3";
+static char BGM8[64] = "fartsy/ffxiv/bgm/undertheweight.mp3";
+static char BGM1Title[32] = "FFXIV - Locus";
+static char BGM2Title[32] = "FFXIV - Metal";
+static char BGM3Title[32] = "FFXIV - Exponential Entropy";
+static char BGM4Title[32] = "FFXIV - Torn From the Heavens";
+static char BGM5Title[64] = "FFXIV - Metal: Brute Justice Mode";
+static char BGM6Title[32] = "FFXIV - Penitus";
+static char BGM7Title[32] = "FFXIV - Revenge Twofold";
+static char BGM8Title[32] = "FFXIV - Under the Weight";
+static float BGM1Dur = 229.25;
+static float BGM2Dur = 153.95;
+static float BGM3Dur = 166.85;
+static float BGM4Dur = 122.25;
+static float BGM5Dur = 131.75;
+static float BGM6Dur = 427.35;
+static float BGM7Dur = 133.25;
+static float BGM8Dur = 313.85;
+static char CLOCKTICK[32] = "fartsy/misc/clock_tick.wav";
+static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
+static char CRUSADERATTACK[32] = "fartsy/fallingback/attack.mp3";
 char curSong[64] = "null";
-char DEFAULTBGM1[64] = "fartsy/ffxiv/bgm/TheSilentRegardOfStars.mp3";
-char DEFAULTBGM2[64] = "fartsy/ffxiv/bgm/KnowledgeNeverSleeps.mp3";
-char DEFAULTBGM1Title[64] = "FFXIV - The Silent Regard of Stars";
-char DEFAULTBGM2Title[64] = "FFXIV - Knowledge Never Sleeps";
-char FALLSND01[32] = "vo/l4d2/billfall02.mp3";
-char FALLSND02[32] = "vo/l4d2/coachfall02.mp3";
-char FALLSND03[32] = "vo/l4d2/ellisfall01.mp3";
-char FALLSND04[32] = "vo/l4d2/francisfall02.mp3";
-char FALLSND05[32] = "vo/l4d2/louisfall01.mp3";
-char FALLSND06[32] = "vo/l4d2/louisfall03.mp3";
-char FALLSND07[32] = "vo/l4d2/nickfall01.mp3";
-char FALLSND08[32] = "vo/l4d2/zoeyfall01.mp3";
-char FALLSND09[32] = "vo/ddd/woahhh.mp3";
-char FALLSND0A[32] = "vo/jigglypuff/jigglypuff.mp3";
-char FALLSND0B[32] = "vo/kirby/eeeahhhh.mp3";
-char FALLSND0C[32] = "vo/luigi/ohohohohoo.mp3";
-char FALLSND0D[32] = "vo/mario/wahahahaha.mp3";
-char FALLSND0E[32] = "vo/pika/pikapika.mp3";
-char FALLSND0F[32] = "vo/wario/wheee.mp3";
-char FALLSND10[32] = "vo/mario/wowww.mp3";
-char GLOBALTHUNDER01[32] = "fartsy/weather/thunder1.wav";
-char GLOBALTHUNDER02[32] = "fartsy/weather/thunder2.wav";
-char GLOBALTHUNDER03[32] = "fartsy/weather/thunder3.wav";
-char GLOBALTHUNDER04[32] = "fartsy/weather/thunder4.wav";
-char GLOBALTHUNDER05[32] = "fartsy/weather/thunder5.wav";
-char GLOBALTHUNDER06[32] = "fartsy/weather/thunder6.wav";
-char GLOBALTHUNDER07[32] = "fartsy/weather/thunder7.wav";
-char GLOBALTHUNDER08[32] = "fartsy/weather/thunder8.wav";
-char GOOBBUEINCOMING[32] = "vo/fartsy/goobbue.mp3";
-char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
-char SHARKSND02[64] = "fartsy/memes/babyshark/baby02.mp3";
-char SHARKSND03[64] = "fartsy/memes/babyshark/doot01.mp3";
-char SHARKSND04[64] = "fartsy/memes/babyshark/doot02.mp3";
-char SHARKSND05[64] = "fartsy/memes/babyshark/doot03.mp3";
-char SHARKSND06[64] = "fartsy/memes/babyshark/doot04.mp3";
-char SHARKSND07[64] = "fartsy/memes/babyshark/shark.mp3";
-char SHARKSND08[64] = "fartsy/memes/babyshark/shark02.mp3";
-char STRONGMAN[32] = "fartsy/misc/strongman_bell.wav";
-char TRIGGERSCORE[32] = "fartsy/misc/triggerscore.wav";
-char WTFBOOM[32] = "fartsy/wtfboom.mp3";
-float HWNMin = 210.0;
-float HWNMax = 380.0;
-int BGMSNDLVL = 90;
+char songName[64] = "null";
+static char DEFAULTBGM1[64] = "fartsy/ffxiv/bgm/TheSilentRegardOfStars.mp3";
+static char DEFAULTBGM2[64] = "fartsy/ffxiv/bgm/KnowledgeNeverSleeps.mp3";
+static float DefBGM1Dur = 137.75;
+static float DefBGM2Dur = 235.5;
+static char DEFAULTBGM1Title[64] = "FFXIV - The Silent Regard of Stars";
+static char DEFAULTBGM2Title[64] = "FFXIV - Knowledge Never Sleeps";
+static char FALLSND01[32] = "vo/l4d2/billfall02.mp3";
+static char FALLSND02[32] = "vo/l4d2/coachfall02.mp3";
+static char FALLSND03[32] = "vo/l4d2/ellisfall01.mp3";
+static char FALLSND04[32] = "vo/l4d2/francisfall02.mp3";
+static char FALLSND05[32] = "vo/l4d2/louisfall01.mp3";
+static char FALLSND06[32] = "vo/l4d2/louisfall03.mp3";
+static char FALLSND07[32] = "vo/l4d2/nickfall01.mp3";
+static char FALLSND08[32] = "vo/l4d2/zoeyfall01.mp3";
+static char FALLSND09[32] = "vo/ddd/woahhh.mp3";
+static char FALLSND0A[32] = "vo/jigglypuff/jigglypuff.mp3";
+static char FALLSND0B[32] = "vo/kirby/eeeahhhh.mp3";
+static char FALLSND0C[32] = "vo/luigi/ohohohohoo.mp3";
+static char FALLSND0D[32] = "vo/mario/wahahahaha.mp3";
+static char FALLSND0E[32] = "vo/pika/pikapika.mp3";
+static char FALLSND0F[32] = "vo/wario/wheee.mp3";
+static char FALLSND10[32] = "vo/mario/wowww.mp3";
+static char GLOBALTHUNDER01[32] = "fartsy/weather/thunder1.wav";
+static char GLOBALTHUNDER02[32] = "fartsy/weather/thunder2.wav";
+static char GLOBALTHUNDER03[32] = "fartsy/weather/thunder3.wav";
+static char GLOBALTHUNDER04[32] = "fartsy/weather/thunder4.wav";
+static char GLOBALTHUNDER05[32] = "fartsy/weather/thunder5.wav";
+static char GLOBALTHUNDER06[32] = "fartsy/weather/thunder6.wav";
+static char GLOBALTHUNDER07[32] = "fartsy/weather/thunder7.wav";
+static char GLOBALTHUNDER08[32] = "fartsy/weather/thunder8.wav";
+static char GOOBBUEINCOMING[32] = "vo/fartsy/goobbue.mp3";
+static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
+static char SHARKSND02[64] = "fartsy/memes/babyshark/baby02.mp3";
+static char SHARKSND03[64] = "fartsy/memes/babyshark/doot01.mp3";
+static char SHARKSND04[64] = "fartsy/memes/babyshark/doot02.mp3";
+static char SHARKSND05[64] = "fartsy/memes/babyshark/doot03.mp3";
+static char SHARKSND06[64] = "fartsy/memes/babyshark/doot04.mp3";
+static char SHARKSND07[64] = "fartsy/memes/babyshark/shark.mp3";
+static char SHARKSND08[64] = "fartsy/memes/babyshark/shark02.mp3";
+static char STRONGMAN[32] = "fartsy/misc/strongman_bell.wav";
+static char TRIGGERSCORE[32] = "fartsy/misc/triggerscore.wav";
+static char WTFBOOM[32] = "fartsy/wtfboom.mp3";
+static float HWNMin = 210.0;
+static float HWNMax = 380.0;
+static int BGMSNDLVL = 90;
 int CodeEntry = 0;
-int DEFBGMSNDLVL = 40;
+static int DEFBGMSNDLVL = 40;
 int bombStatus = 0;
 int bombStatusMax = 0;
 int explodeType = 0;
 int sacPoints = 0;
 int sacPointsMax = 60;
-int SNDCHAN = 6;
+static int SNDCHAN = 6;
 public Plugin myinfo =
 {
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.3.8",
+	version = "3.4.7",
 	url = "https://forums.firehostredux.com"
 };
 
 public void OnPluginStart()
 {
-	PrecacheSound(BELL, true),
-	PrecacheSound(BGM1, true),
-	PrecacheSound(BGM2, true),
-	PrecacheSound(BGM3, true),
-	PrecacheSound(BGM4, true),
-	PrecacheSound(BGM5, true),
-	PrecacheSound(BGM6, true),
-	PrecacheSound(BGM7, true),
-	PrecacheSound(BGM8, true),
-	PrecacheSound(CLOCKTICK, true),
-	PrecacheSound(COUNTDOWN, true),
-	PrecacheSound(CRUSADERATTACK, true),
-	PrecacheSound(DEFAULTBGM1, true),
-	PrecacheSound(DEFAULTBGM2, true),
-	PrecacheSound(FALLSND01, true),
-	PrecacheSound(FALLSND02, true),
-	PrecacheSound(FALLSND03, true),
-	PrecacheSound(FALLSND04, true),
-	PrecacheSound(FALLSND05, true),
-	PrecacheSound(FALLSND06, true),
-	PrecacheSound(FALLSND07, true),
-	PrecacheSound(FALLSND08, true),
-	PrecacheSound(FALLSND09, true),
-	PrecacheSound(FALLSND0A, true),
-	PrecacheSound(FALLSND0B, true),
-	PrecacheSound(FALLSND0C, true),
-	PrecacheSound(FALLSND0D, true),
-	PrecacheSound(FALLSND0E, true),
-	PrecacheSound(FALLSND0F, true),
-	PrecacheSound(FALLSND10, true),
-	PrecacheSound(GLOBALTHUNDER01, true),
-	PrecacheSound(GLOBALTHUNDER02, true),
-	PrecacheSound(GLOBALTHUNDER03, true),
-	PrecacheSound(GLOBALTHUNDER04, true),
-	PrecacheSound(GLOBALTHUNDER05, true),
-	PrecacheSound(GLOBALTHUNDER06, true),
-	PrecacheSound(GLOBALTHUNDER07, true),
-	PrecacheSound(GLOBALTHUNDER08, true),
-	PrecacheSound(GOOBBUEINCOMING, true),
-	PrecacheSound(SHARKSND01, true),
-	PrecacheSound(SHARKSND02, true),
-	PrecacheSound(SHARKSND03, true),
-	PrecacheSound(SHARKSND04, true),
-	PrecacheSound(SHARKSND05, true),
-	PrecacheSound(SHARKSND06, true),
-	PrecacheSound(SHARKSND07, true),
-	PrecacheSound(SHARKSND08, true),
-	PrecacheSound(STRONGMAN, true),
-	PrecacheSound(TRIGGERSCORE, true),
-	PrecacheSound(WTFBOOM, true),
-	PrecacheSound("fartsy/fallingback/bgm.mp3", true),
-	RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client."),
-	RegServerCmd("tacobell_wave01", Command_TBWave01,"Taco Bell - Wave One"),
-	RegServerCmd("tacobell_finished", Command_TacoBellFinished, "TacoBell has been completed!"),
-	RegConsoleCmd("sm_bombstatus", Command_FBBombStatus, "Check bomb status"),
-	RegConsoleCmd("sm_sacstatus", Command_FBSacStatus, "Check sacrifice points status"),
-	RegConsoleCmd("sm_song", Command_GetCurrentSong, "Get current song name"),
-	HookEvent("player_death", EventDeath),
-	HookEvent("server_cvar", Event_Cvar, EventHookMode_Pre),
-	HookEvent("mvm_wave_complete", EventWaveComplete),
-	HookEvent("mvm_wave_failed", EventWaveFailed),
-	HookEvent("mvm_bomb_alarm_triggered", EventWarning),
-	HookEvent("mvm_bomb_reset_by_player", EventReset);
+    PrecacheSound(BELL, true),
+    PrecacheSound(BGM1, true),
+    PrecacheSound(BGM2, true),
+    PrecacheSound(BGM3, true),
+    PrecacheSound(BGM4, true),
+    PrecacheSound(BGM5, true),
+    PrecacheSound(BGM6, true),
+    PrecacheSound(BGM7, true),
+    PrecacheSound(BGM8, true),
+    PrecacheSound(CLOCKTICK, true),
+    PrecacheSound(COUNTDOWN, true),
+    PrecacheSound(CRUSADERATTACK, true),
+    PrecacheSound(DEFAULTBGM1, true),
+    PrecacheSound(DEFAULTBGM2, true),
+    PrecacheSound(FALLSND01, true),
+    PrecacheSound(FALLSND02, true),
+    PrecacheSound(FALLSND03, true),
+    PrecacheSound(FALLSND04, true),
+    PrecacheSound(FALLSND05, true),
+    PrecacheSound(FALLSND06, true),
+    PrecacheSound(FALLSND07, true),
+    PrecacheSound(FALLSND08, true),
+    PrecacheSound(FALLSND09, true),
+    PrecacheSound(FALLSND0A, true),
+    PrecacheSound(FALLSND0B, true),
+    PrecacheSound(FALLSND0C, true),
+    PrecacheSound(FALLSND0D, true),
+    PrecacheSound(FALLSND0E, true),
+    PrecacheSound(FALLSND0F, true),
+    PrecacheSound(FALLSND10, true),
+    PrecacheSound(GLOBALTHUNDER01, true),
+    PrecacheSound(GLOBALTHUNDER02, true),
+    PrecacheSound(GLOBALTHUNDER03, true),
+    PrecacheSound(GLOBALTHUNDER04, true),
+    PrecacheSound(GLOBALTHUNDER05, true),
+    PrecacheSound(GLOBALTHUNDER06, true),
+    PrecacheSound(GLOBALTHUNDER07, true),
+    PrecacheSound(GLOBALTHUNDER08, true),
+    PrecacheSound(GOOBBUEINCOMING, true),
+    PrecacheSound(SHARKSND01, true),
+    PrecacheSound(SHARKSND02, true),
+    PrecacheSound(SHARKSND03, true),
+    PrecacheSound(SHARKSND04, true),
+    PrecacheSound(SHARKSND05, true),
+    PrecacheSound(SHARKSND06, true),
+    PrecacheSound(SHARKSND07, true),
+    PrecacheSound(SHARKSND08, true),
+    PrecacheSound(STRONGMAN, true),
+    PrecacheSound(TRIGGERSCORE, true),
+    PrecacheSound(WTFBOOM, true),
+    PrecacheSound("fartsy/fallingback/bgm.mp3", true),
+    RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client."),
+    RegServerCmd("tacobell_wave01", Command_TBWave01,"Taco Bell - Wave One"),
+    RegServerCmd("tacobell_finished", Command_TacoBellFinished, "TacoBell has been completed!"),
+    RegConsoleCmd("sm_bombstatus", Command_FBBombStatus, "Check bomb status"),
+    RegConsoleCmd("sm_sacstatus", Command_FBSacStatus, "Check sacrifice points status"),
+    RegConsoleCmd("sm_song", Command_GetCurrentSong, "Get current song name"),
+    HookEvent("player_death", EventDeath),
+    HookEvent("server_cvar", Event_Cvar, EventHookMode_Pre),
+    HookEvent("mvm_wave_complete", EventWaveComplete),
+    HookEvent("mvm_wave_failed", EventWaveFailed),
+    HookEvent("mvm_bomb_alarm_triggered", EventWarning),
+    HookEvent("mvm_bomb_reset_by_player", EventReset);
+    PrintToChatAll("Plugin Loaded.");
+    CreateTimer(1.0, PerformAdverts);
 }
 
 //Now that command definitions are done, lets make some things happen.
 public void OnMapStart()
 {
-    PrintToChatAll("Plugin Loaded.");
-    CreateTimer(1.0, PerformAdverts);
-    SelectBGM();
     FireEntityInput("rain", "Alpha", "0", 0.0);
 }
 //Select background music
@@ -183,24 +207,27 @@ public Action SelectBGM()
 		case 1:{
 			EmitSoundToAll(DEFAULTBGM1, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = DEFAULTBGM1;
-			CreateTimer(137.75, RefireBGM);
+			songName = DEFAULTBGM1Title;
+			CreateTimer(DefBGM1Dur, RefireDefBGM1);
 			PrintToServer("Creating timer for The Silent Regard of Stars. Enjoy the music!");
 		}
 		case 2:{
 			EmitSoundToAll(DEFAULTBGM2, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = DEFAULTBGM2;
+			songName = DEFAULTBGM2Title;
 			PrintToServer("Creating timer for Knowledge Never Sleeps. Enjoy the music!");
-			CreateTimer(235.5, RefireBGMAlt);
+			CreateTimer(DefBGM2Dur, RefireDefBGM2);
 		}
 	}
 }
 //Stop current song
 public Action StopCurSong(){
-	for(int i=1;i<=MaxClients;i++)
+    if (StrEqual(curSong, "null")) return Plugin_Handled;
+    for(int i=1;i<=MaxClients;i++)
     {
         StopSound(i, SNDCHAN, curSong);
     }
-	return Plugin_Handled;
+    return Plugin_Handled;
 }
 
 //Timers
@@ -235,117 +262,145 @@ public Action PerformAdverts(Handle timer){
 	}
 	return Plugin_Stop;
 }
-//BGM (Defaults)
-public Action RefireBGM(Handle timer)
-{
-	if (!isWave){
-        SelectBGM();
-        PrintToServer("RefireBGM!");
-        return Plugin_Stop;
+//Adverts for wave information
+public Action PerformWaveAdverts(Handle timer){
+	if (isWave){
+		CreateTimer(2.5, PerformWaveAdverts);
+		for(int i=1;i<=MaxClients;i++)
+    	{
+			switch (bombStatus){
+				case 8,16,24,32,40,48,56,64:{
+					if(TornadoWarningIssued){
+						PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. PLEASE TAKE PRECAUTIONS NOW.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+						StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");	
+					}
+					PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+					StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
+				}
+				case 0,1,2,3,4,5,6,7,9,10,11,13,14,15,17,18,19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,38,39,41,42,43,44,45,46,47,49,50,51,52,53,54,55,57,58,59,60,61,62,63:{
+					if(TornadoWarningIssued){
+						PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. PLEASE TAKE PRECAUTIONS NOW.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+						StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");	
+					}
+					PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+					StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
+				}
+			}
+    	}
 	}
 	return Plugin_Stop;
 }
-//BGM Default2
-public Action RefireBGMAlt(Handle timer)
+//Background Music System
+public Action RefireDefBGM1(Handle timer)
 {
 	if (!isWave){
         SelectBGM();
-        PrintToServer("RefireBGMAlt!");
+        PrintToServer("RefireBGM1!");
         return Plugin_Stop;
 	}
 	return Plugin_Stop;
 }
 
-//BGM (Locus)
-public Action RefireLocus(Handle timer)
+public Action RefireDefBGM2(Handle timer)
+{
+	if (!isWave){
+        SelectBGM();
+        PrintToServer("RefireBGM2!");
+        return Plugin_Stop;
+	}
+	return Plugin_Stop;
+}
+
+public Action RefireBGM1(Handle timer)
 {
 	if (!bgmlock1){
 		StopCurSong();
 		EmitSoundToAll(BGM1, _, SNDCHAN, DEFBGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM1;
-		CreateTimer(229.25, RefireLocus);
+		songName = BGM1Title;
+		CreateTimer(BGM1Dur, RefireBGM1);
 	}
 	return Plugin_Stop;
 }
 
-//BGM (Metal)
-public Action RefireMetal(Handle timer)
+public Action RefireBGM2(Handle timer)
 {
 	if (!bgmlock2){
 		StopCurSong();
 		EmitSoundToAll(BGM2, _, SNDCHAN, DEFBGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM2;
-		CreateTimer(153.95, RefireMetal);
+		songName = BGM2Title;
+		CreateTimer(BGM2Dur, RefireBGM2);
 	}
 	return Plugin_Stop;
 }
 
-//BGM (Exponential Entropy)
-public Action RefireEntropy(Handle timer)
+public Action RefireBGM3(Handle timer)
 {
 	if (!bgmlock3){
 		StopCurSong();
 		EmitSoundToAll(BGM3, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM3;
-		CreateTimer(166.85, RefireEntropy);
+		songName = BGM3Title;
+		CreateTimer(BGM3Dur, RefireBGM3);
 	}
 	return Plugin_Stop;
 }
 
-//BGM (Torn From the Heavens)
-public Action RefireTorn(Handle timer)
+public Action RefireBGM4(Handle timer)
 {
 	if (!bgmlock4){
 		StopCurSong();
 		EmitSoundToAll(BGM4, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM4;
-		CreateTimer(122.25, RefireTorn);
+		songName = BGM4Title;
+		CreateTimer(BGM4Dur, RefireBGM4);
 	}
 	return Plugin_Stop;
 }
 
-//BGM (Brute Justice Mode)
-public Action RefireBJMode(Handle timer)
+public Action RefireBGM5(Handle timer)
 {
 	if (!bgmlock5){
 		StopCurSong();
 		EmitSoundToAll(BGM5, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM5;
-		CreateTimer(131.75, RefireBJMode);
+		songName = BGM5Title;
+		CreateTimer(BGM5Dur, RefireBGM5);
 	}
 	return Plugin_Stop;
 }
 
-//BGM (Grandma Destruction)
-public Action RefireGrandma(Handle timer)
+public Action RefireBGM6(Handle timer)
 {
 	if (!bgmlock6){
 		StopCurSong();
 		EmitSoundToAll(BGM6, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM6;
-		CreateTimer(323.95, RefireGrandma);
+		songName = BGM6Title;
+		CreateTimer(BGM6Dur, RefireBGM6);
 	}
 	return Plugin_Stop;
 }
 
-//BGM (Revenge Twofold)
-public Action RefireRevenge2F(Handle timer){
+public Action RefireBGM7(Handle timer){
 	if (!bgmlock7){
 		StopCurSong();
 		EmitSoundToAll(BGM7, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM7;
-		CreateTimer(133.25, RefireRevenge2F);
+		songName = BGM7Title;
+		CreateTimer(BGM7Dur, RefireBGM7);
 	}
 	return Plugin_Stop;
 }
 
-//BGM (Under The Weight)
-public Action RefireUnderTW(Handle timer){
+public Action RefireBGM8(Handle timer){
 	if (!bgmlock8){
 		StopCurSong();
 		EmitSoundToAll(BGM8, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM8;
-		CreateTimer(313.85, RefireUnderTW);
+		songName = BGM8Title;
+		CreateTimer(BGM8Dur, RefireBGM8);
 	}
 	return Plugin_Stop;
 }
@@ -501,11 +556,18 @@ public Action StrikeLightning(){
 public Action ActivateTornadoTimer(){
 	if (isWave && canTornado){
 		float f = GetRandomFloat(210.0, 500.0);
+		float x = f - 30.0;
+		CreateTimer (x, TornadoWarning);
 		CreateTimer(f, SpawnTornado);
 	}
 	return Plugin_Stop;
 }
+//Tornado Warning in Effect!
+public Action TornadoWarning(Handle timer){
+	EmitSoundToAll("mvm/ambient_mp3/mvm_siren.mp3"),
 
+	TornadoWarningIssued = true;
+}
 //Spawn the tornado.
 public Action SpawnTornado(Handle timer){
 	if (isWave && canTornado && !tornado){
@@ -525,6 +587,7 @@ public Action SpawnTornado(Handle timer){
 //After a predetermined time, despawn the tornado.
 public Action DespawnTornado(Handle timer){
 	KillTornado();
+	TornadoWarningIssued = false;
 	ActivateTornadoTimer();
 }
 
@@ -553,40 +616,42 @@ public Action UnlockTimer (Handle timer){
 
 //SpecTimer
 public Action SpecTimer(Handle timer){
-	int i = GetRandomInt(1, 6);
-	switch (i){
-		case 1:{
-			FireEntityInput("Spec.*", "Disable", "", 0.0),
-			FireEntityInput("Spec.Goobbue", "Enable", "", 0.1),
-			PrintToChatAll("\x070000AA Legend tells of a Goobbue sproutling somewhere nearby...");
+	if(isWave){
+		int i = GetRandomInt(1, 6);
+		switch (i){
+			case 1:{
+				FireEntityInput("Spec.*", "Disable", "", 0.0),
+				FireEntityInput("Spec.Goobbue", "Enable", "", 0.1),
+				PrintToChatAll("\x070000AA Legend tells of a Goobbue sproutling somewhere nearby...");
+			}
+			case 2:{
+				FireEntityInput("Spec.*", "Disable", "", 0.0),
+				FireEntityInput("Spec.Waffle", "Enable", "", 0.1),
+				PrintToChatAll("\x0700A0A0Don't eat THESE...");
+			}
+			case 3:{
+				FireEntityInput("Spec.*", "Disable", "", 0.0),
+				FireEntityInput("Spec.Burrito", "Enable", "", 0.1),
+				PrintToChatAll("\x07A00000What's worse than Taco Bell?");
+			}
+			case 4:{
+				FireEntityInput("Spec.*", "Disable", "", 0.0),
+				FireEntityInput("Spec.Shroom", "Enable", "", 0.1),
+				PrintToChatAll("\x07DD0000M\x07FFFFFFA\x07DD0000R\x07FFFFFFI\x07DD0000O\x07FFFFFF time!");
+			}
+			case 5:{
+				FireEntityInput("Spec.*", "Disable", "", 0.0),
+				FireEntityInput("Spec.BlueBall", "Enable", "", 0.1),
+				PrintToChatAll("A \x070000AA Blue Ball \x07FFFFFF lurks from afar...");
+			}
+			case 6:{
+				FireEntityInput("Spec.*", "Enable", "", 0.0),
+				PrintToChatAll("\x07AA00AAIs it a miracle? Is it  chaos? WHO KNOWWWWWWS");
+			}
 		}
-		case 2:{
-			FireEntityInput("Spec.*", "Disable", "", 0.0),
-			FireEntityInput("Spec.Waffle", "Enable", "", 0.1),
-			PrintToChatAll("\x0700A0A0Don't eat THESE...");
-		}
-		case 3:{
-			FireEntityInput("Spec.*", "Disable", "", 0.0),
-			FireEntityInput("Spec.Burrito", "Enable", "", 0.1),
-			PrintToChatAll("\x07A00000What's worse than Taco Bell?");
-		}
-		case 4:{
-			FireEntityInput("Spec.*", "Disable", "", 0.0),
-			FireEntityInput("Spec.Shroom", "Enable", "", 0.1),
-			PrintToChatAll("\x07DD0000M\x07FFFFFFA\x07DD0000R\x07FFFFFFI\x07DD0000O\x07FFFFFF time!");
-		}
-		case 5:{
-			FireEntityInput("Spec.*", "Disable", "", 0.0),
-			FireEntityInput("Spec.BlueBall", "Enable", "", 0.1),
-			PrintToChatAll("A \x070000AA Blue Ball \x07FFFFFF lurks from afar...");
-		}
-		case 6:{
-			FireEntityInput("Spec.*", "Enable", "", 0.0),
-			PrintToChatAll("\x07AA00AAIs it a miracle? Is it  chaos? WHO KNOWWWWWWS");
-		}
+		float spDelay = GetRandomFloat(10.0, 30.0);
+		CreateTimer(spDelay, SpecTimer);
 	}
-	float spDelay = GetRandomFloat(10.0, 30.0);
-	CreateTimer(spDelay, SpecTimer);
 	return Plugin_Stop;
 }
 
@@ -713,6 +778,7 @@ public Action SENTStarDisable(Handle timer){
 //TankHornSND because why not when code entry fails???
 public Action FBCodeFailTankHornSND(Handle timer){
 	EmitSoundToAll("mvm/mvm_tank_horn.wav");
+	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55A \x07FF0000TORNADO WARNING \x0700AA55has been issued! Take cover \x07AA0000NOW\x07FFFFFF.");
 	return Plugin_Stop;
 }
 
@@ -1125,7 +1191,8 @@ public Action Command_FBBombStatus(int client, int args){
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Bombs are \x07FF0000NOT READY\x07FFFFFF!");
 		}
 		case 8:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has not deployed any bombs, however: Your team's \x07FF0000FREEDOM BOMB \x0700AA55is available for deployment!");
+			if(!bombProgression) PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has not deployed any bombs, however: Your team's \x07FF0000FREEDOM BOMB \x0700AA55is available for deployment!");
+			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing a \x07FF0000FREEDOM BOMB \x0700AA55!");
 		}
 		case 9,10,11,12,13,14,15:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFREEDOM BOMB \x0700AA55. Please wait for the next bomb.");
@@ -1515,17 +1582,19 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     SelectBGM();
     CreateTimer(1.0, PerformAdverts);
     FireEntityInput("rain", "Alpha", "0", 0.0);
-//	PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFWave set/reset success!");
+    PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFWave \x07FF0000failed\x07FFFFFF successfully!");
     FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
     FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
 }
 //Announce the bomb has been reset by client %N.
 public Action EventReset(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast)
 {
+	char clientName[64];
 	int client = Spawn_Event.GetInt("player");
-	if (0 < client <= MaxClients && IsClientInGame(client))
+	if (client <= MaxClients && IsClientInGame(client))
     {
-		PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Client \x0700AA00%N\x07FFFFFF has reset the ass!", client);
+		GetClientName(client, clientName, sizeof(client));
+		PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Client \x0700AA00%s\x07FFFFFF has reset the ass!", clientName);
 	}
 	return Plugin_Handled;
 }
@@ -1555,11 +1624,12 @@ public Action GetWave(int args){
 			bombStatus = 0;
 			bombStatusMax = 10;
 			sacPointsMax = 90;
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 1: Locus");
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 1: \x0700AA00%s", BGM1Title);
 			StopCurSong();
+			CreateTimer(2.5, PerformWaveAdverts);
 			EmitSoundToAll(BGM1, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = BGM1;
-			CreateTimer(229.25, RefireLocus);
+			CreateTimer(BGM1Dur, RefireBGM1);
 			CreateTimer(1.0, BombStatusAddTimer);
 			CreateTimer(0.1, BombStatusUpdater);
 			CreateTimer(1.0, RobotLaunchTimer);
@@ -1593,11 +1663,12 @@ public Action GetWave(int args){
 			bombStatus = 4;
 			bombStatusMax = 18;
 			sacPointsMax = 90;
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 2: Metal");
+			CreateTimer(2.5, PerformWaveAdverts);
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 2: \x0700AA00%s", BGM2Title);
 			StopCurSong();
 			EmitSoundToAll(BGM2, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = BGM2;
-			CreateTimer(153.95, RefireMetal);
+			CreateTimer(BGM2Dur, RefireBGM2);
 			CreateTimer(1.0, BombStatusAddTimer);
 			CreateTimer(0.1, BombStatusUpdater);
 			CreateTimer(1.0, RobotLaunchTimer);
@@ -1634,11 +1705,12 @@ public Action GetWave(int args){
 			bombStatus = 7;
 			bombStatusMax = 26;
 			sacPointsMax = 90;
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 3: Exponential Entropy");
+			CreateTimer(2.5, PerformWaveAdverts);
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 3: \x0700AA00%s", BGM3Title);
 			StopCurSong();
 			EmitSoundToAll(BGM3, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = BGM3;
-			CreateTimer(166.85, RefireEntropy);
+			CreateTimer(BGM3Dur, RefireBGM3);
 			CreateTimer(1.0, BombStatusAddTimer);
 			CreateTimer(0.1, BombStatusUpdater);
 			CreateTimer(1.0, RobotLaunchTimer);
@@ -1679,11 +1751,12 @@ public Action GetWave(int args){
 			bombStatus = 12;
 			bombStatusMax = 34;
 			sacPointsMax = 90;
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 4: Torn From The Heavens");
+			CreateTimer(2.5, PerformWaveAdverts);
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 4: \x0700AA00%s", BGM4Title);
 			StopCurSong();
 			EmitSoundToAll(BGM4, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = BGM4;
-			CreateTimer(122.25, RefireTorn);
+			CreateTimer(BGM4Dur, RefireBGM4);
 			CreateTimer(1.0, BombStatusAddTimer);
 			CreateTimer(0.1, BombStatusUpdater);
 			CreateTimer(1.0, RobotLaunchTimer);
@@ -1723,11 +1796,11 @@ public Action GetWave(int args){
 			bombStatus = 14;
 			bombStatusMax = 42;
 			sacPointsMax = 100;
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 5: Metal - Brute Justice Mode");
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 5: \x0700AA00%s", BGM5Title);
 			StopCurSong();
 			EmitSoundToAll(BGM5, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = BGM5;
-			CreateTimer(131.75, RefireBJMode);
+			CreateTimer(BGM5Dur, RefireBGM5);
 			CreateTimer(1.0, BombStatusAddTimer);
 			CreateTimer(0.1, BombStatusUpdater);
 			CreateTimer(1.0, RobotLaunchTimer);
@@ -1771,11 +1844,11 @@ public Action GetWave(int args){
 			bombStatus = 20;
 			bombStatusMax = 50;
 			sacPointsMax = 100;
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 6: Grandma Destruction");
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 6: \x0700AA00%s", BGM6Title);
 			StopCurSong();
 			EmitSoundToAll(BGM6, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = BGM6;
-			CreateTimer(323.95, RefireGrandma);
+			CreateTimer(BGM6Dur, RefireBGM6);
 			CreateTimer(1.0, BombStatusAddTimer);
 			CreateTimer(0.1, BombStatusUpdater);
 			CreateTimer(1.0, RobotLaunchTimer);
@@ -1815,11 +1888,11 @@ public Action GetWave(int args){
 			bombStatus = 28;
 			bombStatusMax = 58;
 			sacPointsMax = 100;
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 7: Revenge Twofold");
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 7: \x0700AA00%s", BGM7Title);
 			StopCurSong();
 			EmitSoundToAll(BGM7, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = BGM7;
-			CreateTimer(133.25, RefireRevenge2F);
+			CreateTimer(BGM7Dur, RefireBGM7);
 			CreateTimer(1.0, BombStatusAddTimer);
 			CreateTimer(0.1, BombStatusUpdater);
 			CreateTimer(1.0, RobotLaunchTimer);
@@ -1860,11 +1933,11 @@ public Action GetWave(int args){
 			bombStatus = 30;
 			bombStatusMax = 66;
 			sacPointsMax = 100;
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 8: Under The Weight");
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 8: \x0700AA00%s", BGM8Title);
 			StopCurSong();
 			EmitSoundToAll(BGM8, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = BGM8;
-			CreateTimer(313.85, RefireUnderTW);
+			CreateTimer(BGM8Dur, RefireBGM8);
 			CreateTimer(1.0, BombStatusAddTimer);
 			CreateTimer(0.1, BombStatusUpdater);
 			CreateTimer(1.0, RobotLaunchTimer);
@@ -2010,7 +2083,8 @@ public Action Command_Operator(int args){
 		}
 		//Prepare yourself!
 		case 2:{
-			PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000DOVAH'S ASS\x07FFFFFF v0x13. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
+            PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000DOVAH'S ASS\x07FFFFFF v0x13. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
+            FireEntityInput("rain", "Alpha", "0", 0.0);
 		}
 		//Force Tornado
 		case 3:{
@@ -2169,12 +2243,15 @@ public Action Command_Operator(int args){
 			}
 			return Plugin_Handled;
 		}
-		//Shark Enable
+		//Shark Enable & notify bomb push began
 		case 20:{
+			bombProgression = true;
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0755AA55Bomb push in progress.");
 			CreateTimer(3.0, SharkTimer);
 		}
 		//Shark Disable
 		case 21:{
+			bombProgression = false;
 			canSENTShark = false;
 		}
 		//HINDENBOOM!!!
