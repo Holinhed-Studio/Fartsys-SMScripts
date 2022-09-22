@@ -176,6 +176,7 @@ public void OnPluginStart()
     PrecacheSound(STRONGMAN, true),
     PrecacheSound(TRIGGERSCORE, true),
     PrecacheSound(WTFBOOM, true),
+	PrecacheSound("mvm/ambient_mp3/mvm_siren.mp3", true),
     PrecacheSound("fartsy/fallingback/bgm.mp3", true),
     RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client."),
     RegServerCmd("tacobell_wave01", Command_TBWave01,"Taco Bell - Wave One"),
