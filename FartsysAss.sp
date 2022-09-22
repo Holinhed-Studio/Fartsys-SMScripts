@@ -95,7 +95,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.3.6",
+	version = "3.3.8",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -169,21 +169,22 @@ public void OnPluginStart()
 //Now that command definitions are done, lets make some things happen.
 public void OnMapStart()
 {
-	FireEntityInput("BombStatus", "disable", "", 0.0),
-	SelectBGM();
+    PrintToChatAll("Plugin Loaded.");
+    CreateTimer(1.0, PerformAdverts);
+    SelectBGM();
+    FireEntityInput("rain", "Alpha", "0", 0.0);
 }
 //Select background music
 public Action SelectBGM()
 {
 	StopCurSong();
-	CreateTimer(1.0, PerformAdverts);
 	int BGM = GetRandomInt(1, 2);
 	switch(BGM){
 		case 1:{
 			EmitSoundToAll(DEFAULTBGM1, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 			curSong = DEFAULTBGM1;
-			PrintToServer("Creating timer for The Silent Regard of Stars. Enjoy the music!");
 			CreateTimer(137.75, RefireBGM);
+			PrintToServer("Creating timer for The Silent Regard of Stars. Enjoy the music!");
 		}
 		case 2:{
 			EmitSoundToAll(DEFAULTBGM2, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
@@ -224,6 +225,12 @@ public Action PerformAdverts(Handle timer){
 			case 5:{
 				PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF Don't forget to buy \x0700AA00protection upgrades\x07FFFFFF and \x0700AA00ammo regen\x07FFFFFF (if applicable)!");
 			}
+            case 6:{
+                PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF TIP: As a DEFENDER, pushing your team's \x0700AA00payload\x07FFFFFF is crucial to wrecking havoc on the robots!");
+            }
+            case 7:{
+                PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF Remember, if someone is being abusive, you may always invoke \x0700AA00!calladmin\x07FFFFFF.");
+            }
 		}
 	}
 	return Plugin_Stop;
@@ -232,8 +239,9 @@ public Action PerformAdverts(Handle timer){
 public Action RefireBGM(Handle timer)
 {
 	if (!isWave){
-		SelectBGM();
-		return Plugin_Stop;
+        SelectBGM();
+        PrintToServer("RefireBGM!");
+        return Plugin_Stop;
 	}
 	return Plugin_Stop;
 }
@@ -241,8 +249,9 @@ public Action RefireBGM(Handle timer)
 public Action RefireBGMAlt(Handle timer)
 {
 	if (!isWave){
-		SelectBGM();
-		return Plugin_Stop;
+        SelectBGM();
+        PrintToServer("RefireBGMAlt!");
+        return Plugin_Stop;
 	}
 	return Plugin_Stop;
 }
@@ -1452,31 +1461,33 @@ public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast)
 //When we win
 public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast)
 {
-	bgmlock1 = true;
-	bgmlock2 = true;
-	bgmlock3 = true;
-	bgmlock4 = true;
-	bgmlock5 = true;
-	bgmlock6 = true;
-	bgmlock7 = true;
-	bgmlock8 = true;
-	canHWBoss = false;
-	canTornado = false;
-	isWave = false;
-	bombStatusMax = 7;
-	bombStatus = 5;
-	explodeType = 0;
-	SelectBGM();
-	PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFYou've defeated the wave!");
-	FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
-	FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
-	FireEntityInput("Barricade_Rebuild_Relay", "Trigger", "", 0.0);
-	FireEntityInput("OldSpawn", "Disable", "", 0.0);
-	FireEntityInput("NewSpawn", "Enable", "", 0.0);
-	FireEntityInput("dovahsassprefer", "Disable", "", 0.0);
-	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.0);
-	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.0);
-	ChooseBombPath();
+    bgmlock1 = true;
+    bgmlock2 = true;
+    bgmlock3 = true;
+    bgmlock4 = true;
+    bgmlock5 = true;
+    bgmlock6 = true;
+    bgmlock7 = true;
+    bgmlock8 = true;
+    canHWBoss = false;
+    canTornado = false;
+    isWave = false;
+    bombStatusMax = 7;
+    bombStatus = 5;
+    explodeType = 0;
+    SelectBGM();
+    CreateTimer(1.0, PerformAdverts);
+    PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFYou've defeated the wave!");
+    FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
+    FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
+    FireEntityInput("Barricade_Rebuild_Relay", "Trigger", "", 0.0);
+    FireEntityInput("OldSpawn", "Disable", "", 0.0);
+    FireEntityInput("NewSpawn", "Enable", "", 0.0);
+    FireEntityInput("dovahsassprefer", "Disable", "", 0.0);
+    FireEntityInput("bombpath_left_arrows", "Disable", "", 0.0);
+    FireEntityInput("bombpath_right_arrows", "Disable", "", 0.0);
+    FireEntityInput("rain", "Alpha", "0", 0.0);
+    ChooseBombPath();
 }
 
 //Announce when we are in danger.
@@ -1487,24 +1498,26 @@ public Action EventWarning(Event Spawn_Event, const char[] Spawn_Name, bool Spaw
 
 //When we fail
 public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
-	bgmlock1 = true;
-	bgmlock2 = true;
-	bgmlock3 = true;
-	bgmlock4 = true;
-	bgmlock5 = true;
-	bgmlock6 = true;
-	bgmlock7 = true;
-	bgmlock8 = true;
-	canHWBoss = false;
-	canTornado = false;
-	isWave = false;
-	bombStatusMax = 7;
-	bombStatus = 5;
-	explodeType = 0;
-	SelectBGM();
+    bgmlock1 = true;
+    bgmlock2 = true;
+    bgmlock3 = true;
+    bgmlock4 = true;
+    bgmlock5 = true;
+    bgmlock6 = true;
+    bgmlock7 = true;
+    bgmlock8 = true;
+    canHWBoss = false;
+    canTornado = false;
+    isWave = false;
+    bombStatusMax = 7;
+    bombStatus = 5;
+    explodeType = 0;
+    SelectBGM();
+    CreateTimer(1.0, PerformAdverts);
+    FireEntityInput("rain", "Alpha", "0", 0.0);
 //	PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFWave set/reset success!");
-	FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
-	FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
+    FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
+    FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
 }
 //Announce the bomb has been reset by client %N.
 public Action EventReset(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast)
