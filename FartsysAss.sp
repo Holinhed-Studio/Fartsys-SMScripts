@@ -21,6 +21,7 @@ bool canSENTNukes = false;
 bool canSENTShark = false;
 bool canSENTStars = false;
 bool canTornado = false;
+bool crusader = false;
 bool isWave = false;
 bool tornado = false;
 bool bgmlock1 = true;
@@ -31,6 +32,7 @@ bool bgmlock5 = true;
 bool bgmlock6 = true;
 bool bgmlock7 = true;
 bool bgmlock8 = true;
+bool onslaughter = false;
 bool TornadoWarningIssued = false;
 static char BELL[32] = "fartsy/misc/bell.wav";
 static char BGM1[32] = "fartsy/ffxiv/bgm/locus.mp3";
@@ -57,6 +59,11 @@ static float BGM5Dur = 131.75;
 static float BGM6Dur = 427.35;
 static float BGM7Dur = 133.25;
 static float BGM8Dur = 313.85;
+static char BMB1SND[32] = "fartsy/misc/murica.mp3"; //IMPORTANT, I NEED UPDATED AND ADDED TO THE PAKINCLUDE FOR R14 - Murica
+static char BMB2SND[32] = "fartsy/bl2/grenade_detonate.mp3"; //IMPORTANT, I NEED ADDED TO THE PAKINCLUDE FOR R14 - Med
+static char BMB3SND[32] = "fartsy/gbombs5/t_12.mp3"; //IMPORTANT, I NEED UPDATED AND ADDED TO THE PAKINCLUDE FOR R14 - Large
+static char BMB4SND[32] = "fartsy/misc/majorkong.mp3"; //IMPORTANT, I NEED ADDED TO THE PAKINCLUDE FOR R14 - Kong
+static char BOOM[32] = "fartsy/vo/spongebob/boom.mp3"; //UPDATE AND ADD TO INCLUDE IF NOT ALREADY
 static char CLOCKTICK[32] = "fartsy/misc/clock_tick.wav";
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
 static char CRUSADERATTACK[32] = "fartsy/fallingback/attack.mp3";
@@ -68,6 +75,7 @@ static float DefBGM1Dur = 137.75;
 static float DefBGM2Dur = 235.5;
 static char DEFAULTBGM1Title[64] = "FFXIV - The Silent Regard of Stars";
 static char DEFAULTBGM2Title[64] = "FFXIV - Knowledge Never Sleeps";
+static char EXPLOSIVEPARADISE[32] = "fartsy/explosiveparadise.mp3"; //IMPORTANT, I NEED UPDATED AND ADDED TO THE PAKINCLUDE FOR R14
 static char FALLSND01[32] = "vo/l4d2/billfall02.mp3";
 static char FALLSND02[32] = "vo/l4d2/coachfall02.mp3";
 static char FALLSND03[32] = "vo/l4d2/ellisfall01.mp3";
@@ -92,7 +100,12 @@ static char GLOBALTHUNDER05[32] = "fartsy/weather/thunder5.wav";
 static char GLOBALTHUNDER06[32] = "fartsy/weather/thunder6.wav";
 static char GLOBALTHUNDER07[32] = "fartsy/weather/thunder7.wav";
 static char GLOBALTHUNDER08[32] = "fartsy/weather/thunder8.wav";
-static char GOOBBUEINCOMING[32] = "vo/fartsy/goobbue.mp3";
+static char HINDENBURGBOOM[64] = "fartsy/gbombs5/tsar_detonate.mp3"; //IMPORTANT, I NEED UPDATED AND ADDED TO THE PAKINCLUDE FOR R14
+static char HINDENCRASH[32] = "fartsy/vo/jeffy/hinden.wav"; //IMPORTANT, I NEED UPDATED AND ADDED TO THE PAKINCLUDE FOR R14
+static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.mp3"; //IMPORTANT, I NEED UPDATED AND ADDED TO THE PAKINCLUDE FOR R14.
+static char OnslaughterLaserSND[32] = "fartsy/antimatter.mp3"; //IMPORTANT, I NEED ADDED TO THE PAKINCLUDE FOR R14
+static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav"; //CHECK WITH BRAWLER IF THIS IS NEEDED IN THE PAK....
+static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav"; // LIKEWISE WITH THIS ONE.	
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
 static char SHARKSND02[64] = "fartsy/memes/babyshark/baby02.mp3";
 static char SHARKSND03[64] = "fartsy/memes/babyshark/doot01.mp3";
@@ -101,12 +114,16 @@ static char SHARKSND05[64] = "fartsy/memes/babyshark/doot03.mp3";
 static char SHARKSND06[64] = "fartsy/memes/babyshark/doot04.mp3";
 static char SHARKSND07[64] = "fartsy/memes/babyshark/shark.mp3";
 static char SHARKSND08[64] = "fartsy/memes/babyshark/shark02.mp3";
+static char SPEC01[32] = "fartsy/vo/fartsy/goobbue.mp3"; //UPDATE ME IN FILES AND PAKINCLUDE
+static char SPEC02[32] = "fartsy/misc/shroom.mp3"; //UPDATE AND ADD TO INCLUDE IF NOT ALREADY
+static char SPEC03[64] = "fartsy/vo/inurat/nuclearwaffle.mp3"; //UPDATE AND ADD TO INCLUDE IF NOT ALREADY
 static char STRONGMAN[32] = "fartsy/misc/strongman_bell.wav";
 static char TRIGGERSCORE[32] = "fartsy/misc/triggerscore.wav";
 static char WTFBOOM[32] = "fartsy/wtfboom.mp3";
 static float HWNMin = 210.0;
 static float HWNMax = 380.0;
 static int BGMSNDLVL = 90;
+int INCOMINGDISPLAYED = 0;
 int CodeEntry = 0;
 static int DEFBGMSNDLVL = 40;
 int bombStatus = 0;
@@ -120,7 +137,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.4.9",
+	version = "3.5.7",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -135,11 +152,17 @@ public void OnPluginStart()
     PrecacheSound(BGM6, true),
     PrecacheSound(BGM7, true),
     PrecacheSound(BGM8, true),
+	PrecacheSound(BMB1SND, true),
+	PrecacheSound(BMB2SND, true),
+	PrecacheSound(BMB3SND, true),
+	PrecacheSound(BMB4SND, true),
+	PrecacheSound(BOOM, true),
     PrecacheSound(CLOCKTICK, true),
     PrecacheSound(COUNTDOWN, true),
     PrecacheSound(CRUSADERATTACK, true),
     PrecacheSound(DEFAULTBGM1, true),
     PrecacheSound(DEFAULTBGM2, true),
+	PrecacheSound(EXPLOSIVEPARADISE, true),
     PrecacheSound(FALLSND01, true),
     PrecacheSound(FALLSND02, true),
     PrecacheSound(FALLSND03, true),
@@ -164,7 +187,13 @@ public void OnPluginStart()
     PrecacheSound(GLOBALTHUNDER06, true),
     PrecacheSound(GLOBALTHUNDER07, true),
     PrecacheSound(GLOBALTHUNDER08, true),
-    PrecacheSound(GOOBBUEINCOMING, true),
+	PrecacheSound(HINDENBURGBOOM, true),
+	PrecacheSound(HINDENCRASH, true),
+	PrecacheSound(INCOMING, true),
+    PrecacheSound(SPEC01, true),
+	PrecacheSound(OnslaughterLaserSND, true),
+	PrecacheSound(OnslaughterFlamePreATK, true),
+	PrecacheSound(OnslaughterFlamePostATK, true),
     PrecacheSound(SHARKSND01, true),
     PrecacheSound(SHARKSND02, true),
     PrecacheSound(SHARKSND03, true),
@@ -173,6 +202,9 @@ public void OnPluginStart()
     PrecacheSound(SHARKSND06, true),
     PrecacheSound(SHARKSND07, true),
     PrecacheSound(SHARKSND08, true),
+	PrecacheSound(SPEC01, true),
+	PrecacheSound(SPEC02, true),
+	PrecacheSound(SPEC03, true),
     PrecacheSound(STRONGMAN, true),
     PrecacheSound(TRIGGERSCORE, true),
     PrecacheSound(WTFBOOM, true),
@@ -272,19 +304,33 @@ public Action PerformWaveAdverts(Handle timer){
 			switch (bombStatus){
 				case 8,16,24,32,40,48,56,64:{
 					if(TornadoWarningIssued){
-						PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. PLEASE TAKE PRECAUTIONS NOW.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
-						StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");	
+						if(bombProgression && IsClientInGame(i)){
+							PrintHintText(i, "Bomb Status: MOVING (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. PLEASE TAKE PRECAUTIONS NOW.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+							StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
+						}
+						else if(IsClientInGame(i)){
+							PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. PLEASE TAKE PRECAUTIONS NOW.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+							StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
+						}
 					}
-					PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
-					StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
+					if(bombProgression && IsClientInGame(i)){
+						PrintHintText(i, "Bomb Status: MOVING (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+						StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
+					}
+					else if(IsClientInGame(i)){
+						PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+						StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
+					}
 				}
 				case 0,1,2,3,4,5,6,7,9,10,11,13,14,15,17,18,19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,38,39,41,42,43,44,45,46,47,49,50,51,52,53,54,55,57,58,59,60,61,62,63:{
-					if(TornadoWarningIssued){
+					if(TornadoWarningIssued && IsClientInGame(i)){
 						PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. PLEASE TAKE PRECAUTIONS NOW.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 						StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");	
 					}
-					PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
-					StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
+					else if(IsClientInGame(i)){
+						PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+						StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
+					}
 				}
 			}
     	}
@@ -338,7 +384,7 @@ public Action RefireBGM2(Handle timer)
 
 public Action RefireBGM3(Handle timer)
 {
-	if (!bgmlock3){
+	if (!bgmlock3 && !crusader){
 		StopCurSong();
 		EmitSoundToAll(BGM3, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM3;
@@ -362,7 +408,7 @@ public Action RefireBGM4(Handle timer)
 
 public Action RefireBGM5(Handle timer)
 {
-	if (!bgmlock5){
+	if (!bgmlock5 && !crusader){
 		StopCurSong();
 		EmitSoundToAll(BGM5, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
 		curSong = BGM5;
@@ -403,6 +449,67 @@ public Action RefireBGM8(Handle timer){
 		songName = BGM8Title;
 		CreateTimer(BGM8Dur, RefireBGM8);
 	}
+	return Plugin_Stop;
+}
+//Brute Justice Timer
+public Action OnslaughterATK(Handle timer){
+	if (!onslaughter){
+		return Plugin_Stop;
+	}
+	else{
+		float f = GetRandomFloat(5.0, 7.0);
+		CreateTimer(f, OnslaughterATK);
+		FireEntityInput("BruteJusticeDefaultATK", "FireMultiple", "3", 5.0);
+		int i = GetRandomInt(1,10);
+		switch(i){
+			case 1,6:{
+				FireEntityInput("BruteJusticeLaserParticle", "Start", "", 0.0);
+				EmitSoundToAll(OnslaughterLaserSND);
+				FireEntityInput("BruteJusticeLaser", "TurnOn", "", 1.40);
+				FireEntityInput("BruteJusticeLaserHurtAOE", "Enable", "", 1.40);
+				FireEntityInput("BruteJusticeLaserParticle", "Stop", "", 3.00);
+				FireEntityInput("BruteJusticeLaser", "TurnOff", "", 3.25);
+				FireEntityInput("BruteJusticeLaserHurtAOE", "Disable", "", 3.25);
+			}
+			case 2,8:{
+				FireEntityInput("BruteJustice", "FireUser1", "", 0.0);
+			}
+			case 3,7:{
+				FireEntityInput("BruteJusticeFlameParticle", "Start", "", 0.0);
+				FireEntityInput("BruteJusticeFlamethrowerHurtAOE", "Enable", "", 0.0);
+				EmitSoundToAll(OnslaughterFlamePreATK);
+				FireEntityInput("SND.BruteJusticeFlameATK", "PlaySound", "", 1.25);
+				FireEntityInput("BruteJusticeFlamethrowerHurtAOE", "Disable", "", 5.0);
+				FireEntityInput("BruteJusticeFlameParticle", "Stop", "", 5.0);
+				FireEntityInput("SND.BruteJusticeFlameATK", "FadeOut", ".25", 5.0);
+				CreateTimer(5.0, OnslaughterFlamePostATKSND);
+				FireEntityInput("SND.BruteJusticeFlameATK", "StopSound", "", 5.10);
+			}
+			case 4:{
+				FireEntityInput("BruteJusticeGrenadeSpammer", "FireMultiple", "10", 0.0);
+				FireEntityInput("BruteJusticeGrenadeSpammer", "FireMultiple", "10", 3.0);
+				FireEntityInput("BruteJusticeGrenadeSpammer", "FireMultiple", "10", 5.0);
+			}
+			case 5:{
+				FireEntityInput("BruteJusticeGrenadeSpammer", "FireMultiple", "50", 0.0);
+			}
+			case 9:{
+				FireEntityInput("BruteJusticeRocketSpammer", "FireOnce", "", 0.00);
+				FireEntityInput("BruteJusticeRocketSpammer", "FireOnce", "", 5.00);
+			}
+			case 10:{
+				FireEntityInput("BruteJusticeRocketSpammer", "FireMultiple", "10", 0.00);
+				FireEntityInput("BruteJusticeRocketSpammer", "FireMultiple", "10", 3.00);
+				FireEntityInput("BruteJusticeRocketSpammer", "FireMultiple", "10", 5.00);
+			}
+		}
+	}
+	return Plugin_Stop;
+}
+
+//Onslaughter Post FlameATK
+public Action OnslaughterFlamePostATKSND(Handle timer){
+	EmitSoundToAll(OnslaughterFlamePostATK);
 	return Plugin_Stop;
 }
 
@@ -565,9 +672,11 @@ public Action ActivateTornadoTimer(){
 }
 //Tornado Warning in Effect!
 public Action TornadoWarning(Handle timer){
-	EmitSoundToAll("mvm/ambient_mp3/mvm_siren.mp3"),
-
-	TornadoWarningIssued = true;
+	if(isWave && canTornado){
+		EmitSoundToAll("mvm/ambient_mp3/mvm_siren.mp3"),
+		TornadoWarningIssued = true;
+	}
+	return Plugin_Stop;
 }
 //Spawn the tornado.
 public Action SpawnTornado(Handle timer){
@@ -789,10 +898,33 @@ public Action CRUSADERATTACKTimer(Handle timer){
 	return Plugin_Handled;
 }
 
+//Crusader Incoming Timer for Crusader
+public Action CRUSADERINCOMING(Handle timer){
+	if(!crusader || INCOMINGDISPLAYED>17){
+		INCOMINGDISPLAYED = 0;
+		return Plugin_Stop;
+	}
+	else{
+		INCOMINGDISPLAYED++;
+		FireEntityInput("FB.INCOMING", "Display", "", 0.0);
+		CreateTimer(1.75, CRUSADERINCOMING);
+	}
+	return Plugin_Stop;
+}
 //WTFBOOMTimer for Crusader
 public Action WTFBOOMTimer(Handle timer){
 	EmitSoundToAll(WTFBOOM);
 	return Plugin_Handled;
+}
+//Hindenburg timer
+public Action HINDENBURGBOOMTimer(Handle timer){
+	EmitSoundToAll(HINDENBURGBOOM);
+	return Plugin_Stop;
+}
+//INCOMING TIMER
+public Action INCOMINGTimer(Handle timer){
+	EmitSoundToAll(INCOMING);
+	return Plugin_Stop;
 }
 
 //Halloween Bosses
@@ -1145,37 +1277,7 @@ public Action RobotLaunchTimer(Handle timer){
 //Command action definitions
 //Get current song
 public Action Command_GetCurrentSong(int client, int args){
-	if(StrEqual(curSong, BGM1))
-	{
-		PrintToChat(client, "The current song is: %s", BGM1Title);
-	}
-	else if(StrEqual(curSong, BGM2)){
-		PrintToChat(client, "The current song is: %s", BGM2Title);
-	}
-	else if(StrEqual(curSong, BGM3)){
-		PrintToChat(client, "The current song is: %s", BGM3Title);
-	}
-	else if(StrEqual(curSong, BGM4)){
-		PrintToChat(client, "The current song is: %s", BGM4Title);
-	}
-	else if(StrEqual(curSong, BGM5)){
-		PrintToChat(client, "The current song is: %s", BGM5Title);
-	}
-	else if(StrEqual(curSong, BGM6)){
-		PrintToChat(client, "The current song is: %s", BGM6Title);
-	}
-	else if(StrEqual(curSong, BGM7)){
-		PrintToChat(client, "The current song is: %s", BGM7Title);
-	}
-	else if(StrEqual(curSong, BGM8)){
-		PrintToChat(client, "The current song is: %s", BGM8Title);
-	}
-	else if(StrEqual(curSong, DEFAULTBGM1)){
-		PrintToChat(client, "The current song is: %s", DEFAULTBGM1Title);
-	}
-	else if(StrEqual(curSong, DEFAULTBGM2)){
-		PrintToChat(client, "The current song is: %s", DEFAULTBGM2Title);
-	}
+	PrintToChat(client, "The current song is: %s", songName);
 	return Plugin_Handled;
 }
 
@@ -1192,50 +1294,89 @@ public Action Command_FBBombStatus(int client, int args){
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Bombs are \x07FF0000NOT READY\x07FFFFFF!");
 		}
 		case 8:{
-			if(!bombProgression) PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has not deployed any bombs, however: Your team's \x07FF0000FREEDOM BOMB \x0700AA55is available for deployment!");
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing a \x07FF0000FREEDOM BOMB \x0700AA55!");
+			if(bombProgression){
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing a \x07FF0000FREEDOM BOMB \x0700AA55!");
+			}
+			else{
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has not deployed any bombs, however: Your team's \x07FF0000FREEDOM BOMB \x0700AA55is available for deployment!");
+			}
 		}
 		case 9,10,11,12,13,14,15:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFREEDOM BOMB \x0700AA55. Please wait for the next bomb.");
 		}
 		case 16:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFREEDOM BOMB \x0700AA55. Your team's \x07FF0000ELON BUST \x0700AA55is available for deployment!");
+			if(bombProgression){
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing an \x07FF0000ELON BUST \x0700AA55!");
+			}
+			else{ 
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFREEDOM BOMB \x0700AA55. Your team's \x07FF0000ELON BUST \x0700AA55is available for deployment!");
+			}
 		}
 		case 17,18,19,20,21,22,23:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFELON BUST \x0700AA55. Please wait for the next bomb.");
 		}
 		case 24:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFELON BUST \x0700AA55. Your team's \x07FF0000BATH SALTS \x0700AA55are available for deployment!");
+			if(bombProgression){
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing \x07FF0000BATH SALTS \x0700AA55!");
+			}
+			else{
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFELON BUST \x0700AA55. Your team's \x07FF0000BATH SALTS \x0700AA55are available for deployment!");
+			}
 		}
 		case 25,26,27,28,29,30,31:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFBATH SALTS \x0700AA55. Please wait for the next bomb.");
 		}
 		case 32:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFBATH SALTS \x0700AA55. Your team's \x07FF0000FALLING STAR \x0700AA55is available for deployment!");
+			if(bombProgression){
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing a \x07FF0000FALLING STAR \x0700AA55!");
+			}
+			else{
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFBATH SALTS \x0700AA55. Your team's \x07FF0000FALLING STAR \x0700AA55is available for deployment!");
+			}
 		}
 		case 33,34,35,36,37,38,39:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFALLING STAR \x0700AA55. Please wait for the next bomb.");
 		}
 		case 40:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFFALLING STAR \x0700AA55. Your team's \x07FF0000MAJOR KONG \x0700AA55is available for deployment!");
+			if(bombProgression){
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing a \x07FF0000MAJOR KONG \x0700AA55!");
+			}
+			else{
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFFALLING STAR \x0700AA55. Your team's \x07FF0000MAJOR KONG \x0700AA55is available for deployment!");
+			}
 		}
 		case 41,42,43,44,45,46,47:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFMAJOR KONG \x0700AA55. Please wait for the next bomb.");
 		}
 		case 48:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFMAJOR KONG \x0700AA55. Your team's \x07FF0000SHARK \x0700AA55is available for deployment!");
+			if(bombProgression){
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing a \x07FF0000SHARK \x0700AA55!");
+			}
+			else{
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFMAJOR KONG \x0700AA55. Your team's \x07FF0000SHARK \x0700AA55is available for deployment!");
+			}
 		}
 		case 49,50,51,52,53,54,55:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFSHARK \x0700AA55. Please wait for the next bomb.");
 		}
 		case 56:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFSHARK \x0700AA55. Your team's \x07FF0000FAT MAN \x0700AA55is available for deployment!");
+			if(bombProgression){
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing a \x07FF0000FAT MAN \x0700AA55!");
+			}
+			else{
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFSHARK \x0700AA55. Your team's \x07FF0000FAT MAN \x0700AA55is available for deployment!");
+			}
 		}
 		case 57,58,59,60,61,62,63:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFAT MAN \x0700AA55. Please wait for the next bomb.");
 		}
 		case 64:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FF0000 FAT MAN \x0700AA55. Your team's \x07FFFF00HYDROGEN \x0700AA55is available for deployment!");
+			if(bombProgression){
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is delivering \x07FFFF00HYDROGEN \x0700AA55!");
+			}
+			else{
+				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FF0000 FAT MAN \x0700AA55. Your team's \x07FFFF00HYDROGEN \x0700AA55is available for deployment!");
+			}
 		}
 		case 65,66,67,68,69,70,71:{
 			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFHYDROGEN\x0700AA55. Bombs are automatically reset to preserve the replayable aspect of this game mode.");
@@ -1406,16 +1547,16 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000EXTERMINATUS\x070000AA]\x07FFFFFF Client %N has sacrificed themselves with a \x0700AA00correct \x07FFFFFFkey entry! Prepare your anus!", client);
 			StopCurSong(),
+			crusader = true,
 			CreateTimer(25.20, CRUSADERATTACKTimer),
 			CreateTimer(63.20, WTFBOOMTimer),
 			PrintToServer("Starting Crusader via plugin!"),
 			EmitSoundToAll("fartsy/fallingback/bgm.mp3"),
-			FireEntityInput("FB.INCOMINGTIMER", "Enable", "", 1.0),
+			CreateTimer(1.75, CRUSADERINCOMING),
 			FireEntityInput("FB.BOOM", "StopShake", "", 3.0),
 			FireEntityInput("FB.CRUSADER", "Enable", "", 25.20),
 			FireEntityInput("CrusaderTrain", "StartForward", "", 25.20),
 			FireEntityInput("CrusaderLaserBase*", "StartForward", "", 25.20),
-			FireEntityInput("FB.INCOMINGTIMER", "Disable", "", 30.0),
 			FireEntityInput("CrusaderTrain", "SetSpeed", "0.9", 38.0),
 			FireEntityInput("CrusaderTrain", "SetSpeed", "0.7", 38.60),
 			FireEntityInput("CrusaderTrain", "SetSpeed", "0.5", 39.20),
@@ -1474,6 +1615,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			FireEntityInput("FB.ShakeBOOM", "StopShake", "", 70.20),
 			FireEntityInput("CrusaderTrain", "Stop", "", 80.0),
 			FireEntityInput("FB.CRUSADER", "Disable", "", 80.0);
+			crusader = false;
 			CreateTimer(80.0, NextWaveTimer); //Jump to next wave
 		}
 
@@ -1759,7 +1901,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 4: \x0700AA00%s", BGM4Title);
 			StopCurSong();
-			EmitSoundToAll(BGM4, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			EmitSoundToAll(BGM4, _, SNDCHAN, BGMSNDLVL-10, _, _, _, _, _, _, _, _);
 			curSong = BGM4;
 			CreateTimer(BGM4Dur, RefireBGM4);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -1802,9 +1944,10 @@ public Action GetWave(int args){
 			bombStatusMax = 42;
 			sacPointsMax = 100;
 			songName = BGM5Title;
+			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 5: \x0700AA00%s", BGM5Title);
 			StopCurSong();
-			EmitSoundToAll(BGM5, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			EmitSoundToAll(BGM5, _, SNDCHAN, BGMSNDLVL-10, _, _, _, _, _, _, _, _);
 			curSong = BGM5;
 			CreateTimer(BGM5Dur, RefireBGM5);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -1825,7 +1968,17 @@ public Action GetWave(int args){
 			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
 			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
 			FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
-			FireEntityInput("BruteJustice", "Trigger", "", 3.0);
+			onslaughter = true;
+			FireEntityInput("FB.BruteJustice", "Enable", "", 3.0);
+			FireEntityInput("FB.BruteJusticeTrain", "StartForward", "", 3.0);
+			CreateTimer(5.0, OnslaughterATK);
+			FireEntityInput("FB.BruteJusticeParticles", "Start", "", 3.0);
+			FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 3.0);
+			FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 4.0);
+			FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 5.0);
+			FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 6.0);
+			FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 7.0);
+			FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 8.0);
 			ChooseBombPath();
 			ActivateTornadoTimer();
 			float f = GetRandomFloat(60.0, 180.0);
@@ -1851,9 +2004,10 @@ public Action GetWave(int args){
 			bombStatusMax = 50;
 			sacPointsMax = 100;
 			songName = BGM6Title;
+			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 6: \x0700AA00%s", BGM6Title);
 			StopCurSong();
-			EmitSoundToAll(BGM6, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			EmitSoundToAll(BGM6, _, SNDCHAN, BGMSNDLVL+10, _, _, _, _, _, _, _, _);
 			curSong = BGM6;
 			CreateTimer(BGM6Dur, RefireBGM6);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -1896,6 +2050,7 @@ public Action GetWave(int args){
 			bombStatusMax = 58;
 			sacPointsMax = 100;
 			songName = BGM7Title;
+			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 7: \x0700AA00%s", BGM7Title);
 			StopCurSong();
 			EmitSoundToAll(BGM7, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
@@ -1942,6 +2097,7 @@ public Action GetWave(int args){
 			bombStatusMax = 66;
 			sacPointsMax = 100;
 			songName = BGM8Title;
+			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 8: \x0700AA00%s", BGM8Title);
 			StopCurSong();
 			EmitSoundToAll(BGM8, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
@@ -2141,7 +2297,7 @@ public Action Command_Operator(int args){
 				}
 				//Small Explosion
 				case 1:{
-					FireEntityInput("Murica", "PlaySound", "", 0.0),
+					EmitSoundToAll(BMB1SND),
 					FireEntityInput("SmallExplosion", "Explode", "", 0.0),
 					FireEntityInput("SmallExploShake", "StartShake", "", 0.0),
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Small Bomb successfully pushed! (\x0700FF00+2 pts\x07FFFFFF)");
@@ -2153,7 +2309,7 @@ public Action Command_Operator(int args){
 				}
 				//Medium Explosion
 				case 2,3:{
-					FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
+					EmitSoundToAll(BMB2SND),
 					FireEntityInput("MediumExplosion", "Explode", "", 0.0),
 					FireEntityInput("MedExploShake", "StartShake", "", 0.0),
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Medium Bomb successfully pushed! (\x0700FF00+5 pts\x07FFFFFF)");
@@ -2166,7 +2322,7 @@ public Action Command_Operator(int args){
 				//Falling Star
 				case 4:{
 					canSENTStars = true,
-					FireEntityInput("MedExplosionSND", "PlaySound", "", 0.0),
+					EmitSoundToAll(BMB2SND),
 					FireEntityInput("MediumExplosion", "Explode", "", 0.0),
 					FireEntityInput("MedExploShake", "StartShake", "", 0.0),
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Average Bomb successfully pushed! (\x0700FF00+10 pts\x07FFFFFF)");
@@ -2180,7 +2336,7 @@ public Action Command_Operator(int args){
 				}
 				//Major Kong
 				case 5:{
-					FireEntityInput("MajorKongSND", "PlaySound", "", 0.0),
+					EmitSoundToAll(BMB4SND),
 					FireEntityInput("FB.Fade", "Fade", "", 1.7),
 					FireEntityInput("LargeExplosion", "Explode", "", 1.7),
 					FireEntityInput("LargeExplosionSound", "PlaySound", "", 1.7),
@@ -2196,7 +2352,7 @@ public Action Command_Operator(int args){
 				}
 				//Large (shark)
 				case 6:{
-					FireEntityInput("LargeExploSound", "PlaySound", "", 0.0),
+					EmitSoundToAll(BMB3SND),
 					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
 					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Heavy Bomb successfully pushed! (\x0700FF00+15 pts\x07FFFFFF)");
@@ -2208,10 +2364,9 @@ public Action Command_Operator(int args){
 				}
 				//FatMan
 				case 7:{
-					FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
+					EmitSoundToAll(HINDENBURGBOOM);
 					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
 					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
-					FireEntityInput("", "PlaySound", "", 0.0),
 					FireEntityInput("NukeAll", "Enable", "", 0.0),
 					FireEntityInput("FB.Fade", "Fade", "", 0.0),
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
@@ -2225,7 +2380,7 @@ public Action Command_Operator(int args){
 				}
 				//Hydrogen
 				case 8:{
-					FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
+					EmitSoundToAll(HINDENBURGBOOM);
 					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
 					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
 					FireEntityInput("LargeExplosionSND", "PlaySound", "", 0.0),
@@ -2243,7 +2398,7 @@ public Action Command_Operator(int args){
 				//Fartsy of the Seventh Taco Bell
 				case 69:{
 					FireEntityInput("NukeAll", "Enable", "", 0.0),
-					FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0),
+					EmitSoundToAll(HINDENBURGBOOM);
 					FireEntityInput("FB.Fade", "Fade", "", 0.0),
 					FireEntityInput("NukeAll", "Disable", "", 2.0),
 					bombStatusMax=64;
@@ -2263,14 +2418,24 @@ public Action Command_Operator(int args){
 			bombProgression = false;
 			canSENTShark = false;
 		}
+		//HINDENBOOM ACTIVATION
+		case 28:{
+			EmitSoundToAll(BOOM);
+			FireEntityInput("HindenTrain", "StartForward", "", 0.0);
+			FireEntityInput("DeliveryBurg", "Lock", "", 0.0);
+			FireEntityInput("Boom", "Enable", "", 0.0);
+			FireEntityInput("Bombs.TheHindenburg", "Enable", "", 0.0);
+			FireEntityInput("Boom", "Disable", "", 1.0);
+		}
 		//HINDENBOOM!!!
 		case 29:{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF OH GOD, THEY'RE \x07AA0000CRASHING THE HINDENBURG\x07FFFFFF!!!");
-			FireEntityInput("HindenburgInc2", "PlaySound", "", 5.0);
+			EmitSoundToAll(HINDENCRASH);
+			CreateTimer(4.0, INCOMINGTimer);
+			CreateTimer(7.0, HINDENBURGBOOMTimer);
 			FireEntityInput("LargeExplosion", "Explode", "", 7.0);
 			FireEntityInput("LargeExploShake", "StartShake", "", 7.0);
 			FireEntityInput("NukeAll", "Enable", "", 7.0);
-			FireEntityInput("HindenburgBoom", "PlaySound", "", 7.0);
 			FireEntityInput("FB.Fade", "Fade", "", 7.0);
 			FireEntityInput("NukeAll", "Disable", "", 9.0);
 			FireEntityInput("Bombs.TheHindenburg", "Disable", "", 7.0);
@@ -2283,7 +2448,8 @@ public Action Command_Operator(int args){
 		}
 		//Bath Salts spend
 		case 30:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF INSTANT BATH SALT DETONATION! (\x07FF0000-10 pts\x07FFFFFF)");
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF INSTANT BATH SALT DETONATION! BOTS ARE FROZEN FOR 10 SECONDS! (\x07FF0000-10 pts\x07FFFFFF)");
+			ServerCommand("sm_freeze @blue 10");
 			sacPoints = (sacPoints - 10);
 			FireEntityInput("BTN.Sacrificial*", "Color", "0 0 0", 0.0),
 			FireEntityInput("BTN.Sacrificial01", "Lock", "", 0.0),
@@ -2300,7 +2466,7 @@ public Action Command_Operator(int args){
 			FireEntityInput("LargeExplosion", "Explode", "", 0.0);
 			FireEntityInput("LargeExploShake", "StartShake", "", 0.0);
 			FireEntityInput("NukeAll", "Enable", "", 0.0);
-			FireEntityInput("HindenburgBoom", "PlaySound", "", 0.0);
+			EmitSoundToAll(HINDENBURGBOOM);
 			FireEntityInput("FB.Fade", "Fade", "", 0.0);
 			FireEntityInput("NukeAll", "Disable", "", 2.0);
 		}
@@ -2311,8 +2477,8 @@ public Action Command_Operator(int args){
 				case 1:{
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF GOOBBUE COMING IN FROM ORBIT! (\x07FF0000-30 pts\x07FFFFFF)");
 					sacPoints = (sacPoints - 30);
-					EmitSoundToAll(GOOBBUEINCOMING);
-					FireEntityInput("HindenburgInc2", "PlaySound", "", 1.5);
+					EmitSoundToAll(SPEC01);
+					CreateTimer(1.5, INCOMINGTimer);
 					FireEntityInput("FB.GiantGoobTemplate", "ForceSpawn", "", 3.0);
 				}
 				case 2:{
@@ -2325,7 +2491,15 @@ public Action Command_Operator(int args){
 		}
 		//Explosive paradise spend
 		case 33:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF We're spending most our lives living in an EXPLOSIVE PARADISE! (\x07FF0000-40 pts\x07FFFFFF)");
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF We're spending most our lives living in an EXPLOSIVE PARADISE! Robots will be launched into orbit, too! (\x07FF0000-40 pts\x07FFFFFF)");
+			EmitSoundToAll(EXPLOSIVEPARADISE);
+			FireEntityInput("FB.FadeBLCK", "Fade", "", 0.0);
+			ServerCommand("sm_evilrocket @blue");
+			FireEntityInput("NukeAll", "Enable", "", 11.50);
+			FireEntityInput("HUGEExplosion", "Explode", "", 11.50);
+			FireEntityInput("FB.Fade", "Fade", "", 11.50);
+			FireEntityInput("FB.ShakeBOOM", "StartShake", "", 11.50);
+			FireEntityInput("NukeAll", "Disable", "", 12.30);
 			sacPoints = (sacPoints - 40);
 		}
 		//Ass Gas spend
@@ -2371,25 +2545,28 @@ public Action Command_Operator(int args){
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55What on earth IS that? It appears to be a... \x075050FFBLUE BALL\x07FFFFFF!");
 			EmitSoundToAll(FALLSND0B);
 			FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 4.0);
-			FireEntityInput("HindenburgInc2", "PlaySound", "", 4.0);
+			CreateTimer(4.0, INCOMINGTimer);
 		}
 		//Found burrito
 		case 41:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Why would you even eat \x07FF0000The Forbidden Burrito\x07FFFFFF?");
+			EmitSoundToAll("vo/sandwicheat09.mp3");// May not need cached?
 		}
 		//Found goobbue
 		case 42:{
-			EmitSoundToAll(GOOBBUEINCOMING);
+			EmitSoundToAll(SPEC01);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55ALL HAIL \x07FF00FFGOOBBUE\x0700AA55!");
-			FireEntityInput("HindenburgInc2", "PlaySound", "", 3.0);
-			FireEntityInput("FB.GiantGoobTemplate", "ForceSpawn", "", 3.0);
+			CreateTimer(4.0, INCOMINGTimer);
+			FireEntityInput("FB.GiantGoobTemplate", "ForceSpawn", "", 4.0);
 		}
 		//Found Mario
 		case 43:{
+			EmitSoundToAll(SPEC02);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Welp, someone is playing \x0700FF00Mario\x07FFFFFF...");
 		}
 		//Found Waffle
 		case 44:{
+			EmitSoundToAll(SPEC03);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Oh no, someone has found and (probably) consumed a \x07FF0000WAFFLE OF MASS DESTRUCTION\x07FFFFFF!");
 		}
 		//Prev wave
