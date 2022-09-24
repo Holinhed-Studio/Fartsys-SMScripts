@@ -137,7 +137,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.5.7",
+	version = "3.5.8",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -190,7 +190,6 @@ public void OnPluginStart()
 	PrecacheSound(HINDENBURGBOOM, true),
 	PrecacheSound(HINDENCRASH, true),
 	PrecacheSound(INCOMING, true),
-    PrecacheSound(SPEC01, true),
 	PrecacheSound(OnslaughterLaserSND, true),
 	PrecacheSound(OnslaughterFlamePreATK, true),
 	PrecacheSound(OnslaughterFlamePostATK, true),
@@ -2623,7 +2622,7 @@ public Action Command_Operator(int args){
 		case 100:{
 			if (CodeEntry == 17){
 				FireEntityInput("FB.BOOM", "StartShake", "", 0.0),
-				FireEntityInput("FB.CodeCorrect", "PlaySound", "", 0.0),
+				EmitSoundToAll(BMB3SND),
 				FireEntityInput("FB.CodeCorrectKill", "Enable", "", 0.0),
 				FireEntityInput("FB.KP*", "Lock", "", 0.0),
 				FireEntityInput("FB.CodeCorrectKill", "Disable", "", 1.0);
@@ -2632,7 +2631,7 @@ public Action Command_Operator(int args){
 				CodeEntry = 0;
 				FireEntityInput("FB.CodeFailedKill", "Enable", "", 0.0),
 				FireEntityInput("FB.CodeFailedKill", "Disable", "", 1.0),
-				FireEntityInput("FB.CodeFailedSND", "PlaySound", "", 0.0);
+				EmitSoundToAll("mvm/mvm_player_died.wav"); // probably also doesnt need cached?
 			}
 		}
 		case 101:{
