@@ -59,11 +59,11 @@ static float BGM5Dur = 131.75;
 static float BGM6Dur = 427.35;
 static float BGM7Dur = 133.25;
 static float BGM8Dur = 313.85;
-static char BMB1SND[32] = "fartsy/misc/murica.mp3"; //IMPORTANT, I NEED UPDATED AND ADDED TO THE PAKINCLUDE FOR R14 - Murica
-static char BMB2SND[32] = "fartsy/bl2/grenade_detonate.mp3"; //IMPORTANT, I NEED ADDED TO THE PAKINCLUDE FOR R14 - Med
-static char BMB3SND[32] = "fartsy/gbombs5/t_12.mp3"; //IMPORTANT, I NEED UPDATED AND ADDED TO THE PAKINCLUDE FOR R14 - Large
-static char BMB4SND[32] = "fartsy/misc/majorkong.mp3"; //IMPORTANT, I NEED ADDED TO THE PAKINCLUDE FOR R14 - Kong
-static char BOOM[32] = "fartsy/vo/spongebob/boom.mp3"; //UPDATE AND ADD TO INCLUDE IF NOT ALREADY
+static char BMB1SND[32] = "fartsy/misc/murica.mp3";
+static char BMB2SND[32] = "fartsy/bl2/grenade_detonate.mp3";
+static char BMB3SND[32] = "fartsy/gbombs5/t_12.mp3";
+static char BMB4SND[32] = "fartsy/misc/majorkong.mp3";
+static char BOOM[32] = "fartsy/vo/spongebob/boom.mp3";
 static char CLOCKTICK[32] = "fartsy/misc/clock_tick.wav";
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
 static char CRUSADERATTACK[32] = "fartsy/fallingback/attack.mp3";
@@ -75,7 +75,7 @@ static float DefBGM1Dur = 137.75;
 static float DefBGM2Dur = 235.5;
 static char DEFAULTBGM1Title[64] = "FFXIV - The Silent Regard of Stars";
 static char DEFAULTBGM2Title[64] = "FFXIV - Knowledge Never Sleeps";
-static char EXPLOSIVEPARADISE[32] = "fartsy/explosiveparadise.mp3"; //IMPORTANT, I NEED UPDATED AND ADDED TO THE PAKINCLUDE FOR R14
+static char EXPLOSIVEPARADISE[64] = "fartsy/misc/explosiveparadise.mp3";
 static char FALLSND01[32] = "vo/l4d2/billfall02.mp3";
 static char FALLSND02[32] = "vo/l4d2/coachfall02.mp3";
 static char FALLSND03[32] = "vo/l4d2/ellisfall01.mp3";
@@ -100,12 +100,14 @@ static char GLOBALTHUNDER05[32] = "fartsy/weather/thunder5.wav";
 static char GLOBALTHUNDER06[32] = "fartsy/weather/thunder6.wav";
 static char GLOBALTHUNDER07[32] = "fartsy/weather/thunder7.wav";
 static char GLOBALTHUNDER08[32] = "fartsy/weather/thunder8.wav";
-static char HINDENBURGBOOM[64] = "fartsy/gbombs5/tsar_detonate.mp3"; //IMPORTANT, I NEED UPDATED AND ADDED TO THE PAKINCLUDE FOR R14
-static char HINDENCRASH[32] = "fartsy/vo/jeffy/hinden.wav"; //IMPORTANT, I NEED UPDATED AND ADDED TO THE PAKINCLUDE FOR R14
-static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.mp3"; //IMPORTANT, I NEED UPDATED AND ADDED TO THE PAKINCLUDE FOR R14.
-static char OnslaughterLaserSND[32] = "fartsy/antimatter.mp3"; //IMPORTANT, I NEED ADDED TO THE PAKINCLUDE FOR R14
+static char HINDENBURGBOOM[64] = "fartsy/gbombs5/tsar_detonate.mp3";
+static char HINDENCRASH[32] = "fartsy/vo/jeffy/hinden.wav";
+static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.mp3";
+static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav"; //CHECK WITH BRAWLER IF THIS IS NEEDED IN THE PAK....
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav"; // LIKEWISE WITH THIS ONE.	
+static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
+static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
 static char SHARKSND02[64] = "fartsy/memes/babyshark/baby02.mp3";
 static char SHARKSND03[64] = "fartsy/memes/babyshark/doot01.mp3";
@@ -114,21 +116,24 @@ static char SHARKSND05[64] = "fartsy/memes/babyshark/doot03.mp3";
 static char SHARKSND06[64] = "fartsy/memes/babyshark/doot04.mp3";
 static char SHARKSND07[64] = "fartsy/memes/babyshark/shark.mp3";
 static char SHARKSND08[64] = "fartsy/memes/babyshark/shark02.mp3";
-static char SPEC01[32] = "fartsy/vo/fartsy/goobbue.mp3"; //UPDATE ME IN FILES AND PAKINCLUDE
-static char SPEC02[32] = "fartsy/misc/shroom.mp3"; //UPDATE AND ADD TO INCLUDE IF NOT ALREADY
-static char SPEC03[64] = "fartsy/vo/inurat/nuclearwaffle.mp3"; //UPDATE AND ADD TO INCLUDE IF NOT ALREADY
+static char SPEC01[32] = "fartsy/vo/fartsy/goobbue.mp3";
+static char SPEC02[32] = "fartsy/misc/shroom.mp3";
+static char SPEC03[64] = "fartsy/vo/inurat/nuclearwaffle.mp3";
 static char STRONGMAN[32] = "fartsy/misc/strongman_bell.wav";
 static char TRIGGERSCORE[32] = "fartsy/misc/triggerscore.wav";
-static char WTFBOOM[32] = "fartsy/wtfboom.mp3";
+static char WTFBOOM[32] = "fartsy/misc/wtfboom.mp3";
 static float HWNMin = 210.0;
 static float HWNMax = 380.0;
+static float Return[3] = {-3730.0, 67.0, -252.0};
 static int BGMSNDLVL = 90;
 int INCOMINGDISPLAYED = 0;
+int clientID = 0;
 int CodeEntry = 0;
 static int DEFBGMSNDLVL = 40;
 int bombStatus = 0;
 int bombStatusMax = 0;
 int explodeType = 0;
+int lastAdmin = 0;
 int sacPoints = 0;
 int sacPointsMax = 60;
 static int SNDCHAN = 6;
@@ -137,7 +142,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.5.8",
+	version = "3.6.3",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -193,6 +198,8 @@ public void OnPluginStart()
 	PrecacheSound(OnslaughterLaserSND, true),
 	PrecacheSound(OnslaughterFlamePreATK, true),
 	PrecacheSound(OnslaughterFlamePostATK, true),
+	PrecacheSound(RETURNSND, true),
+	PrecacheSound(RETURNSUCCESS, true),
     PrecacheSound(SHARKSND01, true),
     PrecacheSound(SHARKSND02, true),
     PrecacheSound(SHARKSND03, true),
@@ -215,6 +222,7 @@ public void OnPluginStart()
     RegConsoleCmd("sm_bombstatus", Command_FBBombStatus, "Check bomb status"),
     RegConsoleCmd("sm_sacstatus", Command_FBSacStatus, "Check sacrifice points status"),
     RegConsoleCmd("sm_song", Command_GetCurrentSong, "Get current song name"),
+	RegConsoleCmd("sm_return", Command_Return, "Return to Spawn"),
     HookEvent("player_death", EventDeath),
     HookEvent("server_cvar", Event_Cvar, EventHookMode_Pre),
     HookEvent("mvm_wave_complete", EventWaveComplete),
@@ -229,6 +237,8 @@ public void OnPluginStart()
 public void OnMapStart()
 {
     FireEntityInput("rain", "Alpha", "0", 0.0);
+    SelectAdmin();
+    CreateTimer(40.0, SelectAdminTimer);
 }
 //Select background music
 public Action SelectBGM()
@@ -262,12 +272,123 @@ public Action StopCurSong(){
     return Plugin_Handled;
 }
 
+//Feature admin timer
+public Action SelectAdminTimer(Handle timer){
+	if (isWave){
+		return Plugin_Stop;
+	}
+	else{
+		SelectAdmin();
+		float f = GetRandomFloat(40.0, 120.0);
+		CreateTimer(f, SelectAdminTimer);
+		return Plugin_Handled;
+	}
+}
+
+//Feature an admin
+public Action SelectAdmin(){
+	FireEntityInput("Admins.*", "Disable", "", 0.0);
+	int i = GetRandomInt(1, 9);
+	switch (i){
+		case 1:{
+			if (i == lastAdmin)
+			{
+				SelectAdmin();
+			}
+			else{
+				FireEntityInput("Admins.Brawler", "Enable", "", 0.0);
+				lastAdmin = 1;
+			}
+		}
+		case 2:{
+			if (i == lastAdmin)
+			{
+				SelectAdmin();
+			}
+			else{
+				FireEntityInput("Admins.Comical", "Disable", "", 0.0);
+				lastAdmin = 2;
+			}
+		}
+		case 3:{
+			if (i == lastAdmin)
+			{
+				SelectAdmin();
+			}
+			else{
+				FireEntityInput("Admins.Holinhed", "Enable", "", 0.0);
+				lastAdmin = 3;
+			}
+		}
+		case 4:{
+			if (i == lastAdmin)
+			{
+				SelectAdmin();
+			}
+			else{
+				FireEntityInput("Admins.JoeyGhost", "Enable", "", 0.0);
+				lastAdmin = 4;
+			}
+		}
+		case 5:{
+			if (i == lastAdmin)
+			{
+				SelectAdmin();
+			}
+			else{
+				FireEntityInput("Admins.KaiserCrazed", "Enable", "", 0.0);
+				lastAdmin = 5;
+			}
+		}
+		case 6:{
+			if (i == lastAdmin)
+			{
+				SelectAdmin();
+			}
+			else{
+				FireEntityInput("Admins.KissoneKinoma", "Enable", "", 0.0);
+				lastAdmin = 6;
+			}
+		}
+		case 7:{
+			if (i == lastAdmin)
+			{
+				SelectAdmin();
+			}
+			else{
+				FireEntityInput("Admins.LixianPrime", "Enable", "", 0.0);
+				lastAdmin = 7;
+			}
+		}
+		case 8:{
+			if (i == lastAdmin)
+			{
+				SelectAdmin();
+			}
+			else{
+				FireEntityInput("Admins.ProfessorFartsalot", "Enable", "", 0.0);
+				lastAdmin = 8;
+			}
+		}
+		case 9:{
+			if (i == lastAdmin)
+			{
+				SelectAdmin();
+			}
+			else{
+				FireEntityInput("Admins.Ribbons", "Enable", "", 0.0);
+				lastAdmin = 9;
+			}
+		}
+	}
+	return Plugin_Handled;
+}
 //Timers
 //Adverts for tips/tricks
 public Action PerformAdverts(Handle timer){
 	if (!isWave){
 		CreateTimer (180.0, PerformAdverts);
-		int i = GetRandomInt(1, 5);
+		int i = GetRandomInt(1, 7);
 		switch (i){
 			case 1:{
 				PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF We have a Discord server: \x0700AA00https://discord.com/invite/SkHaeMH");
@@ -285,7 +406,7 @@ public Action PerformAdverts(Handle timer){
 				PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF Don't forget to buy \x0700AA00protection upgrades\x07FFFFFF and \x0700AA00ammo regen\x07FFFFFF (if applicable)!");
 			}
             case 6:{
-                PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF TIP: As a DEFENDER, pushing your team's \x0700AA00payload\x07FFFFFF is crucial to wrecking havoc on the robots!");
+                PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF TIP: As a \x07AA0000DEFENDER\x07FFFFFF, pushing your team's \x0700AA00payload\x07FFFFFF is crucial to wrecking havoc on the robots!");
             }
             case 7:{
                 PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF Remember, if someone is being abusive, you may always invoke \x0700AA00!calladmin\x07FFFFFF.");
@@ -304,11 +425,11 @@ public Action PerformWaveAdverts(Handle timer){
 				case 8,16,24,32,40,48,56,64:{
 					if(TornadoWarningIssued){
 						if(bombProgression && IsClientInGame(i)){
-							PrintHintText(i, "Bomb Status: MOVING (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. PLEASE TAKE PRECAUTIONS NOW.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+							PrintHintText(i, "Bomb Status: MOVING (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. TAKE COVER.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 							StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
 						}
 						else if(IsClientInGame(i)){
-							PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. PLEASE TAKE PRECAUTIONS NOW.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+							PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. TAKE COVER.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 							StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
 						}
 					}
@@ -323,7 +444,7 @@ public Action PerformWaveAdverts(Handle timer){
 				}
 				case 0,1,2,3,4,5,6,7,9,10,11,13,14,15,17,18,19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,38,39,41,42,43,44,45,46,47,49,50,51,52,53,54,55,57,58,59,60,61,62,63:{
 					if(TornadoWarningIssued && IsClientInGame(i)){
-						PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. PLEASE TAKE PRECAUTIONS NOW.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+						PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. TAKE COVER.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 						StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");	
 					}
 					else if(IsClientInGame(i)){
@@ -1386,6 +1507,27 @@ public Action Command_FBBombStatus(int client, int args){
 	}
 	return Plugin_Handled;
 }
+//Return the client to spawn
+public Action Command_Return(int client, int args){
+	if (!IsPlayerAlive(client)){
+		ReplyToCommand(client, "\x07AA0000[Core] You must be alive to use this command...");
+		return Plugin_Handled;
+	}
+	else{
+		clientID = client;
+		char name[128];
+		GetClientName(client, name, sizeof(name));
+		PrintToChatAll("\x0700AAAA[\x0700FF00CORE\x0700AAAA]\x07FFFFFF Client \x07FF0000%s \x07FFFFFFbegan casting \x07AA00AA/return\x07FFFFFF.", name);
+		EmitSoundToAll(RETURNSND);
+		CreateTimer(5.0, ReturnClient);
+	}
+	return Plugin_Handled;
+}
+
+public Action ReturnClient(Handle timer){
+	TeleportEntity(clientID, Return, NULL_VECTOR, NULL_VECTOR);
+	EmitSoundToClient(clientID, RETURNSUCCESS);
+}
 
 //Deprecated
 public Action Command_TBWave01(int args)
@@ -1697,6 +1839,8 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
     FireEntityInput("bombpath_right_arrows", "Disable", "", 0.0);
     FireEntityInput("rain", "Alpha", "0", 0.0);
     ChooseBombPath();
+    SelectAdmin();
+    CreateTimer(40.0, SelectAdminTimer);
 }
 
 //Announce when we are in danger.
@@ -1727,6 +1871,18 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFWave \x07FF0000failed\x07FFFFFF successfully!");
     FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
     FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
+    FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
+    FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
+    FireEntityInput("Barricade_Rebuild_Relay", "Trigger", "", 0.0);
+    FireEntityInput("OldSpawn", "Disable", "", 0.0);
+    FireEntityInput("NewSpawn", "Enable", "", 0.0);
+    FireEntityInput("dovahsassprefer", "Disable", "", 0.0);
+    FireEntityInput("bombpath_left_arrows", "Disable", "", 0.0);
+    FireEntityInput("bombpath_right_arrows", "Disable", "", 0.0);
+    FireEntityInput("rain", "Alpha", "0", 0.0);
+    ChooseBombPath();
+    SelectAdmin();
+    CreateTimer(40.0, SelectAdminTimer);
 }
 //Announce the bomb has been reset by client %N.
 public Action EventReset(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast)
@@ -1786,6 +1942,7 @@ public Action GetWave(int args){
 			FireEntityInput("NewSpawn", "Disable", "", 0.0);
 			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
 			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			SelectAdmin();
 			ChooseBombPath();
 			ActivateTornadoTimer();
 			float hwn = GetRandomFloat(HWNMin, HWNMax);
@@ -1828,6 +1985,7 @@ public Action GetWave(int args){
 			FireEntityInput("NewSpawn", "Disable", "", 0.0);
 			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
 			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			SelectAdmin();
 			ChooseBombPath();
 			ActivateTornadoTimer();
 			float hwn = GetRandomFloat(HWNMin, HWNMax);
@@ -1873,6 +2031,7 @@ public Action GetWave(int args){
 			FireEntityInput("NewSpawn", "Disable", "", 0.0);
 			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
 			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			SelectAdmin();
 			ChooseBombPath();
 			ActivateTornadoTimer();
 			float f = GetRandomFloat(60.0, 180.0);
@@ -1920,6 +2079,7 @@ public Action GetWave(int args){
 			FireEntityInput("NewSpawn", "Disable", "", 0.0);
 			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
 			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			SelectAdmin();
 			ChooseBombPath();
 			ActivateTornadoTimer();
 			float hwn = GetRandomFloat(HWNMin, HWNMax);
@@ -1978,6 +2138,7 @@ public Action GetWave(int args){
 			FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 6.0);
 			FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 7.0);
 			FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 8.0);
+			SelectAdmin();
 			ChooseBombPath();
 			ActivateTornadoTimer();
 			float f = GetRandomFloat(60.0, 180.0);
@@ -2026,6 +2187,7 @@ public Action GetWave(int args){
 			FireEntityInput("NewSpawn", "Disable", "", 0.0);
 			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
 			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			SelectAdmin();
 			ChooseBombPath();
 			ActivateTornadoTimer();
 			float hwn = GetRandomFloat(HWNMin, HWNMax);
@@ -2073,6 +2235,7 @@ public Action GetWave(int args){
 			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
 			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
 			FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
+			SelectAdmin();
 			ChooseBombPath();
 			ActivateTornadoTimer();
 			float hwn = GetRandomFloat(HWNMin, HWNMax);
@@ -2119,6 +2282,7 @@ public Action GetWave(int args){
 			FireEntityInput("NewSpawn", "Disable", "", 0.0);
 			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
 			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
+			SelectAdmin();
 			ChooseBombPath();
 			ActivateTornadoTimer();
 			float hwn = GetRandomFloat(HWNMin, HWNMax);
@@ -2277,10 +2441,11 @@ public Action Command_Operator(int args){
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Dunked a client into liquid death. (\x0700FF00+1 pt\x07FFFFFF)");
 			sacPoints++;
 		}
-		//Tank Destroyed (+1)
+		//Tank Destroyed (+1), includes hacky method of disabling onslaughter attack system. Just as it was in the original map.
 		case 13:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A tank has been destroyed. (\x0700FF00+1 pt\x07FFFFFF)");
 			sacPoints++;
+			onslaughter = false;
 		}
 		//Bomb Reset (+5)
 		case 14:{
@@ -2405,6 +2570,11 @@ public Action Command_Operator(int args){
 				}
 			}
 			return Plugin_Handled;
+		}
+		//Tank deployed its bomb
+		case 16:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A tank has deployed its bomb! (\x0700FF00+1 pt\x07FFFFFF)");
+			onslaughter = false;
 		}
 		//Shark Enable & notify bomb push began
 		case 20:{
@@ -2567,6 +2737,14 @@ public Action Command_Operator(int args){
 		case 44:{
 			EmitSoundToAll(SPEC03);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Oh no, someone has found and (probably) consumed a \x07FF0000WAFFLE OF MASS DESTRUCTION\x07FFFFFF!");
+		}
+		//Workaround to Emit sounds using map entities without requiring ambient_generic
+		//Medium Explosion
+		case 51:{
+			EmitSoundToAll(BMB3SND);
+		}
+		case 52:{
+			EmitSoundToAll(HINDENBURGBOOM);
 		}
 		//Prev wave
 		case 98:{
