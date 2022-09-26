@@ -142,7 +142,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.6.3",
+	version = "3.6.4",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -425,11 +425,11 @@ public Action PerformWaveAdverts(Handle timer){
 				case 8,16,24,32,40,48,56,64:{
 					if(TornadoWarningIssued){
 						if(bombProgression && IsClientInGame(i)){
-							PrintHintText(i, "Bomb Status: MOVING (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. TAKE COVER.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+							PrintHintText(i, "Bomb Status: MOVING (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED...", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 							StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
 						}
 						else if(IsClientInGame(i)){
-							PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. TAKE COVER.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+							PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED...", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 							StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
 						}
 					}
@@ -444,7 +444,7 @@ public Action PerformWaveAdverts(Handle timer){
 				}
 				case 0,1,2,3,4,5,6,7,9,10,11,13,14,15,17,18,19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,38,39,41,42,43,44,45,46,47,49,50,51,52,53,54,55,57,58,59,60,61,62,63:{
 					if(TornadoWarningIssued && IsClientInGame(i)){
-						PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED. TAKE COVER.", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+						PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED...", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 						StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");	
 					}
 					else if(IsClientInGame(i)){
