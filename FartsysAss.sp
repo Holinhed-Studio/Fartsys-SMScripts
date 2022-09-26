@@ -142,7 +142,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.6.4",
+	version = "3.6.5",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -296,7 +296,7 @@ public Action SelectAdmin(){
 				SelectAdmin();
 			}
 			else{
-				FireEntityInput("Admins.Brawler", "Enable", "", 0.0);
+				FireEntityInput("Admins.Brawler", "Enable", "", 0.05);
 				lastAdmin = 1;
 			}
 		}
@@ -306,7 +306,7 @@ public Action SelectAdmin(){
 				SelectAdmin();
 			}
 			else{
-				FireEntityInput("Admins.Comical", "Disable", "", 0.0);
+				FireEntityInput("Admins.Comical", "Disable", "", 0.05);
 				lastAdmin = 2;
 			}
 		}
@@ -316,7 +316,7 @@ public Action SelectAdmin(){
 				SelectAdmin();
 			}
 			else{
-				FireEntityInput("Admins.Holinhed", "Enable", "", 0.0);
+				FireEntityInput("Admins.Holinhed", "Enable", "", 0.05);
 				lastAdmin = 3;
 			}
 		}
@@ -326,7 +326,7 @@ public Action SelectAdmin(){
 				SelectAdmin();
 			}
 			else{
-				FireEntityInput("Admins.JoeyGhost", "Enable", "", 0.0);
+				FireEntityInput("Admins.JoeyGhost", "Enable", "", 0.05);
 				lastAdmin = 4;
 			}
 		}
@@ -336,7 +336,7 @@ public Action SelectAdmin(){
 				SelectAdmin();
 			}
 			else{
-				FireEntityInput("Admins.KaiserCrazed", "Enable", "", 0.0);
+				FireEntityInput("Admins.KaiserCrazed", "Enable", "", 0.05);
 				lastAdmin = 5;
 			}
 		}
@@ -346,7 +346,7 @@ public Action SelectAdmin(){
 				SelectAdmin();
 			}
 			else{
-				FireEntityInput("Admins.KissoneKinoma", "Enable", "", 0.0);
+				FireEntityInput("Admins.KissoneKinoma", "Enable", "", 0.05);
 				lastAdmin = 6;
 			}
 		}
@@ -356,7 +356,7 @@ public Action SelectAdmin(){
 				SelectAdmin();
 			}
 			else{
-				FireEntityInput("Admins.LixianPrime", "Enable", "", 0.0);
+				FireEntityInput("Admins.LixianPrime", "Enable", "", 0.05);
 				lastAdmin = 7;
 			}
 		}
@@ -366,7 +366,7 @@ public Action SelectAdmin(){
 				SelectAdmin();
 			}
 			else{
-				FireEntityInput("Admins.ProfessorFartsalot", "Enable", "", 0.0);
+				FireEntityInput("Admins.ProfessorFartsalot", "Enable", "", 0.05);
 				lastAdmin = 8;
 			}
 		}
@@ -376,7 +376,7 @@ public Action SelectAdmin(){
 				SelectAdmin();
 			}
 			else{
-				FireEntityInput("Admins.Ribbons", "Enable", "", 0.0);
+				FireEntityInput("Admins.Ribbons", "Enable", "", 0.05);
 				lastAdmin = 9;
 			}
 		}
