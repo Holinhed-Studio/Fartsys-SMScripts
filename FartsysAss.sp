@@ -142,7 +142,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.6.7",
+	version = "3.6.9",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -231,15 +231,12 @@ public void OnPluginStart()
     HookEvent("mvm_bomb_alarm_triggered", EventWarning),
     HookEvent("mvm_bomb_reset_by_player", EventReset);
     PrintToChatAll("Plugin Loaded.");
-    CreateTimer(1.0, PerformAdverts);
 }
 
 //Now that command definitions are done, lets make some things happen.
 public void OnMapStart()
 {
     FireEntityInput("rain", "Alpha", "0", 0.0);
-    SelectAdmin();
-    CreateTimer(40.0, SelectAdminTimer);
 }
 //Select background music
 public Action SelectBGM()
@@ -288,7 +285,7 @@ public Action SelectAdminTimer(Handle timer){
 
 //Feature an admin
 public Action SelectAdmin(){
-	FireEntityInput("Admins.*", "Disable", "", 0.0);
+	FireEntityInput("Admins*", "Disable", "", 0.0);
 	int i = GetRandomInt(1, 9);
 	switch (i){
 		case 1:{
@@ -307,7 +304,7 @@ public Action SelectAdmin(){
 				SelectAdmin();
 			}
 			else{
-				FireEntityInput("Admins.Comical", "Disable", "", 0.05);
+				FireEntityInput("Admins.Comical", "Enable", "", 0.05);
 				lastAdmin = 2;
 			}
 		}
@@ -851,32 +848,32 @@ public Action SpecTimer(Handle timer){
 		int i = GetRandomInt(1, 6);
 		switch (i){
 			case 1:{
-				FireEntityInput("Spec.*", "Disable", "", 0.0),
+				FireEntityInput("Spec*", "Disable", "", 0.0),
 				FireEntityInput("Spec.Goobbue", "Enable", "", 0.1),
 				PrintToChatAll("\x070000AA Legend tells of a Goobbue sproutling somewhere nearby...");
 			}
 			case 2:{
-				FireEntityInput("Spec.*", "Disable", "", 0.0),
+				FireEntityInput("Spec*", "Disable", "", 0.0),
 				FireEntityInput("Spec.Waffle", "Enable", "", 0.1),
 				PrintToChatAll("\x0700A0A0Don't eat THESE...");
 			}
 			case 3:{
-				FireEntityInput("Spec.*", "Disable", "", 0.0),
+				FireEntityInput("Spec*", "Disable", "", 0.0),
 				FireEntityInput("Spec.Burrito", "Enable", "", 0.1),
 				PrintToChatAll("\x07A00000What's worse than Taco Bell?");
 			}
 			case 4:{
-				FireEntityInput("Spec.*", "Disable", "", 0.0),
+				FireEntityInput("Spec*", "Disable", "", 0.0),
 				FireEntityInput("Spec.Shroom", "Enable", "", 0.1),
 				PrintToChatAll("\x07DD0000M\x07FFFFFFA\x07DD0000R\x07FFFFFFI\x07DD0000O\x07FFFFFF time!");
 			}
 			case 5:{
-				FireEntityInput("Spec.*", "Disable", "", 0.0),
+				FireEntityInput("Spec*", "Disable", "", 0.0),
 				FireEntityInput("Spec.BlueBall", "Enable", "", 0.1),
 				PrintToChatAll("A \x070000AA Blue Ball \x07FFFFFF lurks from afar...");
 			}
 			case 6:{
-				FireEntityInput("Spec.*", "Enable", "", 0.0),
+				FireEntityInput("Spec*", "Enable", "", 0.0),
 				PrintToChatAll("\x07AA00AAIs it a miracle? Is it  chaos? WHO KNOWWWWWWS");
 			}
 		}
@@ -1141,7 +1138,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 8;
 					explodeType = 1;
 					canSENTShark = false;
-					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("Bombs*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
 					FireEntityInput("Bombs.FreedomBomb", "Enable", "", 0.0),
@@ -1152,7 +1149,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 16;
 					explodeType = 2;
 					canSENTShark = false;
-					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("Bombs*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.ElonBust", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
@@ -1163,7 +1160,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 24;
 					explodeType = 3;
 					canSENTShark = false;
-					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("Bombs*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.BathSalts", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
@@ -1174,7 +1171,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 32;
 					explodeType = 4;
 					canSENTShark = false;
-					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("Bombs*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.FallingStar", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
@@ -1185,7 +1182,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 40;
 					explodeType = 5;
 					canSENTShark = false;
-					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("Bombs*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.MajorKong", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
@@ -1196,7 +1193,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 48;
 					explodeType = 6;
 					canSENTShark = true;
-					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("Bombs*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.SharkTorpedo", "Enable", "", 0.0),
 					FireEntityInput("BombExploShark", "Enable", "", 0.0),
@@ -1208,7 +1205,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 56;
 					explodeType = 7;
 					canSENTShark = false;
-					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("Bombs*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.FatMan", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
@@ -1219,7 +1216,7 @@ public Action BombStatusUpdater(Handle timer){
 					bombStatusMax = 64;
 					explodeType = 8;
 					canSENTShark = false;
-					FireEntityInput("Bombs.*", "Disable", "", 0.0),
+					FireEntityInput("Bombs*", "Disable", "", 0.0),
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.Hydrogen", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
@@ -2712,7 +2709,7 @@ public Action Command_Operator(int args){
 			explodeType = 69;
 			FireEntityInput("Delivery", "Unlock", "", 0.0),
 			FireEntityInput("BombExplo*", "Disable", "", 0.0),
-			FireEntityInput("Bombs.*", "Disable", "", 0.0),
+			FireEntityInput("Bombs*", "Disable", "", 0.0),
 			FireEntityInput("Bombs.Professor", "Enable", "", 3.0);
 		}
 		//Found blue ball
