@@ -142,7 +142,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.6.5",
+	version = "3.6.7",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -223,6 +223,7 @@ public void OnPluginStart()
     RegConsoleCmd("sm_sacstatus", Command_FBSacStatus, "Check sacrifice points status"),
     RegConsoleCmd("sm_song", Command_GetCurrentSong, "Get current song name"),
 	RegConsoleCmd("sm_return", Command_Return, "Return to Spawn"),
+	RegConsoleCmd("sm_discord", Command_Discord, "Join our Discord server!"),
     HookEvent("player_death", EventDeath),
     HookEvent("server_cvar", Event_Cvar, EventHookMode_Pre),
     HookEvent("mvm_wave_complete", EventWaveComplete),
@@ -1529,6 +1530,11 @@ public Action ReturnClient(Handle timer){
 	EmitSoundToClient(clientID, RETURNSUCCESS);
 }
 
+//Join us on Discord!
+public Action Command_Discord(int client, int args){
+	PrintToChat(client, "\x0700AAAA[\x0700FF00CORE\x0700AAAA]\x07FFFFFF Our Discord server URL is \x07AA00AAhttps://discord.com/invite/SkHaeMH\x07FFFFFF."),
+	ShowMOTDPanel(client, "https://discord.com/invite/SkHaeMH");
+}
 //Deprecated
 public Action Command_TBWave01(int args)
 {
