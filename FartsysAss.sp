@@ -1533,7 +1533,7 @@ public Action ReturnClient(Handle timer){
 //Join us on Discord!
 public Action Command_Discord(int client, int args){
 	PrintToChat(client, "\x0700AAAA[\x0700FF00CORE\x0700AAAA]\x07FFFFFF Our Discord server URL is \x07AA00AAhttps://discord.com/invite/SkHaeMH\x07FFFFFF."),
-	ShowMOTDPanel(client, "https://discord.com/invite/SkHaeMH");
+	ShowMOTDPanel(client, "FireHostRedux Discord", "https://discord.com/invite/SkHaeMH", MOTDPANEL_TYPE_URL);
 }
 //Deprecated
 public Action Command_TBWave01(int args)
@@ -2417,7 +2417,7 @@ public Action Command_Operator(int args){
 		}
 		//Prepare yourself!
 		case 2:{
-            PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000DOVAH'S ASS\x07FFFFFF v0x13. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
+            PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000DOVAH'S ASS\x07FFFFFF v0x14. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
             FireEntityInput("rain", "Alpha", "0", 0.0);
 		}
 		//Force Tornado
