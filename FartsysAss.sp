@@ -12,6 +12,7 @@
 */
 #include <sourcemod>
 #include <sdktools>
+#include <clientprefs>
 #pragma newdecls required
 #pragma semicolon 1
 bool bombProgression = false;
@@ -125,11 +126,11 @@ static char WTFBOOM[32] = "fartsy/misc/wtfboom.mp3";
 static float HWNMin = 210.0;
 static float HWNMax = 380.0;
 static float Return[3] = {-3730.0, 67.0, -252.0};
-static int BGMSNDLVL = 90;
+static int BGMSNDLVL = 100;
 int INCOMINGDISPLAYED = 0;
 int clientID = 0;
 int CodeEntry = 0;
-static int DEFBGMSNDLVL = 40;
+static int DEFBGMSNDLVL = 50;
 int bombStatus = 0;
 int bombStatusMax = 0;
 int explodeType = 0;
@@ -137,12 +138,16 @@ int lastAdmin = 0;
 int sacPoints = 0;
 int sacPointsMax = 60;
 static int SNDCHAN = 6;
+int soundPreference[MAXPLAYERS + 1];
+Handle cookieSNDPref;
+Handle cvarSNDDefault = INVALID_HANDLE;
+
 public Plugin myinfo =
 {
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.6.9",
+	version = "3.8.0",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -224,6 +229,7 @@ public void OnPluginStart()
     RegConsoleCmd("sm_song", Command_GetCurrentSong, "Get current song name"),
 	RegConsoleCmd("sm_return", Command_Return, "Return to Spawn"),
 	RegConsoleCmd("sm_discord", Command_Discord, "Join our Discord server!"),
+	RegConsoleCmd("sm_sounds", Command_Sounds, "Toggle sounds on or off via menu"),
     HookEvent("player_death", EventDeath),
     HookEvent("server_cvar", Event_Cvar, EventHookMode_Pre),
     HookEvent("mvm_wave_complete", EventWaveComplete),
@@ -231,12 +237,90 @@ public void OnPluginStart()
     HookEvent("mvm_bomb_alarm_triggered", EventWarning),
     HookEvent("mvm_bomb_reset_by_player", EventReset);
     PrintToChatAll("Plugin Loaded.");
+    LoadTranslations("plugin.FartsysAss");
+    cvarSNDDefault = CreateConVar("sm_fartsysass_sound", "3", "Default sound for new users, 3 = Everything, 2 = Sounds Only, 1 = Music Only, 0 = Nothing");
+    cookieSNDPref = RegClientCookie("Sound Pref", "Sound settings", CookieAccess_Private);
+    SetCookieMenuItem(FartsysSNDSelected, 0, "Fartsys Ass Sound Preferences");
+}
+//Clientprefs built in menu
+public void FartsysSNDSelected(int client, CookieMenuAction action, any info, char[] buffer, int maxlen) 
+{
+	if (action == CookieMenuAction_SelectOption)
+	{
+		ShowFartsyMenu(client);
+	}
+}
+// When a new client joins we reset sound preferences
+public void OnClientPutInServer(int client)
+{
+	if(!IsFakeClient(client))
+	{
+		soundPreference[client] = GetConVarInt(cvarSNDDefault);
+		if (AreClientCookiesCached(client))
+		{
+			getClientCookiesFor(client);
+		}
+	}
+	else
+	{
+		soundPreference[client] = 0;
+	}
+}
+
+public void getClientCookiesFor(int client){
+	char buffer[5];
+	GetClientCookie(client, cookieSNDPref, buffer, 5);
+	if(!StrEqual(buffer, ""))
+	{
+		soundPreference[client] = StringToInt(buffer);
+	}
+}
+
+public void ShowFartsyMenu(int client)
+{
+    Menu menu = new Menu(MenuHandlerFartsy, MENU_ACTIONS_DEFAULT);
+    char buffer[100];
+    menu.SetTitle("FartsysAss Sound Menu");
+    menu.AddItem(buffer, "Disable ALL");
+    menu.AddItem(buffer, "Music Only");
+    menu.AddItem(buffer, "Sound Effects Only");
+    menu.AddItem(buffer, "Enable ALL");
+    menu.Display(client, 20);
+    menu.ExitButton = true;
+}
+
+//Create menu
+public Action Command_Sounds(int client, int args)
+{
+	ShowFartsyMenu(client);
+	return Plugin_Handled;
+}
+
+//  This selects or disables the sounds
+public int MenuHandlerFartsy(Menu menu, MenuAction action, int param1, int param2)
+{
+	if(action == MenuAction_Select)
+	{
+		PrintToChatAll("%i", param2);
+		soundPreference[param1] = param2;
+		char buffer[5];
+		IntToString(soundPreference[param1], buffer, 5);
+		SetClientCookie(param1, cookieSNDPref, buffer);
+		PrintToChatAll("Set client cookie to %i and %s", param1, buffer);
+		Command_Sounds(param1, 0);
+	} 
+	else if(action == MenuAction_End)
+	{
+		CloseHandle(menu);
+	}
 }
 
 //Now that command definitions are done, lets make some things happen.
 public void OnMapStart()
 {
     FireEntityInput("rain", "Alpha", "0", 0.0);
+    SelectAdmin();
+    CreateTimer(1.0, SelectAdminTimer);
 }
 //Select background music
 public Action SelectBGM()
@@ -245,14 +329,14 @@ public Action SelectBGM()
 	int BGM = GetRandomInt(1, 2);
 	switch(BGM){
 		case 1:{
-			EmitSoundToAll(DEFAULTBGM1, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL);
 			curSong = DEFAULTBGM1;
 			songName = DEFAULTBGM1Title;
 			CreateTimer(DefBGM1Dur, RefireDefBGM1);
 			PrintToServer("Creating timer for The Silent Regard of Stars. Enjoy the music!");
 		}
 		case 2:{
-			EmitSoundToAll(DEFAULTBGM2, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL);
 			curSong = DEFAULTBGM2;
 			songName = DEFAULTBGM2Title;
 			PrintToServer("Creating timer for Knowledge Never Sleeps. Enjoy the music!");
@@ -260,6 +344,7 @@ public Action SelectBGM()
 		}
 	}
 }
+
 //Stop current song
 public Action StopCurSong(){
     if (StrEqual(curSong, "null")) return Plugin_Handled;
@@ -421,17 +506,17 @@ public Action PerformWaveAdverts(Handle timer){
     	{
 			switch (bombStatus){
 				case 8,16,24,32,40,48,56,64:{
-					if(TornadoWarningIssued){
-						if(bombProgression && IsClientInGame(i)){
+					if(TornadoWarningIssued && IsClientInGame(i)){
+						if(bombProgression){
 							PrintHintText(i, "Bomb Status: MOVING (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED...", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 							StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
 						}
-						else if(IsClientInGame(i)){
+						else{
 							PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED...", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 							StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
 						}
 					}
-					if(bombProgression && IsClientInGame(i)){
+					else if(bombProgression && IsClientInGame(i)){
 						PrintHintText(i, "Bomb Status: MOVING (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 						StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
 					}
@@ -440,7 +525,7 @@ public Action PerformWaveAdverts(Handle timer){
 						StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
 					}
 				}
-				case 0,1,2,3,4,5,6,7,9,10,11,13,14,15,17,18,19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,38,39,41,42,43,44,45,46,47,49,50,51,52,53,54,55,57,58,59,60,61,62,63:{
+				case 0,1,2,3,4,5,6,7,9,10,11,12,13,14,15,17,18,19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,38,39,41,42,43,44,45,46,47,49,50,51,52,53,54,55,57,58,59,60,61,62,63:{
 					if(TornadoWarningIssued && IsClientInGame(i)){
 						PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED...", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 						StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");	
@@ -480,7 +565,7 @@ public Action RefireBGM1(Handle timer)
 {
 	if (!bgmlock1){
 		StopCurSong();
-		EmitSoundToAll(BGM1, _, SNDCHAN, DEFBGMSNDLVL, _, _, _, _, _, _, _, _);
+		CustomSoundEmitter(BGM1, BGMSNDLVL);
 		curSong = BGM1;
 		songName = BGM1Title;
 		CreateTimer(BGM1Dur, RefireBGM1);
@@ -492,7 +577,7 @@ public Action RefireBGM2(Handle timer)
 {
 	if (!bgmlock2){
 		StopCurSong();
-		EmitSoundToAll(BGM2, _, SNDCHAN, DEFBGMSNDLVL, _, _, _, _, _, _, _, _);
+		CustomSoundEmitter(BGM2, BGMSNDLVL);
 		curSong = BGM2;
 		songName = BGM2Title;
 		CreateTimer(BGM2Dur, RefireBGM2);
@@ -504,7 +589,7 @@ public Action RefireBGM3(Handle timer)
 {
 	if (!bgmlock3 && !crusader){
 		StopCurSong();
-		EmitSoundToAll(BGM3, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+		CustomSoundEmitter(BGM3, BGMSNDLVL);
 		curSong = BGM3;
 		songName = BGM3Title;
 		CreateTimer(BGM3Dur, RefireBGM3);
@@ -516,7 +601,7 @@ public Action RefireBGM4(Handle timer)
 {
 	if (!bgmlock4){
 		StopCurSong();
-		EmitSoundToAll(BGM4, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+		CustomSoundEmitter(BGM4, BGMSNDLVL);
 		curSong = BGM4;
 		songName = BGM4Title;
 		CreateTimer(BGM4Dur, RefireBGM4);
@@ -528,7 +613,7 @@ public Action RefireBGM5(Handle timer)
 {
 	if (!bgmlock5 && !crusader){
 		StopCurSong();
-		EmitSoundToAll(BGM5, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+		CustomSoundEmitter(BGM5, BGMSNDLVL);
 		curSong = BGM5;
 		songName = BGM5Title;
 		CreateTimer(BGM5Dur, RefireBGM5);
@@ -540,7 +625,7 @@ public Action RefireBGM6(Handle timer)
 {
 	if (!bgmlock6){
 		StopCurSong();
-		EmitSoundToAll(BGM6, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+		CustomSoundEmitter(BGM6, BGMSNDLVL);
 		curSong = BGM6;
 		songName = BGM6Title;
 		CreateTimer(BGM6Dur, RefireBGM6);
@@ -551,7 +636,7 @@ public Action RefireBGM6(Handle timer)
 public Action RefireBGM7(Handle timer){
 	if (!bgmlock7){
 		StopCurSong();
-		EmitSoundToAll(BGM7, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+		CustomSoundEmitter(BGM7, BGMSNDLVL);
 		curSong = BGM7;
 		songName = BGM7Title;
 		CreateTimer(BGM7Dur, RefireBGM7);
@@ -562,12 +647,28 @@ public Action RefireBGM7(Handle timer){
 public Action RefireBGM8(Handle timer){
 	if (!bgmlock8){
 		StopCurSong();
-		EmitSoundToAll(BGM8, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+		CustomSoundEmitter(BGM8, BGMSNDLVL);
 		curSong = BGM8;
 		songName = BGM8Title;
 		CreateTimer(BGM8Dur, RefireBGM8);
 	}
 	return Plugin_Stop;
+}
+
+//Wrote our own sound processor, this should make handling sounds easier.
+public Action CustomSoundEmitter(char[] sndName, int SNDLVL){
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		//If it's music
+		if(IsClientInGame(i) && !IsFakeClient(i) && (soundPreference[i] == 1 || soundPreference[i] == 3) && (StrContains(sndName, "BGM"))){
+			EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, _, _, _, _, _, _, _, _);
+		}
+		//If it's sound effects
+		else if(IsClientInGame(i) && !IsFakeClient(i) && (soundPreference[i] == 2 || soundPreference[i] == 3) && (!StrContains(sndName, "BGM"))){
+			EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, _, _, _, _, _, _, _, _);
+		}
+	}
+	return Plugin_Handled;
 }
 //Brute Justice Timer
 public Action OnslaughterATK(Handle timer){
@@ -1354,7 +1455,7 @@ public Action SacrificePointsUpdater(Handle timer){
 				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
 				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
 			}
-			case 70,71,72,73,74,75,76,77,78,79:{
+			case 70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99:{
 				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
 				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
 				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
@@ -1929,7 +2030,7 @@ public Action GetWave(int args){
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 1: \x0700AA00%s", BGM1Title);
 			StopCurSong();
 			CreateTimer(2.5, PerformWaveAdverts);
-			EmitSoundToAll(BGM1, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			CustomSoundEmitter(BGM1, BGMSNDLVL);
 			curSong = BGM1;
 			CreateTimer(BGM1Dur, RefireBGM1);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -1970,7 +2071,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 2: \x0700AA00%s", BGM2Title);
 			StopCurSong();
-			EmitSoundToAll(BGM2, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			CustomSoundEmitter(BGM2, BGMSNDLVL);
 			curSong = BGM2;
 			CreateTimer(BGM2Dur, RefireBGM2);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2014,7 +2115,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 3: \x0700AA00%s", BGM3Title);
 			StopCurSong();
-			EmitSoundToAll(BGM3, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			CustomSoundEmitter(BGM3, BGMSNDLVL);
 			curSong = BGM3;
 			CreateTimer(BGM3Dur, RefireBGM3);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2062,7 +2163,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 4: \x0700AA00%s", BGM4Title);
 			StopCurSong();
-			EmitSoundToAll(BGM4, _, SNDCHAN, BGMSNDLVL-10, _, _, _, _, _, _, _, _);
+			CustomSoundEmitter(BGM4, BGMSNDLVL);
 			curSong = BGM4;
 			CreateTimer(BGM4Dur, RefireBGM4);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2109,7 +2210,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 5: \x0700AA00%s", BGM5Title);
 			StopCurSong();
-			EmitSoundToAll(BGM5, _, SNDCHAN, BGMSNDLVL-10, _, _, _, _, _, _, _, _);
+			CustomSoundEmitter(BGM5, BGMSNDLVL);
 			curSong = BGM5;
 			CreateTimer(BGM5Dur, RefireBGM5);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2170,7 +2271,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 6: \x0700AA00%s", BGM6Title);
 			StopCurSong();
-			EmitSoundToAll(BGM6, _, SNDCHAN, BGMSNDLVL+10, _, _, _, _, _, _, _, _);
+			CustomSoundEmitter(BGM6, BGMSNDLVL);
 			curSong = BGM6;
 			CreateTimer(BGM6Dur, RefireBGM6);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2217,7 +2318,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 7: \x0700AA00%s", BGM7Title);
 			StopCurSong();
-			EmitSoundToAll(BGM7, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			CustomSoundEmitter(BGM7, BGMSNDLVL);
 			curSong = BGM7;
 			CreateTimer(BGM7Dur, RefireBGM7);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2265,7 +2366,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 8: \x0700AA00%s", BGM8Title);
 			StopCurSong();
-			EmitSoundToAll(BGM8, _, SNDCHAN, BGMSNDLVL, _, _, _, _, _, _, _, _);
+			CustomSoundEmitter(BGM8, BGMSNDLVL);
 			curSong = BGM8;
 			CreateTimer(BGM8Dur, RefireBGM8);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2305,7 +2406,13 @@ public Action JumpToWave(int wave_number)
 }
 //NextWaveTimer
 public Action NextWaveTimer(Handle timer){
-	ServerCommand("fb_operator 99");
+	if (isWave){
+		ServerCommand("fb_operator 99");
+	}
+	else{
+		return Plugin_Stop;
+	}
+	return Plugin_Stop;
 }
 //Timer to restart the server.
 public Action Timer_RestartServer(Handle timer)
@@ -2431,8 +2538,13 @@ public Action Command_Operator(int args){
 		//Tornado Sacrifice (+1)
 		case 10:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Sacrificed a client into orbit. (\x0700FF00+1 pt\x07FFFFFF)");
-			bombStatus++;
 			sacPoints++;
+			if(bombStatus >= bombStatusMax){
+				return Plugin_Handled;
+			}
+			else{
+				bombStatus++;
+			}
 		}
 		//Death pit sacrifice (+1)
 		case 11:{
@@ -2470,9 +2582,14 @@ public Action Command_Operator(int args){
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Small Bomb successfully pushed! (\x0700FF00+2 pts\x07FFFFFF)");
 					sacPoints+=2,
 					bombStatusMax+=10,
-					bombStatus+=2,
 					CreateTimer(3.0, BombStatusAddTimer);
 					EmitSoundToAll(COUNTDOWN);
+					if(bombStatus>=bombStatusMax){
+						return Plugin_Handled;
+					}
+					else{
+						bombStatus+=2;
+					}
 				}
 				//Medium Explosion
 				case 2,3:{
@@ -2482,9 +2599,14 @@ public Action Command_Operator(int args){
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Medium Bomb successfully pushed! (\x0700FF00+5 pts\x07FFFFFF)");
 					sacPoints+=5,
 					bombStatusMax+=10,
-					bombStatus+=2,
 					CreateTimer(3.0, BombStatusAddTimer);
 					EmitSoundToAll(COUNTDOWN);
+					if(bombStatus>=bombStatusMax){
+						return Plugin_Handled;
+					}
+					else{
+						bombStatus+=2;
+					}
 				}
 				//Falling Star
 				case 4:{
@@ -2495,11 +2617,16 @@ public Action Command_Operator(int args){
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Average Bomb successfully pushed! (\x0700FF00+10 pts\x07FFFFFF)");
 					sacPoints+=10,
 					bombStatusMax+=10,
-					bombStatus+=2,
 					CreateTimer(3.0, BombStatusAddTimer);
 					EmitSoundToAll(COUNTDOWN),
 					CreateTimer(1.0, SENTStarTimer),
 					CreateTimer(60.0, SENTStarDisable);
+					if(bombStatus>=bombStatusMax){
+						return Plugin_Handled;
+					}
+					else{
+						bombStatus+=2;
+					}
 				}
 				//Major Kong
 				case 5:{
@@ -2513,9 +2640,14 @@ public Action Command_Operator(int args){
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07AA0000 NUCLEAR WARHEAD\x07FFFFFF successfully pushed! (\x0700FF00+25 pts\x07FFFFFF)");
 					sacPoints+=25,
 					bombStatusMax+=10,
-					bombStatus+=4,
 					CreateTimer(3.0, BombStatusAddTimer);
 					EmitSoundToAll(COUNTDOWN);
+					if(bombStatus>=bombStatusMax){
+						return Plugin_Handled;
+					}
+					else{
+						bombStatus+=4;
+					}
 				}
 				//Large (shark)
 				case 6:{
@@ -2525,9 +2657,14 @@ public Action Command_Operator(int args){
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Heavy Bomb successfully pushed! (\x0700FF00+15 pts\x07FFFFFF)");
 					sacPoints+=15,
 					bombStatusMax+=10,
-					bombStatus+=4,
 					CreateTimer(3.0, BombStatusAddTimer);
 					EmitSoundToAll(COUNTDOWN);
+					if(bombStatus>=bombStatusMax){
+						return Plugin_Handled;
+					}
+					else{
+						bombStatus+=4;
+					}
 				}
 				//FatMan
 				case 7:{
@@ -2540,10 +2677,15 @@ public Action Command_Operator(int args){
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07AA0000 NUCLEAR WARHEAD\x07FFFFFF successfully pushed! (\x0700FF00+25 pts\x07FFFFFF)");
 					sacPoints+=25,
 					bombStatusMax+=10,
-					bombStatus+=4,
 					CreateTimer(3.0, BombStatusAddTimer);
 					CreateTimer(15.0, SpecTimer);
 					EmitSoundToAll(COUNTDOWN);
+					if(bombStatus>=bombStatusMax){
+						return Plugin_Handled;
+					}
+					else{
+						bombStatus+=4;
+					}
 				}
 				//Hydrogen
 				case 8:{
@@ -2614,7 +2756,7 @@ public Action Command_Operator(int args){
 			FireEntityInput("HindenTrain", "TeleportToPathTrack", "Hinden01", 7.0);
 			FireEntityInput("HindenTrain", "Stop", "", 7.0);
 			CreateTimer(9.0, NextWaveTimer);
-			bombStatus= 4;
+			bombStatus = 4;
 			bombStatusMax = 8;
 			explodeType = 0;
 		}
