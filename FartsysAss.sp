@@ -129,7 +129,6 @@ static float Return[3] = {-3730.0, 67.0, -252.0};
 static int BGMSNDLVL = 100;
 int INCOMINGDISPLAYED = 0;
 int clientID = 0;
-int menuID = 0;
 int CodeEntry = 0;
 static int DEFBGMSNDLVL = 50;
 int bombStatus = 0;
@@ -141,7 +140,7 @@ int sacPointsMax = 60;
 static int SFXSNDLVL = 75;
 static int SNDCHAN = 6;
 int soundPreference[MAXPLAYERS + 1];
-Handle cookieSNDPref;
+Handle cSNDPref;
 Handle cvarSNDDefault = INVALID_HANDLE;
 
 public Plugin myinfo =
@@ -149,7 +148,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.8.3",
+	version = "3.8.4",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -242,7 +241,7 @@ public void OnPluginStart()
     HookEvent("mvm_bomb_reset_by_player", EventReset);
     PrintToChatAll("Plugin Loaded.");
     cvarSNDDefault = CreateConVar("sm_fartsysass_sound", "3", "Default sound for new users, 3 = Everything, 2 = Sounds Only, 1 = Music Only, 0 = Nothing");
-    cookieSNDPref = RegClientCookie("Sound Pref", "Sound settings", CookieAccess_Private);
+    cSNDPref = RegClientCookie("Sound Pref", "Sound settings", CookieAccess_Private);
     SetCookieMenuItem(FartsysSNDSelected, 0, "Fartsys Ass Sound Preferences");
 }
 //Clientprefs built in menu
@@ -266,13 +265,13 @@ public void OnClientPutInServer(int client)
 	}
 	else
 	{
-		soundPreference[client] = 0;
+		soundPreference[client] = 3;
 	}
 }
 
 public void getClientCookiesFor(int client){
 	char buffer[5];
-	GetClientCookie(client, cookieSNDPref, buffer, 5);
+	GetClientCookie(client, cSNDPref, buffer, 5);
 	if(!StrEqual(buffer, ""))
 	{
 		soundPreference[client] = StringToInt(buffer);
@@ -281,7 +280,6 @@ public void getClientCookiesFor(int client){
 
 public void ShowFartsyMenu(int client)
 {
-    menuID = client;
     Menu menu = new Menu(MenuHandlerFartsy, MENU_ACTIONS_DEFAULT);
     char buffer[100];
     menu.SetTitle("FartsysAss Sound Menu");
@@ -297,6 +295,20 @@ public void ShowFartsyMenu(int client)
 public Action Command_Sounds(int client, int args)
 {
 	ShowFartsyMenu(client);
+	switch(soundPreference[client]){
+		case 0:{
+			PrintToChat(client, "Sounds are currently DISABLED.");
+		}
+		case 1:{
+			PrintToChat(client, "Sounds are currently MUSIC ONLY.");
+		}
+		case 2:{
+			PrintToChat(client, "Sounds are currently SOUND EFFECTS ONLY.");
+		}
+		case 3:{
+			PrintToChat(client, "Sounds are currently ALL ON.");
+		}
+	}
 	return Plugin_Handled;
 }
 
@@ -308,23 +320,9 @@ public int MenuHandlerFartsy(Menu menu, MenuAction action, int param1, int param
 		soundPreference[param1] = param2;
 		char buffer[5];
 		IntToString(soundPreference[param1], buffer, 5);
-		SetClientCookie(param1, cookieSNDPref, buffer);
+		SetClientCookie(param1, cSNDPref, buffer);
 		Command_Sounds(param1, 0);
-		switch(soundPreference[param1]){
-			case 0:{
-				PrintToChat(menuID, "You chose to DISABLE ALL SOUNDS.");
-			}
-			case 1:{
-				PrintToChat(menuID, "You chose to ENABLE ONLY MUSIC.");
-			}
-			case 2:{
-				PrintToChat(menuID, "You chose to ENABLE ONLY SOUNDS");
-			}
-			case 3:{
-				PrintToChat(menuID, "You set to ENABLE ALL SOUNDS.");
-			}
-		}
-	} 
+	}
 	else if(action == MenuAction_End)
 	{
 		CloseHandle(menu);
@@ -352,7 +350,7 @@ public Action SelectBGM()
 			PrintToServer("Creating timer for The Silent Regard of Stars. Enjoy the music!");
 		}
 		case 2:{
-			CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL-20);
+			CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL-5);
 			curSong = DEFAULTBGM2;
 			songName = DEFAULTBGM2Title;
 			PrintToServer("Creating timer for Knowledge Never Sleeps. Enjoy the music!");
@@ -1948,6 +1946,7 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
     bombStatusMax = 7;
     bombStatus = 5;
     explodeType = 0;
+    //CreateTimer(3.0, RefireDefBGM1);
     SelectBGM();
     CreateTimer(1.0, PerformAdverts);
     PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFYou've defeated the wave!");
