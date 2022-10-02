@@ -148,7 +148,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.8.4",
+	version = "3.8.5",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -224,6 +224,8 @@ public void OnPluginStart()
 	PrecacheSound("mvm/mvm_player_died.wav", true),
 	PrecacheSound("mvm/mvm_tank_horn.wav", true),
     PrecacheSound("fartsy/fallingback/bgm.mp3", true),
+	PrecacheSound("ambient/sawblade_impact1.wav", true),
+	PrecacheSound("vo/sandwicheat09.mp3", true),
     RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client."),
     RegServerCmd("tacobell_wave01", Command_TBWave01,"Taco Bell - Wave One"),
     RegServerCmd("tacobell_finished", Command_TacoBellFinished, "TacoBell has been completed!"),
@@ -343,14 +345,14 @@ public Action SelectBGM()
 	int BGM = GetRandomInt(1, 2);
 	switch(BGM){
 		case 1:{
-			CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL);
+			CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL, true);
 			curSong = DEFAULTBGM1;
 			songName = DEFAULTBGM1Title;
 			CreateTimer(DefBGM1Dur, RefireDefBGM1);
 			PrintToServer("Creating timer for The Silent Regard of Stars. Enjoy the music!");
 		}
 		case 2:{
-			CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL-5);
+			CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL-5, true);
 			curSong = DEFAULTBGM2;
 			songName = DEFAULTBGM2Title;
 			PrintToServer("Creating timer for Knowledge Never Sleeps. Enjoy the music!");
@@ -579,7 +581,7 @@ public Action RefireBGM1(Handle timer)
 {
 	if (!bgmlock1){
 		StopCurSong();
-		CustomSoundEmitter(BGM1, BGMSNDLVL);
+		CustomSoundEmitter(BGM1, BGMSNDLVL, true);
 		curSong = BGM1;
 		songName = BGM1Title;
 		CreateTimer(BGM1Dur, RefireBGM1);
@@ -591,7 +593,7 @@ public Action RefireBGM2(Handle timer)
 {
 	if (!bgmlock2){
 		StopCurSong();
-		CustomSoundEmitter(BGM2, BGMSNDLVL);
+		CustomSoundEmitter(BGM2, BGMSNDLVL, true);
 		curSong = BGM2;
 		songName = BGM2Title;
 		CreateTimer(BGM2Dur, RefireBGM2);
@@ -603,7 +605,7 @@ public Action RefireBGM3(Handle timer)
 {
 	if (!bgmlock3 && !crusader){
 		StopCurSong();
-		CustomSoundEmitter(BGM3, BGMSNDLVL);
+		CustomSoundEmitter(BGM3, BGMSNDLVL, true);
 		curSong = BGM3;
 		songName = BGM3Title;
 		CreateTimer(BGM3Dur, RefireBGM3);
@@ -615,7 +617,7 @@ public Action RefireBGM4(Handle timer)
 {
 	if (!bgmlock4){
 		StopCurSong();
-		CustomSoundEmitter(BGM4, BGMSNDLVL);
+		CustomSoundEmitter(BGM4, BGMSNDLVL, true);
 		curSong = BGM4;
 		songName = BGM4Title;
 		CreateTimer(BGM4Dur, RefireBGM4);
@@ -627,7 +629,7 @@ public Action RefireBGM5(Handle timer)
 {
 	if (!bgmlock5 && !crusader){
 		StopCurSong();
-		CustomSoundEmitter(BGM5, BGMSNDLVL);
+		CustomSoundEmitter(BGM5, BGMSNDLVL, true);
 		curSong = BGM5;
 		songName = BGM5Title;
 		CreateTimer(BGM5Dur, RefireBGM5);
@@ -639,7 +641,7 @@ public Action RefireBGM6(Handle timer)
 {
 	if (!bgmlock6){
 		StopCurSong();
-		CustomSoundEmitter(BGM6, BGMSNDLVL);
+		CustomSoundEmitter(BGM6, BGMSNDLVL, true);
 		curSong = BGM6;
 		songName = BGM6Title;
 		CreateTimer(BGM6Dur, RefireBGM6);
@@ -650,7 +652,7 @@ public Action RefireBGM6(Handle timer)
 public Action RefireBGM7(Handle timer){
 	if (!bgmlock7){
 		StopCurSong();
-		CustomSoundEmitter(BGM7, BGMSNDLVL);
+		CustomSoundEmitter(BGM7, BGMSNDLVL, true);
 		curSong = BGM7;
 		songName = BGM7Title;
 		CreateTimer(BGM7Dur, RefireBGM7);
@@ -661,7 +663,7 @@ public Action RefireBGM7(Handle timer){
 public Action RefireBGM8(Handle timer){
 	if (!bgmlock8){
 		StopCurSong();
-		CustomSoundEmitter(BGM8, BGMSNDLVL);
+		CustomSoundEmitter(BGM8, BGMSNDLVL, true);
 		curSong = BGM8;
 		songName = BGM8Title;
 		CreateTimer(BGM8Dur, RefireBGM8);
@@ -670,15 +672,15 @@ public Action RefireBGM8(Handle timer){
 }
 
 //Wrote our own sound processor, this should make handling sounds easier.
-public Action CustomSoundEmitter(char[] sndName, int SNDLVL){
+public Action CustomSoundEmitter(char[] sndName, int SNDLVL, bool isBGM){
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		//If it's music
-		if(IsClientInGame(i) && !IsFakeClient(i) && (soundPreference[i] == 1 || soundPreference[i] == 3) && ((StrEqual(sndName, DEFAULTBGM1)) || (StrEqual(sndName, DEFAULTBGM2)) || (StrEqual(sndName, BGM1)) || (StrEqual(sndName, BGM2)) || (StrEqual(sndName, BGM3)) || (StrEqual(sndName, BGM4)) || (StrEqual(sndName, BGM5)) || (StrEqual(sndName, BGM6)) || (StrEqual(sndName, BGM7)) || (StrEqual(sndName, BGM8)))){
+		if(IsClientInGame(i) && !IsFakeClient(i) && (soundPreference[i] == 1 || soundPreference[i] == 3) && isBGM){
 			EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, _, _, _, _, _, _, _, _);
 		}
 		//If it's sound effects
-		else if(IsClientInGame(i) && !IsFakeClient(i) && soundPreference[i] >= 2 && (!(StrEqual(sndName, DEFAULTBGM1)) || (StrEqual(sndName, DEFAULTBGM2)) || (StrEqual(sndName, BGM1)) || (StrEqual(sndName, BGM2)) || (StrEqual(sndName, BGM3)) || (StrEqual(sndName, BGM4)) || (StrEqual(sndName, BGM5)) || (StrEqual(sndName, BGM6)) || (StrEqual(sndName, BGM7)) || (StrEqual(sndName, BGM8)))){
+		else if(IsClientInGame(i) && !IsFakeClient(i) && soundPreference[i] >= 2 && !isBGM){
 			EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, _, _, _, _, _, _, _, _);
 		}
 	}
@@ -697,7 +699,7 @@ public Action OnslaughterATK(Handle timer){
 		switch(i){
 			case 1,6:{
 				FireEntityInput("BruteJusticeLaserParticle", "Start", "", 0.0);
-				CustomSoundEmitter(OnslaughterLaserSND, SFXSNDLVL);
+				CustomSoundEmitter(OnslaughterLaserSND, SFXSNDLVL, false);
 				FireEntityInput("BruteJusticeLaser", "TurnOn", "", 1.40);
 				FireEntityInput("BruteJusticeLaserHurtAOE", "Enable", "", 1.40);
 				FireEntityInput("BruteJusticeLaserParticle", "Stop", "", 3.00);
@@ -710,7 +712,7 @@ public Action OnslaughterATK(Handle timer){
 			case 3,7:{
 				FireEntityInput("BruteJusticeFlameParticle", "Start", "", 0.0);
 				FireEntityInput("BruteJusticeFlamethrowerHurtAOE", "Enable", "", 0.0);
-				CustomSoundEmitter(OnslaughterFlamePreATK, SFXSNDLVL);
+				CustomSoundEmitter(OnslaughterFlamePreATK, SFXSNDLVL, false);
 				FireEntityInput("SND.BruteJusticeFlameATK", "PlaySound", "", 1.25);
 				FireEntityInput("BruteJusticeFlamethrowerHurtAOE", "Disable", "", 5.0);
 				FireEntityInput("BruteJusticeFlameParticle", "Stop", "", 5.0);
@@ -742,7 +744,7 @@ public Action OnslaughterATK(Handle timer){
 
 //Onslaughter Post FlameATK
 public Action OnslaughterFlamePostATKSND(Handle timer){
-	CustomSoundEmitter(OnslaughterFlamePostATK, SFXSNDLVL);
+	CustomSoundEmitter(OnslaughterFlamePostATK, SFXSNDLVL, false);
 	return Plugin_Stop;
 }
 
@@ -755,28 +757,28 @@ public Action SharkTimer(Handle timer){
 		int i = GetRandomInt(1, 8);
 		switch(i){
 			case 1:{
-				CustomSoundEmitter(SHARKSND01, SFXSNDLVL);
+				CustomSoundEmitter(SHARKSND01, SFXSNDLVL, false);
 			}
 			case 2:{
-				CustomSoundEmitter(SHARKSND02, SFXSNDLVL);
+				CustomSoundEmitter(SHARKSND02, SFXSNDLVL, false);
 			}
 			case 3:{
-				CustomSoundEmitter(SHARKSND03, SFXSNDLVL);
+				CustomSoundEmitter(SHARKSND03, SFXSNDLVL, false);
 			}
 			case 4:{
-				CustomSoundEmitter(SHARKSND04, SFXSNDLVL);
+				CustomSoundEmitter(SHARKSND04, SFXSNDLVL, false);
 			}
 			case 5:{
-				CustomSoundEmitter(SHARKSND05, SFXSNDLVL);
+				CustomSoundEmitter(SHARKSND05, SFXSNDLVL, false);
 			}
 			case 6:{
-				CustomSoundEmitter(SHARKSND06, SFXSNDLVL);
+				CustomSoundEmitter(SHARKSND06, SFXSNDLVL, false);
 			}
 			case 7:{
-				CustomSoundEmitter(SHARKSND07, SFXSNDLVL);
+				CustomSoundEmitter(SHARKSND07, SFXSNDLVL, false);
 			}
 			case 8:{
-				CustomSoundEmitter(SHARKSND08, SFXSNDLVL);
+				CustomSoundEmitter(SHARKSND08, SFXSNDLVL, false);
 			}
 		}
 		return Plugin_Handled;
@@ -793,82 +795,82 @@ public Action RefireStorm(Handle timer){
 		int Thunder = GetRandomInt(1, 16);
 		switch (Thunder){
 			case 1:{
-				CustomSoundEmitter(GLOBALTHUNDER01, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER01, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt00", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt00",  "Disable", "", 0.07);
 			}
 			case 2:{
-				CustomSoundEmitter(GLOBALTHUNDER02, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER02, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt01", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt01",  "Disable", "", 0.07);
 			}
 			case 3:{
-				CustomSoundEmitter(GLOBALTHUNDER03, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER03, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt02", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt02",  "Disable", "", 0.07);
 			}
 			case 4:{
-				CustomSoundEmitter(GLOBALTHUNDER04, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER04, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt03", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt03",  "Disable", "", 0.07);
 			}
 			case 5:{
-				CustomSoundEmitter(GLOBALTHUNDER05, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER05, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt04", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt04",  "Disable", "", 0.07);
 			}
 			case 6:{
-				CustomSoundEmitter(GLOBALTHUNDER06, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER06, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt05", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt05",  "Disable", "", 0.07);
 			}
 			case 7:{
-				CustomSoundEmitter(GLOBALTHUNDER07, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER07, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt06", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt06",  "Disable", "", 0.07);
 			}
 			case 8:{
-				CustomSoundEmitter(GLOBALTHUNDER08, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER08, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt07", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt07",  "Disable", "", 0.07);
 			}
 			case 9:{
-				CustomSoundEmitter(GLOBALTHUNDER01, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER01, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt08", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt08",  "Disable", "", 0.07);
 			}
 			case 10:{
-				CustomSoundEmitter(GLOBALTHUNDER02, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER02, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt09", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt09",  "Disable", "", 0.07);
 			}
 			case 11:{
-				CustomSoundEmitter(GLOBALTHUNDER03, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER03, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt0A", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt0A",  "Disable", "", 0.07);
 			}
 			case 12:{
-				CustomSoundEmitter(GLOBALTHUNDER04, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER04, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt0B", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt0B",  "Disable", "", 0.07);
 			}
 			case 13:{
-				CustomSoundEmitter(GLOBALTHUNDER05, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER05, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt0C", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt0C",  "Disable", "", 0.07);
 			}
 			case 14:{
-				CustomSoundEmitter(GLOBALTHUNDER06, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER06, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt0D", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt0D",  "Disable", "", 0.07);
 			}
 			case 15:{
-				CustomSoundEmitter(GLOBALTHUNDER07, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER07, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt0E", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt0E",  "Disable", "", 0.07);
 			}
 			case 16:{
-				CustomSoundEmitter(GLOBALTHUNDER08, SFXSNDLVL);
+				CustomSoundEmitter(GLOBALTHUNDER08, SFXSNDLVL, false);
 				FireEntityInput("LightningHurt0F", "Enable", "", 0.0),
 				FireEntityInput("LightningHurt0F",  "Disable", "", 0.07);
 			}
@@ -952,7 +954,7 @@ public Action KillTornado(){
 public Action UnlockTimer (Handle timer){
 	if(isWave){
 		FireEntityInput("FB.KP*", "Unlock", "", 0.0);
-		CustomSoundEmitter(BELL, SFXSNDLVL);
+		CustomSoundEmitter(BELL, SFXSNDLVL, false);
 	}
 	return Plugin_Stop;
 }
@@ -1120,7 +1122,7 @@ public Action SENTStarDisable(Handle timer){
 
 //TankHornSND because why not when code entry fails???
 public Action FBCodeFailTankHornSND(Handle timer){
-	CustomSoundEmitter("mvm/mvm_tank_horn.wav", SFXSNDLVL);
+	CustomSoundEmitter("mvm/mvm_tank_horn.wav", SFXSNDLVL, false);
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55A \x07FF0000TORNADO WARNING \x0700AA55has been issued! Take cover \x07AA0000NOW\x07FFFFFF.");
 	return Plugin_Stop;
 }
@@ -1156,7 +1158,7 @@ public Action HINDENBURGBOOMTimer(Handle timer){
 }
 //INCOMING TIMER
 public Action INCOMINGTimer(Handle timer){
-	CustomSoundEmitter(INCOMING, SFXSNDLVL);
+	CustomSoundEmitter(INCOMING, SFXSNDLVL, false);
 	return Plugin_Stop;
 }
 
@@ -1257,7 +1259,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
 					FireEntityInput("Bombs.FreedomBomb", "Enable", "", 0.0),
-					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL),
+					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000FREEDOM BOMB \x0700AA55is now available for deployment!");
 				}
 				case 16:{
@@ -1268,7 +1270,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.ElonBust", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
-					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL),
+					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000ELON BUST \x0700AA55is now available for deployment!");
 				}
 				case 24:{
@@ -1279,7 +1281,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.BathSalts", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
-					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL),
+					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000BATH SALTS \x0700AA55are now available for deployment!");
 				}
 				case 32:{
@@ -1290,7 +1292,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.FallingStar", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
-					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL),
+					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FFFF00FALLING STAR\x0700AA55 is now available for deployment!");
 				}
 				case 40:{
@@ -1301,7 +1303,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.MajorKong", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
-					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL),
+					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000MAJOR KONG \x0700AA55is now available for deployment!");
 				}
 				case 48:{
@@ -1313,7 +1315,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("Bombs.SharkTorpedo", "Enable", "", 0.0),
 					FireEntityInput("BombExploShark", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
-					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL),
+					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x0700FFFFSHARK \x0700AA55is now available for deployment!");
 				}
 				case 56:{
@@ -1324,7 +1326,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.FatMan", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
-					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL),
+					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000FAT MAN \x0700AA55is now available for deployment!");
 				}
 				case 64:{
@@ -1335,7 +1337,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("BombExplo*", "Disable", "", 0.0),
 					FireEntityInput("Bombs.Hydrogen", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
-					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL),
+					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000HYDROGEN \x0700AA55is now available for deployment!");
 				}
 			}
@@ -1631,7 +1633,7 @@ public Action Command_Return(int client, int args){
 		char name[128];
 		GetClientName(client, name, sizeof(name));
 		PrintToChatAll("\x0700AAAA[\x0700FF00CORE\x0700AAAA]\x07FFFFFF Client \x07FF0000%s \x07FFFFFFbegan casting \x07AA00AA/return\x07FFFFFF.", name);
-		CustomSoundEmitter(RETURNSND, SFXSNDLVL);
+		CustomSoundEmitter(RETURNSND, SFXSNDLVL, false);
 		CreateTimer(5.0, ReturnClient);
 	}
 	return Plugin_Handled;
@@ -1692,53 +1694,53 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			int i = GetRandomInt(1, 16);
 			switch (i){
 				case 1:{
-					CustomSoundEmitter(FALLSND01, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND01, SFXSNDLVL, false);
 				}
 				case 2:{
-					CustomSoundEmitter(FALLSND02, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND02, SFXSNDLVL, false);
 				}
 				case 3:{
-					CustomSoundEmitter(FALLSND03, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND03, SFXSNDLVL, false);
 				}
 				case 4:{
-					CustomSoundEmitter(FALLSND04, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND04, SFXSNDLVL, false);
 				}
 				case 5:{
-					CustomSoundEmitter(FALLSND05, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND05, SFXSNDLVL, false);
 				}
 				case 6:{
-					CustomSoundEmitter(FALLSND06, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND06, SFXSNDLVL, false);
 				}
 				case 7:{
-					CustomSoundEmitter(FALLSND07, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND07, SFXSNDLVL, false);
 				}
 				case 8:{
-					CustomSoundEmitter(FALLSND08, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND08, SFXSNDLVL, false);
 				}
 				case 9:{
-					CustomSoundEmitter(FALLSND09, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND09, SFXSNDLVL, false);
 				}
 				case 10:{
-					CustomSoundEmitter(FALLSND0A, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND0A, SFXSNDLVL, false);
 				}
 				case 11:{
-					CustomSoundEmitter(FALLSND0B, SFXSNDLVL),
+					CustomSoundEmitter(FALLSND0B, SFXSNDLVL, false),
 					FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 0.0);
 				}
 				case 12:{
-					CustomSoundEmitter(FALLSND0C, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND0C, SFXSNDLVL, false);
 				}
 				case 13:{
-					CustomSoundEmitter(FALLSND0D, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND0D, SFXSNDLVL, false);
 				}
 				case 14:{
-					CustomSoundEmitter(FALLSND0E, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND0E, SFXSNDLVL, false);
 				}
 				case 15:{
-					CustomSoundEmitter(FALLSND0F, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND0F, SFXSNDLVL, false);
 				}
 				case 16:{
-					CustomSoundEmitter(FALLSND10, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND10, SFXSNDLVL, false);
 				}
 			}
 		}
@@ -1771,7 +1773,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 					FireEntityInput("FB.Tank", "Enable", "", 1.0);
 				}
 				case 4,8,14:{
-					CustomSoundEmitter("ambient/alarms/train_horn_distant1.wav", SFXSNDLVL),
+					CustomSoundEmitter("ambient/alarms/train_horn_distant1.wav", SFXSNDLVL, false),
 					FireEntityInput("TrainSND", "PlaySound", "", 0.0),
 					FireEntityInput("TrainDamage", "Enable", "", 0.0),
 					FireEntityInput("Train01", "Enable", "", 0.0),
@@ -1791,7 +1793,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 				}
 				case 11:{
 					FireEntityInput("FB.Slice", "Enable", "", 0.0),
-					CustomSoundEmitter("ambient/sawblade_impact1.wav", SFXSNDLVL),
+					CustomSoundEmitter("ambient/sawblade_impact1.wav", SFXSNDLVL, false),
 					FireEntityInput("FB.Slice", "Disable", "", 1.0);
 				}
 				case 12,15:{
@@ -2047,7 +2049,7 @@ public Action GetWave(int args){
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 1: \x0700AA00%s", BGM1Title);
 			StopCurSong();
 			CreateTimer(2.5, PerformWaveAdverts);
-			CustomSoundEmitter(BGM1, BGMSNDLVL);
+			CustomSoundEmitter(BGM1, BGMSNDLVL, true);
 			curSong = BGM1;
 			CreateTimer(BGM1Dur, RefireBGM1);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2088,7 +2090,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 2: \x0700AA00%s", BGM2Title);
 			StopCurSong();
-			CustomSoundEmitter(BGM2, BGMSNDLVL);
+			CustomSoundEmitter(BGM2, BGMSNDLVL, true);
 			curSong = BGM2;
 			CreateTimer(BGM2Dur, RefireBGM2);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2132,7 +2134,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 3: \x0700AA00%s", BGM3Title);
 			StopCurSong();
-			CustomSoundEmitter(BGM3, BGMSNDLVL);
+			CustomSoundEmitter(BGM3, BGMSNDLVL, true);
 			curSong = BGM3;
 			CreateTimer(BGM3Dur, RefireBGM3);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2180,7 +2182,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 4: \x0700AA00%s", BGM4Title);
 			StopCurSong();
-			CustomSoundEmitter(BGM4, BGMSNDLVL);
+			CustomSoundEmitter(BGM4, BGMSNDLVL, true);
 			curSong = BGM4;
 			CreateTimer(BGM4Dur, RefireBGM4);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2227,7 +2229,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 5: \x0700AA00%s", BGM5Title);
 			StopCurSong();
-			CustomSoundEmitter(BGM5, BGMSNDLVL);
+			CustomSoundEmitter(BGM5, BGMSNDLVL, true);
 			curSong = BGM5;
 			CreateTimer(BGM5Dur, RefireBGM5);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2288,7 +2290,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 6: \x0700AA00%s", BGM6Title);
 			StopCurSong();
-			CustomSoundEmitter(BGM6, BGMSNDLVL);
+			CustomSoundEmitter(BGM6, BGMSNDLVL, true);
 			curSong = BGM6;
 			CreateTimer(BGM6Dur, RefireBGM6);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2335,7 +2337,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 7: \x0700AA00%s", BGM7Title);
 			StopCurSong();
-			CustomSoundEmitter(BGM7, BGMSNDLVL);
+			CustomSoundEmitter(BGM7, BGMSNDLVL, true);
 			curSong = BGM7;
 			CreateTimer(BGM7Dur, RefireBGM7);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2383,7 +2385,7 @@ public Action GetWave(int args){
 			CreateTimer(2.5, PerformWaveAdverts);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 8: \x0700AA00%s", BGM8Title);
 			StopCurSong();
-			CustomSoundEmitter(BGM8, BGMSNDLVL);
+			CustomSoundEmitter(BGM8, BGMSNDLVL, true);
 			curSong = BGM8;
 			CreateTimer(BGM8Dur, RefireBGM8);
 			CreateTimer(1.0, BombStatusAddTimer);
@@ -2538,7 +2540,7 @@ public Action Command_Operator(int args){
 		}
 		//Prepare yourself!
 		case 2:{
-            PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000PROFESSOR'S ASS\x07FFFFFF v0x15. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
+            PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000PROFESSOR'S ASS\x07FFFFFF v0x16. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
             FireEntityInput("rain", "Alpha", "0", 0.0);
 		}
 		//Force Tornado
@@ -2600,7 +2602,7 @@ public Action Command_Operator(int args){
 					sacPoints+=2,
 					bombStatusMax+=10,
 					CreateTimer(3.0, BombStatusAddTimer);
-					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL);
+					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL, false);
 					if(bombStatus>=bombStatusMax){
 						return Plugin_Handled;
 					}
@@ -2617,7 +2619,7 @@ public Action Command_Operator(int args){
 					sacPoints+=5,
 					bombStatusMax+=10,
 					CreateTimer(3.0, BombStatusAddTimer);
-					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL);
+					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL, false);
 					if(bombStatus>=bombStatusMax){
 						return Plugin_Handled;
 					}
@@ -2635,7 +2637,7 @@ public Action Command_Operator(int args){
 					sacPoints+=10,
 					bombStatusMax+=10,
 					CreateTimer(3.0, BombStatusAddTimer);
-					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL),
+					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL, false),
 					CreateTimer(1.0, SENTStarTimer),
 					CreateTimer(60.0, SENTStarDisable);
 					if(bombStatus>=bombStatusMax){
@@ -2658,7 +2660,7 @@ public Action Command_Operator(int args){
 					sacPoints+=25,
 					bombStatusMax+=10,
 					CreateTimer(3.0, BombStatusAddTimer);
-					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL);
+					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL, false);
 					if(bombStatus>=bombStatusMax){
 						return Plugin_Handled;
 					}
@@ -2675,7 +2677,7 @@ public Action Command_Operator(int args){
 					sacPoints+=15,
 					bombStatusMax+=10,
 					CreateTimer(3.0, BombStatusAddTimer);
-					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL);
+					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL, false);
 					if(bombStatus>=bombStatusMax){
 						return Plugin_Handled;
 					}
@@ -2696,7 +2698,7 @@ public Action Command_Operator(int args){
 					bombStatusMax+=10,
 					CreateTimer(3.0, BombStatusAddTimer);
 					CreateTimer(15.0, SpecTimer);
-					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL);
+					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL, false);
 					if(bombStatus>=bombStatusMax){
 						return Plugin_Handled;
 					}
@@ -2719,7 +2721,7 @@ public Action Command_Operator(int args){
 					bombStatus = 0;
 					explodeType = 0;
 					CreateTimer(3.0, BombStatusAddTimer);
-					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL);
+					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL, false);
 				}
 				//Fartsy of the Seventh Taco Bell
 				case 69:{
@@ -2808,7 +2810,7 @@ public Action Command_Operator(int args){
 				case 1:{
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF GOOBBUE COMING IN FROM ORBIT! (\x07FF0000-30 pts\x07FFFFFF)");
 					sacPoints = (sacPoints - 30);
-					CustomSoundEmitter(SPEC01, SFXSNDLVL);
+					CustomSoundEmitter(SPEC01, SFXSNDLVL, false);
 					CreateTimer(1.5, INCOMINGTimer);
 					FireEntityInput("FB.GiantGoobTemplate", "ForceSpawn", "", 3.0);
 				}
@@ -2816,14 +2818,14 @@ public Action Command_Operator(int args){
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF BLUE KIRBY FALLING OUT OF THE SKY! (\x07FF0000-30 pts\x07FFFFFF)");
 					sacPoints = (sacPoints - 30);
 					FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 0.0);
-					CustomSoundEmitter(FALLSND0B, SFXSNDLVL);
+					CustomSoundEmitter(FALLSND0B, SFXSNDLVL, false);
 				}
 			}
 		}
 		//Explosive paradise spend
 		case 33:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF We're spending most our lives living in an EXPLOSIVE PARADISE! Robots will be launched into orbit, too! (\x07FF0000-40 pts\x07FFFFFF)");
-			CustomSoundEmitter(EXPLOSIVEPARADISE, SFXSNDLVL);
+			CustomSoundEmitter(EXPLOSIVEPARADISE, SFXSNDLVL, false);
 			FireEntityInput("FB.FadeBLCK", "Fade", "", 0.0);
 			ServerCommand("sm_evilrocket @blue");
 			FireEntityInput("NukeAll", "Enable", "", 11.50);
@@ -2874,35 +2876,35 @@ public Action Command_Operator(int args){
 		//Found blue ball
 		case 40:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55What on earth IS that? It appears to be a... \x075050FFBLUE BALL\x07FFFFFF!");
-			CustomSoundEmitter(FALLSND0B, SFXSNDLVL);
+			CustomSoundEmitter(FALLSND0B, SFXSNDLVL, false);
 			FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 4.0);
 			CreateTimer(4.0, INCOMINGTimer);
 		}
 		//Found burrito
 		case 41:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Why would you even eat \x07FF0000The Forbidden Burrito\x07FFFFFF?");
-			CustomSoundEmitter("vo/sandwicheat09.mp3", SFXSNDLVL);// May not need cached?
+			CustomSoundEmitter("vo/sandwicheat09.mp3", SFXSNDLVL, false);
 		}
 		//Found goobbue
 		case 42:{
-			CustomSoundEmitter(SPEC01, SFXSNDLVL);
+			CustomSoundEmitter(SPEC01, SFXSNDLVL, false);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55ALL HAIL \x07FF00FFGOOBBUE\x0700AA55!");
 			CreateTimer(4.0, INCOMINGTimer);
 			FireEntityInput("FB.GiantGoobTemplate", "ForceSpawn", "", 4.0);
 		}
 		//Found Mario
 		case 43:{
-			CustomSoundEmitter(SPEC02, SFXSNDLVL);
+			CustomSoundEmitter(SPEC02, SFXSNDLVL, false);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Welp, someone is playing \x0700FF00Mario\x07FFFFFF...");
 		}
 		//Found Waffle
 		case 44:{
-			CustomSoundEmitter(SPEC03, SFXSNDLVL);
+			CustomSoundEmitter(SPEC03, SFXSNDLVL, false);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Oh no, someone has found and (probably) consumed a \x07FF0000WAFFLE OF MASS DESTRUCTION\x07FFFFFF!");
 		}
 		//Medium Explosion (defined again, but we aren't using a bomb this time)
 		case 51:{
-			CustomSoundEmitter(BMB3SND, SFXSNDLVL);
+			CustomSoundEmitter(BMB3SND, SFXSNDLVL, false);
 		}
 		//Probably for the hindenburg...
 		case 52:{
@@ -2962,7 +2964,7 @@ public Action Command_Operator(int args){
 		case 100:{
 			if (CodeEntry == 17){
 				FireEntityInput("FB.BOOM", "StartShake", "", 0.0),
-				CustomSoundEmitter(BMB3SND, SFXSNDLVL),
+				CustomSoundEmitter(BMB3SND, SFXSNDLVL, false),
 				FireEntityInput("FB.CodeCorrectKill", "Enable", "", 0.0),
 				FireEntityInput("FB.KP*", "Lock", "", 0.0),
 				FireEntityInput("FB.CodeCorrectKill", "Disable", "", 1.0);
@@ -2971,7 +2973,7 @@ public Action Command_Operator(int args){
 				CodeEntry = 0;
 				FireEntityInput("FB.CodeFailedKill", "Enable", "", 0.0),
 				FireEntityInput("FB.CodeFailedKill", "Disable", "", 1.0),
-				CustomSoundEmitter("mvm/mvm_player_died.wav", SFXSNDLVL);
+				CustomSoundEmitter("mvm/mvm_player_died.wav", SFXSNDLVL, false);
 			}
 		}
 		case 101:{
