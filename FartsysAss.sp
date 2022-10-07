@@ -148,7 +148,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.8.6",
+	version = "3.8.7",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -221,8 +221,8 @@ public void OnPluginStart()
     PrecacheSound(TRIGGERSCORE, true),
     PrecacheSound(WTFBOOM, true),
 	PrecacheSound("mvm/ambient_mp3/mvm_siren.mp3", true),
-	PrecacheSound("mvm/mvm_player_died.wav", true),
-	PrecacheSound("mvm/mvm_tank_horn.wav", true),
+	PrecacheSound("fartsy/memes/priceisright_fail.wav", true),
+	PrecacheSound("fartsy/eee/the_horn.wav", true),
     PrecacheSound("fartsy/fallingback/bgm.mp3", true),
 	PrecacheSound("ambient/sawblade_impact1.wav", true),
 	PrecacheSound("vo/sandwicheat09.mp3", true),
@@ -1122,7 +1122,7 @@ public Action SENTStarDisable(Handle timer){
 
 //TankHornSND because why not when code entry fails???
 public Action FBCodeFailTankHornSND(Handle timer){
-	CustomSoundEmitter("mvm/mvm_tank_horn.wav", SFXSNDLVL, false);
+	CustomSoundEmitter("fartsy/eee/the_horn.wav", SFXSNDLVL, false);
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55A \x07FF0000TORNADO WARNING \x0700AA55has been issued! Take cover \x07AA0000NOW\x07FFFFFF.");
 	return Plugin_Stop;
 }
@@ -2973,7 +2973,7 @@ public Action Command_Operator(int args){
 				CodeEntry = 0;
 				FireEntityInput("FB.CodeFailedKill", "Enable", "", 0.0),
 				FireEntityInput("FB.CodeFailedKill", "Disable", "", 1.0),
-				CustomSoundEmitter("mvm/mvm_player_died.wav", SFXSNDLVL, false);
+				CustomSoundEmitter("fartsy/memes/priceisright_fail.wav", SFXSNDLVL, false);
 			}
 		}
 		case 101:{
