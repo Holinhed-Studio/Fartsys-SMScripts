@@ -16,6 +16,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 bool bombProgression = false;
+bool canHindenburg = false;
 bool canHWBoss = false;
 bool canSENTMeteors = false;
 bool canSENTNukes = false;
@@ -148,7 +149,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.8.7",
+	version = "3.8.9",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -524,11 +525,11 @@ public Action PerformWaveAdverts(Handle timer){
 				case 8,16,24,32,40,48,56,64:{
 					if(TornadoWarningIssued && IsClientInGame(i)){
 						if(bombProgression){
-							PrintHintText(i, "Bomb Status: MOVING (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED...", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+							PrintHintText(i, "Bomb Status: MOVING (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 							StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
 						}
 						else{
-							PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED...", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+							PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 							StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
 						}
 					}
@@ -543,7 +544,7 @@ public Action PerformWaveAdverts(Handle timer){
 				}
 				case 0,1,2,3,4,5,6,7,9,10,11,12,13,14,15,17,18,19,20,21,22,23,25,26,27,28,29,30,31,33,34,35,36,37,38,39,41,42,43,44,45,46,47,49,50,51,52,53,54,55,57,58,59,60,61,62,63:{
 					if(TornadoWarningIssued && IsClientInGame(i)){
-						PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s \n\nA TORNADO WARNING HAS BEEN ISSUED...", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+						PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
 						StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");	
 					}
 					else if(IsClientInGame(i)){
@@ -1688,7 +1689,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was flattened out by a \x07AA0000TRAIN\x07FFFFFF!", client);
 		}
 
-		if ((damagebits & (1 << 5)) && !attacker) //DMG_FALL
+		if ((damagebits & (1 << 5)) && !attacker && tornado) //DMG_FALL // tornado
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was \x07AA0000YEETED OUT INTO ORBIT\x07FFFFFF!", client);
 			int i = GetRandomInt(1, 16);
@@ -1750,7 +1751,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N went \x07AA0000 KABOOM\x07FFFFFF!", client);
 		}
 
-		if ((damagebits & (1 << 7)) && !attacker) //DMG_CLUB
+		if ((damagebits & (1 << 7)) && !attacker && canHindenburg) //DMG_CLUB // Can hindenburg
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N is \x07AA0000CRASHING THE HINDENBURG\x07FFFFFF!!!", client);
 		}
@@ -1879,7 +1880,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			FireEntityInput("CrusaderTrain", "Stop", "", 80.0),
 			FireEntityInput("FB.CRUSADER", "Disable", "", 80.0);
 			crusader = false;
-			CreateTimer(80.0, NextWaveTimer); //Jump to next wave
+			CreateTimer(80.0, CrusaderNextWaveTimer); //Jump to next wave
 		}
 
 		if ((damagebits & (1 << 10)) && !attacker) //DMG_ENERGYBEAM
@@ -1942,6 +1943,7 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
     bgmlock6 = true;
     bgmlock7 = true;
     bgmlock8 = true;
+    canHindenburg = false;
     canHWBoss = false;
     canTornado = false;
     isWave = false;
@@ -1955,6 +1957,7 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
     FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
     FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
     FireEntityInput("Barricade_Rebuild_Relay", "Trigger", "", 0.0);
+    FireEntityInput("FB.KP*", "Lock", "", 0.0);
     FireEntityInput("OldSpawn", "Disable", "", 0.0);
     FireEntityInput("NewSpawn", "Enable", "", 0.0);
     FireEntityInput("dovahsassprefer", "Disable", "", 0.0);
@@ -1982,6 +1985,7 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     bgmlock6 = true;
     bgmlock7 = true;
     bgmlock8 = true;
+    canHindenburg = false;
     canHWBoss = false;
     canTornado = false;
     isWave = false;
@@ -1997,6 +2001,7 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
     FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
     FireEntityInput("Barricade_Rebuild_Relay", "Trigger", "", 0.0);
+    FireEntityInput("FB.KP*", "Lock", "", 0.0);
     FireEntityInput("OldSpawn", "Disable", "", 0.0);
     FireEntityInput("NewSpawn", "Enable", "", 0.0);
     FireEntityInput("dovahsassprefer", "Disable", "", 0.0);
@@ -2433,6 +2438,22 @@ public Action NextWaveTimer(Handle timer){
 	}
 	return Plugin_Stop;
 }
+//Crusader next wave timer
+public Action CrusaderNextWaveTimer(Handle timer){
+	int ent = FindEntityByClassname(-1, "tf_objective_resource");
+	if(ent == -1){
+        LogMessage("tf_objective_resource not found");
+        return Plugin_Stop;
+	}
+	int current_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
+	if (isWave && (current_wave == 3 || current_wave == 5)){
+		ServerCommand("fb_operator 99");
+	}
+	else{
+		return Plugin_Stop;
+	}
+	return Plugin_Stop;
+}
 //Timer to restart the server.
 public Action Timer_RestartServer(Handle timer)
 {
@@ -2540,7 +2561,7 @@ public Action Command_Operator(int args){
 		}
 		//Prepare yourself!
 		case 2:{
-            PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000PROFESSOR'S ASS\x07FFFFFF v0x16. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
+            PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000PROFESSOR'S ASS\x07FFFFFF v0x18. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
             FireEntityInput("rain", "Alpha", "0", 0.0);
 		}
 		//Force Tornado
@@ -2719,6 +2740,7 @@ public Action Command_Operator(int args){
 					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has delivered Hydrogen! The \x07FF0000HINDENBURG \x0700AA55is now ready for flight!");
 					FireEntityInput("DeliveryBurg", "Unlock", "", 0.0);
 					bombStatus = 0;
+					canHindenburg = true;
 					explodeType = 0;
 					CreateTimer(3.0, BombStatusAddTimer);
 					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL, false);
