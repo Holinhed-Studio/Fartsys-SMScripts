@@ -37,14 +37,14 @@ bool bgmlock8 = true;
 bool onslaughter = false;
 bool TornadoWarningIssued = false;
 static char BELL[32] = "fartsy/misc/bell.wav";
-static char BGM1[32] = "fartsy/ffxiv/bgm/locus.mp3";
-static char BGM2[32] = "fartsy/ffxiv/bgm/metal.mp3";
-static char BGM3[64] = "fartsy/ffxiv/bgm/exponentialentropy.mp3";
-static char BGM4[64] = "fartsy/ffxiv/bgm/tornfromtheheavens.mp3";
-static char BGM5[64] = "fartsy/ffxiv/bgm/metalbrutejusticemode.mp3";
-static char BGM6[64] = "fartsy/ffxiv/bgm/penitus.mp3";
-static char BGM7[64] = "fartsy/ffxiv/bgm/revengetwofold.mp3";
-static char BGM8[64] = "fartsy/ffxiv/bgm/undertheweight.mp3";
+static char BGM1[32] = "fartsy/music/ffxiv/locus.mp3";
+static char BGM2[32] = "fartsy/music/ffxiv/metal.mp3";
+static char BGM3[64] = "fartsy/music/ffxiv/exponentialentropy.mp3";
+static char BGM4[64] = "fartsy/music/ffxiv/tornfromtheheavens.mp3";
+static char BGM5[64] = "fartsy/music/ffxiv/metalbrutejusticemode.mp3";
+static char BGM6[64] = "fartsy/music/ffxiv/penitus.mp3";
+static char BGM7[64] = "fartsy/music/ffxiv/revengetwofold.mp3";
+static char BGM8[64] = "fartsy/music/ffxiv/undertheweight.mp3";
 static char BGM1Title[32] = "FFXIV - Locus";
 static char BGM2Title[32] = "FFXIV - Metal";
 static char BGM3Title[32] = "FFXIV - Exponential Entropy";
@@ -68,11 +68,11 @@ static char BMB4SND[32] = "fartsy/misc/majorkong.mp3";
 static char BOOM[32] = "fartsy/vo/spongebob/boom.mp3";
 static char CLOCKTICK[32] = "fartsy/misc/clock_tick.wav";
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char CRUSADERATTACK[32] = "fartsy/fallingback/attack.mp3";
+static char CRUSADERATTACK[64] = "fartsy/misc/fartsyscrusader_attack.mp3";
 char curSong[64] = "null";
 char songName[64] = "null";
-static char DEFAULTBGM1[64] = "fartsy/ffxiv/bgm/TheSilentRegardOfStars.mp3";
-static char DEFAULTBGM2[64] = "fartsy/ffxiv/bgm/KnowledgeNeverSleeps.mp3";
+static char DEFAULTBGM1[64] = "fartsy/music/ffxiv/TheSilentRegardOfStars.mp3";
+static char DEFAULTBGM2[64] = "fartsy/music/ffxiv/KnowledgeNeverSleeps.mp3";
 static float DefBGM1Dur = 137.75;
 static float DefBGM2Dur = 235.5;
 static char DEFAULTBGM1Title[64] = "FFXIV - The Silent Regard of Stars";
@@ -149,7 +149,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "3.8.9",
+	version = "3.9.0",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -224,7 +224,7 @@ public void OnPluginStart()
 	PrecacheSound("mvm/ambient_mp3/mvm_siren.mp3", true),
 	PrecacheSound("fartsy/memes/priceisright_fail.wav", true),
 	PrecacheSound("fartsy/eee/the_horn.wav", true),
-    PrecacheSound("fartsy/fallingback/bgm.mp3", true),
+    PrecacheSound("fartsy/misc/fartsyscrusader_bgm_locus.mp3", true),
 	PrecacheSound("ambient/sawblade_impact1.wav", true),
 	PrecacheSound("vo/sandwicheat09.mp3", true),
     RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client."),
@@ -1815,7 +1815,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			CreateTimer(25.20, CRUSADERATTACKTimer),
 			CreateTimer(63.20, WTFBOOMTimer),
 			PrintToServer("Starting Crusader via plugin!"),
-			EmitSoundToAll("fartsy/fallingback/bgm.mp3"),
+			EmitSoundToAll("fartsy/misc/fartsyscrusader_bgm_locus.mp3"),
 			CreateTimer(1.75, CRUSADERINCOMING),
 			FireEntityInput("FB.BOOM", "StopShake", "", 3.0),
 			FireEntityInput("FB.CRUSADER", "Enable", "", 25.20),
