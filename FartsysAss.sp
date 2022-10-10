@@ -150,7 +150,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.0.8",
+	version = "4.0.9",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -1701,11 +1701,21 @@ public Action Command_Operator(int args){
 	switch (x){
 		//When the map is complete
 		case 0:{
+			if(tacobell){
+					PrintToChatAll("WOWIE YOU DID IT! The server will restart in 30 seconds, prepare to do it again! LULW");
+					CreateTimer(10.0, TimedOperator, 100);
+			}
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF YOU HAVE SUCCESSFULLY COMPLETED PROF'S ASS ! THE SERVER WILL RESTART IN 10 SECONDS.");
 			CreateTimer(10.0, TimedOperator, 100);
 		}
-		//Wave init
+		//Prepare yourself!
 		case 1:{
+            tacobell = false;
+            PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000PROFESSOR'S ASS\x07FFFFFF v0x19. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
+            FireEntityInput("rain", "Alpha", "0", 0.0);
+		}
+		//Wave init
+		case 2:{
 			int ent = FindEntityByClassname(-1, "tf_objective_resource"); //Get current wave, perform actions per wave.
 			if(ent == -1){
 				LogMessage("tf_objective_resource not found");
@@ -1866,12 +1876,6 @@ public Action Command_Operator(int args){
 			}
 			return Plugin_Handled;
 		}
-		//Prepare yourself!
-		case 2:{
-            tacobell = false;
-            PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000PROFESSOR'S ASS\x07FFFFFF v0x19. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
-            FireEntityInput("rain", "Alpha", "0", 0.0);
-		}
 		//Force Tornado
 		case 3:{
 			if(isWave && canTornado && !tornado){
@@ -1909,7 +1913,11 @@ public Action Command_Operator(int args){
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A tank has been destroyed. (\x0700FF00+1 pt\x07FFFFFF)");
 			sacPoints++;
 			if (onslaughter){
+				FireEntityInput("FB.BruteJustice", "Disable", "", 0.0);	
+				FireEntityInput("FB.BruteJusticeTrain", "Stop", "", 0.0);
+				FireEntityInput("FB.BruteJusticeParticles", "Stop", "", 0.0);
 				FireEntityInput("FB.BruteJusticeDMGRelay", "Break", "", 0.0);
+				FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_b_10", 0.5);
 				onslaughter = false;
 			}
 			return Plugin_Handled;
@@ -2371,11 +2379,6 @@ public Action Command_Operator(int args){
 		case 210:{
 			tacobell = true;
 			PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07FFFFFFYou have chosen \x07AA0000DOVAH'S ASS - TACO BELL EDITION\x07FFFFFF. Why... Why would you DO THIS?! Do you not realize what you've just done?????");
-		}
-		//Taco Bell Victory
-		case 255:{
-			PrintToChatAll("WOWIE YOU DID IT! The server will restart in 30 seconds, prepare to do it again! LULW");
-			CreateTimer(10.0, TimedOperator, 100);
 		}
 		// Select BGM
 		case 1000:{
