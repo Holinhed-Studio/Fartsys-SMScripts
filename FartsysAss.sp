@@ -1591,6 +1591,8 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
     FireEntityInput("FB.KP*", "Lock", "", 0.0);
     FireEntityInput("OldSpawn", "Disable", "", 0.0);
     FireEntityInput("NewSpawn", "Enable", "", 0.0);
+    FireEntityInput("CommonSpells", "Disable", "", 0.0);
+    FireEntityInput("RareSpells", "Disable", "", 0.0);
     FireEntityInput("dovahsassprefer", "Disable", "", 0.0);
     FireEntityInput("bombpath_left_arrows", "Disable", "", 0.0);
     FireEntityInput("bombpath_right_arrows", "Disable", "", 0.0);
@@ -1636,6 +1638,8 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     FireEntityInput("FB.KP*", "Lock", "", 0.0);
     FireEntityInput("OldSpawn", "Disable", "", 0.0);
     FireEntityInput("NewSpawn", "Enable", "", 0.0);
+    FireEntityInput("CommonSpells", "Disable", "", 0.0);
+    FireEntityInput("RareSpells", "Disable", "", 0.0);
     FireEntityInput("dovahsassprefer", "Disable", "", 0.0);
     FireEntityInput("bombpath_left_arrows", "Disable", "", 0.0);
     FireEntityInput("bombpath_right_arrows", "Disable", "", 0.0);
@@ -1961,6 +1965,7 @@ public Action Command_Operator(int args){
 				}
 				//Small Explosion
 				case 1:{
+					FireEntityInput("RareSpells", "Enable", "", 0.0);
 					EmitSoundToAll(BMB1SND),
 					FireEntityInput("SmallExplosion", "Explode", "", 0.0),
 					FireEntityInput("SmallExploShake", "StartShake", "", 0.0),
@@ -1978,6 +1983,7 @@ public Action Command_Operator(int args){
 				}
 				//Medium Explosion
 				case 2,3:{
+					FireEntityInput("RareSpells", "Enable", "", 0.0);
 					EmitSoundToAll(BMB2SND),
 					FireEntityInput("MediumExplosion", "Explode", "", 0.0),
 					FireEntityInput("MedExploShake", "StartShake", "", 0.0),
@@ -1995,6 +2001,7 @@ public Action Command_Operator(int args){
 				}
 				//Falling Star
 				case 4:{
+					FireEntityInput("RareSpells", "Enable", "", 0.0);
 					canSENTStars = true,
 					EmitSoundToAll(BMB2SND),
 					FireEntityInput("MediumExplosion", "Explode", "", 0.0),
@@ -2015,6 +2022,7 @@ public Action Command_Operator(int args){
 				}
 				//Major Kong
 				case 5:{
+					FireEntityInput("RareSpells", "Enable", "", 0.0);
 					EmitSoundToAll(BMB4SND),
 					FireEntityInput("FB.Fade", "Fade", "", 1.7),
 					FireEntityInput("LargeExplosion", "Explode", "", 1.7),
@@ -2036,6 +2044,7 @@ public Action Command_Operator(int args){
 				}
 				//Large (shark)
 				case 6:{
+					FireEntityInput("RareSpells", "Enable", "", 0.0);
 					EmitSoundToAll(BMB3SND),
 					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
 					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
@@ -2053,6 +2062,7 @@ public Action Command_Operator(int args){
 				}
 				//FatMan
 				case 7:{
+					FireEntityInput("RareSpells", "Enable", "", 0.0);
 					EmitSoundToAll(HINDENBURGBOOM);
 					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
 					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
@@ -2074,6 +2084,7 @@ public Action Command_Operator(int args){
 				}
 				//Hydrogen
 				case 8:{
+					FireEntityInput("RareSpells", "Enable", "", 0.0);
 					EmitSoundToAll(HINDENBURGBOOM);
 					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
 					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
@@ -2705,6 +2716,7 @@ public Action PerformWaveSetup(){
 			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1); //Disable left arrows TODO: Figure out why
 			FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0); //Activate Intel 1
 			FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0); //Activate Intel 2
+			FireEntityInput("CommonSpells", "Enable", "", 0.0); // Activate common spells
 			FireEntityInput("rain", "Alpha", "200", 0.0); //Activate rain
 			FireEntityInput("OldSpawn", "Enable", "", 0.0); //Activate Old Spawn
 			FireEntityInput("NewSpawn", "Disable", "", 0.0); //De-activate New SpawnServerCommand("fb_operator 1002");
