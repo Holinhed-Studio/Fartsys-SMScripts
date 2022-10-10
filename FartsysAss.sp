@@ -133,6 +133,7 @@ int CodeEntry = 0;
 static int DEFBGMSNDLVL = 50;
 int bombStatus = 0;
 int bombStatusMax = 0;
+int curWave = 0;
 int explodeType = 0;
 int lastAdmin = 0;
 int sacPoints = 0;
@@ -148,7 +149,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.0.4",
+	version = "4.0.5",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -1703,149 +1704,54 @@ public Action Command_Operator(int args){
 		}
 		//Wave init
 		case 1:{
-			//Get current wave, perform actions per wave.
-			int ent = FindEntityByClassname(-1, "tf_objective_resource");
+			int ent = FindEntityByClassname(-1, "tf_objective_resource"); //Get current wave, perform actions per wave.
 			if(ent == -1){
 				LogMessage("tf_objective_resource not found");
 				return Plugin_Handled;
 			}
-			int current_wave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
-			switch (current_wave){
+			curWave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
+			PerformWaveSetup();
+			switch (curWave){
 				case 1:{
 					bgmlock1 = false;
-					bgmlock2 = true;
-					bgmlock3 = true;
-					bgmlock4 = true;
-					bgmlock5 = true;
-					bgmlock6 = true;
-					bgmlock7 = true;
-					bgmlock8 = true;
-					canHWBoss = true;
-					canTornado = true;
-					isWave = true;
 					bombStatus = 0;
 					bombStatusMax = 10;
 					sacPointsMax = 90;
-					songName = BGM1Title;
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave %i: \x0700AA00%s", current_wave, BGM1Title);
-					ServerCommand("fb_operator 1001");
 					CreateTimer(0.1, TimedOperator, 2);
-					CreateTimer(2.5, PerformWaveAdverts);
-					CreateTimer(1.0, BombStatusAddTimer);
-					CreateTimer(0.1, BombStatusUpdater);
-					CreateTimer(1.0, RobotLaunchTimer);
-					CreateTimer(1.0, SacrificePointsTimer);
-					CreateTimer(1.0, SacrificePointsUpdater);
-					CreateTimer(1.0, RefireStorm);
-					FireEntityInput("rain", "Alpha", "200", 0.0);
-					FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-					FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
-					FireEntityInput("OldSpawn", "Enable", "", 0.0);
-					FireEntityInput("NewSpawn", "Disable", "", 0.0);
-					FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-					FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-					ServerCommand("fb_operator 1002");
-					ServerCommand("fb_operator 1007");
-					ServerCommand("fb_operator 1004");
-					float hwn = GetRandomFloat(HWNMin, HWNMax);
-					CreateTimer(hwn, HWBosses);
 				}
 				case 2:{
-					bgmlock1 = true;
 					bgmlock2 = false;
-					bgmlock3 = true;
-					bgmlock4 = true;
-					bgmlock5 = true;
-					bgmlock6 = true;
-					bgmlock7 = true;
-					bgmlock8 = true;
 					canHWBoss = true;
 					canTornado = true;
-					isWave = true;
 					bombStatus = 4;
 					bombStatusMax = 18;
 					sacPointsMax = 90;
-					songName = BGM2Title;
-					CreateTimer(2.5, PerformWaveAdverts);
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 2: \x0700AA00%s", BGM2Title);
-					ServerCommand("fb_operator 1001");
 					CreateTimer(0.1, TimedOperator, 3);
-					CreateTimer(1.0, BombStatusAddTimer);
-					CreateTimer(0.1, BombStatusUpdater);
-					CreateTimer(1.0, RobotLaunchTimer);
-					CreateTimer(1.0, SacrificePointsTimer);
-					CreateTimer(1.0, SacrificePointsUpdater);
-					CreateTimer(1.0, RefireStorm);
-					FireEntityInput("rain", "Alpha", "200", 0.0);
-					FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-					FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
-					FireEntityInput("OldSpawn", "Enable", "", 0.0);
-					FireEntityInput("NewSpawn", "Disable", "", 0.0);
-					FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-					FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-					ServerCommand("fb_operator 1002");
-					ServerCommand("fb_operator 1007");
-					ServerCommand("fb_operator 1004");
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
 				case 3:{
-					bgmlock1 = true;
-					bgmlock2 = true;
 					bgmlock3 = false;
-					bgmlock4 = true;
-					bgmlock5 = true;
-					bgmlock6 = true;
-					bgmlock7 = true;
-					bgmlock8 = true;
 					canHWBoss = true;
 					canTornado = true;
 					HWNMax = 360.0;
-					isWave = true;
 					bombStatus = 7;
 					bombStatusMax = 26;
 					sacPointsMax = 90;
-					songName = BGM3Title;
-					CreateTimer(2.5, PerformWaveAdverts);
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 3: \x0700AA00%s", BGM3Title);
-					ServerCommand("fb_operator 1001");
 					CreateTimer(0.1, TimedOperator, 4);
-					CreateTimer(1.0, BombStatusAddTimer);
-					CreateTimer(0.1, BombStatusUpdater);
-					CreateTimer(1.0, RobotLaunchTimer);
-					CreateTimer(1.0, SacrificePointsTimer);
-					CreateTimer(1.0, SacrificePointsUpdater);
-					CreateTimer(1.0, RefireStorm);
-					FireEntityInput("rain", "Alpha", "200", 0.0);
-					FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-					FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
-					FireEntityInput("OldSpawn", "Enable", "", 0.0);
-					FireEntityInput("NewSpawn", "Disable", "", 0.0);
-					FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-					FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-					ServerCommand("fb_operator 1002");
-					ServerCommand("fb_operator 1007");
-					ServerCommand("fb_operator 1004");
 					float f = GetRandomFloat(60.0, 180.0);
 					CreateTimer(f, TimedOperator, 70);
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
 				case 4:{
-					bgmlock1 = true;
-					bgmlock2 = true;
-					bgmlock3 = true;
 					bgmlock4 = false;
-					bgmlock5 = true;
-					bgmlock6 = true;
-					bgmlock7 = true;
-					bgmlock8 = true;
 					canHWBoss = true;
 					canTornado = true;
 					HWNMax = 360.0;
@@ -1853,43 +1759,16 @@ public Action Command_Operator(int args){
 					bombStatus = 12;
 					bombStatusMax = 34;
 					sacPointsMax = 90;
-					songName = BGM4Title;
-					CreateTimer(2.5, PerformWaveAdverts);
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 4: \x0700AA00%s", BGM4Title);
-					ServerCommand("fb_operator 1001");
 					CreateTimer(0.1, TimedOperator, 5);
-					CreateTimer(1.0, BombStatusAddTimer);
-					CreateTimer(0.1, BombStatusUpdater);
-					CreateTimer(1.0, RobotLaunchTimer);
-					CreateTimer(1.0, SacrificePointsTimer);
-					CreateTimer(1.0, SacrificePointsUpdater);
-					CreateTimer(1.0, RefireStorm);
-					FireEntityInput("rain", "Alpha", "200", 0.0);
-					FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-					FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
-					FireEntityInput("OldSpawn", "Enable", "", 0.0);
-					FireEntityInput("NewSpawn", "Disable", "", 0.0);
-					FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-					FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-					ServerCommand("fb_operator 1002");
-					ServerCommand("fb_operator 1007");
-					ServerCommand("fb_operator 1004");
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
 				case 5:{
-					bgmlock1 = true;
-					bgmlock2 = true;
-					bgmlock3 = true;
-					bgmlock4 = true;
 					bgmlock5 = false;
-					bgmlock6 = true;
-					bgmlock7 = true;
-					bgmlock8 = true;
 					canHWBoss = true;
 					canTornado = true;
 					HWNMax = 260.0;
@@ -1898,28 +1777,11 @@ public Action Command_Operator(int args){
 					bombStatus = 14;
 					bombStatusMax = 42;
 					sacPointsMax = 100;
-					songName = BGM5Title;
-					CreateTimer(2.5, PerformWaveAdverts);
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 5: \x0700AA00%s", BGM5Title);
-					ServerCommand("fb_operator 1001");
 					CreateTimer(0.1, TimedOperator, 6);
-					CreateTimer(1.0, BombStatusAddTimer);
-					CreateTimer(0.1, BombStatusUpdater);
-					CreateTimer(1.0, RobotLaunchTimer);
-					CreateTimer(1.0, SacrificePointsTimer);
-					CreateTimer(1.0, SacrificePointsUpdater);
-					CreateTimer(1.0, RefireStorm);
-					FireEntityInput("rain", "Alpha", "200", 0.0);
-					FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-					FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
-					FireEntityInput("OldSpawn", "Enable", "", 0.0);
-					FireEntityInput("NewSpawn", "Disable", "", 0.0);
-					FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-					FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
 					FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
 					onslaughter = true;
 					FireEntityInput("FB.BruteJustice", "Enable", "", 3.0);
@@ -1932,23 +1794,13 @@ public Action Command_Operator(int args){
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 6.0);
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 7.0);
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 8.0);
-					ServerCommand("fb_operator 1002");
-					ServerCommand("fb_operator 1007");
-					ServerCommand("fb_operator 1004");
 					float f = GetRandomFloat(60.0, 180.0);
 					CreateTimer(f, TimedOperator, 70);
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
 				case 6:{
-					bgmlock1 = true;
-					bgmlock2 = true;
-					bgmlock3 = true;
-					bgmlock4 = true;
-					bgmlock5 = true;
 					bgmlock6 = false;
-					bgmlock7 = true;
-					bgmlock8 = true;
 					canHWBoss = true;
 					canTornado = true;
 					HWNMax = 260.0;
@@ -1957,43 +1809,16 @@ public Action Command_Operator(int args){
 					bombStatus = 20;
 					bombStatusMax = 50;
 					sacPointsMax = 100;
-					songName = BGM6Title;
-					CreateTimer(2.5, PerformWaveAdverts);
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 6: \x0700AA00%s", BGM6Title);
-					ServerCommand("fb_operator 1001");
 					CreateTimer(0.1, TimedOperator, 7);
-					CreateTimer(1.0, BombStatusAddTimer);
-					CreateTimer(0.1, BombStatusUpdater);
-					CreateTimer(1.0, RobotLaunchTimer);
-					CreateTimer(1.0, SacrificePointsTimer);
-					CreateTimer(1.0, SacrificePointsUpdater);
-					CreateTimer(1.0, RefireStorm);
-					FireEntityInput("rain", "Alpha", "200", 0.0);
-					FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-					FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
-					FireEntityInput("OldSpawn", "Enable", "", 0.0);
-					FireEntityInput("NewSpawn", "Disable", "", 0.0);
-					FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-					FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-					ServerCommand("fb_operator 1002");
-					ServerCommand("fb_operator 1007");
-					ServerCommand("fb_operator 1004");
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
 				case 7:{
-					bgmlock1 = true;
-					bgmlock2 = true;
-					bgmlock3 = true;
-					bgmlock4 = true;
-					bgmlock5 = true;
-					bgmlock6 = true;
 					bgmlock7 = false;
-					bgmlock8 = true;
 					canHWBoss = true;
 					canTornado = true;
 					HWNMax = 240.0;
@@ -2002,77 +1827,30 @@ public Action Command_Operator(int args){
 					bombStatus = 28;
 					bombStatusMax = 58;
 					sacPointsMax = 100;
-					songName = BGM7Title;
-					CreateTimer(2.5, PerformWaveAdverts);
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 7: \x0700AA00%s", BGM7Title);
-					ServerCommand("fb_operator 1001");
 					CreateTimer(0.1, TimedOperator, 8);
-					CreateTimer(1.0, BombStatusAddTimer);
-					CreateTimer(0.1, BombStatusUpdater);
-					CreateTimer(1.0, RobotLaunchTimer);
-					CreateTimer(1.0, SacrificePointsTimer);
-					CreateTimer(1.0, SacrificePointsUpdater);
-					CreateTimer(1.0, RefireStorm);
 					FireEntityInput("rain", "Alpha", "200", 0.0);
-					FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-					FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
-					FireEntityInput("OldSpawn", "Enable", "", 0.0);
-					FireEntityInput("NewSpawn", "Disable", "", 0.0);
-					FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-					FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
 					FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
-					ServerCommand("fb_operator 1002");
-					ServerCommand("fb_operator 1007");
-					ServerCommand("fb_operator 1004");
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
 				case 8:{
-					bgmlock1 = true;
-					bgmlock2 = true;
-					bgmlock3 = true;
-					bgmlock4 = true;
-					bgmlock5 = true;
-					bgmlock6 = true;
-					bgmlock7 = true;
 					bgmlock8 = false;
 					canHWBoss = true;
 					canTornado = true;
 					HWNMax = 240.0;
 					HWNMin = 120.0;
-					isWave = true;
 					bombStatus = 30;
 					bombStatusMax = 66;
 					sacPointsMax = 100;
-					songName = BGM8Title;
-					CreateTimer(2.5, PerformWaveAdverts);
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 8: \x0700AA00%s", BGM8Title);
-					ServerCommand("fb_operator 1001");
 					CreateTimer(0.1, TimedOperator, 9);
-					CreateTimer(1.0, BombStatusAddTimer);
-					CreateTimer(0.1, BombStatusUpdater);
-					CreateTimer(1.0, RobotLaunchTimer);
-					CreateTimer(1.0, SacrificePointsTimer);
-					CreateTimer(1.0, SacrificePointsUpdater);
-					CreateTimer(1.0, RefireStorm);
-					FireEntityInput("rain", "Alpha", "200", 0.0);
-					FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
-					FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
-					FireEntityInput("OldSpawn", "Enable", "", 0.0);
-					FireEntityInput("NewSpawn", "Disable", "", 0.0);
-					FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1);
-					FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1);
-					ServerCommand("fb_operator 1002");
-					ServerCommand("fb_operator 1007");
-					ServerCommand("fb_operator 1004");
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
@@ -2876,9 +2654,35 @@ public Action Command_Operator(int args){
 	}
 	return Plugin_Handled;
 }
+//Perform Wave Setup
+public Action PerformWaveSetup(){
+			isWave = true; //It's a wave!
+			ServerCommand("fb_operator 1001"); //Stop any playing BGM
+			CreateTimer(0.25, TimedOperator, 0); //Print wave information to global chat
+			CreateTimer(2.5, PerformWaveAdverts); //Activate the mini hud
+			CreateTimer(0.1, BombStatusUpdater); //Activate the bomb status updater
+			CreateTimer(1.0, BombStatusAddTimer); //Activate bomb status timer
+			CreateTimer(1.0, RobotLaunchTimer); //Activate robot launch timer
+			CreateTimer(1.0, SacrificePointsTimer); //Activate sacrifice points add timer
+			CreateTimer(1.0, SacrificePointsUpdater); //Activate sacrifice points updater
+			CreateTimer(1.0, RefireStorm); //Activate thunderstorm
+			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1); //Disable right arrows TODO: Figure out why
+			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1); //Disable left arrows TODO: Figure out why
+			FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0); //Activate Intel 1
+			FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0); //Activate Intel 2
+			FireEntityInput("rain", "Alpha", "200", 0.0); //Activate rain
+			FireEntityInput("OldSpawn", "Enable", "", 0.0); //Activate Old Spawn
+			FireEntityInput("NewSpawn", "Disable", "", 0.0); //De-activate New SpawnServerCommand("fb_operator 1002");
+			ServerCommand("fb_operator 1002"); //Feature admin
+			ServerCommand("fb_operator 1004"); //Activate Tornado Timer
+			ServerCommand("fb_operator 1007"); //Choose bomb path
+}
 //Timed commands
 public Action TimedOperator(Handle timer, int job){
 	switch(job){
+		case 0:{
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave %i: \x0700AA00%s", curWave, songName);
+		}
 		case 1:{
 			int BGM = GetRandomInt(1, 2);
 			switch(BGM){
