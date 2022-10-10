@@ -35,6 +35,7 @@ bool bgmlock6 = true;
 bool bgmlock7 = true;
 bool bgmlock8 = true;
 bool onslaughter = false;
+bool tacobell = false;
 bool TornadoWarningIssued = false;
 static char BELL[32] = "fartsy/misc/bell.wav";
 static char BGM1[32] = "fartsy/music/ffxiv/locus.mp3";
@@ -149,7 +150,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.0.7",
+	version = "4.0.8",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -1714,6 +1715,9 @@ public Action Command_Operator(int args){
 			PerformWaveSetup();
 			switch (curWave){
 				case 1:{
+					if(tacobell){
+						PrintToChatAll("NOT IMPLEMENTED YET.");
+					}
 					bgmlock1 = false;
 					bombStatus = 0;
 					bombStatusMax = 10;
@@ -1855,12 +1859,17 @@ public Action Command_Operator(int args){
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
+				//SOON TM
+				case 9,10,11,12,13,14,15,16,17,18,19,20,21:{
+					PrintToChatAll("NOT IMPLEMENTED.");
+				}
 			}
 			return Plugin_Handled;
 		}
 		//Prepare yourself!
 		case 2:{
-            PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000PROFESSOR'S ASS\x07FFFFFF v0x18. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
+            tacobell = false;
+            PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000PROFESSOR'S ASS\x07FFFFFF v0x19. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
             FireEntityInput("rain", "Alpha", "0", 0.0);
 		}
 		//Force Tornado
@@ -2360,12 +2369,8 @@ public Action Command_Operator(int args){
 		}
 		//Taco Bell Edition
 		case 210:{
+			tacobell = true;
 			PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07FFFFFFYou have chosen \x07AA0000DOVAH'S ASS - TACO BELL EDITION\x07FFFFFF. Why... Why would you DO THIS?! Do you not realize what you've just done?????");
-		}
-		//Taco Bell GetWave
-		case 211:{
-			//GetTacoBellWave(0);
-			PrintToChatAll("WARNING, THIS IS NOT IMPLEMENTED YET. PLEASE DO NOT PLAY TACO BELL EDITION AT THIS POINT IN TIME.");
 		}
 		//Taco Bell Victory
 		case 255:{
