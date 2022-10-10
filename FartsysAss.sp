@@ -104,7 +104,7 @@ static char GLOBALTHUNDER07[32] = "fartsy/weather/thunder7.wav";
 static char GLOBALTHUNDER08[32] = "fartsy/weather/thunder8.wav";
 static char HINDENBURGBOOM[64] = "fartsy/gbombs5/tsar_detonate.mp3";
 static char HINDENCRASH[32] = "fartsy/vo/jeffy/hinden.wav";
-static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.mp3";
+static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav"; //CHECK WITH BRAWLER IF THIS IS NEEDED IN THE PAK....
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav"; // LIKEWISE WITH THIS ONE.	
@@ -127,7 +127,7 @@ static char WTFBOOM[32] = "fartsy/misc/wtfboom.mp3";
 static float HWNMin = 210.0;
 static float HWNMax = 380.0;
 static float Return[3] = {-3730.0, 67.0, -252.0};
-static int BGMSNDLVL = 100;
+static int BGMSNDLVL = 95;
 int INCOMINGDISPLAYED = 0;
 int CodeEntry = 0;
 static int DEFBGMSNDLVL = 50;
@@ -148,7 +148,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.0.3",
+	version = "4.0.4",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -333,7 +333,7 @@ public void OnMapStart(){
     CreateTimer(1.0, SelectAdminTimer);
 }
 
-//Timers
+//Repeating Timers
 //Adverts for tips/tricks
 public Action PerformAdverts(Handle timer){
 	if (!isWave){
@@ -491,21 +491,6 @@ public Action RefireBGM(Handle timer, int BGM){
 	return Plugin_Continue;
 }
 
-//Wrote our own sound processor, this should make handling sounds easier.
-public Action CustomSoundEmitter(char[] sndName, int SNDLVL, bool isBGM){
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		//If it's music
-		if(IsClientInGame(i) && !IsFakeClient(i) && (soundPreference[i] == 1 || soundPreference[i] == 3) && isBGM){
-			EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, _, _, _, _, _, _, _, _);
-		}
-		//If it's sound effects
-		else if(IsClientInGame(i) && !IsFakeClient(i) && soundPreference[i] >= 2 && !isBGM){
-			EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, _, _, _, _, _, _, _, _);
-		}
-	}
-	return Plugin_Handled;
-}
 //Brute Justice Timer
 public Action OnslaughterATK(Handle timer){
 	if (!onslaughter){
@@ -1362,6 +1347,7 @@ public Action Command_TBWave01(int args){
 	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 01: Battle On The Big Bridge");
 }
 
+//Events
 //Check who died by what and announce it to chat.
 public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
     int client = GetClientOfUserId(Spawn_Event.GetInt("userid"));
@@ -1371,22 +1357,22 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
     if (0 < client <= MaxClients && IsClientInGame(client))
     {
 		int damagebits = Spawn_Event.GetInt("damagebits");
-		if ((damagebits & (1 << 0)) && !attacker) //DMG_CRUSH
+		if ((damagebits & (1 << 0)) && !attacker) //DMG_CRUSH (1)
     	{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was crushed by a \x07AA0000FALLING ROCK FROM OUTER SPACE\x07FFFFFF!", client);
         }
 
-		if ((damagebits & (1 << 3)) && !attacker) //DMG_BURN
+		if ((damagebits & (1 << 3)) && !attacker) //DMG_BURN (8)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was \x07AA0000MELTED\x07FFFFFF.", client);
 		}
 		
-		if ((damagebits & (1 << 4)) && !attacker) //DMG_VEHICLE (DMG_FREEZE)
+		if ((damagebits & (1 << 4)) && !attacker) //DMG_VEHICLE (DMG_FREEZE) (16)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was flattened out by a \x07AA0000TRAIN\x07FFFFFF!", client);
 		}
 
-		if ((damagebits & (1 << 5)) && !attacker && tornado) //DMG_FALL // tornado
+		if ((damagebits & (1 << 5)) && !attacker && tornado) //DMG_FALL // tornado (32)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was \x07AA0000YEETED OUT INTO ORBIT\x07FFFFFF!", client);
 			int i = GetRandomInt(1, 16);
@@ -1443,22 +1429,22 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			}
 		}
 
-		if ((damagebits & (1 << 5)) && !attacker && !tornado) //DMG_FALL // not tornado
+		if ((damagebits & (1 << 5)) && !attacker && !tornado) //DMG_FALL // not tornado (32)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N fell to a \x07AA0000CLUMSY PAINFUL DEATH\x07FFFFFF!", client);
 		}
 
-		if ((damagebits & (1 << 6)) && !attacker) //DMG_BLAST
+		if ((damagebits & (1 << 6)) && !attacker) //DMG_BLAST (64)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N went \x07AA0000 KABOOM\x07FFFFFF!", client);
 		}
 
-		if ((damagebits & (1 << 7)) && !attacker && canHindenburg) //DMG_CLUB // Can hindenburg
+		if ((damagebits & (1 << 7)) && !attacker && canHindenburg) //DMG_CLUB // Can hindenburg (128)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N is \x07AA0000CRASHING THE HINDENBURG\x07FFFFFF!!!", client);
 		}
 
-		if ((damagebits & (1 << 8)) && !attacker){ //DMG_SHOCK
+		if ((damagebits & (1 << 8)) && !attacker){ //DMG_SHOCK (256)
 			PrintToChatAll("\x070000AA[\x07AA0000EXTERMINATUS\x070000AA]\x07FFFFFF Client %N has humliated themselves with an \x07AA0000incorrect \x07FFFFFFkey entry!", client);
 			int i = GetRandomInt(1, 16);
 			switch(i){
@@ -1507,49 +1493,49 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			}
 		}
 
-		if ((damagebits & (1 << 9)) && !attacker) //DMG_SONIC
+		if ((damagebits & (1 << 9)) && !attacker) //DMG_SONIC (512)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000EXTERMINATUS\x070000AA]\x07FFFFFF Client %N has sacrificed themselves with a \x0700AA00correct \x07FFFFFFkey entry! Prepare your anus!", client);
 			ServerCommand("fb_operator 1006");
 		}
 
-		if ((damagebits & (1 << 10)) && !attacker) //DMG_ENERGYBEAM
+		if ((damagebits & (1 << 10)) && !attacker) //DMG_ENERGYBEAM (1024)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N has been vaporized by a \x07AA0000HIGH ENERGY PHOTON BEAM\x07FFFFFF!", client);
 		}
 
-		if ((damagebits & (1 << 14)) && !attacker) //DMG_DROWN
+		if ((damagebits & (1 << 14)) && !attacker) //DMG_DROWN (16384)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N \x07AA0000DROWNED\x07FFFFFF.", client);
 		}
 
-		if ((damagebits & (1 << 15)) && !attacker) //DMG_PARALYZE
+		if ((damagebits & (1 << 15)) && !attacker) //DMG_PARALYZE (32768)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N has been crushed by a \x070000AAMYSTERIOUS BLUE BALL\x07FFFFFF!", client);
 		}
 
-		if ((damagebits & (1 << 16)) && !attacker) //DMG_NERVEGAS
+		if ((damagebits & (1 << 16)) && !attacker) //DMG_NERVEGAS (65536)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N has been \x07AA0000SLICED TO RIBBONS\x07FFFFFF!", client);
 		}
 
-		if ((damagebits & (1 << 17)) && !attacker) //DMG_POISON
+		if ((damagebits & (1 << 17)) && !attacker) //DMG_POISON (131072)
 		{
 			ServerCommand("sm_psay %d \x07FF0000[\x0700FF00ADMIN\x07FF0000] \x07AAAAAAPlease don't sit IDLE in the FC Tavern. Repeated offenses may result in a kick.");
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was killed for standing in the Tavern instead of helping their team!", client);
 		}
 
-		if ((damagebits & (1 << 18)) && !attacker) //DMG_RADIATION
+		if ((damagebits & (1 << 18)) && !attacker) //DMG_RADIATION (262144)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was blown away by a \x07AA0000NUCLEAR EXPLOSION\x07FFFFFF!", client);
 		}
 
-		if ((damagebits & (1 << 19)) && !attacker) //DMG_DROWNRECOVER
+		if ((damagebits & (1 << 19)) && !attacker) //DMG_DROWNRECOVER (524288)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N experienced \x07AA0000TACO BELL\x07FFFFFF!", client);
 		}
 
-		if ((damagebits & (1 << 20)) && !attacker) //DMG_ACID
+		if ((damagebits & (1 << 20)) && !attacker) //DMG_ACID (1048576)
 		{
 			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N has been crushed by a \x0700AA00FALLING GOOBBUE FROM OUTER SPACE\x07FFFFFF!", client);
 		}
@@ -1602,7 +1588,7 @@ public Action EventWarning(Event Spawn_Event, const char[] Spawn_Name, bool Spaw
 	PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA]\x07AA0000 WARNING\x07FFFFFF: \x07AA0000PROFESSOR'S ASS IS ABOUT TO BE DEPLOYED!!!");
 }
 
-//When we fail
+//When the wave fails
 public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
     bgmlock1 = true;
     bgmlock2 = true;
@@ -1652,15 +1638,7 @@ public Action EventReset(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 	return Plugin_Handled;
 }
 
-//Jump to the wave.
-public Action JumpToWave(int wave_number){
-	int flags = GetCommandFlags("tf_mvm_jump_to_wave");
-	SetCommandFlags("tf_mvm_jump_to_wave", flags & ~FCVAR_CHEAT);
-	ServerCommand("tf_mvm_jump_to_wave %d", wave_number);
-	FakeClientCommand(0, "");
-	SetCommandFlags("tf_mvm_jump_to_wave", flags|FCVAR_CHEAT);
-}
-
+//Functions
 //Create a temp entity and fire an input
 public Action FireEntityInput(char[] strTargetname, char[] strInput, char[] strParameter, float flDelay){
 	char strBuffer[255];
@@ -1678,6 +1656,31 @@ public Action FireEntityInput(char[] strTargetname, char[] strInput, char[] strP
 		return Plugin_Continue;
 	}
 	return Plugin_Handled;
+}
+
+//Custom sound processor, this should make handling sounds easier.
+public Action CustomSoundEmitter(char[] sndName, int SNDLVL, bool isBGM){
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		//If it's music
+		if(IsClientInGame(i) && !IsFakeClient(i) && (soundPreference[i] == 1 || soundPreference[i] == 3) && isBGM){
+			EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, _, _, _, _, _, _, _, _);
+		}
+		//If it's sound effects
+		else if(IsClientInGame(i) && !IsFakeClient(i) && soundPreference[i] >= 2 && !isBGM){
+			EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, _, _, _, _, _, _, _, _);
+		}
+	}
+	return Plugin_Handled;
+}
+
+//Jump waves.
+public Action JumpToWave(int wave_number){
+	int flags = GetCommandFlags("tf_mvm_jump_to_wave");
+	SetCommandFlags("tf_mvm_jump_to_wave", flags & ~FCVAR_CHEAT);
+	ServerCommand("tf_mvm_jump_to_wave %d", wave_number);
+	FakeClientCommand(0, "");
+	SetCommandFlags("tf_mvm_jump_to_wave", flags|FCVAR_CHEAT);
 }
 
 //Remove edict allocated by temp entity
@@ -1698,8 +1701,9 @@ public Action Command_Operator(int args){
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF YOU HAVE SUCCESSFULLY COMPLETED PROF'S ASS ! THE SERVER WILL RESTART IN 10 SECONDS.");
 			CreateTimer(10.0, TimedOperator, 100);
 		}
-		//Get current wave, perform actions per wave.
+		//Wave init
 		case 1:{
+			//Get current wave, perform actions per wave.
 			int ent = FindEntityByClassname(-1, "tf_objective_resource");
 			if(ent == -1){
 				LogMessage("tf_objective_resource not found");
@@ -1723,7 +1727,7 @@ public Action Command_Operator(int args){
 					bombStatusMax = 10;
 					sacPointsMax = 90;
 					songName = BGM1Title;
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 1: \x0700AA00%s", BGM1Title);
+					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave %i: \x0700AA00%s", current_wave, BGM1Title);
 					ServerCommand("fb_operator 1001");
 					CreateTimer(0.1, TimedOperator, 2);
 					CreateTimer(2.5, PerformWaveAdverts);
@@ -2379,8 +2383,13 @@ public Action Command_Operator(int args){
 		}
 		//Ass Gas spend
 		case 34:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF NO NO NO, STOP THE SHARTS!!!! (\x07FF0000-40 pts\x07FFFFFF)");
+			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF ANYTHING BUT THE ASS GAS!!!! (\x07FF0000-40 pts\x07FFFFFF)");
 			sacPoints = (sacPoints - 40);
+			FireEntityInput("HurtAll", "AddOutput", "damagetype 524288", 0.0);
+			FireEntityInput("FB.ShakeBOOM", "StartShake", "", 0.1);
+			FireEntityInput("HurtAll", "Enable", "", 0.1);
+			FireEntityInput("HurtAll", "Disable", "", 4.1); //Add a sound to this in the future. Maybe gas sound from gbombs? Maybe custom fart sounds? hmm....
+			FireEntityInput("FB.ShakeBOOM", "StopShake", "", 4.1);
 		}
 		//Banish tornadoes for the wave
 		case 35:{
@@ -2426,6 +2435,9 @@ public Action Command_Operator(int args){
 		case 41:{
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Why would you even eat \x07FF0000The Forbidden Burrito\x07FFFFFF?");
 			CustomSoundEmitter("vo/sandwicheat09.mp3", SFXSNDLVL, false);
+			FireEntityInput("HurtAll", "AddOutput", "damagetype 8", 0.0);
+			FireEntityInput("HurtAll", "Enable", "", 4.0);
+			FireEntityInput("HurtAll", "Disable", "", 8.0);
 		}
 		//Found goobbue
 		case 42:{
@@ -2443,14 +2455,37 @@ public Action Command_Operator(int args){
 		case 44:{
 			CustomSoundEmitter(SPEC03, SFXSNDLVL, false);
 			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Oh no, someone has found and (probably) consumed a \x07FF0000WAFFLE OF MASS DESTRUCTION\x07FFFFFF!");
+			FireEntityInput("HurtAll", "AddOutput", "damagetype 262144", 10.0);
+			FireEntityInput("FB.ShakeBOOM", "StartShake", "", 10.3);
+			FireEntityInput("HUGEExplosion", "Explode", "", 10.3);
+			FireEntityInput("FB.Fade", "Fade", "", 10.3);
+			FireEntityInput("HurtAll", "Enable", "", 10.3);
+			FireEntityInput("HurtAll", "Disable", "", 12.3);
 		}
 		//Medium Explosion (defined again, but we aren't using a bomb this time)
 		case 51:{
 			CustomSoundEmitter(BMB3SND, SFXSNDLVL, false);
 		}
-		//Probably for the hindenburg...
+		//Probably for the hindenburg... EDIT: NOPE. THIS IS FOR KIRB LANDING ON THE GROUND
 		case 52:{
 			EmitSoundToAll(HINDENBURGBOOM);
+			FireEntityInput("FB.BOOM", "StartShake", "", 0.0);
+			FireEntityInput("BlueBall*", "Kill", "", 0.0);
+			FireEntityInput("HUGEExplosion", "Explode", "", 0.0);
+			FireEntityInput("BlueKirb", "Kill", "", 0.0);
+			FireEntityInput("HurtAll", "AddOutput", "damagetype 32768", 0.0);
+			FireEntityInput("HurtAll", "Enable", "", 0.1);
+			FireEntityInput("HurtAll", "Disable", "", 2.1);
+		}
+		//Giant Goobbue
+		case 53:{
+			EmitSoundToAll(HINDENBURGBOOM);
+			FireEntityInput("FB.BOOM", "StartShake", "", 0.0);
+			FireEntityInput("GiantGoob*", "Kill", "", 0.0);
+			FireEntityInput("HUGEExplosion", "Explode", "", 0.0);
+			FireEntityInput("HurtAll", "AddOutput", "damagetype 1048576", 0.0);
+			FireEntityInput("HurtAll", "Enable", "", 0.1);
+			FireEntityInput("HurtAll", "Disable", "", 2.1);
 		}
 		//Prev wave
 		case 98:{
@@ -2767,13 +2802,14 @@ public Action Command_Operator(int args){
 			FireEntityInput("CrusaderLaserBase", "SetSpeed", "1", 65.20),
 			FireEntityInput("FB.ShakeBOOM", "StartShake", "", 65.20),
 			FireEntityInput("FB.Fade", "Fade", "", 65.20),
-			FireEntityInput("FB.CrusaderLaserKill02", "Enabled", "", 65.20),
+			FireEntityInput("HurtAll", "AddOutput", "damagetype 1024", 65.10),
+			FireEntityInput("HurtAll", "Enable", "", 65.20),
 			FireEntityInput("FB.CrusaderSideLaser", "TurnOn", "", 65.20),
 			FireEntityInput("CrusaderSprite", "Color", "255 230 255", 65.20),
 			FireEntityInput("FB.Laser*", "TurnOff", "", 70.0),
 			FireEntityInput("CrusaderTrain", "StartForward", "", 70.0),
 			FireEntityInput("CrusaderLaserBase*", "Stop", "", 70.0),
-			FireEntityInput("FB.LaserKill02", "Disable", "", 70.0),
+			FireEntityInput("HurtAll", "Disable", "", 70.0),
 			FireEntityInput("FB.CrusaderSideLaser", "TurnOff", "", 70.0),
 			FireEntityInput("CrusaderSprite", "Color", "0 0 0", 70.0),
 			FireEntityInput("FB.ShakeBOOM", "StopShake", "", 70.20),
