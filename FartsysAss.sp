@@ -1763,7 +1763,7 @@ public Action Command_Operator(int args){
 						CreateTimer(0.1, TimedOperator, 2);
 					}
 				}
-				case 2:{
+				case 2,9,16:{
 					bgmlock2 = false;
 					canHWBoss = true;
 					canTornado = true;
@@ -1776,7 +1776,7 @@ public Action Command_Operator(int args){
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
-				case 3:{
+				case 3,10,17:{
 					bgmlock3 = false;
 					canHWBoss = true;
 					canTornado = true;
@@ -1794,7 +1794,7 @@ public Action Command_Operator(int args){
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
-				case 4:{
+				case 4,11,18:{
 					bgmlock4 = false;
 					canHWBoss = true;
 					canTornado = true;
@@ -1811,7 +1811,7 @@ public Action Command_Operator(int args){
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
-				case 5:{
+				case 5,12,19:{
 					bgmlock5 = false;
 					canHWBoss = true;
 					canTornado = true;
@@ -1843,7 +1843,7 @@ public Action Command_Operator(int args){
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
-				case 6:{
+				case 6,13,20:{
 					bgmlock6 = false;
 					canHWBoss = true;
 					canTornado = true;
@@ -1861,7 +1861,7 @@ public Action Command_Operator(int args){
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
-				case 7:{
+				case 7,14,21:{
 					bgmlock7 = false;
 					canHWBoss = true;
 					canTornado = true;
@@ -1881,7 +1881,7 @@ public Action Command_Operator(int args){
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
-				case 8:{
+				case 8,15:{
 					bgmlock8 = false;
 					canHWBoss = true;
 					canTornado = true;
@@ -1897,10 +1897,6 @@ public Action Command_Operator(int args){
 					FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
-				}
-				//SOON TM
-				case 9,10,11,12,13,14,15,16,17,18,19,20,21:{
-					PrintToChatAll("NOT IMPLEMENTED.");
 				}
 			}
 			return Plugin_Handled;
