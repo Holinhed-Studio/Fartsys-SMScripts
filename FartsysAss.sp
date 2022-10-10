@@ -150,7 +150,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.0.9",
+	version = "4.1.0",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -367,6 +367,7 @@ public Action PerformAdverts(Handle timer){
 	}
 	return Plugin_Stop;
 }
+
 //Adverts for wave information
 public Action PerformWaveAdverts(Handle timer){
 	if (isWave){
