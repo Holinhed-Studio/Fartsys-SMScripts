@@ -149,7 +149,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.0.6",
+	version = "4.0.7",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -1606,6 +1606,7 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     bombStatusMax = 7;
     bombStatus = 5;
     explodeType = 0;
+    onslaughter = false;
     ServerCommand("fb_operator 1000");
     CreateTimer(1.0, PerformAdverts);
     FireEntityInput("rain", "Alpha", "0", 0.0);
@@ -2719,13 +2720,13 @@ public Action TimedOperator(Handle timer, int job){
 			CreateTimer(BGM3Dur, RefireBGM, 4);
 		}
 		case 5:{
-			CustomSoundEmitter(BGM4, BGMSNDLVL, true);
+			CustomSoundEmitter(BGM4, BGMSNDLVL-10, true);
 			curSong = BGM4;
 			songName = BGM4Title;
 			CreateTimer(BGM4Dur, RefireBGM, 5);
 		}
 		case 6:{
-			CustomSoundEmitter(BGM5, BGMSNDLVL, true);
+			CustomSoundEmitter(BGM5, BGMSNDLVL-5, true);
 			curSong = BGM5;
 			songName = BGM5Title;
 			CreateTimer(BGM5Dur, RefireBGM, 6);
