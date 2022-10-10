@@ -9,6 +9,7 @@
 *   SEVEN..... TIPS AND TRICKS MAY BE ADDED TO THE TIMER, SEE PerformAdverts(Handle timer);
 *
 *                                       GL HF!!!
+* For Taco bell edition, target ass_relay with trigger for InitWaveOutput and FireUser2 for StartWaveOutput. FireUser3 still acts as boss dead relay, and FireUser4 will act as map completion.
 */
 #include <sourcemod>
 #include <sdktools>
@@ -34,6 +35,7 @@ bool bgmlock5 = true;
 bool bgmlock6 = true;
 bool bgmlock7 = true;
 bool bgmlock8 = true;
+bool bgmlock9 = true;
 bool onslaughter = false;
 bool tacobell = false;
 bool TornadoWarningIssued = false;
@@ -46,6 +48,8 @@ static char BGM5[64] = "fartsy/music/ffxiv/metalbrutejusticemode.mp3";
 static char BGM6[64] = "fartsy/music/ffxiv/penitus.mp3";
 static char BGM7[64] = "fartsy/music/ffxiv/revengetwofold.mp3";
 static char BGM8[64] = "fartsy/music/ffxiv/undertheweight.mp3";
+static char BGM9[64] = "fartsy/music/brawler/battle.mp3";
+static char BGM9Intro[64] = "fartsy/music/brawler/battle_intro.mp3";
 static char BGM1Title[32] = "FFXIV - Locus";
 static char BGM2Title[32] = "FFXIV - Metal";
 static char BGM3Title[32] = "FFXIV - Exponential Entropy";
@@ -54,6 +58,7 @@ static char BGM5Title[64] = "FFXIV - Metal: Brute Justice Mode";
 static char BGM6Title[32] = "FFXIV - Penitus";
 static char BGM7Title[32] = "FFXIV - Revenge Twofold";
 static char BGM8Title[32] = "FFXIV - Under the Weight";
+static char BGM9Title[64] = "Xenoblade Chronicles 2 - Battle!!";
 static float BGM1Dur = 229.25;
 static float BGM2Dur = 153.95;
 static float BGM3Dur = 166.85;
@@ -62,6 +67,7 @@ static float BGM5Dur = 131.75;
 static float BGM6Dur = 427.35;
 static float BGM7Dur = 133.25;
 static float BGM8Dur = 313.85;
+static float BGM9Dur = 112.20;
 static char BMB1SND[32] = "fartsy/misc/murica.mp3";
 static char BMB2SND[32] = "fartsy/bl2/grenade_detonate.mp3";
 static char BMB3SND[32] = "fartsy/gbombs5/t_12.mp3";
@@ -150,7 +156,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.1.0",
+	version = "4.1.2",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -489,6 +495,12 @@ public Action RefireBGM(Handle timer, int BGM){
 				CreateTimer(0.1, TimedOperator, 9);
 			}
 			return Plugin_Continue;
+		}
+		case 10:{ //BGM 9
+			if (isWave && !bgmlock9){
+				ServerCommand("fb_operator 1001");
+				CreateTimer(0.1, TimedOperator, 10);
+			}
 		}
 	}
 	return Plugin_Continue;
@@ -836,6 +848,7 @@ public Action SENTStarTimer(Handle timer){
 		float f = GetRandomFloat(0.75, 1.5);
 		CreateTimer(f, SENTStarTimer);
 	}
+	return Plugin_Stop;
 }
 public Action SENTStarDisable(Handle timer){
 	canSENTStars = false;
@@ -1560,6 +1573,7 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
     bgmlock6 = true;
     bgmlock7 = true;
     bgmlock8 = true;
+    bgmlock9 = true;
     canHindenburg = false;
     canHWBoss = false;
     canTornado = false;
@@ -1601,6 +1615,7 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     bgmlock6 = true;
     bgmlock7 = true;
     bgmlock8 = true;
+    bgmlock9 = true;
     canHindenburg = false;
     canHWBoss = false;
     canTornado = false;
@@ -1706,8 +1721,10 @@ public Action Command_Operator(int args){
 					PrintToChatAll("WOWIE YOU DID IT! The server will restart in 30 seconds, prepare to do it again! LULW");
 					CreateTimer(10.0, TimedOperator, 100);
 			}
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF YOU HAVE SUCCESSFULLY COMPLETED PROF'S ASS ! THE SERVER WILL RESTART IN 10 SECONDS.");
-			CreateTimer(10.0, TimedOperator, 100);
+			else{
+				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF YOU HAVE SUCCESSFULLY COMPLETED PROF'S ASS ! THE SERVER WILL RESTART IN 10 SECONDS.");
+				CreateTimer(10.0, TimedOperator, 100);
+			}
 		}
 		//Prepare yourself!
 		case 1:{
@@ -1727,13 +1744,20 @@ public Action Command_Operator(int args){
 			switch (curWave){
 				case 1:{
 					if(tacobell){
-						PrintToChatAll("NOT IMPLEMENTED YET.");
+						bgmlock9 = false;
+						canTornado = true;
+						bombStatus = 0;
+						bombStatusMax = 10;
+						sacPointsMax = 90;
+						CreateTimer(0.1, TimedOperator, 2);
 					}
-					bgmlock1 = false;
-					bombStatus = 0;
-					bombStatusMax = 10;
-					sacPointsMax = 90;
-					CreateTimer(0.1, TimedOperator, 2);
+					else{
+						bgmlock1 = false;
+						bombStatus = 0;
+						bombStatusMax = 10;
+						sacPointsMax = 90;
+						CreateTimer(0.1, TimedOperator, 2);
+					}
 				}
 				case 2:{
 					bgmlock2 = false;
@@ -2530,6 +2554,7 @@ public Action Command_Operator(int args){
 				FireEntityInput("tornadobutton", "Unlock", "", 30.0);
 				tornado = false;
 			}
+			return Plugin_Handled;
 		}
 		//Crusader
 		case 1006:{
@@ -2711,10 +2736,17 @@ public Action TimedOperator(Handle timer, int job){
 			}
 		}
 		case 2:{
-			CustomSoundEmitter(BGM1, BGMSNDLVL, true);
-			curSong = BGM1;
-			songName = BGM1Title;
-			CreateTimer(BGM1Dur, RefireBGM, 2);
+			if(tacobell){
+				curSong = BGM9;
+				CustomSoundEmitter(BGM9Intro, BGMSNDLVL, true);
+				CreateTimer(11.9, TimedOperator, 10);
+			}
+			else{
+				CustomSoundEmitter(BGM1, BGMSNDLVL, true);
+				curSong = BGM1;
+				songName = BGM1Title;
+				CreateTimer(BGM1Dur, RefireBGM, 2);
+			}
 		}
 		case 3:{
 			CustomSoundEmitter(BGM2, BGMSNDLVL, true);
@@ -2757,6 +2789,12 @@ public Action TimedOperator(Handle timer, int job){
 			curSong = BGM8;
 			songName = BGM8Title;
 			CreateTimer(BGM8Dur, RefireBGM, 9);
+		}
+		case 10:{
+			CustomSoundEmitter(BGM9, BGMSNDLVL, true);
+			curSong = BGM9;
+			songName = BGM9Title;
+			CreateTimer(BGM9Dur, RefireBGM, 2);
 		}
 		case 21:{
 			CustomSoundEmitter(INCOMING, SFXSNDLVL, false);
