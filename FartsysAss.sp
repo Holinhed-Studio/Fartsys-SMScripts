@@ -149,7 +149,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.0.5",
+	version = "4.0.6",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -704,9 +704,9 @@ public Action SpecTimer(Handle timer){
 				PrintToChatAll("\x07DD0000M\x07FFFFFFA\x07DD0000R\x07FFFFFFI\x07DD0000O\x07FFFFFF time!");
 			}
 			case 5:{
-				FireEntityInput("Spec*", "Disable", "", 0.0),
-				FireEntityInput("Spec.BlueBall", "Enable", "", 0.1),
-				PrintToChatAll("A \x070000AA Blue Ball \x07FFFFFF lurks from afar...");
+				FireEntityInput("Spec*", "Disable", "", 0.0);
+				FireEntityInput("Spec.BlueBall", "Enable", "", 0.1);
+				PrintToChatAll("\x070000AA Blue Ball \x07FFFFFF lurks from afar...");
 			}
 			case 6:{
 				FireEntityInput("Spec*", "Enable", "", 0.0),
