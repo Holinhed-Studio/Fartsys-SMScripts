@@ -1629,7 +1629,7 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     bombStatus = 5;
     explodeType = 0;
     onslaughter = false;
-    if (FailedCount == 0){
+    if (FailedCount == 0){ //Works around valve's way of firing EventWaveFailed four times when mission changes. Without this, BGM would play 4 times and any functions enclosed would also happen four times.......
 		FailedCount++;
 		ServerCommand("fb_operator 1000");
 		CreateTimer(1.0, PerformAdverts);
@@ -2705,7 +2705,7 @@ public Action Command_Operator(int args){
 //Perform Wave Setup
 public Action PerformWaveSetup(){
 			isWave = true; //It's a wave!
-			FailedCount = 0;
+			FailedCount = 0; //Reset fail count to zero. (See EventWaveFailed, where we play the BGM.)
 			ServerCommand("fb_operator 1001"); //Stop any playing BGM
 			CreateTimer(0.25, TimedOperator, 0); //Print wave information to global chat
 			CreateTimer(2.5, PerformWaveAdverts); //Activate the mini hud
