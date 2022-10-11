@@ -157,7 +157,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.1.3",
+	version = "4.1.4",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -1739,6 +1739,7 @@ public Action Command_Operator(int args){
 		//Prepare yourself!
 		case 1:{
             tacobell = false;
+            ServerCommand("fb_startmoney 50000");
             PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000PROFESSOR'S ASS\x07FFFFFF v0x19. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
             FireEntityInput("rain", "Alpha", "0", 0.0);
 		}
@@ -2227,10 +2228,18 @@ public Action Command_Operator(int args){
 		}
 		//Banish tornadoes for the wave
 		case 35:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A PINK KIRBY HAS BANISHED TORNADOES FOR THIS WAVE! (\x07FF0000-50 pts\x07FFFFFF)");
-			ServerCommand("fb_operator 1005");
-			canTornado = false;
-			sacPoints = (sacPoints - 50);
+			if(tornado){
+				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A PINK KIRBY HAS BANISHED TORNADOES FOR THIS WAVE! (\x07FF0000-50 pts\x07FFFFFF)");
+				ServerCommand("fb_operator 1005");
+				canTornado = false;
+				sacPoints = (sacPoints - 50);
+			}
+			else{
+				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A PINK KIRBY HAS BANISHED TORNADOES.... BUT NO TORNADO WAS ACTIVE? (\x07FFFF00REFUNDED 50 pts\x07FFFFFF)");
+				ServerCommand("fb_operator 1005");
+				canTornado = false;
+				sacPoints = (sacPoints - 50);
+			}
 		}
 		//Nuclear fallout spend
 		case 36:{
@@ -2416,6 +2425,7 @@ public Action Command_Operator(int args){
 		//Taco Bell Edition
 		case 210:{
 			tacobell = true;
+			ServerCommand("fb_startmoney 200000");
 			PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07FFFFFFYou have chosen \x07AA0000DOVAH'S ASS - TACO BELL EDITION\x07FFFFFF. Why... Why would you DO THIS?! Do you not realize what you've just done?????");
 		}
 		// Select BGM
@@ -2558,15 +2568,13 @@ public Action Command_Operator(int args){
 		}
 		//Despawn the tornado
 		case 1005:{
-			if (tornado){
-				FireEntityInput("tornadof1", "stop", "", 0.0),
-				FireEntityInput("TornadoKill", "Disable", "", 0.0),
-				FireEntityInput("tornadof1wind", "Disable", "", 0.0),
-				FireEntityInput("tornadowindf1", "StopSound", "", 0.0),
-				FireEntityInput("shaketriggerf1", "Disable", "", 0.0),
-				FireEntityInput("tornadobutton", "Unlock", "", 30.0);
-				tornado = false;
-			}
+			FireEntityInput("tornadof1", "stop", "", 0.0),
+			FireEntityInput("TornadoKill", "Disable", "", 0.0),
+			FireEntityInput("tornadof1wind", "Disable", "", 0.0),
+			FireEntityInput("tornadowindf1", "StopSound", "", 0.0),
+			FireEntityInput("shaketriggerf1", "Disable", "", 0.0),
+			FireEntityInput("tornadobutton", "Unlock", "", 30.0);
+			tornado = false;
 			return Plugin_Handled;
 		}
 		//Crusader

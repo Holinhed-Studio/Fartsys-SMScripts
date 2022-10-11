@@ -9,7 +9,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define UU_VERSION "0.9.5-psy"
+#define UU_VERSION "0.9.6-fartsy-psy"
 
 #define RED 0
 #define BLUE 1
@@ -27,7 +27,7 @@
 
 #define _NB_SP_TWEAKS 60
 #define MAXLEVEL_D 500
-
+char tempStartMoney[16];
 Handle up_menus[MAXPLAYERS + 1];
 Handle menuBuy;
 Handle BuyNWmenu;
@@ -46,7 +46,7 @@ float MoneyForTeamRatio[2];
 float MoneyTotalFlow[2];
 
 Handle Timers_[4];
-
+Handle cvarStartMoney = INVALID_HANDLE;
 
 int clientLevels[MAXPLAYERS + 1];
 char clientBaseName[MAXPLAYERS + 1][255];
@@ -127,8 +127,7 @@ float RealStartMoney = 0.0;
 float CurrencySaved[MAXPLAYERS + 1];
 float StartMoneySaved;
 
-stock bool IsMvM(bool forceRecalc = false)
-{
+stock bool IsMvM(bool forceRecalc = false){
 	static bool found = false;
 	static bool ismvm = false;
 	if (forceRecalc)
@@ -145,8 +144,7 @@ stock bool IsMvM(bool forceRecalc = false)
 	return ismvm;
 }
 
-public Action Timer_WaitForTF2II(Handle timer)
-{
+public Action Timer_WaitForTF2II(Handle timer){
 	int i = 0;
 	if (TF2II_IsValidAttribID(1))
 	{
@@ -181,8 +179,7 @@ public Action Timer_WaitForTF2II(Handle timer)
 	return Plugin_Continue;
 }
 
-void UberShopDefineUpgradeTabs()
-{
+void UberShopDefineUpgradeTabs(){
 	int i = 0;
 	while (i < MAXPLAYERS + 1)
 	{
@@ -485,7 +482,8 @@ public Action Timer_GetConVars(Handle timer)//Reload con_vars into vars
 public Action Timer_GiveSomeMoney(Handle timer)//GIVE MONEY EVRY 5s
 {
 	float iCashtmp;
-	float HighestMoney;
+	//float HighestMoney;
+	//float StartMoneyCVAR = StringToFloat(tempStartMoney);
 	for (int client_id = 1; client_id < MAXPLAYERS + 1; client_id++)
 	{
 		if (IsValidClient(client_id) && (GetClientTeam(client_id) > 1))
@@ -501,11 +499,11 @@ public Action Timer_GiveSomeMoney(Handle timer)//GIVE MONEY EVRY 5s
 			{
 				MoneyTotalFlow[RED] += iCashtmp;
 			}
-			if(HighestMoney <= iCashtmp)
-			{
-				HighestMoney = iCashtmp;
-				RealStartMoney = iCashtmp;
-			}
+			//if(HighestMoney <= iCashtmp)
+			//{
+			//	HighestMoney = iCashtmp;
+				//RealStartMoney = iCashtmp;
+			//}
 		}
 	}
 
@@ -890,8 +888,8 @@ public void Event_ResetStats(Handle event, const char[] name, bool dontBroadcast
 			}
 			FakeClientCommandEx(client, "menuselect 0");
 			Menu_BuyUpgrade(client, 0);
-			CurrencyOwned[client] = 1400.0;
-			RealStartMoney = 1400.0;
+			CurrencyOwned[client] = StringToFloat(tempStartMoney);
+			//RealStartMoney = 1400.0;
 		}
 	}
 }
@@ -1660,14 +1658,20 @@ int GetUpgrade_CatList(const char[] WCName)
 	return w_id;
 }
 
+public Action Command_MyMoney(int client, int args){
+	PrintToChat(client, "You have %f", CurrencyOwned[client]); // todo, test this
+}
 public void OnPluginStart()
 {
+	RegConsoleCmd("sm_mymoney", Command_MyMoney, "Show my money");
 	UberShopinitMenusHandlers();
-
+	cvarStartMoney = CreateConVar("fb_startmoney", "50000", "Starting money for FartsysAss UbUps. Default = 50000, Taco Bell = 200000, can be anything though.");
 	UberShopDefineUpgradeTabs();
 	SetConVarFloat(FindConVar("sv_maxvelocity"), 10000000.0, true, false); //Up the cap for the speed of projectiles
-	SetConVarInt(FindConVar("tf_weapon_criticals"), 0, true, false); //Disables random crits
-	RealStartMoney = 1400.0;
+	//SetConVarInt(FindConVar("tf_weapon_criticals"), 0, true, false); //Disables random crits
+	GetConVarString(cvarStartMoney, tempStartMoney, sizeof(tempStartMoney));
+	RealStartMoney = StringToFloat(tempStartMoney);
+	PrintToServer("Start Money is %f", RealStartMoney);
 	for (int client = 0; client < MAXPLAYERS + 1; client++)
 	{
 		if (IsValidClient(client))
@@ -1680,7 +1684,7 @@ public void OnPluginStart()
 			{
 				CreateTimer(0.2, ClChangeClassTimer, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 			}
-			CurrencyOwned[client] = 1400.0;
+			CurrencyOwned[client] = RealStartMoney;
 		}
 	}
 }
