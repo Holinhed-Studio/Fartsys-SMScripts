@@ -67,7 +67,7 @@ static float BGM5Dur = 131.75;
 static float BGM6Dur = 427.35;
 static float BGM7Dur = 133.25;
 static float BGM8Dur = 313.85;
-static float BGM9Dur = 112.20;
+static float BGM9Dur = 111.90;
 static char BMB1SND[32] = "fartsy/misc/murica.mp3";
 static char BMB2SND[32] = "fartsy/bl2/grenade_detonate.mp3";
 static char BMB3SND[32] = "fartsy/gbombs5/t_12.mp3";
@@ -135,6 +135,7 @@ static float HWNMin = 210.0;
 static float HWNMax = 380.0;
 static float Return[3] = {-3730.0, 67.0, -252.0};
 static int BGMSNDLVL = 95;
+int FailedCount = 0;
 int INCOMINGDISPLAYED = 0;
 int CodeEntry = 0;
 static int DEFBGMSNDLVL = 50;
@@ -156,7 +157,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.1.2",
+	version = "4.1.3",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -170,6 +171,8 @@ public void OnPluginStart(){
     PrecacheSound(BGM6, true),
     PrecacheSound(BGM7, true),
     PrecacheSound(BGM8, true),
+	PrecacheSound(BGM9, true),
+	PrecacheSound(BGM9Intro, true),
 	PrecacheSound(BMB1SND, true),
 	PrecacheSound(BMB2SND, true),
 	PrecacheSound(BMB3SND, true),
@@ -1626,8 +1629,12 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     bombStatus = 5;
     explodeType = 0;
     onslaughter = false;
-    ServerCommand("fb_operator 1000");
-    CreateTimer(1.0, PerformAdverts);
+    if (FailedCount == 0){
+		FailedCount++;
+		ServerCommand("fb_operator 1000");
+		CreateTimer(1.0, PerformAdverts);
+		CreateTimer(40.0, SelectAdminTimer);
+	}
     FireEntityInput("rain", "Alpha", "0", 0.0);
     PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFWave \x07FF0000failed\x07FFFFFF successfully!");
     FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
@@ -1646,7 +1653,6 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     FireEntityInput("rain", "Alpha", "0", 0.0);
     ServerCommand("fb_operator 1007");
     ServerCommand("fb_operator 1002");
-    CreateTimer(40.0, SelectAdminTimer);
 }
 
 //Announce the bomb has been reset by client %N.
@@ -2699,6 +2705,7 @@ public Action Command_Operator(int args){
 //Perform Wave Setup
 public Action PerformWaveSetup(){
 			isWave = true; //It's a wave!
+			FailedCount = 0;
 			ServerCommand("fb_operator 1001"); //Stop any playing BGM
 			CreateTimer(0.25, TimedOperator, 0); //Print wave information to global chat
 			CreateTimer(2.5, PerformWaveAdverts); //Activate the mini hud
@@ -2745,9 +2752,10 @@ public Action TimedOperator(Handle timer, int job){
 		}
 		case 2:{
 			if(tacobell){
-				curSong = BGM9;
-				CustomSoundEmitter(BGM9Intro, BGMSNDLVL, true);
-				CreateTimer(11.9, TimedOperator, 10);
+				curSong = BGM9Intro;
+				songName = BGM9Title;
+				CustomSoundEmitter(BGM9Intro, BGMSNDLVL-5, true);
+				CreateTimer(11.75, TimedOperator, 10);
 			}
 			else{
 				CustomSoundEmitter(BGM1, BGMSNDLVL, true);
@@ -2799,10 +2807,10 @@ public Action TimedOperator(Handle timer, int job){
 			CreateTimer(BGM8Dur, RefireBGM, 9);
 		}
 		case 10:{
-			CustomSoundEmitter(BGM9, BGMSNDLVL, true);
+			CustomSoundEmitter(BGM9, BGMSNDLVL-5, true);
 			curSong = BGM9;
 			songName = BGM9Title;
-			CreateTimer(BGM9Dur, RefireBGM, 2);
+			CreateTimer(BGM9Dur, RefireBGM, 10);
 		}
 		case 21:{
 			CustomSoundEmitter(INCOMING, SFXSNDLVL, false);
