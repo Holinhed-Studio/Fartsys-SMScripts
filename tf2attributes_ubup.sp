@@ -31,9 +31,8 @@ char tempStartMoney[16];
 Handle up_menus[MAXPLAYERS + 1];
 Handle menuBuy;
 Handle BuyNWmenu;
-
 int BuyNWmenu_enabled;
-
+int clientpre = 0;
 Handle cvar_TimerMoneyGive_BlueTeam;
 float TimerMoneyGive_BlueTeam;
 Handle cvar_TimerMoneyGive_RedTeam;
@@ -425,11 +424,11 @@ public void Event_PlayerChangeClass(Handle event, const char[] name, bool dontBr
 	if (IsValidClient(client))
 	{
 		current_class[client] = view_as<int>(TF2_GetPlayerClass(client));
-		ResetClientUpgrades(client);
-		TF2Attrib_RemoveAll(client);
-		RespawnEffect(client);
+		//ResetClientUpgrades(client);
+		//TF2Attrib_RemoveAll(client);
+		//RespawnEffect(client);
 		CurrencyOwned[client] = RealStartMoney;
-		//PrintToChat(client, "client changeclass");
+		PrintToChat(client, "client changeclass");
 		if (!client_respawn_handled[client])
 		{
 			CreateTimer(0.1, ClChangeClassTimer, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -600,7 +599,7 @@ public Action WeaponReGiveUpgrades(Handle timer, int userid)
 		client_respawn_handled[client] = 1;
 		for (int slot = 0; slot < NB_SLOTS_UED; slot++)
 		{
-			//PrintToChat(client, "money spent on slot  %d -- %d$", slot, client_spent_money[client][slot]);
+			//PrintToChat(client, "client id %i was %i but now money spent on slot  %d -- %d$", client, clientidpre, slot, client_spent_money[client][slot]);
 			if (client_spent_money[client][slot] > 0)
 			{
 				if (slot == 3 && client_new_weapon_ent_id[client])
@@ -619,10 +618,25 @@ public Action WeaponReGiveUpgrades(Handle timer, int userid)
 public void OnClientDisconnect(int client)
 {
 	PrintToServer("%N (%i) left", client, client);
+	clientpre = GetSteamAccountID(client);
 }
 
 public void OnClientPutInServer(int client)
 {
+	
+	for (int slot = 0; slot < NB_SLOTS_UED; slot++)
+	{
+		//PrintToChat(client, "client id %i was %i but now money spent on slot  %d -- %d$", client, clientidpre, slot, client_spent_money[client][slot]);
+		if (client_spent_money[client][slot] > 0)
+		{
+			if (slot == 3 && client_new_weapon_ent_id[client])
+			{
+				GiveNewWeapon(client, 3);
+			}
+			GiveNewUpgradedWeapon_(client, slot);
+		//	PrintToChat(client, "player's upgrad!!");
+		}
+	}
 	char clname[255];
 	GetClientName(client, clname, sizeof(clname));
 	clientBaseName[client] = clname;
@@ -631,14 +645,19 @@ public void OnClientPutInServer(int client)
 	clientLevels[client] = 0;
 	client_no_d_team_upgrade[client] = 1;
 	client_no_d_name[client] = 1;
-	ResetClientUpgrades(client);
+	//ResetClientUpgrades(client);
 	current_class[client] = view_as<int>(TF2_GetPlayerClass(client));
 	if (!client_respawn_handled[client])
 	{
 		CreateTimer(0.2, ClChangeClassTimer, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
 	PrintToServer("realstartmoney = %f", RealStartMoney);
-	CurrencyOwned[client] = RealStartMoney;
+	if(clientpre == GetSteamAccountID(client)){
+		return;
+	}
+	else{
+		CurrencyOwned[client] = RealStartMoney;
+	}
 }
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon)//Every single server tick.  GetTickInterval() for the seconds per tick.
 {
@@ -1661,9 +1680,28 @@ int GetUpgrade_CatList(const char[] WCName)
 public Action Command_MyMoney(int client, int args){
 	PrintToChat(client, "You have %f", CurrencyOwned[client]); // todo, test this
 }
+
+public Action Command_ResetUpgrades(int client, int args){
+	if (IsValidClient(client))
+	{
+		current_class[client] = view_as<int>(TF2_GetPlayerClass(client));
+		ResetClientUpgrades(client);
+		TF2Attrib_RemoveAll(client);
+		RespawnEffect(client);
+		CurrencyOwned[client] = RealStartMoney;
+		PrintToChat(client, "client upgrades reset");
+		if (!client_respawn_handled[client])
+		{
+			CreateTimer(0.1, ClChangeClassTimer, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+		}
+		FakeClientCommand(client,"menuselect 0");
+		ChangeClassEffect(client);
+	}
+}
 public void OnPluginStart()
 {
 	RegConsoleCmd("sm_mymoney", Command_MyMoney, "Show my money");
+	RegConsoleCmd("sm_reset", Command_ResetUpgrades, "Force reset upgrades");
 	UberShopinitMenusHandlers();
 	cvarStartMoney = CreateConVar("fb_startmoney", "50000", "Starting money for FartsysAss UbUps. Default = 50000, Taco Bell = 200000, can be anything though.");
 	UberShopDefineUpgradeTabs();

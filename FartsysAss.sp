@@ -14,9 +14,13 @@
 #include <sourcemod>
 #include <sdktools>
 #include <clientprefs>
+#include <morecolors>
+#include <regex>
+#include <tf2_stocks>
 #pragma newdecls required
 #pragma semicolon 1
 bool bombProgression = false;
+bool bombReset = false; //used for notifying us when Event mvm_bomb_reset_by_player doesn't....
 bool canHindenburg = false;
 bool canHWBoss = false;
 bool canSENTMeteors = false;
@@ -37,8 +41,10 @@ bool bgmlock7 = true;
 bool bgmlock8 = true;
 bool bgmlock9 = true;
 bool onslaughter = false;
+bool sacrificedByClient = false; //Was the robot sacrificed by the client?
 bool tacobell = false;
 bool TornadoWarningIssued = false;
+Database FB_Database;
 static char BELL[32] = "fartsy/misc/bell.wav";
 static char BGM1[32] = "fartsy/music/ffxiv/locus.mp3";
 static char BGM2[32] = "fartsy/music/ffxiv/metal.mp3";
@@ -151,13 +157,16 @@ static int SNDCHAN = 6;
 int soundPreference[MAXPLAYERS + 1];
 Handle cSNDPref;
 Handle cvarSNDDefault = INVALID_HANDLE;
-
+stock bool IsValidClient(int client)
+{
+	return (0 < client <= MaxClients && IsClientInGame(client));
+}
 public Plugin myinfo =
 {
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.1.4",
+	version = "4.2.2",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -237,25 +246,166 @@ public void OnPluginStart(){
 	PrecacheSound("ambient/sawblade_impact1.wav", true),
 	PrecacheSound("vo/sandwicheat09.mp3", true),
     RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client."),
-    RegServerCmd("tacobell_wave01", Command_TBWave01,"Taco Bell - Wave One"),
     RegConsoleCmd("sm_bombstatus", Command_FBBombStatus, "Check bomb status"),
     RegConsoleCmd("sm_sacstatus", Command_FBSacStatus, "Check sacrifice points status"),
     RegConsoleCmd("sm_song", Command_GetCurrentSong, "Get current song name"),
+	RegConsoleCmd("sm_stats", Command_MyStats, "Print current statistics"),
 	RegConsoleCmd("sm_return", Command_Return, "Return to Spawn"),
 	RegConsoleCmd("sm_discord", Command_Discord, "Join our Discord server!"),
 	RegConsoleCmd("sm_sounds", Command_Sounds, "Toggle sounds on or off via menu"),
     HookEvent("player_death", EventDeath),
+	HookEvent("player_spawn", EventSpawn),
     HookEvent("server_cvar", Event_Cvar, EventHookMode_Pre),
     HookEvent("mvm_wave_complete", EventWaveComplete),
     HookEvent("mvm_wave_failed", EventWaveFailed),
     HookEvent("mvm_bomb_alarm_triggered", EventWarning),
-    HookEvent("mvm_bomb_reset_by_player", EventReset);
-    PrintToChatAll("Plugin Loaded.");
+    HookEventEx("player_hurt", Event_Playerhurt, EventHookMode_Pre);
+    CPrintToChatAll("{darkred}Plugin Loaded.");
     cvarSNDDefault = CreateConVar("sm_fartsysass_sound", "3", "Default sound for new users, 3 = Everything, 2 = Sounds Only, 1 = Music Only, 0 = Nothing");
     cSNDPref = RegClientCookie("Sound Pref", "Sound settings", CookieAccess_Private);
     SetCookieMenuItem(FartsysSNDSelected, 0, "Fartsys Ass Sound Preferences");
 }
 
+public Action Command_MyStats(int client, int args){
+	if (!FB_Database)
+	{
+		return;
+	}
+	int steamID = GetSteamAccountID(client);
+	if (!steamID || steamID<=10000){
+		return;
+	}
+	DataPack pk = new DataPack();
+	pk.WriteCell(client ? GetClientUserId(client) : 0);
+	pk.WriteString("steamid");
+	char queryID[256];
+	Format(queryID, sizeof(queryID), "SELECT * from ass_activity WHERE steamid = %d;", steamID);
+	FB_Database.Query(MyStats, queryID, pk);
+}
+
+public void MyStats(Database db, DBResultSet results, const char[] error, any data){
+	DataPack pk = view_as<DataPack>(data);
+	pk.Reset();
+	
+	int userId = pk.ReadCell();
+	char steamId[64];
+	pk.ReadString(steamId, sizeof(steamId));
+	delete pk;
+	
+	int client = userId ? GetClientOfUserId(userId) : 0;
+	bool validClient = !userId || client;
+	
+	if (!results)
+	{
+		if (validClient)
+		{
+			PrintToChat(client,"[SM] Command Database Query Error");
+		}
+		
+		LogError("Failed to query database: %s", error);
+		return;
+	}
+	
+	if (!validClient)
+	{
+		return;
+	}
+	
+	char name[64];
+	char class[64];
+	int steamID, damagedealt, damagedealtsession, kills, killssession, deaths, deathssession, bombsreset, bombsresetsession, sacrifices, sacrificessession;
+	char lastkilledname[128];
+	char lastusedweapon[128];
+	char killedbyname[128];
+	char killedbyweapon[128];
+	if (results.FetchRow())
+	{
+		results.FetchString(0, name, 64); //name
+		steamID = results.FetchInt(1); //steamid
+		results.FetchString(4, class, 64); //class
+		damagedealt = results.FetchInt(5); //damage dealt
+		damagedealtsession = results.FetchInt(6); //damage dealt session
+		kills = results.FetchInt(7); //kills
+		killssession = results.FetchInt(8); //kills session
+		deaths = results.FetchInt(9); //deaths
+		deathssession = results.FetchInt(10); //deaths session
+		bombsreset = results.FetchInt(11); //bombs reset
+		bombsresetsession = results.FetchInt(12); //bombs reset session
+		sacrifices = results.FetchInt(13); //sacrifices
+		sacrificessession = results.FetchInt(14); //sacrifices session
+		results.FetchString(13, lastkilledname, sizeof(lastkilledname)); //last client killed
+		results.FetchString(14, lastusedweapon, sizeof(lastusedweapon)); //using weapon
+		results.FetchString(15, killedbyname, sizeof(killedbyname)); //last client that killed
+		results.FetchString(16, killedbyweapon, sizeof(killedbyweapon)); //using weapon
+	}
+	CPrintToChat(client,"\x07AAAAAA[CORE] Showing stats of %s   [%s] || SteamID: %i ", name, class, steamID);
+	CPrintToChat(client,"{white}Damage Dealt: %i (Session: %i) || Kills: %i (Session: %i) || Deaths: %i (Session: %i) || Bombs Reset: %i (Session: %i)", damagedealt, damagedealtsession, kills, killssession, deaths, deathssession, bombsreset, bombsresetsession);
+	CPrintToChat(client,"Sacrifices: %i(Session:%i) || Killed %s (using %s) || Last killed by: %s (using %s)", sacrifices, sacrificessession, lastkilledname, lastusedweapon, killedbyname, killedbyweapon);
+}
+public void OnConfigsExecuted(){
+	if (!FB_Database)
+	{
+		Database.Connect(Database_OnConnect, "ass");
+	}
+}
+//DB setup
+public void Database_OnConnect(Database db, const char[] error, any data){
+	if (!db)
+	{
+		LogError("Could not connect to the database: %s", error);
+		return;
+	}
+	
+	char buffer[64];
+	db.Driver.GetIdentifier(buffer, sizeof(buffer));
+	
+	if (!StrEqual(buffer, "mysql", false))
+	{
+		delete db;
+		LogError("Could not connect to the database: expected mysql database.");
+		return;
+	}
+	FB_Database = db;
+	FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS ass_activity (name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '4', PRIMARY KEY (steamid, date));");
+}
+
+public void Database_FastQuery(Database db, DBResultSet results, const char[] error, any data){
+	if (!results)
+	{	
+		LogError("Failed to query database: %s", error);
+	}
+}
+public void Database_MergeDataError(Database db, any data, int numQueries, const char[] error, int failIndex, any[] queryData){
+	LogError("Failed to query database (transaction): %s", error);
+}
+
+//When a client leaves
+public void OnClientDisconnect(int client){
+	if (!FB_Database)
+	{
+		return;
+	}
+	
+	int steamID = GetSteamAccountID(client);
+	if (!steamID || steamID<=10000){
+		return;
+	}
+	char query[256];
+	char clientName[128];
+	GetClientInfo(client, "name", clientName, 128);
+	Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, seconds) VALUES ('%s', %d, CURRENT_DATE, %d) ON DUPLICATE KEY UPDATE name = '%s', seconds = seconds + VALUES(seconds);", clientName, steamID, GetClientMapTime(client), clientName);
+	PrintToServer("%s", query);
+	FB_Database.Query(Database_FastQuery, query);
+}
+int GetClientMapTime(int client){
+	float clientTime = GetClientTime(client), gameTime = GetGameTime();
+	if (clientTime > gameTime)
+	{
+		return RoundToZero(gameTime);
+	}
+	
+	return RoundToZero(clientTime);
+}
 //Clientprefs built in menu
 public void FartsysSNDSelected(int client, CookieMenuAction action, any info, char[] buffer, int maxlen) {
 	if (action == CookieMenuAction_SelectOption)
@@ -264,7 +414,7 @@ public void FartsysSNDSelected(int client, CookieMenuAction action, any info, ch
 	}
 }
 
-// When a new client joins we reset sound preferences
+// When a new client joins
 public void OnClientPutInServer(int client){
 	if(!IsFakeClient(client))
 	{
@@ -273,6 +423,18 @@ public void OnClientPutInServer(int client){
 		{
 			getClientCookiesFor(client);
 		}
+		if (!FB_Database){
+			return;
+		}
+		int steamID = GetSteamAccountID(client);
+		if (!steamID || steamID<=10000){	
+			return;
+		}
+		char query[1024];
+		char clientName[128];
+		GetClientInfo(client, "name", clientName, 128);
+		Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%s', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%s', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", clientName, steamID, clientName);
+		FB_Database.Query(Database_FastQuery, query);
 	}
 	else
 	{
@@ -352,25 +514,29 @@ public Action PerformAdverts(Handle timer){
 		int i = GetRandomInt(1, 7);
 		switch (i){
 			case 1:{
-				PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF We have a Discord server: \x0700AA00https://discord.com/invite/SkHaeMH");
+				CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}We have a Discord server: {forestgreen}https://discord.com/invite/SkHaeMH");
 			}
 			case 2:{
-				PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF Remember to buy your upgrades using \x0700AA00!buy");
+				CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}Remember to buy your upgrades using {forestgreen}!buy");
 			}
 			case 3:{
-				PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF If this is your first time here, please run console command \x0700AA00snd_restart \x07FFFFFFfor safety. Otherwise, you might \x07FF0000crash\x07FFFFFF!");
+				//CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}If this is your first time here, please run console command {forestgreen}snd_restart {white}for safety. Otherwise, you might {red}crash{white}!");
+				CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}You may invoke {forestgreen}!sounds {white}to configure what sounds you hear from the plugin, or {forestgreen}!stats{white} to see your stats.");
 			}
 			case 4:{
-				PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF Advanced users may quick buy upgrades using \x0700AA00!qbuy");
+				CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}Advanced users may quick buy upgrades using {forestgreen}!qbuy");
 			}
 			case 5:{
-				PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF Don't forget to buy \x0700AA00protection upgrades\x07FFFFFF and \x0700AA00ammo regen\x07FFFFFF (if applicable)!");
+				CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}Don't forget to buy {forestgreen}protection upgrades {white}and {forestgreen}ammo regen{white}(if applicable)!");
 			}
             case 6:{
-                PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF TIP: As a \x07AA0000DEFENDER\x07FFFFFF, pushing your team's \x0700AA00payload\x07FFFFFF is crucial to wrecking havoc on the robots!");
+                CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}TIP: As a {red}DEFENDER{white}, pushing your team's {forestgreen}payload {white}is crucial to wrecking havoc on the robots!");
             }
             case 7:{
-                PrintToChatAll("\x07800080[\x0780AAAACORE\x07800080]\x07FFFFFF Remember, if someone is being abusive, you may always invoke \x0700AA00!calladmin\x07FFFFFF.");
+                CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}Remember, if someone is being abusive, you may always invoke {forestgreen}!calladmin{white}.");
+            }
+            case 8:{
+                CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}You may always invoke {forestgreen}!return{white} to be returned to spawn.");
             }
 		}
 	}
@@ -703,31 +869,31 @@ public Action SpecTimer(Handle timer){
 			case 1:{
 				FireEntityInput("Spec*", "Disable", "", 0.0),
 				FireEntityInput("Spec.Goobbue", "Enable", "", 0.1),
-				PrintToChatAll("\x070000AA Legend tells of a Goobbue sproutling somewhere nearby...");
+				CPrintToChatAll("{fullblue} Legend tells of a Goobbue sproutling somewhere nearby...");
 			}
 			case 2:{
 				FireEntityInput("Spec*", "Disable", "", 0.0),
 				FireEntityInput("Spec.Waffle", "Enable", "", 0.1),
-				PrintToChatAll("\x0700A0A0Don't eat THESE...");
+				CPrintToChatAll("{turquoise}Don't eat THESE...");
 			}
 			case 3:{
 				FireEntityInput("Spec*", "Disable", "", 0.0),
 				FireEntityInput("Spec.Burrito", "Enable", "", 0.1),
-				PrintToChatAll("\x07A00000What's worse than Taco Bell?");
+				CPrintToChatAll("{darkred}What's worse than Taco Bell?");
 			}
 			case 4:{
 				FireEntityInput("Spec*", "Disable", "", 0.0),
 				FireEntityInput("Spec.Shroom", "Enable", "", 0.1),
-				PrintToChatAll("\x07DD0000M\x07FFFFFFA\x07DD0000R\x07FFFFFFI\x07DD0000O\x07FFFFFF time!");
+				CPrintToChatAll("{red}M{white}A{red}R{white}I{red}O {white}time!");
 			}
 			case 5:{
 				FireEntityInput("Spec*", "Disable", "", 0.0);
 				FireEntityInput("Spec.BlueBall", "Enable", "", 0.1);
-				PrintToChatAll("\x070000AA Blue Ball \x07FFFFFF lurks from afar...");
+				CPrintToChatAll("{white}A {fullblue}Blue Ball {white}lurks from afar...");
 			}
 			case 6:{
 				FireEntityInput("Spec*", "Enable", "", 0.0),
-				PrintToChatAll("\x07AA00AAIs it a miracle? Is it  chaos? WHO KNOWWWWWWS");
+				CPrintToChatAll("{magenta}Is it a miracle? Is it {red}chaos{magenta}? WHO KNOWWWWWWS");
 			}
 		}
 		float spDelay = GetRandomFloat(10.0, 30.0);
@@ -970,7 +1136,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
 					FireEntityInput("Bombs.FreedomBomb", "Enable", "", 0.0),
 					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000FREEDOM BOMB \x0700AA55is now available for deployment!");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}FREEDOM BOMB {forestgreen}is now available for deployment!");
 				}
 				case 16:{
 					bombStatusMax = 16;
@@ -981,7 +1147,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("Bombs.ElonBust", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
 					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000ELON BUST \x0700AA55is now available for deployment!");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}ELON BUST {forestgreen}is now available for deployment!");
 				}
 				case 24:{
 					bombStatusMax = 24;
@@ -992,7 +1158,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("Bombs.BathSalts", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
 					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000BATH SALTS \x0700AA55are now available for deployment!");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}BATH SALTS {forestgreen}are now available for deployment!");
 				}
 				case 32:{
 					bombStatusMax = 32;
@@ -1003,7 +1169,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("Bombs.FallingStar", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
 					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FFFF00FALLING STAR\x0700AA55 is now available for deployment!");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's \x07FFFF00FALLING STAR{forestgreen} is now available for deployment!");
 				}
 				case 40:{
 					bombStatusMax = 40;
@@ -1014,7 +1180,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("Bombs.MajorKong", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
 					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000MAJOR KONG \x0700AA55is now available for deployment!");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}MAJOR KONG {forestgreen}is now available for deployment!");
 				}
 				case 48:{
 					bombStatusMax = 48;
@@ -1026,7 +1192,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("BombExploShark", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
 					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x0700FFFFSHARK \x0700AA55is now available for deployment!");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {aqua}SHARK {forestgreen}is now available for deployment!");
 				}
 				case 56:{
 					bombStatusMax = 56;
@@ -1037,7 +1203,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("Bombs.FatMan", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
 					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000FAT MAN \x0700AA55is now available for deployment!");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {orange}FAT MAN {forestgreen}is now available for deployment!");
 				}
 				case 64:{
 					bombStatusMax = 64;
@@ -1048,7 +1214,7 @@ public Action BombStatusUpdater(Handle timer){
 					FireEntityInput("Bombs.Hydrogen", "Enable", "", 0.0),
 					FireEntityInput("Delivery", "Unlock", "", 0.0),
 					CustomSoundEmitter(TRIGGERSCORE, SFXSNDLVL, false),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team's \x07FF0000HYDROGEN \x0700AA55is now available for deployment!");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}HYDROGEN {forestgreen}is now available for deployment!");
 				}
 			}
 		}
@@ -1228,106 +1394,106 @@ public Action Command_GetCurrentSong(int client, int args){
 
 //Tell the client the current sacrifice points earned.
 public Action Command_FBSacStatus(int client, int args){
-	PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55The sacrificial points counter is currently at %i of %i maximum for this wave.", sacPoints, sacPointsMax);
+	CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}The sacrificial points counter is currently at %i of %i maximum for this wave.", sacPoints, sacPointsMax);
 }
 
 //Determine which bomb has been recently pushed and tell the client if a bomb is ready or not.
 public Action Command_FBBombStatus(int client, int args){
-	PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55The bomb status is currently %i, with a max of %i", bombStatus, bombStatusMax);
+	CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}The bomb status is currently %i, with a max of %i", bombStatus, bombStatusMax);
 	switch(bombStatus){
 		case 0,1,2,3,4,5,6,7:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Bombs are \x07FF0000NOT READY\x07FFFFFF!");
+			CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Bombs are {red}NOT READY{white}!");
 		}
 		case 8:{
 			if(bombProgression){
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing a \x07FF0000FREEDOM BOMB \x0700AA55!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing a {red}FREEDOM BOMB {forestgreen}!");
 			}
 			else{
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has not deployed any bombs, however: Your team's \x07FF0000FREEDOM BOMB \x0700AA55is available for deployment!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team has not deployed any bombs, however: Your team's {red}FREEDOM BOMB {forestgreen}is available for deployment!");
 			}
 		}
 		case 9,10,11,12,13,14,15:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFREEDOM BOMB \x0700AA55. Please wait for the next bomb.");
+			CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}FREEDOM BOMB {forestgreen}. Please wait for the next bomb.");
 		}
 		case 16:{
 			if(bombProgression){
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing an \x07FF0000ELON BUST \x0700AA55!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing an {red}ELON BUST {forestgreen}!");
 			}
 			else{ 
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFREEDOM BOMB \x0700AA55. Your team's \x07FF0000ELON BUST \x0700AA55is available for deployment!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}FREEDOM BOMB {forestgreen}. Your team's {red}ELON BUST {forestgreen}is available for deployment!");
 			}
 		}
 		case 17,18,19,20,21,22,23:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFELON BUST \x0700AA55. Please wait for the next bomb.");
+			CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed {white}ELON BUST {forestgreen}. Please wait for the next bomb.");
 		}
 		case 24:{
 			if(bombProgression){
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing \x07FF0000BATH SALTS \x0700AA55!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing {red}BATH SALTS {forestgreen}!");
 			}
 			else{
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFELON BUST \x0700AA55. Your team's \x07FF0000BATH SALTS \x0700AA55are available for deployment!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}ELON BUST {forestgreen}. Your team's {red}BATH SALTS {forestgreen}are available for deployment!");
 			}
 		}
 		case 25,26,27,28,29,30,31:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFBATH SALTS \x0700AA55. Please wait for the next bomb.");
+			CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed {white}BATH SALTS {forestgreen}. Please wait for the next bomb.");
 		}
 		case 32:{
 			if(bombProgression){
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing a \x07FF0000FALLING STAR \x0700AA55!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing a {red}FALLING STAR {forestgreen}!");
 			}
 			else{
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFBATH SALTS \x0700AA55. Your team's \x07FF0000FALLING STAR \x0700AA55is available for deployment!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed {white}BATH SALTS {forestgreen}. Your team's {red}FALLING STAR {forestgreen}is available for deployment!");
 			}
 		}
 		case 33,34,35,36,37,38,39:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFALLING STAR \x0700AA55. Please wait for the next bomb.");
+			CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}FALLING STAR {forestgreen}. Please wait for the next bomb.");
 		}
 		case 40:{
 			if(bombProgression){
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing a \x07FF0000MAJOR KONG \x0700AA55!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing a {red}MAJOR KONG {forestgreen}!");
 			}
 			else{
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFFALLING STAR \x0700AA55. Your team's \x07FF0000MAJOR KONG \x0700AA55is available for deployment!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed {white}FALLING STAR {forestgreen}. Your team's {red}MAJOR KONG {forestgreen}is available for deployment!");
 			}
 		}
 		case 41,42,43,44,45,46,47:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFMAJOR KONG \x0700AA55. Please wait for the next bomb.");
+			CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}MAJOR KONG {forestgreen}. Please wait for the next bomb.");
 		}
 		case 48:{
 			if(bombProgression){
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing a \x07FF0000SHARK \x0700AA55!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing a {red}SHARK {forestgreen}!");
 			}
 			else{
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed \x07FFFFFFMAJOR KONG \x0700AA55. Your team's \x07FF0000SHARK \x0700AA55is available for deployment!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed {white}MAJOR KONG {forestgreen}. Your team's {red}SHARK {forestgreen}is available for deployment!");
 			}
 		}
 		case 49,50,51,52,53,54,55:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFSHARK \x0700AA55. Please wait for the next bomb.");
+			CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}SHARK {forestgreen}. Please wait for the next bomb.");
 		}
 		case 56:{
 			if(bombProgression){
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is currently pushing a \x07FF0000FAT MAN \x0700AA55!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing a {red}FAT MAN {forestgreen}!");
 			}
 			else{
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFSHARK \x0700AA55. Your team's \x07FF0000FAT MAN \x0700AA55is available for deployment!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}SHARK {forestgreen}. Your team's {red}FAT MAN {forestgreen}is available for deployment!");
 			}
 		}
 		case 57,58,59,60,61,62,63:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFFAT MAN \x0700AA55. Please wait for the next bomb.");
+			CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}FAT MAN {forestgreen}. Please wait for the next bomb.");
 		}
 		case 64:{
 			if(bombProgression){
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team is delivering \x07FFFF00HYDROGEN \x0700AA55!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is delivering \x07FFFF00HYDROGEN {forestgreen}!");
 			}
 			else{
-				PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FF0000 FAT MAN \x0700AA55. Your team's \x07FFFF00HYDROGEN \x0700AA55is available for deployment!");
+				CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {red} FAT MAN {forestgreen}. Your team's \x07FFFF00HYDROGEN {forestgreen}is available for deployment!");
 			}
 		}
 		case 65,66,67,68,69,70,71:{
-			PrintToChat(client, "\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team recently deployed a \x07FFFFFFHYDROGEN\x0700AA55. Bombs are automatically reset to preserve the replayable aspect of this game mode.");
+			CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}HYDROGEN{forestgreen}. Bombs are automatically reset to preserve the replayable aspect of this game mode.");
 		}
 		case 72:{
-			PrintToChatAll("Something exceeded a maximum value!!! Apparently the bomb status is %i, with a maximum status of %i.", bombStatus, bombStatusMax);
+			CPrintToChatAll("{red}Something exceeded a maximum value!!! Apparently the bomb status is %i, with a maximum status of %i.", bombStatus, bombStatusMax);
 		}
 	}
 	return Plugin_Handled;
@@ -1336,13 +1502,13 @@ public Action Command_FBBombStatus(int client, int args){
 //Return the client to spawn
 public Action Command_Return(int client, int args){
 	if (!IsPlayerAlive(client)){
-		ReplyToCommand(client, "\x07AA0000[Core] You must be alive to use this command...");
+		ReplyToCommand(client, "{red}[Core] You must be alive to use this command...");
 		return Plugin_Handled;
 	}
 	else{
 		char name[128];
 		GetClientName(client, name, sizeof(name));
-		PrintToChatAll("\x0700AAAA[\x0700FF00CORE\x0700AAAA]\x07FFFFFF Client \x07FF0000%s \x07FFFFFFbegan casting \x07AA00AA/return\x07FFFFFF.", name);
+		CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%s {white}began casting {darkviolet}/return{white}.", name);
 		CustomSoundEmitter(RETURNSND, SFXSNDLVL, false);
 		CreateTimer(5.0, ReturnClient, client);
 	}
@@ -1358,12 +1524,8 @@ public Action ReturnClient(Handle timer, int clientID){
 
 //Join us on Discord!
 public Action Command_Discord(int client, int args){
-	PrintToChat(client, "\x0700AAAA[\x0700FF00CORE\x0700AAAA]\x07FFFFFF Our Discord server URL is \x07AA00AAhttps://discord.com/invite/SkHaeMH\x07FFFFFF."),
+	CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Our Discord server URL is {darkviolet}https://discord.com/invite/SkHaeMH{white}."),
 	ShowMOTDPanel(client, "FireHostRedux Discord", "https://discord.com/invite/SkHaeMH", MOTDPANEL_TYPE_URL);
-}
-//Deprecated
-public Action Command_TBWave01(int args){
-	PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave 01: Battle On The Big Bridge");
 }
 
 //Events
@@ -1373,27 +1535,62 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
     int attacker = GetClientOfUserId(Spawn_Event.GetInt("attacker"));
     char weapon[32];
     Spawn_Event.GetString("weapon", weapon, sizeof(weapon));
-    if (0 < client <= MaxClients && IsClientInGame(client))
-    {
+    if(GetClientTeam(client) == 3 && (bombReset == true || sacrificedByClient == true)){ //If we reset the bomb
+		if (attacker <= MaxClients && IsClientInGame(attacker) && bombReset == true){
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%N {white}has reset the ass! ({limegreen}+5 pts{white})", attacker);
+			bombReset = false;
+			char query[256];
+			int steamID = GetSteamAccountID(attacker);
+			if (!FB_Database){
+				return Plugin_Handled;
+			}
+			if (!steamID){	
+				return Plugin_Handled;
+			}
+			Format(query, sizeof(query), "UPDATE ass_activity SET bombsreset = bombsreset + 1, bombsresetsession = bombsresetsession + 1 WHERE steamid = %i;", steamID);
+			FB_Database.Query(Database_FastQuery, query);
+		}
+		else if (attacker <= MaxClients && IsClientInGame(attacker) && sacrificedByClient == true){
+			sacrificedByClient = false;
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%N {white}has sacrificed {blue}%N {white}for the ass! ({limegreen}+1 pt{white})", attacker, client);
+			bombReset = false;
+			char query[256];
+			int steamID = GetSteamAccountID(attacker);
+			if (!FB_Database){
+				return Plugin_Handled;
+			}
+			if (!steamID){	
+				return Plugin_Handled;
+			}
+			Format(query, sizeof(query), "UPDATE ass_activity SET sacrifices = sacrifices + 1, sacrificessession = sacrificessession + 1 WHERE steamid = %i;", steamID); //Eventually we will want to replace this with sacrifices, sacrificessession.
+			FB_Database.Query(Database_FastQuery, query);
+		}
+		return Plugin_Handled;
+	}
+    if (0 < client <= MaxClients && IsClientInGame(client)){
 		int damagebits = Spawn_Event.GetInt("damagebits");
 		if ((damagebits & (1 << 0)) && !attacker) //DMG_CRUSH (1)
     	{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was crushed by a \x07AA0000FALLING ROCK FROM OUTER SPACE\x07FFFFFF!", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was crushed by a {red}FALLING ROCK FROM OUTER SPACE{white}!", client);
+			weapon = "Meteor to the Face";
         }
 
 		if ((damagebits & (1 << 3)) && !attacker) //DMG_BURN (8)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was \x07AA0000MELTED\x07FFFFFF.", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}MELTED{white}.", client);
+			weapon = "Melted by Sharts or Ass Gas";
 		}
 		
 		if ((damagebits & (1 << 4)) && !attacker) //DMG_VEHICLE (DMG_FREEZE) (16)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was flattened out by a \x07AA0000TRAIN\x07FFFFFF!", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was flattened out by a {red}TRAIN{white}!", client);
+			weapon = "Attempted Train Robbery";
 		}
 
 		if ((damagebits & (1 << 5)) && !attacker && tornado) //DMG_FALL // tornado (32)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was \x07AA0000YEETED OUT INTO ORBIT\x07FFFFFF!", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}YEETED OUT INTO ORBIT{white}!", client);
+			weapon = "Yeeted into Orbit by a Tornado";
 			int i = GetRandomInt(1, 16);
 			switch (i){
 				case 1:{
@@ -1450,26 +1647,30 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 
 		if ((damagebits & (1 << 5)) && !attacker && !tornado) //DMG_FALL // not tornado (32)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N fell to a \x07AA0000CLUMSY PAINFUL DEATH\x07FFFFFF!", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N fell to a {red}CLUMSY PAINFUL DEATH{white}!", client);
+			weapon = "Tripped on a LEGO";
 		}
 
 		if ((damagebits & (1 << 6)) && !attacker) //DMG_BLAST (64)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N went \x07AA0000 KABOOM\x07FFFFFF!", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N went {red} KABOOM{white}!", client);
+			weapon = "Gone Kaboom!";
 		}
 
 		if ((damagebits & (1 << 7)) && !attacker && canHindenburg) //DMG_CLUB // Can hindenburg (128)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N is \x07AA0000CRASHING THE HINDENBURG\x07FFFFFF!!!", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N is {red}CRASHING THE HINDENBURG{white}!!!", client);
+			weapon = "Crashing the Hindenburg";
 		}
 
 		if ((damagebits & (1 << 8)) && !attacker){ //DMG_SHOCK (256)
-			PrintToChatAll("\x070000AA[\x07AA0000EXTERMINATUS\x070000AA]\x07FFFFFF Client %N has humliated themselves with an \x07AA0000incorrect \x07FFFFFFkey entry!", client);
+			CPrintToChatAll("{darkviolet}[{red}EXTERMINATUS{darkviolet}] {white}Client %N has humliated themselves with an {red}incorrect {white}key entry!", client);
+			weapon = "Failed FB Code Entry";
 			int i = GetRandomInt(1, 16);
 			switch(i){
 				case 1,3,10:{
 					FireEntityInput("BG.Meteorites1", "ForceSpawn", "", 0.0),
-					PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07FFFFFFUh oh, a \x07AA0000METEOR\x07FFFFFF has been spotted coming towards Dovah's Ass!!!"),
+					CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {white}Uh oh, a {red}METEOR{white}has been spotted coming towards Dovah's Ass!!!"),
 					FireEntityInput("bg.meteorite1", "StartForward", "", 0.1);
 				}
 				case 2,5,16:{
@@ -1484,7 +1685,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 					FireEntityInput("TrainSND", "PlaySound", "", 0.0),
 					FireEntityInput("TrainDamage", "Enable", "", 0.0),
 					FireEntityInput("Train01", "Enable", "", 0.0),
-					PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07AA7000KISSONE'S TRAIN\x07FFFFFF is \x07AA0000INCOMING\x07FFFFFF. Look out!"),
+					CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {orange}KISSONE'S TRAIN{white}is {red}INCOMING{white}. Look out!"),
 					FireEntityInput("TrainTrain", "TeleportToPathTrack", "TrainTrack01", 0.0),
 					FireEntityInput("TrainTrain", "StartForward", "", 0.1);
 				}
@@ -1493,7 +1694,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 					CreateTimer(1.0, TimedOperator, 41);
 				}
 				case 7,13:{
-					PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07FFFFFFUh oh, a \x07AA0000METEOR SHOWER\x07FFFFFF has been reported from Dovah's Ass!!!");
+					CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {white}Uh oh, a {red}METEOR SHOWER{white}has been reported from Dovah's Ass!!!");
 					canSENTMeteors = true,
 					CreateTimer(1.0, SENTMeteorTimer),
 					CreateTimer(30.0, DisableSENTMeteors);
@@ -1504,7 +1705,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 					FireEntityInput("FB.Slice", "Disable", "", 1.0);
 				}
 				case 12,15:{
-					PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA] \x07FFFFFFUh oh, it's begun to rain \x07AA0000ATOM BOMBS\x07FFFFFF! TAKE COVER!"),
+					CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {white}Uh oh, it's begun to rain {red}ATOM BOMBS{white}! TAKE COVER!"),
 					canSENTNukes = true,
 					CreateTimer(1.0, SENTNukeTimer),
 					CreateTimer(30.0, DisableSENTNukes);
@@ -1514,54 +1715,143 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 
 		if ((damagebits & (1 << 9)) && !attacker) //DMG_SONIC (512)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000EXTERMINATUS\x070000AA]\x07FFFFFF Client %N has sacrificed themselves with a \x0700AA00correct \x07FFFFFFkey entry! Prepare your anus!", client);
+			CPrintToChatAll("{darkviolet}[{red}EXTERMINATUS{darkviolet}] {white}Client %N has sacrificed themselves with a {forestgreen}correct {white}key entry! Prepare your anus!", client);
 			ServerCommand("fb_operator 1006");
+			weapon = "Correct FB Code Entry";
 		}
 
 		if ((damagebits & (1 << 10)) && !attacker) //DMG_ENERGYBEAM (1024)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N has been vaporized by a \x07AA0000HIGH ENERGY PHOTON BEAM\x07FFFFFF!", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been vaporized by a {red}HIGH ENERGY PHOTON BEAM{white}!", client);
+			weapon = "Onslaughter or Crusader Laser";
 		}
 
 		if ((damagebits & (1 << 14)) && !attacker) //DMG_DROWN (16384)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N \x07AA0000DROWNED\x07FFFFFF.", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N {red}DROWNED{white}.", client);
+			weapon = "Darwin Award for Drowning";
 		}
 
 		if ((damagebits & (1 << 15)) && !attacker) //DMG_PARALYZE (32768)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N has been crushed by a \x070000AAMYSTERIOUS BLUE BALL\x07FFFFFF!", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been crushed by a {darkviolet}MYSTERIOUS BLUE BALL{white}!", client);
+			weapon = "Mysterious Blue Ball";
 		}
 
 		if ((damagebits & (1 << 16)) && !attacker) //DMG_NERVEGAS (65536)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N has been \x07AA0000SLICED TO RIBBONS\x07FFFFFF!", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been {red}SLICED TO RIBBONS{white}!", client);
+			weapon = "FB Code Entry Failed";
 		}
 
 		if ((damagebits & (1 << 17)) && !attacker) //DMG_POISON (131072)
 		{
-			ServerCommand("sm_psay %d \x07FF0000[\x0700FF00ADMIN\x07FF0000] \x07AAAAAAPlease don't sit IDLE in the FC Tavern. Repeated offenses may result in a kick.");
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was killed for standing in the Tavern instead of helping their team!", client);
+			CPrintToChat(client, "{darkviolet}[{red}CORE{darkviolet}] {white}Please don't sit {red}IDLE {white}in the FC Tavern.");
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was killed for standing in the Tavern instead of helping their team!", client);
+			weapon = "Idle in FC Tavern..?";
 		}
 
 		if ((damagebits & (1 << 18)) && !attacker) //DMG_RADIATION (262144)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N was blown away by a \x07AA0000NUCLEAR EXPLOSION\x07FFFFFF!", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was blown away by a {red}NUCLEAR EXPLOSION{white}!", client);
+			weapon = "Nuclear Explosion";
 		}
 
 		if ((damagebits & (1 << 19)) && !attacker) //DMG_DROWNRECOVER (524288)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N experienced \x07AA0000TACO BELL\x07FFFFFF!", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N experienced {red}TACO BELL{white}!", client);
+			weapon = "Taco Bell";
 		}
 
 		if ((damagebits & (1 << 20)) && !attacker) //DMG_ACID (1048576)
 		{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF Client %N has been crushed by a \x0700AA00FALLING GOOBBUE FROM OUTER SPACE\x07FFFFFF!", client);
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been crushed by a {forestgreen}FALLING GOOBBUE FROM OUTER SPACE{white}!", client);
+			weapon = "Falling Goobbue";
+		}
+	}
+	//Log if a player killed someone
+    if(attacker != client){
+		char query[256];
+		int steamID;
+		if(attacker != 0){
+			steamID = GetSteamAccountID(attacker);
+		}
+		else{
+			steamID = 0;
+		}
+		if (!FB_Database){
+			return Plugin_Handled;
+		}
+		if (!steamID || steamID <= 10000){
+			int steamIDclient = GetSteamAccountID(client);
+			if (!steamIDclient || steamIDclient<=10000){
+				return Plugin_Handled;
+			}
+			else{
+				char queryClient[256];
+				Format(queryClient, sizeof(queryClient), "UPDATE ass_activity SET deaths = deaths + 1, deathssession = deathssession + 1 WHERE steamid = %i;", steamIDclient);
+				FB_Database.Query(Database_FastQuery, queryClient);
+				if (!StrEqual(weapon, "world")){
+					Format(queryClient, sizeof(queryClient), "UPDATE ass_activity SET killedbyname = '%N', killedbyweapon = '%s' WHERE steamid = %i;", attacker, weapon, steamIDclient);
+					FB_Database.Query(Database_FastQuery, queryClient);
+				}
+				return Plugin_Handled;
+			}
+		}
+		Format(query, sizeof(query), "UPDATE ass_activity SET kills = kills + 1, killssession = killssession + 1 WHERE steamid = %i;", steamID);
+		FB_Database.Query(Database_FastQuery, query);
+		if (!StrEqual(weapon, "world")){
+			Format(query, sizeof(query), "UPDATE ass_activity SET lastkilledname = '%N', lastweaponused = '%s' WHERE steamid = %i;", client, weapon, steamID);
+			FB_Database.Query(Database_FastQuery, query);
 		}
 	}
     return Plugin_Handled;
 }
-
+//Check who spawned and log their class
+public Action EventSpawn(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
+	int client = GetClientOfUserId(Spawn_Event.GetInt("userid"));
+	if(IsValidClient(client)){
+		char strClass[32];
+		char query[256];
+		int class = Spawn_Event.GetInt("class");
+		int steamID = GetSteamAccountID(client);
+		if (!FB_Database || !steamID || !class){
+			return Plugin_Handled;
+		}
+		switch(class){
+			case 1:{
+				strClass = "scout";
+			}
+			case 2:{
+				strClass = "sniper";
+			}
+			case 3:{
+				strClass = "soldier";
+			}
+			case 4:{
+				strClass = "demoman";
+			}
+			case 5:{
+				strClass = "medic";
+			}
+			case 6:{
+				strClass = "heavy";
+			}
+			case 7:{
+				strClass = "pyro";
+			}
+			case 8:{
+				strClass = "spy";
+			}
+			case 9:{
+				strClass = "engineer";
+			}
+		}
+		Format(query, sizeof(query), "UPDATE ass_activity SET class = '%s' WHERE steamid = %i;", strClass, steamID);
+		FB_Database.Query(Database_FastQuery, query);
+	}
+	return Plugin_Handled;
+}
 //Silence cvar changes to minimize chat spam.
 public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast){
 	event.BroadcastDisabled = true;
@@ -1587,7 +1877,7 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
     //CreateTimer(3.0, RefireDefBGM1);
     ServerCommand("fb_operator 1000");
     CreateTimer(1.0, PerformAdverts);
-    PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFYou've defeated the wave!");
+    CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}You've defeated the wave!");
     FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
     FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
     FireEntityInput("Barricade_Rebuild_Relay", "Trigger", "", 0.0);
@@ -1607,7 +1897,7 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
 
 //Announce when we are in danger.
 public Action EventWarning(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
-	PrintToChatAll("\x070000AA[\x07AA0000WARN\x070000AA]\x07AA0000 WARNING\x07FFFFFF: \x07AA0000PROFESSOR'S ASS IS ABOUT TO BE DEPLOYED!!!");
+	CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {red}WARNING{white}: {darkred}PROFESSOR'S ASS IS ABOUT TO BE DEPLOYED!!!");
 }
 
 //When the wave fails
@@ -1636,7 +1926,7 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
 		CreateTimer(40.0, SelectAdminTimer);
 	}
     FireEntityInput("rain", "Alpha", "0", 0.0);
-    PrintToChatAll("\x0700FF00[CORE] \x07FFFFFFWave \x07FF0000failed\x07FFFFFF successfully!");
+    CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave {red}failed{white}successfully!");
     FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
     FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
     FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
@@ -1655,24 +1945,12 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     ServerCommand("fb_operator 1002");
 }
 
-//Announce the bomb has been reset by client %N.
-public Action EventReset(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
-	char clientName[64];
-	int client = Spawn_Event.GetInt("player");
-	if (client <= MaxClients && IsClientInGame(client))
-    {
-		GetClientName(client, clientName, sizeof(client));
-		PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Client \x0700AA00%s\x07FFFFFF has reset the ass!", clientName);
-	}
-	return Plugin_Handled;
-}
-
 //Functions
 //Create a temp entity and fire an input
 public Action FireEntityInput(char[] strTargetname, char[] strInput, char[] strParameter, float flDelay){
 	char strBuffer[255];
 	Format(strBuffer, sizeof(strBuffer), "OnUser1 %s:%s:%s:%f:1", strTargetname, strInput, strParameter, flDelay);
-	//PrintToChatAll("\x0700FF00[CORE] \x07FFFFFF Firing entity %s with input %s , a parameter override of %s , and delay of %f ...", strTargetname, strInput, strParameter, flDelay);
+	//PrintToChatAll("{limegreen}[CORE] {white}Firing entity %s with input %s , a parameter override of %s , and delay of %f ...", strTargetname, strInput, strParameter, flDelay);
 	int entity = CreateEntityByName("info_target");
 	if(IsValidEdict(entity))
 	{
@@ -1723,16 +2001,16 @@ public Action Command_Operator(int args){
 	char arg1[16];
 	GetCmdArg(1, arg1, sizeof(arg1));
 	int x = StringToInt(arg1);
-	//PrintToChatAll("Calling on fb_operator because arg1 was %i, and was stored in memory position %i", x, arg1);
+	//PrintToConsoleAll("Calling on fb_operator because arg1 was %i, and was stored in memory position %i", x, arg1);
 	switch (x){
 		//When the map is complete
 		case 0:{
 			if(tacobell){
-					PrintToChatAll("WOWIE YOU DID IT! The server will restart in 30 seconds, prepare to do it again! LULW");
+					CPrintToChatAll("WOWIE YOU DID IT! The server will restart in 30 seconds, prepare to do it again! LULW");
 					CreateTimer(10.0, TimedOperator, 100);
 			}
 			else{
-				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF YOU HAVE SUCCESSFULLY COMPLETED PROF'S ASS ! THE SERVER WILL RESTART IN 10 SECONDS.");
+				CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}YOU HAVE SUCCESSFULLY COMPLETED PROF'S ASS ! THE SERVER WILL RESTART IN 10 SECONDS.");
 				CreateTimer(10.0, TimedOperator, 100);
 			}
 		}
@@ -1740,7 +2018,7 @@ public Action Command_Operator(int args){
 		case 1:{
             tacobell = false;
             ServerCommand("fb_startmoney 50000");
-            PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07AA0000PROFESSOR'S ASS\x07FFFFFF v0x19. Prepare yourself for the unpredictable... [\x0700FF00by TTV/ProfessorFartsalot\x07FFFFFF]");
+            CPrintToChatAll("{darkviolet}[{yellow}INFO{darkviolet}] {red}PROFESSOR'S ASS {white}v0x1A. Prepare yourself for the unpredictable... [{limegreen}by TTV/ProfessorFartsalot{white}]");
             FireEntityInput("rain", "Alpha", "0", 0.0);
 		}
 		//Wave init
@@ -1921,7 +2199,7 @@ public Action Command_Operator(int args){
 		}
 		//Tornado Sacrifice (+1)
 		case 10:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Sacrificed a client into orbit. (\x0700FF00+1 pt\x07FFFFFF)");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Sacrificed a client into orbit. ({limegreen}+1 pt{white})");
 			sacPoints++;
 			if(bombStatus >= bombStatusMax){
 				return Plugin_Handled;
@@ -1932,31 +2210,31 @@ public Action Command_Operator(int args){
 		}
 		//Death pit sacrifice (+1)
 		case 11:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Sent a client to their doom. (\x0700FF00+1 pt\x07FFFFFF)");
+//			PrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Sent a client to their doom. ({limegreen}+1 pt{white})");
+			sacrificedByClient = true;
 			sacPoints++;
 		}
 		//KissoneTM pit sacrifice (+1)
 		case 12:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Dunked a client into liquid death. (\x0700FF00+1 pt\x07FFFFFF)");
+//			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Dunked a client into liquid death. ({limegreen}+1 pt{white})");
+			sacrificedByClient = true;
 			sacPoints++;
 		}
 		//Tank Destroyed (+1), includes hacky method of disabling onslaughter attack system. Just as it was in the original map.
 		case 13:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A tank has been destroyed. (\x0700FF00+1 pt\x07FFFFFF)");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has been destroyed. ({limegreen}+1 pt{white})");
 			sacPoints++;
-			if (onslaughter){
-				FireEntityInput("FB.BruteJustice", "Disable", "", 0.0);	
-				FireEntityInput("FB.BruteJusticeTrain", "Stop", "", 0.0);
-				FireEntityInput("FB.BruteJusticeParticles", "Stop", "", 0.0);
-				FireEntityInput("FB.BruteJusticeDMGRelay", "Break", "", 0.0);
-				FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_b_10", 0.5);
-				onslaughter = false;
-			}
+			FireEntityInput("FB.BruteJustice", "Disable", "", 0.0);	
+			FireEntityInput("FB.BruteJusticeTrain", "Stop", "", 0.0);
+			FireEntityInput("FB.BruteJusticeParticles", "Stop", "", 0.0);
+			FireEntityInput("FB.BruteJusticeDMGRelay", "Break", "", 0.0);
+			FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_b_10", 0.5);
+			onslaughter = false;
 			return Plugin_Handled;
 		}
 		//Bomb Reset (+5)
 		case 14:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Bomb has been reset. (\x0700FF00+5 pts\x07FFFFFF)");
+			bombReset = true;
 			sacPoints+=5;
 		}
 		//Bomb Deployed
@@ -1972,7 +2250,7 @@ public Action Command_Operator(int args){
 					EmitSoundToAll(BMB1SND),
 					FireEntityInput("SmallExplosion", "Explode", "", 0.0),
 					FireEntityInput("SmallExploShake", "StartShake", "", 0.0),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Small Bomb successfully pushed! (\x0700FF00+2 pts\x07FFFFFF)");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Small Bomb successfully pushed! ({limegreen}+2 pts{white})");
 					sacPoints+=2,
 					bombStatusMax+=10,
 					CreateTimer(3.0, BombStatusAddTimer);
@@ -1985,12 +2263,31 @@ public Action Command_Operator(int args){
 					}
 				}
 				//Medium Explosion
-				case 2,3:{
+				case 2:{
 					FireEntityInput("RareSpells", "Enable", "", 0.0);
 					EmitSoundToAll(BMB2SND),
 					FireEntityInput("MediumExplosion", "Explode", "", 0.0),
 					FireEntityInput("MedExploShake", "StartShake", "", 0.0),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Medium Bomb successfully pushed! (\x0700FF00+5 pts\x07FFFFFF)");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Medium Bomb successfully pushed! ({limegreen}+5 pts{white})");
+					sacPoints+=5,
+					bombStatusMax+=10,
+					CreateTimer(3.0, BombStatusAddTimer);
+					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL, false);
+					if(bombStatus>=bombStatusMax){
+						return Plugin_Handled;
+					}
+					else{
+						bombStatus+=2;
+					}
+				}
+				//Medium Explosion (Bath salts)
+				case 3:{
+					FireEntityInput("RareSpells", "Enable", "", 0.0);
+					EmitSoundToAll(BMB2SND),
+					FireEntityInput("MediumExplosion", "Explode", "", 0.0),
+					FireEntityInput("MedExploShake", "StartShake", "", 0.0),
+					ServerCommand("sm_freeze @blue 10");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Medium Bomb successfully pushed! Bots froze for 10 seconds. ({limegreen}+5 pts{white})");
 					sacPoints+=5,
 					bombStatusMax+=10,
 					CreateTimer(3.0, BombStatusAddTimer);
@@ -2009,7 +2306,7 @@ public Action Command_Operator(int args){
 					EmitSoundToAll(BMB2SND),
 					FireEntityInput("MediumExplosion", "Explode", "", 0.0),
 					FireEntityInput("MedExploShake", "StartShake", "", 0.0),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Average Bomb successfully pushed! (\x0700FF00+10 pts\x07FFFFFF)");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Large Bomb successfully pushed! ({limegreen}+10 pts{white})");
 					sacPoints+=10,
 					bombStatusMax+=10,
 					CreateTimer(3.0, BombStatusAddTimer);
@@ -2033,7 +2330,7 @@ public Action Command_Operator(int args){
 					FireEntityInput("LargeExploShake", "StartShake", "", 1.7),
 					FireEntityInput("NukeAll", "Enable", "", 1.7),
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07AA0000 NUCLEAR WARHEAD\x07FFFFFF successfully pushed! (\x0700FF00+25 pts\x07FFFFFF)");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}NUCLEAR WARHEAD{white}successfully pushed! ({limegreen}+25 pts{white})");
 					sacPoints+=25,
 					bombStatusMax+=10,
 					CreateTimer(3.0, BombStatusAddTimer);
@@ -2051,7 +2348,7 @@ public Action Command_Operator(int args){
 					EmitSoundToAll(BMB3SND),
 					FireEntityInput("LargeExplosion", "Explode", "", 0.0),
 					FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF Heavy Bomb successfully pushed! (\x0700FF00+15 pts\x07FFFFFF)");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Heavy Bomb successfully pushed! ({limegreen}+15 pts{white})");
 					sacPoints+=15,
 					bombStatusMax+=10,
 					CreateTimer(3.0, BombStatusAddTimer);
@@ -2072,7 +2369,7 @@ public Action Command_Operator(int args){
 					FireEntityInput("NukeAll", "Enable", "", 0.0),
 					FireEntityInput("FB.Fade", "Fade", "", 0.0),
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07AA0000 NUCLEAR WARHEAD\x07FFFFFF successfully pushed! (\x0700FF00+25 pts\x07FFFFFF)");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}NUCLEAR WARHEAD{white}successfully pushed! ({limegreen}+25 pts{white})");
 					sacPoints+=25,
 					bombStatusMax+=10,
 					CreateTimer(3.0, BombStatusAddTimer);
@@ -2095,8 +2392,8 @@ public Action Command_Operator(int args){
 					FireEntityInput("NukeAll", "Enable", "", 0.0),
 					FireEntityInput("FB.Fade", "Fade", "", 0.0),
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07AA0000 HINDENBURG\x07FFFFFF successfully fueled! (\x0700FF00+30 pts\x07FFFFFF)");
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Your team has delivered Hydrogen! The \x07FF0000HINDENBURG \x0700AA55is now ready for flight!");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}HINDENBURG{white}successfully fueled! ({limegreen}+30 pts{white})");
+					CPrintToChatAll("The {red}HINDENBURG {forestgreen}is now ready for flight!");
 					FireEntityInput("DeliveryBurg", "Unlock", "", 0.0);
 					bombStatus = 0;
 					canHindenburg = true;
@@ -2118,13 +2415,13 @@ public Action Command_Operator(int args){
 		}
 		//Tank deployed its bomb
 		case 16:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A tank has deployed its bomb! (\x0700FF00+1 pt\x07FFFFFF)");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has deployed its bomb! ({limegreen}+1 pt{white})");
 			onslaughter = false;
 		}
 		//Shark Enable & notify bomb push began
 		case 20:{
 			bombProgression = true;
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0755AA55Bomb push in progress.");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Bomb push in progress.");
 			CreateTimer(3.0, SharkTimer);
 		}
 		//Shark Disable
@@ -2143,7 +2440,7 @@ public Action Command_Operator(int args){
 		}
 		//HINDENBOOM!!!
 		case 29:{
-			PrintToChatAll("\x070000AA[\x07AA0000CORE\x070000AA]\x07FFFFFF OH GOD, THEY'RE \x07AA0000CRASHING THE HINDENBURG\x07FFFFFF!!!");
+			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}OH GOD, THEY'RE {red}CRASHING THE HINDENBURG{white}!!!");
 			EmitSoundToAll(HINDENCRASH);
 			CreateTimer(4.0, TimedOperator, 21);
 			CreateTimer(7.0, TimedOperator, 37);
@@ -2162,7 +2459,7 @@ public Action Command_Operator(int args){
 		}
 		//Bath Salts spend
 		case 30:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF INSTANT BATH SALT DETONATION! BOTS ARE FROZEN FOR 10 SECONDS! (\x07FF0000-10 pts\x07FFFFFF)");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}INSTANT BATH SALT DETONATION! BOTS ARE FROZEN FOR 10 SECONDS! ({red}-10 pts{white})");
 			ServerCommand("sm_freeze @blue 10");
 			sacPoints = (sacPoints - 10);
 			FireEntityInput("BTN.Sacrificial*", "Color", "0 0 0", 0.0),
@@ -2173,7 +2470,7 @@ public Action Command_Operator(int args){
 		}
 		//Fat man spend
 		case 31:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF INSTANT FAT MAN DETONATION! (\x07FF0000-20 pts\x07FFFFFF)");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}INSTANT FAT MAN DETONATION! ({red}-20 pts{white})");
 			sacPoints = (sacPoints - 20);
 			FireEntityInput("BTN.Sacrificial*", "Color", "0 0 0", 0.0);
 			FireEntityInput("BTN.Sacrificial02", "Lock", "", 0.0);
@@ -2189,14 +2486,14 @@ public Action Command_Operator(int args){
 			int i = GetRandomInt(1, 2);
 			switch (i){
 				case 1:{
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF GOOBBUE COMING IN FROM ORBIT! (\x07FF0000-30 pts\x07FFFFFF)");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}GOOBBUE COMING IN FROM ORBIT! ({red}-30 pts{white})");
 					sacPoints = (sacPoints - 30);
 					CustomSoundEmitter(SPEC01, SFXSNDLVL, false);
 					CreateTimer(1.5, TimedOperator, 21);
 					FireEntityInput("FB.GiantGoobTemplate", "ForceSpawn", "", 3.0);
 				}
 				case 2:{
-					PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF BLUE KIRBY FALLING OUT OF THE SKY! (\x07FF0000-30 pts\x07FFFFFF)");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}BLUE KIRBY FALLING OUT OF THE SKY! ({red}-30 pts{white})");
 					sacPoints = (sacPoints - 30);
 					FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 0.0);
 					CustomSoundEmitter(FALLSND0B, SFXSNDLVL, false);
@@ -2205,10 +2502,10 @@ public Action Command_Operator(int args){
 		}
 		//Explosive paradise spend
 		case 33:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF We're spending most our lives living in an EXPLOSIVE PARADISE! Robots will be launched into orbit, too! (\x07FF0000-40 pts\x07FFFFFF)");
 			CustomSoundEmitter(EXPLOSIVEPARADISE, SFXSNDLVL, false);
 			FireEntityInput("FB.FadeBLCK", "Fade", "", 0.0);
 			ServerCommand("sm_evilrocket @blue");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}We're spending most our lives living in an EXPLOSIVE PARADISE! Robots will be launched into orbit, too! ({red}-40 pts{white})");
 			FireEntityInput("NukeAll", "Enable", "", 11.50);
 			FireEntityInput("HUGEExplosion", "Explode", "", 11.50);
 			FireEntityInput("FB.Fade", "Fade", "", 11.50);
@@ -2218,7 +2515,7 @@ public Action Command_Operator(int args){
 		}
 		//Ass Gas spend
 		case 34:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF ANYTHING BUT THE ASS GAS!!!! (\x07FF0000-40 pts\x07FFFFFF)");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}ANYTHING BUT THE ASS GAS!!!! ({red}-40 pts{white})");
 			sacPoints = (sacPoints - 40);
 			FireEntityInput("HurtAll", "AddOutput", "damagetype 524288", 0.0);
 			FireEntityInput("FB.ShakeBOOM", "StartShake", "", 0.1);
@@ -2228,22 +2525,21 @@ public Action Command_Operator(int args){
 		}
 		//Banish tornadoes for the wave
 		case 35:{
-			if(tornado){
-				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A PINK KIRBY HAS BANISHED TORNADOES FOR THIS WAVE! (\x07FF0000-50 pts\x07FFFFFF)");
+			if(canTornado || tornado){
+				CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A PINK KIRBY HAS BANISHED TORNADOES FOR THIS WAVE! ({red}-50 pts{white})");
 				ServerCommand("fb_operator 1005");
 				canTornado = false;
 				sacPoints = (sacPoints - 50);
 			}
 			else{
-				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF A PINK KIRBY HAS BANISHED TORNADOES.... BUT NO TORNADO WAS ACTIVE? (\x07FFFF00REFUNDED 50 pts\x07FFFFFF)");
+				CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A PINK KIRBY HAS BANISHED TORNADOES.... BUT CANTORNADO and TORNADO WERE BOTH FALSE... CALL A PROGRAMMER. ({red} -0 pts{white})");
 				ServerCommand("fb_operator 1005");
 				canTornado = false;
-				sacPoints = (sacPoints - 50);
 			}
 		}
 		//Nuclear fallout spend
 		case 36:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF TOTAL ATOMIC ANNIHILATION. (\x07FF0000-60 pts\x07FFFFFF)");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}TOTAL ATOMIC ANNIHILATION. ({red}-60 pts{white})");
 			sacPoints = (sacPoints - 60);
 			canSENTNukes = true;
 			CreateTimer(1.0, SENTNukeTimer);
@@ -2251,7 +2547,7 @@ public Action Command_Operator(int args){
 		}
 		//Meteor shower spend
 		case 37:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF COSMIC DEVASTATION IMMINENT. (\x07FF0000-70 pts\x07FFFFFF)");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}COSMIC DEVASTATION IMMINENT. ({red}-70 pts{white})");
 			sacPoints = (sacPoints - 70);
 			canSENTMeteors = true;
 			CreateTimer(1.0, SENTMeteorTimer);
@@ -2259,7 +2555,7 @@ public Action Command_Operator(int args){
 		}
 		//Fartsy of the Seventh Taco Bell
 		case 38:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF NOW PRESENTING... PROFESSOR FARTSALOT OF THE SEVENTH TACO BELL! (\x07FF0000-100 points\x07FFFFFF)");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}NOW PRESENTING... PROFESSOR FARTSALOT OF THE SEVENTH TACO BELL! ({red}-100 points{white})");
 			sacPoints = (sacPoints - 100);
 			explodeType = 69;
 			FireEntityInput("Delivery", "Unlock", "", 0.0),
@@ -2269,14 +2565,14 @@ public Action Command_Operator(int args){
 		}
 		//Found blue ball
 		case 40:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55What on earth IS that? It appears to be a... \x075050FFBLUE BALL\x07FFFFFF!");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}What on earth IS that? It appears to be a... \x075050FFBLUE BALL{white}!");
 			CustomSoundEmitter(FALLSND0B, SFXSNDLVL, false);
 			FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 4.0);
 			CreateTimer(4.0, TimedOperator, 21);
 		}
 		//Found burrito
 		case 41:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Why would you even eat \x07FF0000The Forbidden Burrito\x07FFFFFF?");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Why would you even eat {red}The Forbidden Burrito{white}?");
 			CustomSoundEmitter("vo/sandwicheat09.mp3", SFXSNDLVL, false);
 			FireEntityInput("HurtAll", "AddOutput", "damagetype 8", 0.0);
 			FireEntityInput("HurtAll", "Enable", "", 4.0);
@@ -2285,19 +2581,19 @@ public Action Command_Operator(int args){
 		//Found goobbue
 		case 42:{
 			CustomSoundEmitter(SPEC01, SFXSNDLVL, false);
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55ALL HAIL \x07FF00FFGOOBBUE\x0700AA55!");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}ALL HAIL \x07FF00FFGOOBBUE{forestgreen}!");
 			CreateTimer(4.0, TimedOperator, 21);
 			FireEntityInput("FB.GiantGoobTemplate", "ForceSpawn", "", 4.0);
 		}
 		//Found Mario
 		case 43:{
 			CustomSoundEmitter(SPEC02, SFXSNDLVL, false);
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Welp, someone is playing \x0700FF00Mario\x07FFFFFF...");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Welp, someone is playing \x0700FF00Mario{white}...");
 		}
 		//Found Waffle
 		case 44:{
 			CustomSoundEmitter(SPEC03, SFXSNDLVL, false);
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x0700AA55Oh no, someone has found and (probably) consumed a \x07FF0000WAFFLE OF MASS DESTRUCTION\x07FFFFFF!");
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Oh no, someone has found and (probably) consumed a {red}WAFFLE OF MASS DESTRUCTION{white}!");
 			FireEntityInput("HurtAll", "AddOutput", "damagetype 262144", 10.0);
 			FireEntityInput("FB.ShakeBOOM", "StartShake", "", 10.3);
 			FireEntityInput("HUGEExplosion", "Explode", "", 10.3);
@@ -2344,13 +2640,13 @@ public Action Command_Operator(int args){
 			int prev_wave = current_wave - 1;
 			if(prev_wave >= max_wave)
 			{
-				PrintToChatAll("\x07AA0000[ERROR] \x07FFFFFFHOW THE HELL DID WE GET HERE?!");
+				CPrintToChatAll("{red}[ERROR] {white}HOW THE HELL DID WE GET HERE?!");
 				return Plugin_Handled;
 			}
 
 			if(prev_wave < 1)
 			{
-				PrintToChatAll("\x07AA0000[ERROR] \x07FFFFFFWE CAN'T JUMP TO WAVE 0, WHY WOULD YOU TRY THAT??");
+				CPrintToChatAll("{red}[ERROR] {white}WE CAN'T JUMP TO WAVE 0, WHY WOULD YOU TRY THAT??");
 				return Plugin_Handled;
 			}
 			JumpToWave(prev_wave);
@@ -2373,7 +2669,7 @@ public Action Command_Operator(int args){
 				ServerCommand("tf_mvm_force_victory 1");
 				FakeClientCommand(0, ""); //Not sure why, but this has to be here. Otherwise the specified commands simply refuse to work...
 				SetCommandFlags("tf_mvm_force_victory", flags|FCVAR_CHEAT);
-				PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA]\x07FFFFFF VICTORY HAS BEEN FORCED! THE SERVER WILL RESTART IN 10 SECONDS.");
+				CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}VICTORY HAS BEEN FORCED! THE SERVER WILL RESTART IN 10 SECONDS.");
 				CreateTimer(10.0, TimedOperator, 100);
 				return Plugin_Handled;
 			}
@@ -2426,7 +2722,7 @@ public Action Command_Operator(int args){
 		case 210:{
 			tacobell = true;
 			ServerCommand("fb_startmoney 200000");
-			PrintToChatAll("\x070000AA[\x07AAAA00INFO\x070000AA] \x07FFFFFFYou have chosen \x07AA0000DOVAH'S ASS - TACO BELL EDITION\x07FFFFFF. Why... Why would you DO THIS?! Do you not realize what you've just done?????");
+			CPrintToChatAll("{darkviolet}[{orange}INFO{darkviolet}] {white}You have chosen {red}DOVAH'S ASS - TACO BELL EDITION{white}. Why... Why would you DO THIS?! Do you not realize what you've just done?????");
 		}
 		// Select BGM
 		case 1000:{
@@ -2739,7 +3035,7 @@ public Action PerformWaveSetup(){
 public Action TimedOperator(Handle timer, int job){
 	switch(job){
 		case 0:{
-			PrintToChatAll("\x070000AA[\x0700AA00CORE\x070000AA] \x07FFFFFFWave %i: \x0700AA00%s", curWave, songName);
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave %i: {forestgreen}%s", curWave, songName);
 		}
 		case 1:{
 			int BGM = GetRandomInt(1, 2);
@@ -2906,4 +3202,26 @@ public Action TimedOperator(Handle timer, int job){
 		}
 	}
 	return Plugin_Stop;
+}
+
+//Log Damage!
+public void Event_Playerhurt(Handle event, const char[] name, bool dontBroadcast)
+{
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+	int damage = GetEventInt(event, "damageamount");
+	if(IsValidClient(attacker) && attacker != client)
+	{
+		char query[256];
+		int steamID = GetSteamAccountID(attacker);
+		PrintToConsole(attacker, "Writing new myDmg value %i", damage);
+		if (!FB_Database){
+			return;
+		}
+		if (!steamID){	
+			return;
+		}
+		Format(query, sizeof(query), "UPDATE ass_activity SET damagedealt = damagedealt + %i, damagedealtsession = damagedealtsession + %i WHERE steamid = %i;", damage, damage, steamID);
+		FB_Database.Query(Database_FastQuery, query);
+	}
 }
