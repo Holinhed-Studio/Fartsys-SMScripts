@@ -166,7 +166,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.2.2",
+	version = "4.2.4",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -333,10 +333,10 @@ public void MyStats(Database db, DBResultSet results, const char[] error, any da
 		bombsresetsession = results.FetchInt(12); //bombs reset session
 		sacrifices = results.FetchInt(13); //sacrifices
 		sacrificessession = results.FetchInt(14); //sacrifices session
-		results.FetchString(13, lastkilledname, sizeof(lastkilledname)); //last client killed
-		results.FetchString(14, lastusedweapon, sizeof(lastusedweapon)); //using weapon
-		results.FetchString(15, killedbyname, sizeof(killedbyname)); //last client that killed
-		results.FetchString(16, killedbyweapon, sizeof(killedbyweapon)); //using weapon
+		results.FetchString(15, lastkilledname, sizeof(lastkilledname)); //last client killed
+		results.FetchString(16, lastusedweapon, sizeof(lastusedweapon)); //using weapon
+		results.FetchString(17, killedbyname, sizeof(killedbyname)); //last client that killed
+		results.FetchString(18, killedbyweapon, sizeof(killedbyweapon)); //using weapon
 	}
 	CPrintToChat(client,"\x07AAAAAA[CORE] Showing stats of %s   [%s] || SteamID: %i ", name, class, steamID);
 	CPrintToChat(client,"{white}Damage Dealt: %i (Session: %i) || Kills: %i (Session: %i) || Deaths: %i (Session: %i) || Bombs Reset: %i (Session: %i)", damagedealt, damagedealtsession, kills, killssession, deaths, deathssession, bombsreset, bombsresetsession);
@@ -1589,58 +1589,73 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 
 		if ((damagebits & (1 << 5)) && !attacker && tornado) //DMG_FALL // tornado (32)
 		{
-			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}YEETED OUT INTO ORBIT{white}!", client);
-			weapon = "Yeeted into Orbit by a Tornado";
-			int i = GetRandomInt(1, 16);
-			switch (i){
-				case 1:{
-					CustomSoundEmitter(FALLSND01, SFXSNDLVL, false);
-				}
+			switch(GetClientTeam(client)){
 				case 2:{
-					CustomSoundEmitter(FALLSND02, SFXSNDLVL, false);
+					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}YEETED OUT INTO ORBIT{white}!", client);
+					weapon = "Yeeted into Orbit by a Tornado";
 				}
 				case 3:{
-					CustomSoundEmitter(FALLSND03, SFXSNDLVL, false);
-				}
-				case 4:{
-					CustomSoundEmitter(FALLSND04, SFXSNDLVL, false);
-				}
-				case 5:{
-					CustomSoundEmitter(FALLSND05, SFXSNDLVL, false);
-				}
-				case 6:{
-					CustomSoundEmitter(FALLSND06, SFXSNDLVL, false);
-				}
-				case 7:{
-					CustomSoundEmitter(FALLSND07, SFXSNDLVL, false);
-				}
-				case 8:{
-					CustomSoundEmitter(FALLSND08, SFXSNDLVL, false);
-				}
-				case 9:{
-					CustomSoundEmitter(FALLSND09, SFXSNDLVL, false);
-				}
-				case 10:{
-					CustomSoundEmitter(FALLSND0A, SFXSNDLVL, false);
-				}
-				case 11:{
-					CustomSoundEmitter(FALLSND0B, SFXSNDLVL, false),
-					FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 0.0);
-				}
-				case 12:{
-					CustomSoundEmitter(FALLSND0C, SFXSNDLVL, false);
-				}
-				case 13:{
-					CustomSoundEmitter(FALLSND0D, SFXSNDLVL, false);
-				}
-				case 14:{
-					CustomSoundEmitter(FALLSND0E, SFXSNDLVL, false);
-				}
-				case 15:{
-					CustomSoundEmitter(FALLSND0F, SFXSNDLVL, false);
-				}
-				case 16:{
-					CustomSoundEmitter(FALLSND10, SFXSNDLVL, false);
+					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}YEETED OUT INTO ORBIT{white}! ({limegreen}+1 pt{white})", client);
+					sacPoints++;
+					int i = GetRandomInt(1, 16);
+					switch (i){
+						case 1:{
+							CustomSoundEmitter(FALLSND01, SFXSNDLVL, false);
+						}
+						case 2:{
+							CustomSoundEmitter(FALLSND02, SFXSNDLVL, false);
+						}
+						case 3:{
+							CustomSoundEmitter(FALLSND03, SFXSNDLVL, false);
+						}
+						case 4:{
+							CustomSoundEmitter(FALLSND04, SFXSNDLVL, false);
+						}
+						case 5:{
+							CustomSoundEmitter(FALLSND05, SFXSNDLVL, false);
+						}
+						case 6:{
+							CustomSoundEmitter(FALLSND06, SFXSNDLVL, false);
+						}
+						case 7:{
+							CustomSoundEmitter(FALLSND07, SFXSNDLVL, false);
+						}
+						case 8:{
+							CustomSoundEmitter(FALLSND08, SFXSNDLVL, false);
+						}
+						case 9:{
+							CustomSoundEmitter(FALLSND09, SFXSNDLVL, false);
+						}
+						case 10:{
+							CustomSoundEmitter(FALLSND0A, SFXSNDLVL, false);
+						}
+						case 11:{
+							CustomSoundEmitter(FALLSND0B, SFXSNDLVL, false),
+							FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 0.0);
+						}
+						case 12:{
+							CustomSoundEmitter(FALLSND0C, SFXSNDLVL, false);
+						}
+						case 13:{
+							CustomSoundEmitter(FALLSND0D, SFXSNDLVL, false);
+						}
+						case 14:{
+							CustomSoundEmitter(FALLSND0E, SFXSNDLVL, false);
+						}
+						case 15:{
+							CustomSoundEmitter(FALLSND0F, SFXSNDLVL, false);
+						}
+						case 16:{
+							CustomSoundEmitter(FALLSND10, SFXSNDLVL, false);
+						}
+					}
+
+					if(bombStatus >= bombStatusMax){
+						return Plugin_Handled;
+					}
+					else{
+						bombStatus++;
+					}
 				}
 			}
 		}
@@ -1926,7 +1941,7 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
 		CreateTimer(40.0, SelectAdminTimer);
 	}
     FireEntityInput("rain", "Alpha", "0", 0.0);
-    CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave {red}failed{white}successfully!");
+    CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave {red}failed {white}successfully!");
     FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
     FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
     FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
@@ -2197,16 +2212,8 @@ public Action Command_Operator(int args){
 			}
 			return Plugin_Handled;
 		}
-		//Tornado Sacrifice (+1)
+		//No longer needed.
 		case 10:{
-			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Sacrificed a client into orbit. ({limegreen}+1 pt{white})");
-			sacPoints++;
-			if(bombStatus >= bombStatusMax){
-				return Plugin_Handled;
-			}
-			else{
-				bombStatus++;
-			}
 		}
 		//Death pit sacrifice (+1)
 		case 11:{
@@ -2392,7 +2399,7 @@ public Action Command_Operator(int args){
 					FireEntityInput("NukeAll", "Enable", "", 0.0),
 					FireEntityInput("FB.Fade", "Fade", "", 0.0),
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
-					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}HINDENBURG{white}successfully fueled! ({limegreen}+30 pts{white})");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}HINDENBURG {white}successfully fueled! ({limegreen}+30 pts{white})");
 					CPrintToChatAll("The {red}HINDENBURG {forestgreen}is now ready for flight!");
 					FireEntityInput("DeliveryBurg", "Unlock", "", 0.0);
 					bombStatus = 0;
