@@ -1727,8 +1727,18 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 
 		if ((damagebits & (1 << 10)) && !attacker) //DMG_ENERGYBEAM (1024)
 		{
-			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been vaporized by a {red}HIGH ENERGY PHOTON BEAM{white}!", client);
-			weapon = "Onslaughter or Crusader Laser";
+			if(crusader){
+				CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been vaporized by {red}THE CRUSADER{white}!", client);
+				weapon = "Crusader";
+			}
+			else if(onslaughter){
+				CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been vaporized by {red}THE ONSLAUGHTER{white}!", client);
+				weapon = "Onslaughter";	
+			}
+			else{
+				CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been vaporized by a {red}HIGH ENERGY PHOTON BEAM{white}!", client);
+				weapon = "HE Photon Beam";
+			}
 		}
 
 		if ((damagebits & (1 << 14)) && !attacker && GetClientTeam(client) == 2) //DMG_DROWN (16384)
@@ -2045,10 +2055,39 @@ public Action Command_Operator(int args){
 		}
 		//Prepare yourself!
 		case 1:{
-            tacobell = false;
-            ServerCommand("fb_startmoney 50000");
-            CPrintToChatAll("{darkviolet}[{yellow}INFO{darkviolet}] {red}PROFESSOR'S ASS {white}v0x1A. Prepare yourself for the unpredictable... [{limegreen}by TTV/ProfessorFartsalot{white}]");
-            FireEntityInput("rain", "Alpha", "0", 0.0);
+			char mapName[64];
+			tacobell = false;
+			ServerCommand("fb_startmoney 50000");
+			CPrintToChatAll("{darkviolet}[{yellow}INFO{darkviolet}] {red}PROFESSOR'S ASS {white}v0x1A. Prepare yourself for the unpredictable... [{limegreen}by TTV/ProfessorFartsalot{white}]");
+			GetCurrentMap(mapName, sizeof(mapName));
+			FireEntityInput("rain", "Alpha", "0", 0.0);
+			//Prepare for the end times....
+			if (StrContains(mapName, "R1A", true) || StrContains(mapName, "R1B", true) || StrContains(mapName, "R1C", true) || StrContains(mapName, "R1D", true) || StrContains(mapName, "R1E", true) || StrContains(mapName, "R1F", true)){
+				int i = GetRandomInt(1, 7);
+				switch(i){
+					case 1:{
+						CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}Fartsy... what have you done???{white}");
+					}
+					case 2:{
+						CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}The end is NEAR...{white}");
+					}
+					case 3:{
+						CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}The ass grows ever stronger...{white}");
+					}
+					case 4:{
+						CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}Muahahahahahahahaha, so MUCH POWER!{white}");
+					}
+					case 5:{
+						CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}Just a little further.... JUST.. a LITTLE... FURTHER!{white}");
+					}
+					case 6:{
+						CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}Investigate if you dare...{white}");
+					}
+					case 7:{
+						CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}Come... JOIN US. Throw wide the gates!{white}");
+					}
+				}
+			}
 		}
 		//Wave init
 		case 2:{
