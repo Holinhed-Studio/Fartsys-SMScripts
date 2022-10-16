@@ -41,8 +41,8 @@ bool bgmlock7 = true;
 bool bgmlock8 = true;
 bool bgmlock9 = true;
 bool onslaughter = false;
-bool sacrificedByClient = false; //Was the robot sacrificed by the client?
 bool tacobell = false;
+bool sacrificedByClient = false;
 bool TornadoWarningIssued = false;
 Database FB_Database;
 static char BELL[32] = "fartsy/misc/bell.wav";
@@ -166,7 +166,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.2.4",
+	version = "4.2.7",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -251,6 +251,7 @@ public void OnPluginStart(){
     RegConsoleCmd("sm_song", Command_GetCurrentSong, "Get current song name"),
 	RegConsoleCmd("sm_stats", Command_MyStats, "Print current statistics"),
 	RegConsoleCmd("sm_return", Command_Return, "Return to Spawn"),
+	RegConsoleCmd("sm_sacpoints", Command_SacrificePointShop, "Fartsy's Annihilation Supply Shop"),
 	RegConsoleCmd("sm_discord", Command_Discord, "Join our Discord server!"),
 	RegConsoleCmd("sm_sounds", Command_Sounds, "Toggle sounds on or off via menu"),
     HookEvent("player_death", EventDeath),
@@ -492,6 +493,185 @@ public int MenuHandlerFartsy(Menu menu, MenuAction action, int param1, int param
 		IntToString(soundPreference[param1], buffer, 5);
 		SetClientCookie(param1, cSNDPref, buffer);
 		Command_Sounds(param1, 0);
+	}
+	else if(action == MenuAction_End)
+	{
+		CloseHandle(menu);
+	}
+}
+
+//Fartsy's A.S.S
+public Action Command_SacrificePointShop(int client, int args){
+	ShowFartsysAss(client);
+	return Plugin_Handled;
+}
+//Fartsy's A.S.S
+public void ShowFartsysAss(int client){
+	if(sacPoints<=9 || !isWave){
+		if(isWave){
+			PrintToChat(client, "[CORE] ERROR: You do not have enough sacPoints. This command requires at least 10. You have %i", sacPoints);
+		}
+		else{
+			PrintToChat(client, "[CORE] ERROR: You may not use this command between waves.");
+		}
+	}
+	else{
+		Menu menu = new Menu(MenuHandlerFartsysAss, MENU_ACTIONS_DEFAULT);
+		char buffer[100];
+		menu.SetTitle("Fartsy's Annihilation Supply Shop");
+		menu.ExitButton = true;
+		switch(sacPoints){
+			case 10,11,12,13,14,15,16,17,18,19:{
+				menu.AddItem(buffer, "[10] Kissone Bath Salts");
+				menu.Display(client, 20);
+			}
+			case 20,21,22,23,24,25,26,27,28,29:{
+				menu.AddItem(buffer, "[10] Kissone Bath Salts");
+				menu.AddItem(buffer, "[20] Instant Fat Man");
+				menu.Display(client, 20);
+			}
+			case 30,31,32,33,34,35,36,37,38,39:{
+				menu.AddItem(buffer, "[10] Kissone Bath Salts");
+				menu.AddItem(buffer, "[20] Instant Fat Man");
+				menu.AddItem(buffer, "[30] Summon Goobbue or Kirby");
+				menu.Display(client, 20);
+			}
+			case 40,41,42,43,44,45,46,47,48,49:{
+				menu.AddItem(buffer, "[10] Kissone Bath Salts");
+				menu.AddItem(buffer, "[20] Instant Fat Man");
+				menu.AddItem(buffer, "[30] Summon Goobbue or Kirby");
+				menu.AddItem(buffer, "[40] Explosives Paradise");
+				menu.Display(client, 20);
+			}
+			case 50,51,52,53,54,55,56,57,58,59:{
+				menu.AddItem(buffer, "[10] Kissone Bath Salts");
+				menu.AddItem(buffer, "[20] Instant Fat Man");
+				menu.AddItem(buffer, "[30] Summon Goobbue or Kirby");
+				menu.AddItem(buffer, "[40] Explosives Paradise");
+				menu.AddItem(buffer, "[50] Ass Gas");
+				menu.AddItem(buffer, "[50] Banish Tornadoes");
+				menu.Display(client, 20);
+			}
+			case 60,61,62,63,64,65,66,67,68,69:{
+				menu.AddItem(buffer, "[10] Kissone Bath Salts");
+				menu.AddItem(buffer, "[20] Instant Fat Man");
+				menu.AddItem(buffer, "[30] Summon Goobbue or Kirby");
+				menu.AddItem(buffer, "[40] Explosives Paradise");
+				menu.AddItem(buffer, "[50] Ass Gas");
+				menu.AddItem(buffer, "[50] Banish Tornadoes");
+				menu.AddItem(buffer, "[60] Total Atomic Annihilation");
+				menu.Display(client, 20);
+			}
+			case 70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99:{
+				menu.AddItem(buffer, "[10] Kissone Bath Salts");
+				menu.AddItem(buffer, "[20] Instant Fat Man");
+				menu.AddItem(buffer, "[30] Summon Goobbue or Kirby");
+				menu.AddItem(buffer, "[40] Explosives Paradise");
+				menu.AddItem(buffer, "[50] Ass Gas");
+				menu.AddItem(buffer, "[50] Banish Tornadoes");
+				menu.AddItem(buffer, "[60] Total Atomic Annihilation");
+				menu.AddItem(buffer, "[70] Meteorites");
+				menu.Display(client, 20);
+			}
+			case 100:{
+				menu.AddItem(buffer, "[10] Kissone Bath Salts");
+				menu.AddItem(buffer, "[20] Instant Fat Man");
+				menu.AddItem(buffer, "[30] Summon Goobbue or Kirby");
+				menu.AddItem(buffer, "[40] Explosives Paradise");
+				menu.AddItem(buffer, "[50] Ass Gas");
+				menu.AddItem(buffer, "[50] Banish Tornadoes");
+				menu.AddItem(buffer, "[60] Total Atomic Annihilation");
+				menu.AddItem(buffer, "[70] Meteorites");
+				menu.AddItem(buffer, "[75] 150,000 UbUp Cash");
+				menu.AddItem(buffer, "[100] Professor Fartsalot");
+				menu.Display(client, 20);
+			}
+		}
+	}
+}
+
+//Also Fartsy's A.S.S
+public int MenuHandlerFartsysAss(Menu menu, MenuAction action, int param1, int param2){
+	if(action == MenuAction_Select)
+	{
+		PrintToChatAll("Got %i", param2);
+		switch(param2){
+			case 0:{
+				if (sacPoints <=9){
+					return;
+				}
+				else{
+					ServerCommand("fb_operator 30");
+				}
+			}
+			case 1:{
+				if (sacPoints <=19){
+					return;
+				}
+				else{
+					ServerCommand("fb_operator 31");
+				}
+			}
+			case 2:{
+				if (sacPoints <=29){
+					return;
+				}
+				else{
+					ServerCommand("fb_operator 32");
+				}
+			}
+			case 3:{
+				if (sacPoints <=39){
+					return;
+				}
+				else{
+					ServerCommand("fb_operator 33");
+				}
+			}
+			case 4,5:{
+				if (sacPoints <=49){
+					return;
+				}
+				else{
+					ServerCommand("fb_operator 34");
+				}
+			}
+			case 6:{
+				if (sacPoints <=59){
+					return;
+				}
+				else{
+					ServerCommand("fb_operator 36");
+				}
+			}
+			case 7:{
+				if (sacPoints <=69){
+					return;
+				}
+				else{
+					ServerCommand("fb_operator 37");
+				}
+
+			}
+			case 8:{
+				if (sacPoints <=74){
+					return;
+				}
+				else{
+					ServerCommand("fb_operator 38");
+				}
+
+			}
+			case 9:{
+				if (sacPoints <=99){
+					return;
+				}
+				else{
+					ServerCommand("fb_operator 39");
+				}
+
+			}
+		}
 	}
 	else if(action == MenuAction_End)
 	{
@@ -923,15 +1103,6 @@ public Action SENTMeteorTimer(Handle timer){
 			case 5:{
 				FireEntityInput("FB.SentMeteor05", "ForceSpawn", "", 0.0);
 			}
-			case 6:{
-				FireEntityInput("FB.SentMeteor06", "ForceSpawn", "", 0.0);
-			}
-			case 7:{
-				FireEntityInput("FB.SentMeteor07", "ForceSpawn", "", 0.0);
-			}
-			case 8:{
-				FireEntityInput("FB.SentMeteor08", "ForceSpawn", "", 0.0);
-			}
 		}
 	}
 	return Plugin_Stop;
@@ -963,15 +1134,6 @@ public Action SENTNukeTimer(Handle timer){
 			case 5:{
 				FireEntityInput("FB.SentNuke05", "ForceSpawn", "", 0.0);
 			}
-			case 6:{
-				FireEntityInput("FB.SentNuke06", "ForceSpawn", "", 0.0);
-			}
-			case 7:{
-				FireEntityInput("FB.SentNuke07", "ForceSpawn", "", 0.0);
-			}
-			case 8:{
-				FireEntityInput("FB.SentNuke08", "ForceSpawn", "", 0.0);
-			}
 		}
 		float f = GetRandomFloat(1.5, 3.0);
 		CreateTimer(f, SENTNukeTimer);
@@ -987,7 +1149,7 @@ public Action DisableSENTNukes(Handle timer){
 //SENTStars (Scripted Entity Stars)
 public Action SENTStarTimer(Handle timer){
 	if(canSENTStars){
-		int i = GetRandomInt(1, 8);
+		int i = GetRandomInt(1, 5);
 		switch(i){
 			case 1:{
 				FireEntityInput("FB.SentStar01", "ForceSpawn", "", 0.0);
@@ -1003,15 +1165,6 @@ public Action SENTStarTimer(Handle timer){
 			}
 			case 5:{
 				FireEntityInput("FB.SentStar05", "ForceSpawn", "", 0.0);
-			}
-			case 6:{
-				FireEntityInput("FB.SentStar06", "ForceSpawn", "", 0.0);
-			}
-			case 7:{
-				FireEntityInput("FB.SentStar07", "ForceSpawn", "", 0.0);
-			}
-			case 8:{
-				FireEntityInput("FB.SentStar08", "ForceSpawn", "", 0.0);
 			}
 		}
 		float f = GetRandomFloat(0.75, 1.5);
@@ -1234,142 +1387,6 @@ public Action SacrificePointsUpdater(Handle timer){
 		if (sacPoints > sacPointsMax){
 			sacPoints = sacPointsMax;
 		}
-		switch (sacPoints){
-			case 0,1,2,3,4,5,6,7,8,9:{
-				FireEntityInput("BTN.Sacrificial*", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
-			}
-			case 10,11,12,13,14,15,16,17,18,19:{
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
-			}
-			case 20,21,22,23,24,25,26,27,28,29:{
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
-			}
-			case 30,31,32,33,34,35,36,37,38,39:{
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
-			}
-			case 40,41,42,43,44,45,46,47,48,49:{
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
-			}
-			case 50,51,52,53,54,55,56,57,58,59:{
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
-			}
-			case 60,61,62,63,64,65,66,67,68,69:{
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Color", "0", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
-			}
-			case 70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99:{
-				FireEntityInput("BTN.Sacrificial01", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial01", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial02", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial03", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial04", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial05", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial06", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial07", "Color", "0 255 0", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Lock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial10", "Color", "0", 0.0);
-			}
-			case 100:{
-				FireEntityInput("BTN.Sacrificial*", "Unlock", "", 0.0),
-				FireEntityInput("BTN.Sacrificial*", "Color", "0 255 0", 0.0);
-			}
-		}
 	}
 	return Plugin_Stop;
 }
@@ -1535,40 +1552,13 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
     int attacker = GetClientOfUserId(Spawn_Event.GetInt("attacker"));
     char weapon[32];
     Spawn_Event.GetString("weapon", weapon, sizeof(weapon));
-    if(GetClientTeam(client) == 3 && (bombReset == true || sacrificedByClient == true)){ //If we reset the bomb
-		if (attacker <= MaxClients && IsClientInGame(attacker) && bombReset == true){
-			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%N {white}has reset the ass! ({limegreen}+5 pts{white})", attacker);
-			bombReset = false;
-			char query[256];
-			int steamID = GetSteamAccountID(attacker);
-			if (!FB_Database){
-				return Plugin_Handled;
-			}
-			if (!steamID){	
-				return Plugin_Handled;
-			}
-			Format(query, sizeof(query), "UPDATE ass_activity SET bombsreset = bombsreset + 1, bombsresetsession = bombsresetsession + 1 WHERE steamid = %i;", steamID);
-			FB_Database.Query(Database_FastQuery, query);
-		}
-		else if (attacker <= MaxClients && IsClientInGame(attacker) && sacrificedByClient == true){
-			sacrificedByClient = false;
-			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%N {white}has sacrificed {blue}%N {white}for the ass! ({limegreen}+1 pt{white})", attacker, client);
-			bombReset = false;
-			char query[256];
-			int steamID = GetSteamAccountID(attacker);
-			if (!FB_Database){
-				return Plugin_Handled;
-			}
-			if (!steamID){	
-				return Plugin_Handled;
-			}
-			Format(query, sizeof(query), "UPDATE ass_activity SET sacrifices = sacrifices + 1, sacrificessession = sacrificessession + 1 WHERE steamid = %i;", steamID); //Eventually we will want to replace this with sacrifices, sacrificessession.
-			FB_Database.Query(Database_FastQuery, query);
-		}
-		return Plugin_Handled;
-	}
     if (0 < client <= MaxClients && IsClientInGame(client)){
 		int damagebits = Spawn_Event.GetInt("damagebits");
+		if(attacker>0 && sacrificedByClient){//Was the client Sacrificed?
+			SacrificeClient(client, attacker, bombReset);
+			sacrificedByClient = false;
+		}
+
 		if ((damagebits & (1 << 0)) && !attacker) //DMG_CRUSH (1)
     	{
 			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was crushed by a {red}FALLING ROCK FROM OUTER SPACE{white}!", client);
@@ -1741,12 +1731,11 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			weapon = "Onslaughter or Crusader Laser";
 		}
 
-		if ((damagebits & (1 << 14)) && !attacker) //DMG_DROWN (16384)
+		if ((damagebits & (1 << 14)) && !attacker && GetClientTeam(client) == 2) //DMG_DROWN (16384)
 		{
 			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N {red}DROWNED{white}.", client);
 			weapon = "Darwin Award for Drowning";
 		}
-
 		if ((damagebits & (1 << 15)) && !attacker) //DMG_PARALYZE (32768)
 		{
 			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been crushed by a {darkviolet}MYSTERIOUS BLUE BALL{white}!", client);
@@ -1912,7 +1901,7 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
 
 //Announce when we are in danger.
 public Action EventWarning(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
-	CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {red}WARNING{white}: {darkred}PROFESSOR'S ASS IS ABOUT TO BE DEPLOYED!!!");
+	CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {darkred}PROFESSOR'S ASS IS ABOUT TO BE DEPLOYED!!!");
 }
 
 //When the wave fails
@@ -2010,6 +1999,31 @@ public Action DeleteEdict(Handle timer, any entity){
 	if(IsValidEdict(entity)) RemoveEdict(entity);
 	return Plugin_Stop;
 }
+
+public Action SacrificeClient(int client, int attacker, bool wasBombReset){
+    if (attacker <= MaxClients && IsClientInGame(attacker) && wasBombReset == true){
+		CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%N {white}has reset the ass! ({limegreen}+5 pts{white})", attacker);
+		bombReset = false;
+		char query[256];
+		int steamID = GetSteamAccountID(attacker);
+		if (!FB_Database || !steamID){
+			return Plugin_Handled;
+		}
+		Format(query, sizeof(query), "UPDATE ass_activity SET bombsreset = bombsreset + 1, bombsresetsession = bombsresetsession + 1 WHERE steamid = %i;", steamID);
+		FB_Database.Query(Database_FastQuery, query);
+	}
+	else if (attacker <= MaxClients && IsClientInGame(attacker) && wasBombReset == false){
+		CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%N {white}has sacrificed {blue}%N {white}for the ass! ({limegreen}+1 pt{white})", attacker, client);
+		char query[256];
+		int steamID = GetSteamAccountID(attacker);
+		if (!FB_Database || !steamID){
+			return Plugin_Handled;
+		}
+		Format(query, sizeof(query), "UPDATE ass_activity SET sacrifices = sacrifices + 1, sacrificessession = sacrificessession + 1 WHERE steamid = %i;", steamID); //Eventually we will want to replace this with sacrifices, sacrificessession.
+		FB_Database.Query(Database_FastQuery, query);
+	}
+    return Plugin_Handled;
+}	
 
 //Operator
 public Action Command_Operator(int args){
@@ -2212,31 +2226,31 @@ public Action Command_Operator(int args){
 			}
 			return Plugin_Handled;
 		}
-		//No longer needed.
+		//Client was Sacrificed.
 		case 10:{
-		}
-		//Death pit sacrifice (+1)
-		case 11:{
-//			PrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Sent a client to their doom. ({limegreen}+1 pt{white})");
 			sacrificedByClient = true;
-			sacPoints++;
 		}
-		//KissoneTM pit sacrifice (+1)
-		case 12:{
-//			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Dunked a client into liquid death. ({limegreen}+1 pt{white})");
-			sacrificedByClient = true;
-			sacPoints++;
+		case 12:{//Onslaughter dmg relay was killed
+			FireEntityInput("tank_boss", "SetHealth", "1", 0.0),
+			FireEntityInput("TankRelayDMG", "Enable", "", 0.1),
+			FireEntityInput("TankRelayDMG", "Disable", "", 3.0);
 		}
-		//Tank Destroyed (+1), includes hacky method of disabling onslaughter attack system. Just as it was in the original map.
+		//Tank Destroyed (+1), includes disabling onslaughter. Just as it was in the original map. Except now it checks if there's an onslaughter.
 		case 13:{
+			if(!onslaughter){
 			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has been destroyed. ({limegreen}+1 pt{white})");
 			sacPoints++;
-			FireEntityInput("FB.BruteJustice", "Disable", "", 0.0);	
-			FireEntityInput("FB.BruteJusticeTrain", "Stop", "", 0.0);
-			FireEntityInput("FB.BruteJusticeParticles", "Stop", "", 0.0);
-			FireEntityInput("FB.BruteJusticeDMGRelay", "Break", "", 0.0);
-			FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_b_10", 0.5);
-			onslaughter = false;
+			}
+			else{
+				CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}ONSLAUGHTER {white}has been destroyed. ({limegreen}+25 pts{white})");
+				FireEntityInput("FB.BruteJustice", "Disable", "", 0.0);	
+				FireEntityInput("FB.BruteJusticeTrain", "Stop", "", 0.0);
+				FireEntityInput("FB.BruteJusticeParticles", "Stop", "", 0.0);
+				FireEntityInput("FB.BruteJusticeDMGRelay", "Break", "", 0.0);
+				FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.5);
+				onslaughter = false;
+				sacPoints+=25;
+			}
 			return Plugin_Handled;
 		}
 		//Bomb Reset (+5)
@@ -2459,7 +2473,7 @@ public Action Command_Operator(int args){
 			FireEntityInput("Bombs.TheHindenburg", "Disable", "", 7.0);
 			FireEntityInput("HindenTrain", "TeleportToPathTrack", "Hinden01", 7.0);
 			FireEntityInput("HindenTrain", "Stop", "", 7.0);
-			CreateTimer(5.0, TimedOperator, 99);
+			CreateTimer(8.0, TimedOperator, 99);
 			bombStatus = 4;
 			bombStatusMax = 8;
 			explodeType = 0;
@@ -2468,7 +2482,7 @@ public Action Command_Operator(int args){
 		case 30:{
 			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}INSTANT BATH SALT DETONATION! BOTS ARE FROZEN FOR 10 SECONDS! ({red}-10 pts{white})");
 			ServerCommand("sm_freeze @blue 10");
-			sacPoints = (sacPoints - 10);
+			sacPoints-=10;
 			FireEntityInput("BTN.Sacrificial*", "Color", "0 0 0", 0.0),
 			FireEntityInput("BTN.Sacrificial01", "Lock", "", 0.0),
 			FireEntityInput("MedExploShake", "StartShake", "", 0.10),
@@ -2478,7 +2492,7 @@ public Action Command_Operator(int args){
 		//Fat man spend
 		case 31:{
 			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}INSTANT FAT MAN DETONATION! ({red}-20 pts{white})");
-			sacPoints = (sacPoints - 20);
+			sacPoints-=20;
 			FireEntityInput("BTN.Sacrificial*", "Color", "0 0 0", 0.0);
 			FireEntityInput("BTN.Sacrificial02", "Lock", "", 0.0);
 			FireEntityInput("LargeExplosion", "Explode", "", 0.0);
@@ -2494,14 +2508,14 @@ public Action Command_Operator(int args){
 			switch (i){
 				case 1:{
 					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}GOOBBUE COMING IN FROM ORBIT! ({red}-30 pts{white})");
-					sacPoints = (sacPoints - 30);
+					sacPoints-=30;
 					CustomSoundEmitter(SPEC01, SFXSNDLVL, false);
 					CreateTimer(1.5, TimedOperator, 21);
 					FireEntityInput("FB.GiantGoobTemplate", "ForceSpawn", "", 3.0);
 				}
 				case 2:{
 					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}BLUE KIRBY FALLING OUT OF THE SKY! ({red}-30 pts{white})");
-					sacPoints = (sacPoints - 30);
+					sacPoints-=30;
 					FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 0.0);
 					CustomSoundEmitter(FALLSND0B, SFXSNDLVL, false);
 				}
@@ -2518,12 +2532,12 @@ public Action Command_Operator(int args){
 			FireEntityInput("FB.Fade", "Fade", "", 11.50);
 			FireEntityInput("FB.ShakeBOOM", "StartShake", "", 11.50);
 			FireEntityInput("NukeAll", "Disable", "", 12.30);
-			sacPoints = (sacPoints - 40);
+			sacPoints-=40;
 		}
 		//Ass Gas spend
 		case 34:{
 			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}ANYTHING BUT THE ASS GAS!!!! ({red}-40 pts{white})");
-			sacPoints = (sacPoints - 40);
+			sacPoints-=40;
 			FireEntityInput("HurtAll", "AddOutput", "damagetype 524288", 0.0);
 			FireEntityInput("FB.ShakeBOOM", "StartShake", "", 0.1);
 			FireEntityInput("HurtAll", "Enable", "", 0.1);
@@ -2536,7 +2550,7 @@ public Action Command_Operator(int args){
 				CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A PINK KIRBY HAS BANISHED TORNADOES FOR THIS WAVE! ({red}-50 pts{white})");
 				ServerCommand("fb_operator 1005");
 				canTornado = false;
-				sacPoints = (sacPoints - 50);
+				sacPoints-=50;
 			}
 			else{
 				CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A PINK KIRBY HAS BANISHED TORNADOES.... BUT CANTORNADO and TORNADO WERE BOTH FALSE... CALL A PROGRAMMER. ({red} -0 pts{white})");
@@ -2547,7 +2561,7 @@ public Action Command_Operator(int args){
 		//Nuclear fallout spend
 		case 36:{
 			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}TOTAL ATOMIC ANNIHILATION. ({red}-60 pts{white})");
-			sacPoints = (sacPoints - 60);
+			sacPoints-=60;
 			canSENTNukes = true;
 			CreateTimer(1.0, SENTNukeTimer);
 			CreateTimer(45.0, DisableSENTNukes);
@@ -2555,15 +2569,21 @@ public Action Command_Operator(int args){
 		//Meteor shower spend
 		case 37:{
 			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}COSMIC DEVASTATION IMMINENT. ({red}-70 pts{white})");
-			sacPoints = (sacPoints - 70);
+			sacPoints-=70;
 			canSENTMeteors = true;
 			CreateTimer(1.0, SENTMeteorTimer);
 			CreateTimer(30.0, DisableSENTMeteors);
 		}
-		//Fartsy of the Seventh Taco Bell
+		//150K UbUp Cash
 		case 38:{
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}150K UbUp Cash Granted to {red}RED{white}! ({red}-75 pts{white})");
+			sacPoints-=75;
+			ServerCommand("sm_addcash @red 150000");
+		}
+		//Fartsy of the Seventh Taco Bell
+		case 39:{
 			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}NOW PRESENTING... PROFESSOR FARTSALOT OF THE SEVENTH TACO BELL! ({red}-100 points{white})");
-			sacPoints = (sacPoints - 100);
+			sacPoints-=100;
 			explodeType = 69;
 			FireEntityInput("Delivery", "Unlock", "", 0.0),
 			FireEntityInput("BombExplo*", "Disable", "", 0.0),
@@ -2748,76 +2768,69 @@ public Action Command_Operator(int args){
 		}
 		//Feature an admin
 		case 1002:{
-			FireEntityInput("Admins*", "Disable", "", 0.0);
+			FireEntityInput("AdminPicker", "SetTextureIndex", "10", 0.0);
 			int i = GetRandomInt(1, 9);
 			switch (i){
 				case 1:{
-					if (i == lastAdmin)
-					{
+					if (i == lastAdmin){
 						ServerCommand("fb_operator 1002");
 					}
 					else{
-						FireEntityInput("Admins.Brawler", "Enable", "", 0.05);
+						FireEntityInput("AdminPicker", "SetTextureIndex", "1", 0.1);
 						lastAdmin = 1;
 					}
 				}
 				case 2:{
-					if (i == lastAdmin)
-					{
+					if (i == lastAdmin){
 						ServerCommand("fb_operator 1002");
 					}
 					else{
-						FireEntityInput("Admins.Comical", "Enable", "", 0.05);
+						FireEntityInput("AdminPicker", "SetTextureIndex", "2", 0.1);
 						lastAdmin = 2;
 					}
 				}
 				case 3:{
-					if (i == lastAdmin)
-					{
+					if (i == lastAdmin){
 						ServerCommand("fb_operator 1002");
 					}
 					else{
-						FireEntityInput("Admins.Holinhed", "Enable", "", 0.05);
+						FireEntityInput("AdminPicker", "SetTextureIndex", "3", 0.1);
 						lastAdmin = 3;
 					}
 				}
 				case 4:{
-					if (i == lastAdmin)
-					{
+					if (i == lastAdmin){
 						ServerCommand("fb_operator 1002");
 					}
 					else{
-						FireEntityInput("Admins.JoeyGhost", "Enable", "", 0.05);
+						FireEntityInput("AdminPicker", "SetTextureIndex", "4", 0.1);
 						lastAdmin = 4;
 					}
 				}
 				case 5:{
-					if (i == lastAdmin)
-					{
+					if (i == lastAdmin){
 						ServerCommand("fb_operator 1002");
 					}
 					else{
-						FireEntityInput("Admins.KaiserCrazed", "Enable", "", 0.05);
+						FireEntityInput("AdminPicker", "SetTextureIndex", "5", 0.1);
 						lastAdmin = 5;
 					}
 				}
 				case 6:{
-					if (i == lastAdmin)
-					{
+					if (i == lastAdmin){
 						ServerCommand("fb_operator 1002");
 					}
 					else{
-						FireEntityInput("Admins.KissoneKinoma", "Enable", "", 0.05);
+						FireEntityInput("AdminPicker", "SetTextureIndex", "6", 0.1);
 						lastAdmin = 6;
 					}
 				}
 				case 7:{
-					if (i == lastAdmin)
-					{
+					if (i == lastAdmin){
 						ServerCommand("fb_operator 1002");
 					}
 					else{
-						FireEntityInput("Admins.LixianPrime", "Enable", "", 0.05);
+						FireEntityInput("AdminPicker", "SetTextureIndex", "7", 0.1);
 						lastAdmin = 7;
 					}
 				}
@@ -2827,18 +2840,25 @@ public Action Command_Operator(int args){
 						ServerCommand("fb_operator 1002");
 					}
 					else{
-						FireEntityInput("Admins.ProfessorFartsalot", "Enable", "", 0.05);
+						FireEntityInput("AdminPicker", "SetTextureIndex", "8", 0.1);
 						lastAdmin = 8;
 					}
 				}
 				case 9:{
-					if (i == lastAdmin)
-					{
+					if (i == lastAdmin){
 						ServerCommand("fb_operator 1002");
 					}
 					else{
-						FireEntityInput("Admins.Ribbons", "Enable", "", 0.05);
+						FireEntityInput("AdminPicker", "SetTextureIndex", "9", 0.1);
 						lastAdmin = 9;
+					}
+				}
+				case 10:{
+					if (i == lastAdmin){
+						ServerCommand("fb_operator 1002");
+					}
+					else{
+						FireEntityInput("AdminPicker", "SetTextureIndex", "10", 0.1);
 					}
 				}
 			}
