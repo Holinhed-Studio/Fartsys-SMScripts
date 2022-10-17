@@ -166,7 +166,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.2.7",
+	version = "4.2.9",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -247,7 +247,6 @@ public void OnPluginStart(){
 	PrecacheSound("vo/sandwicheat09.mp3", true),
     RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client."),
     RegConsoleCmd("sm_bombstatus", Command_FBBombStatus, "Check bomb status"),
-    RegConsoleCmd("sm_sacstatus", Command_FBSacStatus, "Check sacrifice points status"),
     RegConsoleCmd("sm_song", Command_GetCurrentSong, "Get current song name"),
 	RegConsoleCmd("sm_stats", Command_MyStats, "Print current statistics"),
 	RegConsoleCmd("sm_return", Command_Return, "Return to Spawn"),
@@ -344,35 +343,29 @@ public void MyStats(Database db, DBResultSet results, const char[] error, any da
 	CPrintToChat(client,"Sacrifices: %i(Session:%i) || Killed %s (using %s) || Last killed by: %s (using %s)", sacrifices, sacrificessession, lastkilledname, lastusedweapon, killedbyname, killedbyweapon);
 }
 public void OnConfigsExecuted(){
-	if (!FB_Database)
-	{
+	if (!FB_Database){
 		Database.Connect(Database_OnConnect, "ass");
 	}
 }
 //DB setup
 public void Database_OnConnect(Database db, const char[] error, any data){
-	if (!db)
-	{
+	if (!db){
 		LogError("Could not connect to the database: %s", error);
 		return;
 	}
-	
 	char buffer[64];
 	db.Driver.GetIdentifier(buffer, sizeof(buffer));
-	
-	if (!StrEqual(buffer, "mysql", false))
-	{
+	if (!StrEqual(buffer, "mysql", false)){
 		delete db;
 		LogError("Could not connect to the database: expected mysql database.");
 		return;
 	}
 	FB_Database = db;
-	FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS ass_activity (name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '4', PRIMARY KEY (steamid, date));");
+	FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS ass_activity(name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '3', PRIMARY KEY (steamid));");
 }
 
 public void Database_FastQuery(Database db, DBResultSet results, const char[] error, any data){
-	if (!results)
-	{	
+	if (!results){	
 		LogError("Failed to query database: %s", error);
 	}
 }
@@ -417,38 +410,78 @@ public void FartsysSNDSelected(int client, CookieMenuAction action, any info, ch
 
 // When a new client joins
 public void OnClientPutInServer(int client){
-	if(!IsFakeClient(client))
-	{
+	if(!IsFakeClient(client)){
+		if (!FB_Database){//Use defaults if no database
+		PrintToServer("No database detected, setting soundPreference for %N to default.", client);
 		soundPreference[client] = GetConVarInt(cvarSNDDefault);
-		if (AreClientCookiesCached(client))
-		{
+		if (AreClientCookiesCached(client)){
 			getClientCookiesFor(client);
-		}
-		if (!FB_Database){
-			return;
+			}
+		return;
 		}
 		int steamID = GetSteamAccountID(client);
 		if (!steamID || steamID<=10000){	
 			return;
 		}
-		char query[1024];
-		char clientName[128];
-		GetClientInfo(client, "name", clientName, 128);
-		Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%s', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%s', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", clientName, steamID, clientName);
-		FB_Database.Query(Database_FastQuery, query);
+		else{
+			char query[1024];
+			Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
+			FB_Database.Query(Database_FastQuery, query);
+			getSNDPrefsFor(client);
+		}
 	}
-	else
-	{
-		soundPreference[client] = 3;
+	else{
+		soundPreference[client] = 0;
 	}
 }
-
+//Soon to be removed, old way of storing preferences.
 public void getClientCookiesFor(int client){
 	char buffer[5];
 	GetClientCookie(client, cSNDPref, buffer, 5);
 	if(!StrEqual(buffer, ""))
 	{
 		soundPreference[client] = StringToInt(buffer);
+	}
+}
+
+//Load cookie from MySQL Server
+public void getSNDPrefsFor(int client){
+	int steamID = GetSteamAccountID(client);
+	if (!steamID || steamID<=10000){	
+		return;
+	}
+	else{
+		char error[255];
+		Database sndDb = SQL_DefConnect(error, sizeof(error));
+		if (sndDb == null){
+    		PrintToServer("Could not connect: %s", error);
+		} 
+		else{
+			char query[255];
+			Format(query, sizeof(query), "SELECT soundprefs FROM ass_activity WHERE steamid = '%d';", steamID);
+			DBResultSet sndQuery = SQL_Query(FB_Database, query);
+			PrintToServer("Querying %s with %s : Got %s", FB_Database, query, sndQuery);
+			if(sndQuery == null){
+				char dberror[255];
+				SQL_GetError(sndDb, dberror, sizeof(dberror));
+				PrintToServer("Failed to query (error: %s)", dberror);
+			}
+			else{
+				while (SQL_FetchRow(sndQuery)){
+					int resultSNDPref = sndQuery.FetchInt(0);
+					if(resultSNDPref == 0){
+						PrintToServer("Error loading soundPref for client %N and steamid %d. Defaulting to 4.", client, steamID);
+						soundPreference[client] = 4;
+					}
+					else{
+						PrintToServer("Preference %i was found.", resultSNDPref);
+						soundPreference[client] = resultSNDPref;
+					}
+				}
+				delete sndQuery;
+			}
+			delete sndDb;
+		}
 	}
 }
 
@@ -480,6 +513,9 @@ public Action Command_Sounds(int client, int args){
 		case 3:{
 			PrintToChat(client, "Sounds are currently ALL ON.");
 		}
+		case 4:{
+			PrintToChat(client, "Somehow your sound preference was stored as non-existent 5... Please configure your sounds.");
+		}
 	}
 	return Plugin_Handled;
 }
@@ -488,11 +524,20 @@ public Action Command_Sounds(int client, int args){
 public int MenuHandlerFartsy(Menu menu, MenuAction action, int param1, int param2){
 	if(action == MenuAction_Select)
 	{
-		soundPreference[param1] = param2;
-		char buffer[5];
-		IntToString(soundPreference[param1], buffer, 5);
-		SetClientCookie(param1, cSNDPref, buffer);
-		Command_Sounds(param1, 0);
+		char query[256];
+		int steamID = GetSteamAccountID(param1);
+		if (!FB_Database || !steamID){
+			return;
+		}
+		else{
+			Format(query, sizeof(query), "UPDATE ass_activity SET soundprefs = '%i' WHERE steamid = '%d';", param2, steamID);
+			FB_Database.Query(Database_FastQuery, query);
+			soundPreference[param1] = param2;
+			char buffer[5];
+			IntToString(soundPreference[param1], buffer, 5);
+			SetClientCookie(param1, cSNDPref, buffer);
+			Command_Sounds(param1, 0);
+		}
 	}
 	else if(action == MenuAction_End)
 	{
@@ -512,7 +557,7 @@ public void ShowFartsysAss(int client){
 			PrintToChat(client, "[CORE] ERROR: You do not have enough sacPoints. This command requires at least 10. You have %i", sacPoints);
 		}
 		else{
-			PrintToChat(client, "[CORE] ERROR: You may not use this command between waves.");
+			CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}The sacrificial points counter is currently at %i of %i maximum for this wave.", sacPoints, sacPointsMax);
 		}
 	}
 	else{
@@ -1409,11 +1454,6 @@ public Action Command_GetCurrentSong(int client, int args){
 	return Plugin_Handled;
 }
 
-//Tell the client the current sacrifice points earned.
-public Action Command_FBSacStatus(int client, int args){
-	CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}The sacrificial points counter is currently at %i of %i maximum for this wave.", sacPoints, sacPointsMax);
-}
-
 //Determine which bomb has been recently pushed and tell the client if a bomb is ready or not.
 public Action Command_FBBombStatus(int client, int args){
 	CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}The bomb status is currently %i, with a max of %i", bombStatus, bombStatusMax);
@@ -1548,11 +1588,14 @@ public Action Command_Discord(int client, int args){
 //Events
 //Check who died by what and announce it to chat.
 public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
-    int client = GetClientOfUserId(Spawn_Event.GetInt("userid"));
-    int attacker = GetClientOfUserId(Spawn_Event.GetInt("attacker"));
-    char weapon[32];
-    Spawn_Event.GetString("weapon", weapon, sizeof(weapon));
-    if (0 < client <= MaxClients && IsClientInGame(client)){
+	int client = GetClientOfUserId(Spawn_Event.GetInt("userid"));
+	int attacker = GetClientOfUserId(Spawn_Event.GetInt("attacker"));
+	char attackerName[64];
+	char weapon[32];
+	Spawn_Event.GetString("weapon", weapon, sizeof(weapon));
+	GetClientName(attacker, attackerName, sizeof(attackerName));
+	if(StrEqual(attackerName, "Console")) weapon = "[INTENTIONAL GAME DESIGN]";
+	if (0 < client <= MaxClients && IsClientInGame(client)){
 		int damagebits = Spawn_Event.GetInt("damagebits");
 		if(attacker>0 && sacrificedByClient){//Was the client Sacrificed?
 			SacrificeClient(client, attacker, bombReset);
@@ -1638,13 +1681,6 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 						case 16:{
 							CustomSoundEmitter(FALLSND10, SFXSNDLVL, false);
 						}
-					}
-
-					if(bombStatus >= bombStatusMax){
-						return Plugin_Handled;
-					}
-					else{
-						bombStatus++;
 					}
 				}
 			}
@@ -1784,7 +1820,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 		}
 	}
 	//Log if a player killed someone
-    if(attacker != client){
+	if(attacker != client){
 		char query[256];
 		int steamID;
 		if(attacker != 0){
@@ -1819,7 +1855,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			FB_Database.Query(Database_FastQuery, query);
 		}
 	}
-    return Plugin_Handled;
+	return Plugin_Handled;
 }
 //Check who spawned and log their class
 public Action EventSpawn(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
@@ -2016,6 +2052,7 @@ public Action SacrificeClient(int client, int attacker, bool wasBombReset){
 		bombReset = false;
 		char query[256];
 		int steamID = GetSteamAccountID(attacker);
+		sacPoints+=5;
 		if (!FB_Database || !steamID){
 			return Plugin_Handled;
 		}
@@ -2023,14 +2060,17 @@ public Action SacrificeClient(int client, int attacker, bool wasBombReset){
 		FB_Database.Query(Database_FastQuery, query);
 	}
 	else if (attacker <= MaxClients && IsClientInGame(attacker) && wasBombReset == false){
-		CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%N {white}has sacrificed {blue}%N {white}for the ass! ({limegreen}+1 pt{white})", attacker, client);
-		char query[256];
 		int steamID = GetSteamAccountID(attacker);
-		if (!FB_Database || !steamID){
+		if (!FB_Database || !steamID || !isWave){
 			return Plugin_Handled;
 		}
-		Format(query, sizeof(query), "UPDATE ass_activity SET sacrifices = sacrifices + 1, sacrificessession = sacrificessession + 1 WHERE steamid = %i;", steamID); //Eventually we will want to replace this with sacrifices, sacrificessession.
-		FB_Database.Query(Database_FastQuery, query);
+		else{
+			char query[256];
+			sacPoints++;
+			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%N {white}has sacrificed {blue}%N {white}for the ass! ({limegreen}+1 pt{white})", attacker, client);
+			Format(query, sizeof(query), "UPDATE ass_activity SET sacrifices = sacrifices + 1, sacrificessession = sacrificessession + 1 WHERE steamid = %i;", steamID); //Eventually we will want to replace this with sacrifices, sacrificessession.
+			FB_Database.Query(Database_FastQuery, query);
+		}
 	}
     return Plugin_Handled;
 }	
@@ -2390,7 +2430,7 @@ public Action Command_Operator(int args){
 					FireEntityInput("LargeExploShake", "StartShake", "", 1.7),
 					FireEntityInput("NukeAll", "Enable", "", 1.7),
 					FireEntityInput("NukeAll", "Disable", "", 3.0),
-					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}NUCLEAR WARHEAD{white}successfully pushed! ({limegreen}+25 pts{white})");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}NUCLEAR WARHEAD {white}successfully pushed! ({limegreen}+25 pts{white})");
 					sacPoints+=25,
 					bombStatusMax+=10,
 					CreateTimer(3.0, BombStatusAddTimer);
