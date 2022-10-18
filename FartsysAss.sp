@@ -155,7 +155,6 @@ int sacPointsMax = 60;
 static int SFXSNDLVL = 75;
 static int SNDCHAN = 6;
 int soundPreference[MAXPLAYERS + 1];
-Handle cSNDPref;
 Handle cvarSNDDefault = INVALID_HANDLE;
 stock bool IsValidClient(int client)
 {
@@ -262,13 +261,11 @@ public void OnPluginStart(){
     HookEventEx("player_hurt", Event_Playerhurt, EventHookMode_Pre);
     CPrintToChatAll("{darkred}Plugin Loaded.");
     cvarSNDDefault = CreateConVar("sm_fartsysass_sound", "3", "Default sound for new users, 3 = Everything, 2 = Sounds Only, 1 = Music Only, 0 = Nothing");
-    cSNDPref = RegClientCookie("Sound Pref", "Sound settings", CookieAccess_Private);
     SetCookieMenuItem(FartsysSNDSelected, 0, "Fartsys Ass Sound Preferences");
 }
 
 public Action Command_MyStats(int client, int args){
-	if (!FB_Database)
-	{
+	if (!FB_Database){
 		return;
 	}
 	int steamID = GetSteamAccountID(client);
@@ -297,20 +294,15 @@ public void MyStats(Database db, DBResultSet results, const char[] error, any da
 	
 	if (!results)
 	{
-		if (validClient)
-		{
+		if (validClient){
 			PrintToChat(client,"[SM] Command Database Query Error");
 		}
-		
 		LogError("Failed to query database: %s", error);
 		return;
 	}
-	
-	if (!validClient)
-	{
+	if (!validClient){
 		return;
 	}
-	
 	char name[64];
 	char class[64];
 	int steamID, damagedealt, damagedealtsession, kills, killssession, deaths, deathssession, bombsreset, bombsresetsession, sacrifices, sacrificessession;
@@ -318,8 +310,7 @@ public void MyStats(Database db, DBResultSet results, const char[] error, any da
 	char lastusedweapon[128];
 	char killedbyname[128];
 	char killedbyweapon[128];
-	if (results.FetchRow())
-	{
+	if (results.FetchRow()){
 		results.FetchString(0, name, 64); //name
 		steamID = results.FetchInt(1); //steamid
 		results.FetchString(4, class, 64); //class
@@ -412,12 +403,9 @@ public void FartsysSNDSelected(int client, CookieMenuAction action, any info, ch
 public void OnClientPutInServer(int client){
 	if(!IsFakeClient(client)){
 		if (!FB_Database){//Use defaults if no database
-		PrintToServer("No database detected, setting soundPreference for %N to default.", client);
-		soundPreference[client] = GetConVarInt(cvarSNDDefault);
-		if (AreClientCookiesCached(client)){
-			getClientCookiesFor(client);
-			}
-		return;
+			PrintToServer("No database detected, setting soundPreference for %N to default.", client);
+			soundPreference[client] = GetConVarInt(cvarSNDDefault);
+			return;
 		}
 		int steamID = GetSteamAccountID(client);
 		if (!steamID || steamID<=10000){	
@@ -427,61 +415,39 @@ public void OnClientPutInServer(int client){
 			char query[1024];
 			Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
 			FB_Database.Query(Database_FastQuery, query);
-			getSNDPrefsFor(client);
+
+			DataPack pk = new DataPack();
+			pk.WriteCell(client ? GetClientUserId(client) : 0);
+			pk.WriteString("steamid");
+			char queryID[256];
+			Format(queryID, sizeof(queryID), "SELECT soundprefs from ass_activity WHERE steamid = '%d';", steamID);
+			FB_Database.Query(SQL_SNDPrefs, queryID, pk);
 		}
 	}
 	else{
 		soundPreference[client] = 0;
 	}
 }
-//Soon to be removed, old way of storing preferences.
-public void getClientCookiesFor(int client){
-	char buffer[5];
-	GetClientCookie(client, cSNDPref, buffer, 5);
-	if(!StrEqual(buffer, ""))
-	{
-		soundPreference[client] = StringToInt(buffer);
-	}
-}
 
-//Load cookie from MySQL Server
-public void getSNDPrefsFor(int client){
-	int steamID = GetSteamAccountID(client);
-	if (!steamID || steamID<=10000){	
+public void SQL_SNDPrefs(Database db, DBResultSet results, const char[] error, any data){
+	DataPack pk = view_as<DataPack>(data);
+	pk.Reset();
+	int userId = pk.ReadCell();
+	char steamId[64];
+	pk.ReadString(steamId, sizeof(steamId));
+	delete pk;
+	int client = userId ? GetClientOfUserId(userId) : 0;
+	bool validClient = !userId || client;
+	if (!results){
+		LogError("Failed to query database: %s", error);
 		return;
 	}
-	else{
-		char error[255];
-		Database sndDb = SQL_DefConnect(error, sizeof(error));
-		if (sndDb == null){
-    		PrintToServer("Could not connect: %s", error);
-		} 
-		else{
-			char query[255];
-			Format(query, sizeof(query), "SELECT soundprefs FROM ass_activity WHERE steamid = '%d';", steamID);
-			DBResultSet sndQuery = SQL_Query(FB_Database, query);
-			PrintToServer("Querying %s with %s : Got %s", FB_Database, query, sndQuery);
-			if(sndQuery == null){
-				char dberror[255];
-				SQL_GetError(sndDb, dberror, sizeof(dberror));
-				PrintToServer("Failed to query (error: %s)", dberror);
-			}
-			else{
-				while (SQL_FetchRow(sndQuery)){
-					int resultSNDPref = sndQuery.FetchInt(0);
-					if(resultSNDPref == 0){
-						PrintToServer("Error loading soundPref for client %N and steamid %d. Defaulting to 4.", client, steamID);
-						soundPreference[client] = 4;
-					}
-					else{
-						PrintToServer("Preference %i was found.", resultSNDPref);
-						soundPreference[client] = resultSNDPref;
-					}
-				}
-				delete sndQuery;
-			}
-			delete sndDb;
-		}
+	if (!validClient){
+		return;
+	}
+	if (results.FetchRow()){
+		soundPreference[client] = results.FetchInt(0); //Set it
+		//PrintToServer("Client %N soundPreference was set to %i", client, soundPreference[client]);
 	}
 }
 
@@ -499,25 +465,37 @@ public void ShowFartsyMenu(int client){
 
 //Create menu
 public Action Command_Sounds(int client, int args){
-	ShowFartsyMenu(client);
-	switch(soundPreference[client]){
-		case 0:{
-			PrintToChat(client, "Sounds are currently DISABLED.");
-		}
-		case 1:{
-			PrintToChat(client, "Sounds are currently MUSIC ONLY.");
-		}
-		case 2:{
-			PrintToChat(client, "Sounds are currently SOUND EFFECTS ONLY.");
-		}
-		case 3:{
-			PrintToChat(client, "Sounds are currently ALL ON.");
-		}
-		case 4:{
-			PrintToChat(client, "Somehow your sound preference was stored as non-existent 5... Please configure your sounds.");
-		}
+	int steamID = GetSteamAccountID(client);
+	if (!steamID || steamID<=10000){	
+		return Plugin_Handled;
 	}
-	return Plugin_Handled;
+	else{
+		DataPack pk = new DataPack();
+		pk.WriteCell(client ? GetClientUserId(client) : 0);
+		pk.WriteString("steamid");
+		char queryID[256];
+		Format(queryID, sizeof(queryID), "SELECT soundprefs from ass_activity WHERE steamid = '%d';", steamID);
+		FB_Database.Query(SQL_SNDPrefs, queryID, pk);
+		ShowFartsyMenu(client);
+		switch(soundPreference[client]){
+			case 0:{
+				PrintToChat(client, "Sounds are currently DISABLED.");
+			}
+			case 1:{
+				PrintToChat(client, "Sounds are currently MUSIC ONLY.");
+			}
+			case 2:{
+				PrintToChat(client, "Sounds are currently SOUND EFFECTS ONLY.");
+			}
+			case 3:{
+				PrintToChat(client, "Sounds are currently ALL ON.");
+			}
+			case 4:{
+				PrintToChat(client, "Somehow your sound preference was stored as non-existent 5... Please configure your sounds.");
+			}
+		}
+		return Plugin_Handled;
+	}
 }
 
 //  This selects or disables the sounds
@@ -533,9 +511,6 @@ public int MenuHandlerFartsy(Menu menu, MenuAction action, int param1, int param
 			Format(query, sizeof(query), "UPDATE ass_activity SET soundprefs = '%i' WHERE steamid = '%d';", param2, steamID);
 			FB_Database.Query(Database_FastQuery, query);
 			soundPreference[param1] = param2;
-			char buffer[5];
-			IntToString(soundPreference[param1], buffer, 5);
-			SetClientCookie(param1, cSNDPref, buffer);
 			Command_Sounds(param1, 0);
 		}
 	}
@@ -616,6 +591,7 @@ public void ShowFartsysAss(int client){
 				menu.AddItem(buffer, "[50] Banish Tornadoes");
 				menu.AddItem(buffer, "[60] Total Atomic Annihilation");
 				menu.AddItem(buffer, "[70] Meteorites");
+				menu.AddItem(buffer, "[75] 150,000 UbUp Cash");
 				menu.Display(client, 20);
 			}
 			case 100:{
