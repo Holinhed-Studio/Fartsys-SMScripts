@@ -165,7 +165,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.2.9",
+	version = "4.3.0",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -1570,14 +1570,209 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 	char weapon[32];
 	Spawn_Event.GetString("weapon", weapon, sizeof(weapon));
 	GetClientName(attacker, attackerName, sizeof(attackerName));
-	if(StrEqual(attackerName, "Console")) weapon = "[INTENTIONAL GAME DESIGN]";
 	if (0 < client <= MaxClients && IsClientInGame(client)){
 		int damagebits = Spawn_Event.GetInt("damagebits");
+		if(StrEqual(attackerName, "Console")){
+			weapon = "[INTENTIONAL GAME DESIGN]";
+		}
 		if(attacker>0 && sacrificedByClient){//Was the client Sacrificed?
 			SacrificeClient(client, attacker, bombReset);
 			sacrificedByClient = false;
 		}
-
+		if(!attacker){
+			switch(damagebits){
+				case 1:{ //CRUSH
+					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was crushed by a {red}FALLING ROCK FROM OUTER SPACE{white}!", client);
+					weapon = "Meteor to the Face";
+				}
+				case 8:{ //BURN
+					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}MELTED{white}.", client);
+					weapon = "Melted by Sharts or Ass Gas";
+				}
+				case 16:{ //FREEZE
+					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was flattened out by a {red}TRAIN{white}!", client);
+					weapon = "Attempted Train Robbery";
+				}
+				case 32:{ //FALL
+					if(tornado){
+						switch(GetClientTeam(client)){
+							case 2:{
+								CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}YEETED OUT INTO ORBIT{white}!", client);
+								weapon = "Yeeted into Orbit by a Tornado";
+							}
+							case 3:{
+								CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}YEETED OUT INTO ORBIT{white}! ({limegreen}+1 pt{white})", client);
+								sacPoints++;
+								int i = GetRandomInt(1, 16);
+								switch (i){
+									case 1:{
+										CustomSoundEmitter(FALLSND01, SFXSNDLVL, false);
+									}
+									case 2:{
+										CustomSoundEmitter(FALLSND02, SFXSNDLVL, false);
+									}
+									case 3:{
+										CustomSoundEmitter(FALLSND03, SFXSNDLVL, false);
+									}
+									case 4:{
+										CustomSoundEmitter(FALLSND04, SFXSNDLVL, false);
+									}
+									case 5:{
+										CustomSoundEmitter(FALLSND05, SFXSNDLVL, false);
+									}
+									case 6:{
+										CustomSoundEmitter(FALLSND06, SFXSNDLVL, false);
+									}
+									case 7:{
+										CustomSoundEmitter(FALLSND07, SFXSNDLVL, false);
+									}
+									case 8:{
+										CustomSoundEmitter(FALLSND08, SFXSNDLVL, false);
+									}
+									case 9:{
+										CustomSoundEmitter(FALLSND09, SFXSNDLVL, false);
+									}
+									case 10:{
+										CustomSoundEmitter(FALLSND0A, SFXSNDLVL, false);
+									}
+									case 11:{
+										CustomSoundEmitter(FALLSND0B, SFXSNDLVL, false),
+										FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 0.0);
+									}
+									case 12:{
+										CustomSoundEmitter(FALLSND0C, SFXSNDLVL, false);
+									}
+									case 13:{
+										CustomSoundEmitter(FALLSND0D, SFXSNDLVL, false);
+									}
+									case 14:{
+										CustomSoundEmitter(FALLSND0E, SFXSNDLVL, false);
+									}
+									case 15:{
+										CustomSoundEmitter(FALLSND0F, SFXSNDLVL, false);
+									}
+									case 16:{
+										CustomSoundEmitter(FALLSND10, SFXSNDLVL, false);
+									}
+								}
+							}
+						}
+					}
+					else{
+						CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N fell to a {red}CLUMSY PAINFUL DEATH{white}!", client);
+						weapon = "Tripped on a LEGO";
+					}
+				}
+				case 64:{ //BLAST
+					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N went {red} KABOOM{white}!", client);
+					weapon = "Gone Kaboom!";
+				}
+				case 128:{ //CLUB
+					if(canHindenburg){
+						CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N is {red}CRASHING THE HINDENBURG{white}!!!", client);
+						weapon = "Crashing the Hindenburg";
+					}
+				}
+				case 256:{ //SHOCK
+					CPrintToChatAll("{darkviolet}[{red}EXTERMINATUS{darkviolet}] {white}Client %N has humliated themselves with an {red}incorrect {white}key entry!", client);
+					weapon = "Failed FB Code Entry";
+					int i = GetRandomInt(1, 16);
+					switch(i){
+						case 1,3,10:{
+							FireEntityInput("BG.Meteorites1", "ForceSpawn", "", 0.0),
+							CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {white}Uh oh, a {red}METEOR{white}has been spotted coming towards Dovah's Ass!!!"),
+							FireEntityInput("bg.meteorite1", "StartForward", "", 0.1);
+						}
+						case 2,5,16:{
+							CreateTimer(0.5, TimedOperator, 71);
+							FireEntityInput("FB.TankTrain", "TeleportToPathTrack", "Tank01", 0.0),
+							FireEntityInput("FB.TankTrain", "StartForward", "", 0.25),
+							FireEntityInput("FB.TankTrain", "SetSpeed", "1", 0.35),
+							FireEntityInput("FB.Tank", "Enable", "", 1.0);
+						}
+						case 4,8,14:{
+							CustomSoundEmitter("ambient/alarms/train_horn_distant1.wav", SFXSNDLVL, false),
+							FireEntityInput("TrainSND", "PlaySound", "", 0.0),
+							FireEntityInput("TrainDamage", "Enable", "", 0.0),
+							FireEntityInput("Train01", "Enable", "", 0.0),
+							CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {orange}KISSONE'S TRAIN{white}is {red}INCOMING{white}. Look out!"),
+							FireEntityInput("TrainTrain", "TeleportToPathTrack", "TrainTrack01", 0.0),
+							FireEntityInput("TrainTrain", "StartForward", "", 0.1);
+						}
+						case 6,9:{
+							canTornado = true,
+							CreateTimer(1.0, TimedOperator, 41);
+						}
+						case 7,13:{
+							CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {white}Uh oh, a {red}METEOR SHOWER{white}has been reported from Dovah's Ass!!!");
+							canSENTMeteors = true,
+							CreateTimer(1.0, SENTMeteorTimer),
+							CreateTimer(30.0, DisableSENTMeteors);
+						}
+						case 11:{
+							FireEntityInput("FB.Slice", "Enable", "", 0.0),
+							CustomSoundEmitter("ambient/sawblade_impact1.wav", SFXSNDLVL, false),
+							FireEntityInput("FB.Slice", "Disable", "", 1.0);
+						}
+						case 12,15:{
+							CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {white}Uh oh, it's begun to rain {red}ATOM BOMBS{white}! TAKE COVER!"),
+							canSENTNukes = true,
+							CreateTimer(1.0, SENTNukeTimer),
+							CreateTimer(30.0, DisableSENTNukes);
+						}
+					}
+				}
+				case 512:{ //SONIC
+					CPrintToChatAll("{darkviolet}[{red}EXTERMINATUS{darkviolet}] {white}Client %N has sacrificed themselves with a {forestgreen}correct {white}key entry! Prepare your anus!", client);
+					ServerCommand("fb_operator 1006");
+					weapon = "Correct FB Code Entry";
+				}
+				case 1024:{ //ENERGYBEAM
+					if(crusader){
+						CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been vaporized by {red}THE CRUSADER{white}!", client);
+						weapon = "Crusader";
+					}
+					else if(onslaughter){
+					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been vaporized by {red}THE ONSLAUGHTER{white}!", client);
+					weapon = "Onslaughter";	
+					}
+					else{
+						CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been vaporized by a {red}HIGH ENERGY PHOTON BEAM{white}!", client);
+						weapon = "HE Photon Beam";
+					}
+				}
+				case 16384:{ //DROWN
+					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N {red}DROWNED{white}.", client);
+					weapon = "Darwin Award for Drowning";
+				}
+				case 32768:{ //PARALYZE
+					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been crushed by a {darkviolet}MYSTERIOUS BLUE BALL{white}!", client);
+					weapon = "Mysterious Blue Ball";
+				}
+				case 65536:{ //NERVEGAS
+					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been {red}SLICED TO RIBBONS{white}!", client);
+					weapon = "FB Code Entry Failed";
+				}
+				case 131072:{ //POISON
+					CPrintToChat(client, "{darkviolet}[{red}CORE{darkviolet}] {white}Please don't sit {red}IDLE {white}in the FC Tavern.");
+					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was killed for standing in the Tavern instead of helping their team!", client);
+					weapon = "Idle in FC Tavern..?";
+				}
+				case 262144:{ //RADIATION
+				CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was blown away by a {red}NUCLEAR EXPLOSION{white}!", client);
+				weapon = "Nuclear Explosion";
+				}
+				case 524288:{ //DROWNRECOVER
+					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N experienced {red}TACO BELL{white}!", client);
+					weapon = "Taco Bell";
+				}
+				case 1048576:{ //ACID
+					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been crushed by a {forestgreen}FALLING GOOBBUE FROM OUTER SPACE{white}!", client);
+					weapon = "Falling Goobbue";
+				}
+			}
+		}
+/*
 		if ((damagebits & (1 << 0)) && !attacker) //DMG_CRUSH (1)
     	{
 			CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was crushed by a {red}FALLING ROCK FROM OUTER SPACE{white}!", client);
@@ -1795,41 +1990,44 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 			weapon = "Falling Goobbue";
 		}
 	}
-	//Log if a player killed someone
-	if(attacker != client){
-		char query[256];
-		int steamID;
-		if(attacker != 0){
-			steamID = GetSteamAccountID(attacker);
-		}
-		else{
-			steamID = 0;
-		}
-		if (!FB_Database){
-			return Plugin_Handled;
-		}
-		if (!steamID || steamID <= 10000){
-			int steamIDclient = GetSteamAccountID(client);
-			if (!steamIDclient || steamIDclient<=10000){
-				return Plugin_Handled;
+*/
+		//Log if a player killed someone
+		else if(attacker != client){
+			char query[256];
+			int steamID;
+			if(attacker != 0){
+				steamID = GetSteamAccountID(attacker);
 			}
 			else{
-				char queryClient[256];
-				Format(queryClient, sizeof(queryClient), "UPDATE ass_activity SET deaths = deaths + 1, deathssession = deathssession + 1 WHERE steamid = %i;", steamIDclient);
-				FB_Database.Query(Database_FastQuery, queryClient);
-				if (!StrEqual(weapon, "world")){
-					Format(queryClient, sizeof(queryClient), "UPDATE ass_activity SET killedbyname = '%N', killedbyweapon = '%s' WHERE steamid = %i;", attacker, weapon, steamIDclient);
-					FB_Database.Query(Database_FastQuery, queryClient);
-				}
+				steamID = 0;
+			}
+			if (!FB_Database){
 				return Plugin_Handled;
 			}
-		}
-		Format(query, sizeof(query), "UPDATE ass_activity SET kills = kills + 1, killssession = killssession + 1 WHERE steamid = %i;", steamID);
-		FB_Database.Query(Database_FastQuery, query);
-		if (!StrEqual(weapon, "world")){
-			Format(query, sizeof(query), "UPDATE ass_activity SET lastkilledname = '%N', lastweaponused = '%s' WHERE steamid = %i;", client, weapon, steamID);
+			if (!steamID || steamID <= 10000){
+				int steamIDclient = GetSteamAccountID(client);
+				if (!steamIDclient || steamIDclient<=10000){
+					return Plugin_Handled;
+				}
+				else{
+					char queryClient[256];
+					Format(queryClient, sizeof(queryClient), "UPDATE ass_activity SET deaths = deaths + 1, deathssession = deathssession + 1 WHERE steamid = %i;", steamIDclient);
+					FB_Database.Query(Database_FastQuery, queryClient);
+					if (!StrEqual(weapon, "world")){
+						Format(queryClient, sizeof(queryClient), "UPDATE ass_activity SET killedbyname = '%N', killedbyweapon = '%s' WHERE steamid = %i;", attacker, weapon, steamIDclient);
+						FB_Database.Query(Database_FastQuery, queryClient);
+					}
+					return Plugin_Handled;
+				}
+			}
+			Format(query, sizeof(query), "UPDATE ass_activity SET kills = kills + 1, killssession = killssession + 1 WHERE steamid = %i;", steamID);
 			FB_Database.Query(Database_FastQuery, query);
+			if (!StrEqual(weapon, "world")){
+				Format(query, sizeof(query), "UPDATE ass_activity SET lastkilledname = '%N', lastweaponused = '%s' WHERE steamid = %i;", client, weapon, steamID);
+				FB_Database.Query(Database_FastQuery, query);
+			}
 		}
+		return Plugin_Handled;
 	}
 	return Plugin_Handled;
 }
