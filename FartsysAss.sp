@@ -135,6 +135,7 @@ static char SPEC01[32] = "fartsy/vo/fartsy/goobbue.mp3";
 static char SPEC02[32] = "fartsy/misc/shroom.mp3";
 static char SPEC03[64] = "fartsy/vo/inurat/nuclearwaffle.mp3";
 static char STRONGMAN[32] = "fartsy/misc/strongman_bell.wav";
+static char SUS[32] = "amongus/emergency.mp3";
 static char TRIGGERSCORE[32] = "fartsy/misc/triggerscore.wav";
 static char WTFBOOM[32] = "fartsy/misc/wtfboom.mp3";
 static float HWNMin = 210.0;
@@ -165,7 +166,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.3.0",
+	version = "4.3.1",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -236,6 +237,7 @@ public void OnPluginStart(){
 	PrecacheSound(SPEC02, true),
 	PrecacheSound(SPEC03, true),
     PrecacheSound(STRONGMAN, true),
+	PrecacheSound(SUS, true),
     PrecacheSound(TRIGGERSCORE, true),
     PrecacheSound(WTFBOOM, true),
 	PrecacheSound("mvm/ambient_mp3/mvm_siren.mp3", true),
@@ -258,6 +260,7 @@ public void OnPluginStart(){
     HookEvent("mvm_wave_complete", EventWaveComplete),
     HookEvent("mvm_wave_failed", EventWaveFailed),
     HookEvent("mvm_bomb_alarm_triggered", EventWarning),
+	AddFileToDownloadsTable("sound/amongus/emergency.mp3");
     HookEventEx("player_hurt", Event_Playerhurt, EventHookMode_Pre);
     CPrintToChatAll("{darkred}Plugin Loaded.");
     cvarSNDDefault = CreateConVar("sm_fartsysass_sound", "3", "Default sound for new users, 3 = Everything, 2 = Sounds Only, 1 = Music Only, 0 = Nothing");
@@ -1060,6 +1063,7 @@ public Action RefireStorm(Handle timer){
 			}
 		}
 	}
+	return Plugin_Handled;
 }
 
 //SpecTimer
@@ -1553,12 +1557,14 @@ public Action ReturnClient(Handle timer, int clientID){
 	if(soundPreference[clientID] >= 2){
 		EmitSoundToClient(clientID, RETURNSUCCESS);
 	}
+	return Plugin_Handled;
 }
 
 //Join us on Discord!
 public Action Command_Discord(int client, int args){
 	CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Our Discord server URL is {darkviolet}https://discord.com/invite/SkHaeMH{white}."),
 	ShowMOTDPanel(client, "FireHostRedux Discord", "https://discord.com/invite/SkHaeMH", MOTDPANEL_TYPE_URL);
+	return Plugin_Handled;
 }
 
 //Events
@@ -1861,6 +1867,7 @@ public Action EventSpawn(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 //Silence cvar changes to minimize chat spam.
 public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast){
 	event.BroadcastDisabled = true;
+	return Plugin_Handled;
 }
 //When we win
 public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
@@ -1899,11 +1906,13 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
     ServerCommand("fb_operator 1007");
     ServerCommand("fb_operator 1002");
     CreateTimer(40.0, SelectAdminTimer);
+    return Plugin_Handled;
 }
 
 //Announce when we are in danger.
 public Action EventWarning(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
 	CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {darkred}PROFESSOR'S ASS IS ABOUT TO BE DEPLOYED!!!");
+	return Plugin_Handled;
 }
 
 //When the wave fails
@@ -1949,6 +1958,7 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     FireEntityInput("rain", "Alpha", "0", 0.0);
     ServerCommand("fb_operator 1007");
     ServerCommand("fb_operator 1002");
+    return Plugin_Handled;
 }
 
 //Functions
@@ -1994,6 +2004,7 @@ public Action JumpToWave(int wave_number){
 	ServerCommand("tf_mvm_jump_to_wave %d", wave_number);
 	FakeClientCommand(0, "");
 	SetCommandFlags("tf_mvm_jump_to_wave", flags|FCVAR_CHEAT);
+	return Plugin_Handled;
 }
 
 //Remove edict allocated by temp entity
@@ -3065,6 +3076,17 @@ public Action Command_Operator(int args){
 				}
 			}
 		}
+		//Do not EVER EVER execute this unless it's an emergency...
+		case 6969:{
+			if (!isWave){
+				PrintToChatAll("{darkred} [CORE] ERROR, attempted to invoke function without an active wave.");
+			}
+			else{
+				EmitSoundToAll(SUS),
+				PrintToChatAll("{darkred} EMERGENCY MODE ACTIVE."),
+				CreateTimer(3.0, TimedOperator, 6969);
+			}
+		}
 	}
 	return Plugin_Handled;
 }
@@ -3092,6 +3114,7 @@ public Action PerformWaveSetup(){
 			ServerCommand("fb_operator 1002"); //Feature admin
 			ServerCommand("fb_operator 1004"); //Activate Tornado Timer
 			ServerCommand("fb_operator 1007"); //Choose bomb path
+			return Plugin_Handled;
 }
 //Timed commands
 public Action TimedOperator(Handle timer, int job){
@@ -3261,6 +3284,83 @@ public Action TimedOperator(Handle timer, int job){
 		}
 		case 100:{
 			ServerCommand("_restart");
+		}
+		case 6969:{
+			ServerCommand("fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40"),
+			CreateTimer(1.0, TimedOperator, 6970);
+		}
+		case 6970:{
+			ServerCommand("fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42"),
+			CreateTimer(1.0, TimedOperator, 6971);
+		}
+		case 6971:{
+			explodeType = 1,
+			ServerCommand("fb_operator 15"),
+			CreateTimer(1.0, TimedOperator, 6972);
+		}
+		case 6972:{
+			explodeType = 2,
+			ServerCommand("fb_operator 15;fb_operator 15"),
+			CreateTimer(1.0, TimedOperator, 6973);
+		}
+		case 6973:{
+			explodeType = 3,
+			ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15"),
+			CreateTimer(1.0, TimedOperator, 6974);
+		}
+		case 6974:{
+			explodeType = 4,
+			ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15"),
+			CreateTimer(1.0, TimedOperator, 6975);
+		}
+		case 6975:{
+			explodeType = 5,
+			ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15;fb_operator 15"),
+			CreateTimer(1.0, TimedOperator, 6976);
+		}
+		case 6976:{
+			explodeType = 6,
+			ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15"),
+			CreateTimer(1.0, TimedOperator, 6977);
+		}
+		case 6977:{
+			ServerCommand("fb_operator 30"),
+			CreateTimer(1.0, TimedOperator, 6978);
+		}
+		case 6978:{
+			ServerCommand("fb_operator 31"),
+			CreateTimer(1.0, TimedOperator, 6979);
+		}
+		case 6979:{
+			ServerCommand("fb_operator 32"),
+			CreateTimer(1.0, TimedOperator, 6980);
+		}
+		case 6980:{
+			ServerCommand("fb_operator 33"),
+			CreateTimer(1.0, TimedOperator, 6981);
+		}
+		case 6981:{
+			ServerCommand("fb_operator 34"),
+			CreateTimer(1.0, TimedOperator, 6982);
+		}
+		case 6982:{
+			ServerCommand("fb_operator 35"),
+			CreateTimer(1.0, TimedOperator, 6983);
+		}
+		case 6983:{
+			ServerCommand("fb_operator 36"),
+			CreateTimer(1.0, TimedOperator, 6984);
+		}
+		case 6984:{
+			ServerCommand("fb_operator 37"),
+			CreateTimer(1.0, TimedOperator, 6985);
+		}
+		case 6985:{
+			ServerCommand("sm_freeze @blue -1; sm_smash @blue"),
+			CreateTimer(10.0, TimedOperator, 6986);
+		}
+		case 6986:{
+			ServerCommand("fb_operator 40; fb_operator 42; fb_operator 30; fb_operator 32; fb_operator 34; fb_operator 32; fb_operator 31; fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 31;fb_operator 32;fb_operator 32;fb_operator 31;fb_operator 32;fb_operator 32");
 		}
 	}
 	return Plugin_Stop;
