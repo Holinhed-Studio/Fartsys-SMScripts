@@ -21,6 +21,7 @@
 #pragma semicolon 1
 bool bombProgression = false;
 bool bombReset = false; //used for notifying us when Event mvm_bomb_reset_by_player doesn't....
+bool brawler_emergency = false;
 bool canHindenburg = false;
 bool canHWBoss = false;
 bool canSENTMeteors = false;
@@ -166,7 +167,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.3.1",
+	version = "4.3.2",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -3082,10 +3083,16 @@ public Action Command_Operator(int args){
 				CPrintToChatAll("{darkred} [CORE] ERROR, attempted to invoke function without an active wave.");
 			}
 			else{
-				EmitSoundToAll(SUS),
-
-				CPrintToChatAll("{darkred}EMERGENCY MODE ACTIVE."),
-				CreateTimer(3.0, TimedOperator, 6969);
+				if (!brawler_emergency){
+					brawler_emergency = true,
+					EmitSoundToAll(SUS),
+					CreateTimer(1.0, TimedOperator, 6969),
+					CPrintToChatAll("{darkred}EMERGENCY MODE ACTIVE.");
+				}
+				else{
+					CPrintToChatAll("{darkred}[CORE] Failed to enter emergency mode, it is already active.");
+					return Plugin_Handled;
+				}
 			}
 		}
 	}
@@ -3287,81 +3294,267 @@ public Action TimedOperator(Handle timer, int job){
 			ServerCommand("_restart");
 		}
 		case 6969:{
-			ServerCommand("fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40"),
-			CreateTimer(1.0, TimedOperator, 6970);
+			if(isWave){
+				ServerCommand("sm_freeze @blue; sm_smash @blue");
+				ServerCommand("fb_operator 2"),
+				CreateTimer(1.0, TimedOperator, 6970);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6970:{
-			ServerCommand("fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42"),
-			CreateTimer(1.0, TimedOperator, 6971);
+			if(isWave){
+				EmitSoundToAll(COUNTDOWN),
+				CreateTimer(1.0, TimedOperator, 6971);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6971:{
-			explodeType = 1,
-			ServerCommand("fb_operator 15"),
-			CreateTimer(1.0, TimedOperator, 6972);
+			if(isWave){
+				ServerCommand("fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40"),
+				CreateTimer(1.0, TimedOperator, 6972);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6972:{
-			explodeType = 2,
-			ServerCommand("fb_operator 15;fb_operator 15"),
-			CreateTimer(1.0, TimedOperator, 6973);
+			if (isWave){
+				ServerCommand("fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42"),
+				ServerCommand("fb_operator 1006"),
+				CreateTimer(1.0, TimedOperator, 6973);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6973:{
-			explodeType = 3,
-			ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15"),
-			CreateTimer(1.0, TimedOperator, 6974);
+			if(isWave){
+				explodeType = 1,
+				ServerCommand("fb_operator 15"),
+				CreateTimer(1.0, TimedOperator, 6974);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6974:{
-			explodeType = 4,
-			ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15"),
-			CreateTimer(1.0, TimedOperator, 6975);
+			if(isWave){
+				explodeType = 2,
+				ServerCommand("fb_operator 15;fb_operator 15"),
+				CreateTimer(1.0, TimedOperator, 6975);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6975:{
-			explodeType = 5,
-			ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15;fb_operator 15"),
-			CreateTimer(1.0, TimedOperator, 6976);
+			if(isWave){
+				explodeType = 3,
+				ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15"),
+				CreateTimer(1.0, TimedOperator, 6976);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6976:{
-			explodeType = 6,
-			ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15"),
-			CreateTimer(1.0, TimedOperator, 6977);
+			if(isWave){
+				explodeType = 4,
+				ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15"),
+				CreateTimer(1.0, TimedOperator, 6977);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6977:{
-			ServerCommand("fb_operator 30"),
-			CreateTimer(1.0, TimedOperator, 6978);
+			if(isWave){
+				explodeType = 5,
+				ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15;fb_operator 15"),
+				CreateTimer(1.0, TimedOperator, 6978);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6978:{
-			ServerCommand("fb_operator 31"),
-			CreateTimer(1.0, TimedOperator, 6979);
+			if(isWave){
+				explodeType = 6,
+				ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15"),
+				ServerCommand("fb_operator 30"),
+				CreateTimer(1.0, TimedOperator, 6979);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6979:{
-			ServerCommand("fb_operator 32"),
-			CreateTimer(1.0, TimedOperator, 6980);
+			if(isWave){
+				ServerCommand("fb_operator 31"),
+				CreateTimer(1.0, TimedOperator, 6980);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6980:{
-			ServerCommand("fb_operator 33"),
-			CreateTimer(1.0, TimedOperator, 6981);
+			if(isWave){
+				ServerCommand("fb_operator 32"),
+				CreateTimer(1.0, TimedOperator, 6981);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6981:{
-			ServerCommand("fb_operator 34"),
-			CreateTimer(1.0, TimedOperator, 6982);
+			if(isWave){
+				ServerCommand("fb_operator 33"),
+				CreateTimer(1.0, TimedOperator, 6982);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6982:{
-			ServerCommand("fb_operator 35"),
-			CreateTimer(1.0, TimedOperator, 6983);
+			if(isWave){
+				ServerCommand("fb_operator 34"),
+				CreateTimer(1.0, TimedOperator, 6983);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6983:{
-			ServerCommand("fb_operator 36"),
-			CreateTimer(1.0, TimedOperator, 6984);
+			if(isWave){
+				ServerCommand("fb_operator 35"),
+				CreateTimer(1.0, TimedOperator, 6984);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6984:{
-			ServerCommand("fb_operator 37"),
-			CreateTimer(1.0, TimedOperator, 6985);
+			if(isWave){
+				ServerCommand("fb_operator 36"),
+				CreateTimer(1.0, TimedOperator, 6985);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6985:{
-			ServerCommand("sm_freeze @blue -1; sm_smash @blue"),
-			CreateTimer(10.0, TimedOperator, 6986);
+			if(isWave){
+				ServerCommand("fb_operator 37"),
+				CreateTimer(1.0, TimedOperator, 6986);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
 		}
 		case 6986:{
-			ServerCommand("fb_operator 40; fb_operator 42; fb_operator 30; fb_operator 32; fb_operator 34; fb_operator 32; fb_operator 31; fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 31;fb_operator 32;fb_operator 32;fb_operator 31;fb_operator 32;fb_operator 32");
+			if(isWave){
+				ServerCommand("sm_freeze @blue -1; sm_smash @blue"),
+				CreateTimer(3.0, TimedOperator, 6987);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
+		}
+		case 6987:{
+			if(isWave){
+				ServerCommand("fb_operator 40; fb_operator 42; fb_operator 30; fb_operator 32; fb_operator 34; fb_operator 32; fb_operator 31; fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 31;fb_operator 32;fb_operator 32;fb_operator 31;fb_operator 32;fb_operator 32");
+				CreateTimer(1.0, TimedOperator, 6988);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
+		}
+		case 6988:{
+			if(isWave){
+				explodeType = 6,
+				ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15"),
+				ServerCommand("fb_operator 30"),
+				ServerCommand("fb_operator 31"),
+				ServerCommand("fb_operator 32"),
+				ServerCommand("fb_operator 33"),
+				ServerCommand("fb_operator 34"),
+				ServerCommand("fb_operator 35"),
+				ServerCommand("fb_operator 36"),
+				ServerCommand("fb_operator 37"),
+				ServerCommand("fb_operator 40"),
+				ServerCommand("fb_operator 41"),
+				ServerCommand("fb_operator 42"),
+				ServerCommand("fb_operator 43"),
+				ServerCommand("fb_operator 44"),
+				ServerCommand("fb_operator 32"),
+				ServerCommand("fb_operator 32"),
+				ServerCommand("fb_operator 32"),
+				ServerCommand("fb_operator 1003"),
+				ServerCommand("fb_operator 1003"),
+				ServerCommand("fb_operator 1003"),
+				ServerCommand("fb_operator 1003"),
+				ServerCommand("fb_operator 1003"),
+				ServerCommand("fb_operator 1003"),
+				ServerCommand("fb_operator 1003"),
+				ServerCommand("fb_operator 1003"),
+				ServerCommand("fb_operator 1003"),
+				ServerCommand("fb_operator 1003"),
+				ServerCommand("fb_operator 1003"),
+				ServerCommand("fb_operator 1003"),
+				ServerCommand("fb_operator 1003"),
+				CreateTimer(1.0, TimedOperator, 6989);
+			}
+			else{
+				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+				brawler_emergency = false;
+				return Plugin_Handled;
+			}
+		}
+		case 6989:{
+			CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode..."),
+			brawler_emergency = false;
 		}
 	}
 	return Plugin_Stop;
