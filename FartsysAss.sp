@@ -618,7 +618,7 @@ public void ShowFartsysAss(int client){
 public int MenuHandlerFartsysAss(Menu menu, MenuAction action, int param1, int param2){
 	if(action == MenuAction_Select)
 	{
-		PrintToChatAll("Got %i", param2);
+		//PrintToChatAll("Got %i", param2);
 		switch(param2){
 			case 0:{
 				if (sacPoints <=9){
@@ -3079,11 +3079,12 @@ public Action Command_Operator(int args){
 		//Do not EVER EVER execute this unless it's an emergency...
 		case 6969:{
 			if (!isWave){
-				PrintToChatAll("{darkred} [CORE] ERROR, attempted to invoke function without an active wave.");
+				CPrintToChatAll("{darkred} [CORE] ERROR, attempted to invoke function without an active wave.");
 			}
 			else{
 				EmitSoundToAll(SUS),
-				PrintToChatAll("{darkred} EMERGENCY MODE ACTIVE."),
+
+				CPrintToChatAll("{darkred}EMERGENCY MODE ACTIVE."),
 				CreateTimer(3.0, TimedOperator, 6969);
 			}
 		}
