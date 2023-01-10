@@ -167,7 +167,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.3.3",
+	version = "4.3.4",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -3297,7 +3297,7 @@ public Action TimedOperator(Handle timer, int job){
 			if(isWave){
 				ServerCommand("sm_freeze @blue; sm_smash @blue");
 				ServerCommand("fb_operator 2"),
-				CreateTimer(1.0, TimedOperator, 6970);
+				CreateTimer(4.0, TimedOperator, 6970);
 			}
 			else{
 				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
@@ -3308,7 +3308,7 @@ public Action TimedOperator(Handle timer, int job){
 		case 6970:{
 			if(isWave){
 				EmitSoundToAll(COUNTDOWN),
-				CreateTimer(4.0, TimedOperator, 6971);
+				CreateTimer(5.0, TimedOperator, 6971);
 			}
 			else{
 				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
