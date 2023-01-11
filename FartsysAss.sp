@@ -149,7 +149,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.4.1",
+	version = "4.4.2",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -1967,7 +1967,7 @@ public Action Command_Operator(int args){
 			char mapName[64];
 			tacobell = false;
 			ServerCommand("fb_startmoney 50000");
-			CPrintToChatAll("{darkviolet}[{yellow}INFO{darkviolet}] {red}PROFESSOR'S ASS {white}v0x1A. Prepare yourself for the unpredictable... [{limegreen}by TTV/ProfessorFartsalot{white}]");
+			CPrintToChatAll("{darkviolet}[{yellow}INFO{darkviolet}] {red}PROFESSOR'S ASS {white}v0x1D. Prepare yourself for the unpredictable... [{limegreen}by TTV/ProfessorFartsalot{white}]");
 			GetCurrentMap(mapName, sizeof(mapName));
 			FireEntityInput("rain", "Alpha", "0", 0.0);
 			//Prepare for the end times....
@@ -3111,7 +3111,8 @@ public Action TimedOperator(Handle timer, int job){
 		case 0:{
 			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave %i: {forestgreen}%s", curWave, songName);
 		}
-		case 1:{ //Music system rewrite (again)
+		//Music system rewrite (again)
+		case 1:{
 		switch(BGMINDEX){
 			//Default BGM indexes are 0 and 1.
 			case 0,1:{
