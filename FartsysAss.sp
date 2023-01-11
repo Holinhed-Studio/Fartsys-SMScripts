@@ -157,6 +157,7 @@ int sacPointsMax = 60;
 static int SFXSNDLVL = 75;
 static int SNDCHAN = 6;
 int soundPreference[MAXPLAYERS + 1];
+int tbLoop = 0;
 Handle cvarSNDDefault = INVALID_HANDLE;
 stock bool IsValidClient(int client)
 {
@@ -167,7 +168,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.3.5",
+	version = "4.4.0",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -802,82 +803,6 @@ public Action SelectAdminTimer(Handle timer){
 		CreateTimer(f, SelectAdminTimer);
 		return Plugin_Handled;
 	}
-}
-
-//NEW MUSIC SYSTEM
-public Action RefireBGM(Handle timer, int BGM){
-	switch(BGM){
-		case 1:{ //Default BGM
-			if (!isWave){
-				ServerCommand("fb_operator 1000");
-				return Plugin_Continue;
-			}
-			return Plugin_Continue; // We continue here to not interrupt other songs.
-		}
-		case 2:{ //BGM 1
-			if (isWave && !bgmlock1){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 2);
-			}
-			return Plugin_Continue;
-		}
-		case 3:{ //BGM 2
-			if (isWave && !bgmlock2){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 3);
-			}
-			return Plugin_Continue;
-		}
-		case 4:{ //BGM 3
-			if (isWave && !bgmlock3 && !crusader){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 4);
-			}
-			return Plugin_Continue;
-		}
-		case 5:{ //BGM 4
-			if (isWave && !bgmlock4){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 5);
-			}
-			return Plugin_Continue;
-		}
-		case 6:{ //BGM 5
-			if (isWave && !bgmlock5 && !crusader){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 6);
-			}
-			return Plugin_Continue;
-		}
-		case 7:{ //BGM 6
-			if (isWave && !bgmlock6){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 7);
-			}
-			return Plugin_Continue;
-		}
-		case 8:{ //BGM 7
-			if (isWave && !bgmlock7){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 8);
-			}
-			return Plugin_Continue;
-		}
-		case 9:{ //BGM 8
-			if (isWave && !bgmlock8){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 9);
-			}
-			return Plugin_Continue;
-		}
-		case 10:{ //BGM 9
-			if (isWave && !bgmlock9){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 10);
-			}
-		}
-	}
-	return Plugin_Continue;
 }
 
 //Brute Justice Timer
@@ -1872,7 +1797,7 @@ public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast){
 }
 //When we win
 public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
-    bgmlock1 = true;
+/*    bgmlock1 = true;
     bgmlock2 = true;
     bgmlock3 = true;
     bgmlock4 = true;
@@ -1880,7 +1805,7 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
     bgmlock6 = true;
     bgmlock7 = true;
     bgmlock8 = true;
-    bgmlock9 = true;
+    bgmlock9 = true; */
     canHindenburg = false;
     canHWBoss = false;
     canTornado = false;
@@ -2949,7 +2874,8 @@ public Action Command_Operator(int args){
 		}
 		//Crusader
 		case 1006:{
-			ServerCommand("fb_operator 1001");
+			ServerCommand("fb_operator 1001"),
+			FireEntityInput("FB.MusicTimer", "Disable", "", 0.0);
 			crusader = true,
 			CreateTimer(25.20, TimedOperator, 78),
 			CreateTimer(63.20, TimedOperator, 80),
@@ -3123,30 +3049,200 @@ public Action PerformWaveSetup(){
 			ServerCommand("fb_operator 1004"); //Activate Tornado Timer
 			ServerCommand("fb_operator 1007"); //Choose bomb path
 			return Plugin_Handled;
-}
+}/*
+//NEW MUSIC SYSTEM
+public Action RefireBGM(Handle timer, int BGM){
+	switch(BGM){
+		case 1:{ //Default BGM
+			if (!isWave){
+				ServerCommand("fb_operator 1000");
+				return Plugin_Continue;
+			}
+			return Plugin_Continue; // We continue here to not interrupt other songs.
+		}
+		case 2:{ //BGM 1
+			if (isWave && !bgmlock1){
+				ServerCommand("fb_operator 1001");
+				CreateTimer(0.1, TimedOperator, 2);
+			}
+			return Plugin_Continue;
+		}
+		case 3:{ //BGM 2
+			if (isWave && !bgmlock2){
+				ServerCommand("fb_operator 1001");
+				CreateTimer(0.1, TimedOperator, 3);
+			}
+			return Plugin_Continue;
+		}
+		case 4:{ //BGM 3
+			if (isWave && !bgmlock3 && !crusader){
+				ServerCommand("fb_operator 1001");
+				CreateTimer(0.1, TimedOperator, 4);
+			}
+			return Plugin_Continue;
+		}
+		case 5:{ //BGM 4
+			if (isWave && !bgmlock4){
+				ServerCommand("fb_operator 1001");
+				CreateTimer(0.1, TimedOperator, 5);
+			}
+			return Plugin_Continue;
+		}
+		case 6:{ //BGM 5
+			if (isWave && !bgmlock5 && !crusader){
+				ServerCommand("fb_operator 1001");
+				CreateTimer(0.1, TimedOperator, 6);
+			}
+			return Plugin_Continue;
+		}
+		case 7:{ //BGM 6
+			if (isWave && !bgmlock6){
+				ServerCommand("fb_operator 1001");
+				CreateTimer(0.1, TimedOperator, 7);
+			}
+			return Plugin_Continue;
+		}
+		case 8:{ //BGM 7
+			if (isWave && !bgmlock7){
+				ServerCommand("fb_operator 1001");
+				CreateTimer(0.1, TimedOperator, 8);
+			}
+			return Plugin_Continue;
+		}
+		case 9:{ //BGM 8
+			if (isWave && !bgmlock8){
+				ServerCommand("fb_operator 1001");
+				CreateTimer(0.1, TimedOperator, 9);
+			}
+			return Plugin_Continue;
+		}
+		case 10:{ //BGM 9
+			if (isWave && !bgmlock9){
+				ServerCommand("fb_operator 1001");
+				CreateTimer(0.1, TimedOperator, 10);
+			}
+		}
+	}
+	return Plugin_Continue;
+}*/
 //Timed commands
 public Action TimedOperator(Handle timer, int job){
 	switch(job){
 		case 0:{
 			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave %i: {forestgreen}%s", curWave, songName);
 		}
-		case 1:{
-			int BGM = GetRandomInt(1, 2);
-			switch(BGM){
-				case 1:{
-					CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL-10, true);
-					curSong = DEFAULTBGM1;
-					songName = DEFAULTBGM1Title;
-					CreateTimer(DefBGM1Dur, RefireBGM, 1);
-				}
-				case 2:{
-					CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL-10, true);
-					curSong = DEFAULTBGM2;
-					songName = DEFAULTBGM2Title;
-					CreateTimer(DefBGM2Dur, RefireBGM, 1);
+		case 1:{ //Music system rewrite (again)
+			if(!isWave){
+				int BGM = GetRandomInt(1, 2);
+				switch(BGM){
+					case 1:{
+						CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL-10, true);
+						curSong = DEFAULTBGM1;
+						songName = DEFAULTBGM1Title;
+						FireEntityInput("FB.MusicTimer", "RefireTime", "137.55", 0.0),
+						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+					}
+					case 2:{
+						CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL-10, true);
+						curSong = DEFAULTBGM2;
+						songName = DEFAULTBGM2Title;
+						FireEntityInput("FB.MusicTimer", "RefireTime", "235.3", 0.0),
+						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+					}
 				}
 			}
-		}
+			else{
+				switch (curWave){
+					case 1:{
+						if(tacobell){
+							if(tbLoop == 0){
+								curSong = BGM9Intro;
+								songName = BGM9Title;
+								CustomSoundEmitter(BGM9Intro, BGMSNDLVL-5, true);
+								FireEntityInput("FB.MusicTimer", "RefireTime", "11.65", 0.0),
+								FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+								FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+								tbLoop = 1;
+							}
+							else{					
+								CustomSoundEmitter(BGM9, BGMSNDLVL-5, true);
+								curSong = BGM9;
+								songName = BGM9Title;
+								FireEntityInput("FB.MusicTimer", "RefireTime", "111.7", 0.0),
+								FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+								FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+							}
+						}
+						else{
+							CustomSoundEmitter(BGM1, BGMSNDLVL, true);
+							curSong = BGM1;
+							songName = BGM1Title;
+							FireEntityInput("FB.MusicTimer", "RefireTime", "229.05", 0.0),
+							FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+							FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+						}
+					}
+					case 2:{
+						CustomSoundEmitter(BGM2, BGMSNDLVL, true);
+						curSong = BGM2;
+						songName = BGM2Title;
+						FireEntityInput("FB.MusicTimer", "RefireTime", "153.75", 0.0),
+						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+					}
+					case 3:{
+						CustomSoundEmitter(BGM3, BGMSNDLVL, true);
+						curSong = BGM3;
+						songName = BGM3Title;
+						FireEntityInput("FB.MusicTimer", "RefireTime", "166.65", 0.0),
+						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+					}
+					case 4:{
+						CustomSoundEmitter(BGM2, BGMSNDLVL-15, true);
+						curSong = BGM4;
+						songName = BGM4Title;
+						FireEntityInput("FB.MusicTimer", "RefireTime", "122.05", 0.0),
+						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+					}
+					case 5:{
+						CustomSoundEmitter(BGM5, BGMSNDLVL-5, true);
+						curSong = BGM5;
+						songName = BGM5Title;
+						FireEntityInput("FB.MusicTimer", "RefireTime", "131.55", 0.0),
+						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+					}
+					case 6:{
+						CustomSoundEmitter(BGM2, BGMSNDLVL, true);
+						curSong = BGM2;
+						songName = BGM2Title;
+						FireEntityInput("FB.MusicTimer", "RefireTime", "427.15", 0.0),
+						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+					}
+					case 7:{
+						CustomSoundEmitter(BGM2, BGMSNDLVL, true);
+						curSong = BGM2;
+						songName = BGM2Title;
+						FireEntityInput("FB.MusicTimer", "RefireTime", "133.05", 0.0),
+						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+					}
+					case 8:{
+						CustomSoundEmitter(BGM2, BGMSNDLVL, true);
+						curSong = BGM2;
+						songName = BGM2Title;
+						FireEntityInput("FB.MusicTimer", "RefireTime", "313.65", 0.0),
+						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+					}
+				}
+			}
+		}/*
 		case 2:{
 			if(tacobell){
 				curSong = BGM9Intro;
@@ -3208,7 +3304,7 @@ public Action TimedOperator(Handle timer, int job){
 			curSong = BGM9;
 			songName = BGM9Title;
 			CreateTimer(BGM9Dur, RefireBGM, 10);
-		}
+		}*/
 		case 21:{
 			CustomSoundEmitter(INCOMING, SFXSNDLVL, false);
 			return Plugin_Stop;
