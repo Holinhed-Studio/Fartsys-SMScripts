@@ -32,15 +32,6 @@ bool canTornado = false;
 bool crusader = false;
 bool isWave = false;
 bool tornado = false;
-bool bgmlock1 = true;
-bool bgmlock2 = true;
-bool bgmlock3 = true;
-bool bgmlock4 = true;
-bool bgmlock5 = true;
-bool bgmlock6 = true;
-bool bgmlock7 = true;
-bool bgmlock8 = true;
-bool bgmlock9 = true;
 bool onslaughter = false;
 bool tacobell = false;
 bool sacrificedByClient = false;
@@ -66,15 +57,6 @@ static char BGM6Title[32] = "FFXIV - Penitus";
 static char BGM7Title[32] = "FFXIV - Revenge Twofold";
 static char BGM8Title[32] = "FFXIV - Under the Weight";
 static char BGM9Title[64] = "Xenoblade Chronicles 2 - Battle!!";
-static float BGM1Dur = 229.25;
-static float BGM2Dur = 153.95;
-static float BGM3Dur = 166.85;
-static float BGM4Dur = 122.25;
-static float BGM5Dur = 131.75;
-static float BGM6Dur = 427.35;
-static float BGM7Dur = 133.25;
-static float BGM8Dur = 313.85;
-static float BGM9Dur = 111.90;
 static char BMB1SND[32] = "fartsy/misc/murica.mp3";
 static char BMB2SND[32] = "fartsy/bl2/grenade_detonate.mp3";
 static char BMB3SND[32] = "fartsy/gbombs5/t_12.mp3";
@@ -87,8 +69,6 @@ char curSong[64] = "null";
 char songName[64] = "null";
 static char DEFAULTBGM1[64] = "fartsy/music/ffxiv/TheSilentRegardOfStars.mp3";
 static char DEFAULTBGM2[64] = "fartsy/music/ffxiv/KnowledgeNeverSleeps.mp3";
-static float DefBGM1Dur = 137.75;
-static float DefBGM2Dur = 235.5;
 static char DEFAULTBGM1Title[64] = "FFXIV - The Silent Regard of Stars";
 static char DEFAULTBGM2Title[64] = "FFXIV - Knowledge Never Sleeps";
 static char EXPLOSIVEPARADISE[64] = "fartsy/misc/explosiveparadise.mp3";
@@ -142,6 +122,7 @@ static char WTFBOOM[32] = "fartsy/misc/wtfboom.mp3";
 static float HWNMin = 210.0;
 static float HWNMax = 380.0;
 static float Return[3] = {-3730.0, 67.0, -252.0};
+int BGMINDEX = 0;
 static int BGMSNDLVL = 95;
 int FailedCount = 0;
 int INCOMINGDISPLAYED = 0;
@@ -168,7 +149,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.4.0",
+	version = "4.4.1",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -1806,6 +1787,8 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
     bgmlock7 = true;
     bgmlock8 = true;
     bgmlock9 = true; */
+    BGMINDEX = 0;
+    tbLoop = 0;
     canHindenburg = false;
     canHWBoss = false;
     canTornado = false;
@@ -1843,15 +1826,8 @@ public Action EventWarning(Event Spawn_Event, const char[] Spawn_Name, bool Spaw
 
 //When the wave fails
 public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
-    bgmlock1 = true;
-    bgmlock2 = true;
-    bgmlock3 = true;
-    bgmlock4 = true;
-    bgmlock5 = true;
-    bgmlock6 = true;
-    bgmlock7 = true;
-    bgmlock8 = true;
-    bgmlock9 = true;
+    BGMINDEX = 0;
+    tbLoop = 0;
     canHindenburg = false;
     canHWBoss = false;
     canTornado = false;
@@ -2034,43 +2010,45 @@ public Action Command_Operator(int args){
 			switch (curWave){
 				case 1:{
 					if(tacobell){
-						bgmlock9 = false;
+						BGMINDEX = 10;
 						canTornado = true;
 						bombStatus = 0;
 						bombStatusMax = 10;
 						sacPointsMax = 90;
-						CreateTimer(0.1, TimedOperator, 2);
+						ServerCommand("fb_operator 1000");
 					}
 					else{
-						bgmlock1 = false;
+						BGMINDEX = 2;
 						bombStatus = 0;
 						bombStatusMax = 10;
 						sacPointsMax = 90;
-						CreateTimer(0.1, TimedOperator, 2);
+						ServerCommand("fb_operator 1000");
 					}
 				}
 				case 2,9,16:{
-					bgmlock2 = false;
+					BGMINDEX = 3;
 					canHWBoss = true;
 					canTornado = true;
 					bombStatus = 4;
 					bombStatusMax = 18;
 					sacPointsMax = 90;
-					CreateTimer(0.1, TimedOperator, 3);
+					ServerCommand("fb_operator 1000");
+					//CreateTimer(0.1, TimedOperator, 3);
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
 					CreateTimer(hwn, HWBosses);
 				}
 				case 3,10,17:{
-					bgmlock3 = false;
+					BGMINDEX = 4;
 					canHWBoss = true;
 					canTornado = true;
 					HWNMax = 360.0;
 					bombStatus = 7;
 					bombStatusMax = 26;
 					sacPointsMax = 90;
-					CreateTimer(0.1, TimedOperator, 4);
+					ServerCommand("fb_operator 1000");
+					//CreateTimer(0.1, TimedOperator, 4);
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
@@ -2081,7 +2059,7 @@ public Action Command_Operator(int args){
 					CreateTimer(hwn, HWBosses);
 				}
 				case 4,11,18:{
-					bgmlock4 = false;
+					BGMINDEX = 5;
 					canHWBoss = true;
 					canTornado = true;
 					HWNMax = 360.0;
@@ -2089,7 +2067,8 @@ public Action Command_Operator(int args){
 					bombStatus = 12;
 					bombStatusMax = 34;
 					sacPointsMax = 90;
-					CreateTimer(0.1, TimedOperator, 5);
+					ServerCommand("fb_operator 1000");
+					//CreateTimer(0.1, TimedOperator, 5);
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
@@ -2098,7 +2077,7 @@ public Action Command_Operator(int args){
 					CreateTimer(hwn, HWBosses);
 				}
 				case 5,12,19:{
-					bgmlock5 = false;
+					BGMINDEX = 6;
 					canHWBoss = true;
 					canTornado = true;
 					HWNMax = 260.0;
@@ -2107,7 +2086,8 @@ public Action Command_Operator(int args){
 					bombStatus = 14;
 					bombStatusMax = 42;
 					sacPointsMax = 100;
-					CreateTimer(0.1, TimedOperator, 6);
+					ServerCommand("fb_operator 1000");
+					//CreateTimer(0.1, TimedOperator, 6);
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
@@ -2130,7 +2110,7 @@ public Action Command_Operator(int args){
 					CreateTimer(hwn, HWBosses);
 				}
 				case 6,13,20:{
-					bgmlock6 = false;
+					BGMINDEX = 7;
 					canHWBoss = true;
 					canTornado = true;
 					HWNMax = 260.0;
@@ -2139,7 +2119,7 @@ public Action Command_Operator(int args){
 					bombStatus = 20;
 					bombStatusMax = 50;
 					sacPointsMax = 100;
-					CreateTimer(0.1, TimedOperator, 7);
+					ServerCommand("fb_operator 1000");
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
@@ -2148,7 +2128,7 @@ public Action Command_Operator(int args){
 					CreateTimer(hwn, HWBosses);
 				}
 				case 7,14,21:{
-					bgmlock7 = false;
+					BGMINDEX = 8;
 					canHWBoss = true;
 					canTornado = true;
 					HWNMax = 240.0;
@@ -2157,7 +2137,7 @@ public Action Command_Operator(int args){
 					bombStatus = 28;
 					bombStatusMax = 58;
 					sacPointsMax = 100;
-					CreateTimer(0.1, TimedOperator, 8);
+					ServerCommand("fb_operator 1000");
 					FireEntityInput("rain", "Alpha", "200", 0.0);
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
@@ -2168,7 +2148,7 @@ public Action Command_Operator(int args){
 					CreateTimer(hwn, HWBosses);
 				}
 				case 8,15:{
-					bgmlock8 = false;
+					BGMINDEX = 9;
 					canHWBoss = true;
 					canTornado = true;
 					HWNMax = 240.0;
@@ -2176,7 +2156,7 @@ public Action Command_Operator(int args){
 					bombStatus = 30;
 					bombStatusMax = 66;
 					sacPointsMax = 100;
-					CreateTimer(0.1, TimedOperator, 9);
+					ServerCommand("fb_operator 1000");
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
@@ -3132,13 +3112,16 @@ public Action TimedOperator(Handle timer, int job){
 			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave %i: {forestgreen}%s", curWave, songName);
 		}
 		case 1:{ //Music system rewrite (again)
-			if(!isWave){
+		switch(BGMINDEX){
+			//Default BGM indexes are 0 and 1.
+			case 0,1:{
 				int BGM = GetRandomInt(1, 2);
 				switch(BGM){
 					case 1:{
 						CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL-10, true);
 						curSong = DEFAULTBGM1;
 						songName = DEFAULTBGM1Title;
+						BGMINDEX = 0;
 						FireEntityInput("FB.MusicTimer", "RefireTime", "137.55", 0.0),
 						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
 						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
@@ -3147,102 +3130,107 @@ public Action TimedOperator(Handle timer, int job){
 						CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL-10, true);
 						curSong = DEFAULTBGM2;
 						songName = DEFAULTBGM2Title;
+						BGMINDEX = 1;
 						FireEntityInput("FB.MusicTimer", "RefireTime", "235.3", 0.0),
 						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
 						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
 					}
 				}
 			}
-			else{
-				switch (curWave){
-					case 1:{
-						if(tacobell){
-							if(tbLoop == 0){
-								curSong = BGM9Intro;
-								songName = BGM9Title;
-								CustomSoundEmitter(BGM9Intro, BGMSNDLVL-5, true);
-								FireEntityInput("FB.MusicTimer", "RefireTime", "11.65", 0.0),
-								FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-								FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-								tbLoop = 1;
-							}
-							else{					
-								CustomSoundEmitter(BGM9, BGMSNDLVL-5, true);
-								curSong = BGM9;
-								songName = BGM9Title;
-								FireEntityInput("FB.MusicTimer", "RefireTime", "111.7", 0.0),
-								FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-								FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-							}
-						}
-						else{
-							CustomSoundEmitter(BGM1, BGMSNDLVL, true);
-							curSong = BGM1;
-							songName = BGM1Title;
-							FireEntityInput("FB.MusicTimer", "RefireTime", "229.05", 0.0),
-							FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-							FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-						}
-					}
-					case 2:{
-						CustomSoundEmitter(BGM2, BGMSNDLVL, true);
-						curSong = BGM2;
-						songName = BGM2Title;
-						FireEntityInput("FB.MusicTimer", "RefireTime", "153.75", 0.0),
-						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-					}
-					case 3:{
-						CustomSoundEmitter(BGM3, BGMSNDLVL, true);
-						curSong = BGM3;
-						songName = BGM3Title;
-						FireEntityInput("FB.MusicTimer", "RefireTime", "166.65", 0.0),
-						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-					}
-					case 4:{
-						CustomSoundEmitter(BGM2, BGMSNDLVL-15, true);
-						curSong = BGM4;
-						songName = BGM4Title;
-						FireEntityInput("FB.MusicTimer", "RefireTime", "122.05", 0.0),
-						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-					}
-					case 5:{
-						CustomSoundEmitter(BGM5, BGMSNDLVL-5, true);
-						curSong = BGM5;
-						songName = BGM5Title;
-						FireEntityInput("FB.MusicTimer", "RefireTime", "131.55", 0.0),
-						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-					}
-					case 6:{
-						CustomSoundEmitter(BGM2, BGMSNDLVL, true);
-						curSong = BGM2;
-						songName = BGM2Title;
-						FireEntityInput("FB.MusicTimer", "RefireTime", "427.15", 0.0),
-						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-					}
-					case 7:{
-						CustomSoundEmitter(BGM2, BGMSNDLVL, true);
-						curSong = BGM2;
-						songName = BGM2Title;
-						FireEntityInput("FB.MusicTimer", "RefireTime", "133.05", 0.0),
-						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-					}
-					case 8:{
-						CustomSoundEmitter(BGM2, BGMSNDLVL, true);
-						curSong = BGM2;
-						songName = BGM2Title;
-						FireEntityInput("FB.MusicTimer", "RefireTime", "313.65", 0.0),
-						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-					}
+			//BGM1
+			case 2:{
+				CustomSoundEmitter(BGM1, BGMSNDLVL, true);
+				curSong = BGM1;
+				songName = BGM1Title;
+				FireEntityInput("FB.MusicTimer", "RefireTime", "229.05", 0.0),
+				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+			}
+			//BGM2
+			case 3:{
+				CustomSoundEmitter(BGM2, BGMSNDLVL, true);
+				curSong = BGM2;
+				songName = BGM2Title;
+				FireEntityInput("FB.MusicTimer", "RefireTime", "153.75", 0.0),
+				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+			}
+			//BGM3
+			case 4:{
+				CustomSoundEmitter(BGM3, BGMSNDLVL, true);
+				curSong = BGM3;
+				songName = BGM3Title;
+				FireEntityInput("FB.MusicTimer", "RefireTime", "166.65", 0.0),
+				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+			}
+			//BGM4
+			case 5:{
+				CustomSoundEmitter(BGM2, BGMSNDLVL-15, true);
+				curSong = BGM4;
+				songName = BGM4Title;
+				FireEntityInput("FB.MusicTimer", "RefireTime", "122.05", 0.0),
+				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+			}
+			//BGM5
+			case 6:{
+				CustomSoundEmitter(BGM5, BGMSNDLVL-5, true);
+				curSong = BGM5;
+				songName = BGM5Title;
+				FireEntityInput("FB.MusicTimer", "RefireTime", "131.55", 0.0),
+				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+			}
+			//BGM6
+			case 7:{
+				CustomSoundEmitter(BGM6, BGMSNDLVL, true);
+				curSong = BGM6;
+				songName = BGM6Title;
+				FireEntityInput("FB.MusicTimer", "RefireTime", "427.15", 0.0),
+				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+			}
+			//BGM7
+			case 8:{
+				CustomSoundEmitter(BGM7, BGMSNDLVL, true);
+				curSong = BGM7;
+				songName = BGM7Title;
+				FireEntityInput("FB.MusicTimer", "RefireTime", "133.05", 0.0),
+				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+			}
+			//BGM8
+			case 9:{
+				CustomSoundEmitter(BGM8, BGMSNDLVL, true);
+				curSong = BGM8;
+				songName = BGM8Title;
+				FireEntityInput("FB.MusicTimer", "RefireTime", "313.65", 0.0),
+				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+			}
+			//BGM9
+			case 10:{
+				if(tbLoop == 0){
+					curSong = BGM9Intro;
+					songName = BGM9Title;
+					CustomSoundEmitter(BGM9Intro, BGMSNDLVL-5, true);
+					FireEntityInput("FB.MusicTimer", "RefireTime", "11.65", 0.0),
+					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+					tbLoop = 1;
+				}
+				else{					
+					CustomSoundEmitter(BGM9, BGMSNDLVL-5, true);
+					curSong = BGM9;
+					songName = BGM9Title;
+					FireEntityInput("FB.MusicTimer", "RefireTime", "111.7", 0.0),
+					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
 				}
 			}
-		}/*
+		}
+	}/*
 		case 2:{
 			if(tacobell){
 				curSong = BGM9Intro;
