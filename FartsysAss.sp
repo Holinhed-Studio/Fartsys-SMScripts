@@ -30,6 +30,7 @@ bool canSENTShark = false;
 bool canSENTStars = false;
 bool canTornado = false;
 bool crusader = false;
+bool doesBossSpawn = false;
 bool isWave = false;
 bool tornado = false;
 bool onslaughter = false;
@@ -149,7 +150,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.4.3",
+	version = "4.4.4",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -1792,6 +1793,7 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
     canHindenburg = false;
     canHWBoss = false;
     canTornado = false;
+    doesBossSpawn = false;
     isWave = false;
     bombStatusMax = 7;
     bombStatus = 5;
@@ -1831,6 +1833,7 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     canHindenburg = false;
     canHWBoss = false;
     canTornado = false;
+    doesBossSpawn = false;
     isWave = false;
     bombStatusMax = 7;
     bombStatus = 5;
@@ -2151,6 +2154,7 @@ public Action Command_Operator(int args){
 					BGMINDEX = 9;
 					canHWBoss = true;
 					canTornado = true;
+					doesBossSpawn = true;
 					HWNMax = 240.0;
 					HWNMin = 120.0;
 					bombStatus = 30;
@@ -2192,6 +2196,10 @@ public Action Command_Operator(int args){
 			if(!onslaughter){
 			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has been destroyed. ({limegreen}+1 pt{white})");
 			sacPoints++;
+			}
+			else if(doesBossSpawn){
+				CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has been destroyed. [debug] But wait, there's more! ({limegreen}+1 pt{white})");
+				sacPoints++;
 			}
 			else{
 				CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}ONSLAUGHTER {white}has been destroyed. ({limegreen}+25 pts{white})");
