@@ -149,7 +149,7 @@ public Plugin myinfo =
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.4.2",
+	version = "4.4.3",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -2706,7 +2706,7 @@ public Action Command_Operator(int args){
 		// Select BGM
 		case 1000:{
 			ServerCommand("fb_operator 1001");
-			CreateTimer(0.1, TimedOperator, 1);
+			CreateTimer(0.0, TimedOperator, 1); //Create a timer to use a CPU cycle so that we don't confuse stopSound with our target song.
 		}
 		//Stop current song
 		case 1001:{
@@ -3167,7 +3167,7 @@ public Action TimedOperator(Handle timer, int job){
 			}
 			//BGM4
 			case 5:{
-				CustomSoundEmitter(BGM2, BGMSNDLVL-15, true);
+				CustomSoundEmitter(BGM4, BGMSNDLVL-15, true);
 				curSong = BGM4;
 				songName = BGM4Title;
 				FireEntityInput("FB.MusicTimer", "RefireTime", "122.05", 0.0),
@@ -3216,7 +3216,7 @@ public Action TimedOperator(Handle timer, int job){
 					curSong = BGM9Intro;
 					songName = BGM9Title;
 					CustomSoundEmitter(BGM9Intro, BGMSNDLVL-5, true);
-					FireEntityInput("FB.MusicTimer", "RefireTime", "11.65", 0.0),
+					FireEntityInput("FB.MusicTimer", "RefireTime", "11.60", 0.0),
 					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
 					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
 					tbLoop = 1;
