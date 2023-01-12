@@ -148,7 +148,7 @@ public Plugin myinfo ={
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.4.5",
+	version = "4.4.6",
 	url = "https://forums.firehostredux.com"
 };
 
