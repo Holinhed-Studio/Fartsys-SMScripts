@@ -30,10 +30,8 @@ bool canSENTShark = false;
 bool canSENTStars = false;
 bool canTornado = false;
 bool crusader = false;
-bool doesBossSpawn = false;
 bool isWave = false;
 bool tornado = false;
-bool onslaughter = false;
 bool tacobell = false;
 bool sacrificedByClient = false;
 bool TornadoWarningIssued = false;
@@ -140,17 +138,17 @@ static int SFXSNDLVL = 75;
 static int SNDCHAN = 6;
 int soundPreference[MAXPLAYERS + 1];
 int tbLoop = 0;
+int waveFlags = 0;
 Handle cvarSNDDefault = INVALID_HANDLE;
-stock bool IsValidClient(int client)
-{
+stock bool IsValidClient(int client){
 	return (0 < client <= MaxClients && IsClientInGame(client));
 }
-public Plugin myinfo =
-{
+
+public Plugin myinfo ={
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.4.4",
+	version = "4.4.5",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -789,7 +787,7 @@ public Action SelectAdminTimer(Handle timer){
 
 //Brute Justice Timer
 public Action OnslaughterATK(Handle timer){
-	if (!onslaughter){
+	if (waveFlags != 1){
 		return Plugin_Stop;
 	}
 	else{
@@ -1486,8 +1484,12 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 	GetClientName(attacker, attackerName, sizeof(attackerName));
 	if (0 < client <= MaxClients && IsClientInGame(client)){
 		int damagebits = Spawn_Event.GetInt("damagebits");
-		if(StrEqual(attackerName, "Console")){
-			weapon = "[INTENTIONAL GAME DESIGN]";
+		//Find server name
+		Handle convar = FindConVar("hostname");
+		char ServerName[64];
+		GetConVarString( convar, ServerName, sizeof(ServerName)); 
+		if(StrEqual(attackerName, ServerName)){
+			attackerName = "[INTENTIONAL GAME DESIGN]";
 		}
 		if(attacker>0 && sacrificedByClient){//Was the client Sacrificed?
 			SacrificeClient(client, attacker, bombReset);
@@ -1646,9 +1648,9 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 						CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been vaporized by {red}THE CRUSADER{white}!", client);
 						weapon = "Crusader";
 					}
-					else if(onslaughter){
-					CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been vaporized by {red}THE ONSLAUGHTER{white}!", client);
-					weapon = "Onslaughter";	
+					else if(waveFlags == 1){
+						CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been vaporized by {red}THE ONSLAUGHTER{white}!", client);
+						weapon = "Onslaughter";	
 					}
 					else{
 						CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been vaporized by a {red}HIGH ENERGY PHOTON BEAM{white}!", client);
@@ -1688,7 +1690,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 		}
 
 		//Log if a player killed someone
-		else if(attacker != client){
+		if(attacker != client){
 			char query[256];
 			int steamID;
 			if(attacker != 0){
@@ -1710,7 +1712,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 					Format(queryClient, sizeof(queryClient), "UPDATE ass_activity SET deaths = deaths + 1, deathssession = deathssession + 1 WHERE steamid = %i;", steamIDclient);
 					FB_Database.Query(Database_FastQuery, queryClient);
 					if (!StrEqual(weapon, "world")){
-						Format(queryClient, sizeof(queryClient), "UPDATE ass_activity SET killedbyname = '%N', killedbyweapon = '%s' WHERE steamid = %i;", attacker, weapon, steamIDclient);
+						Format(queryClient, sizeof(queryClient), "UPDATE ass_activity SET killedbyname = '%s', killedbyweapon = '%s' WHERE steamid = %i;", attackerName, weapon, steamIDclient);
 						FB_Database.Query(Database_FastQuery, queryClient);
 					}
 					return Plugin_Handled;
@@ -1793,11 +1795,11 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
     canHindenburg = false;
     canHWBoss = false;
     canTornado = false;
-    doesBossSpawn = false;
     isWave = false;
     bombStatusMax = 7;
     bombStatus = 5;
     explodeType = 0;
+    waveFlags = 0;
     //CreateTimer(3.0, RefireDefBGM1);
     ServerCommand("fb_operator 1000");
     CreateTimer(1.0, PerformAdverts);
@@ -1833,12 +1835,11 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     canHindenburg = false;
     canHWBoss = false;
     canTornado = false;
-    doesBossSpawn = false;
     isWave = false;
     bombStatusMax = 7;
     bombStatus = 5;
     explodeType = 0;
-    onslaughter = false;
+    waveFlags = 0;
     if (FailedCount == 0){ //Works around valve's way of firing EventWaveFailed four times when mission changes. Without this, BGM would play 4 times and any functions enclosed would also happen four times.......
 		FailedCount++;
 		ServerCommand("fb_operator 1000");
@@ -2096,7 +2097,7 @@ public Action Command_Operator(int args){
 					FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
 					FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
-					onslaughter = true;
+					waveFlags = 1;
 					FireEntityInput("FB.BruteJustice", "Enable", "", 3.0);
 					FireEntityInput("FB.BruteJusticeTrain", "StartForward", "", 3.0);
 					CreateTimer(5.0, OnslaughterATK);
@@ -2154,12 +2155,12 @@ public Action Command_Operator(int args){
 					BGMINDEX = 9;
 					canHWBoss = true;
 					canTornado = true;
-					doesBossSpawn = true;
 					HWNMax = 240.0;
 					HWNMin = 120.0;
 					bombStatus = 30;
 					bombStatusMax = 66;
 					sacPointsMax = 100;
+					waveFlags = 2;
 					ServerCommand("fb_operator 1000");
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
@@ -2193,23 +2194,25 @@ public Action Command_Operator(int args){
 		}
 		//Tank Destroyed (+1), includes disabling onslaughter. Just as it was in the original map. Except now it checks if there's an onslaughter.
 		case 13:{
-			if(!onslaughter){
-			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has been destroyed. ({limegreen}+1 pt{white})");
-			sacPoints++;
-			}
-			else if(doesBossSpawn){
-				CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has been destroyed. [debug] But wait, there's more! ({limegreen}+1 pt{white})");
-				sacPoints++;
-			}
-			else{
-				CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}ONSLAUGHTER {white}has been destroyed. ({limegreen}+25 pts{white})");
-				FireEntityInput("FB.BruteJustice", "Disable", "", 0.0);	
-				FireEntityInput("FB.BruteJusticeTrain", "Stop", "", 0.0);
-				FireEntityInput("FB.BruteJusticeParticles", "Stop", "", 0.0);
-				FireEntityInput("FB.BruteJusticeDMGRelay", "Break", "", 0.0);
-				FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.5);
-				onslaughter = false;
-				sacPoints+=25;
+			switch(waveFlags){
+				case 0:{
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has been destroyed. waveFlags was 0. ({limegreen}+1 pt{white})");
+					sacPoints++;
+				}
+				case 1:{
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}ONSLAUGHTER {white}has been destroyed. ({limegreen}+25 pts{white})");
+					FireEntityInput("FB.BruteJustice", "Disable", "", 0.0);	
+					FireEntityInput("FB.BruteJusticeTrain", "Stop", "", 0.0);
+					FireEntityInput("FB.BruteJusticeParticles", "Stop", "", 0.0);
+					FireEntityInput("FB.BruteJusticeDMGRelay", "Break", "", 0.0);
+					FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.5);
+					waveFlags = 0;
+					sacPoints+=25;
+				}
+				case 2:{
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has been destroyed. But wait, there's more! ({limegreen}+1 pt{white})");
+					sacPoints++;
+				}
 			}
 			return Plugin_Handled;
 		}
@@ -2397,7 +2400,6 @@ public Action Command_Operator(int args){
 		//Tank deployed its bomb
 		case 16:{
 			CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has deployed its bomb! ({limegreen}+1 pt{white})");
-			onslaughter = false;
 		}
 		//Shark Enable & notify bomb push began
 		case 20:{
@@ -3037,82 +3039,7 @@ public Action PerformWaveSetup(){
 			ServerCommand("fb_operator 1004"); //Activate Tornado Timer
 			ServerCommand("fb_operator 1007"); //Choose bomb path
 			return Plugin_Handled;
-}/*
-//NEW MUSIC SYSTEM
-public Action RefireBGM(Handle timer, int BGM){
-	switch(BGM){
-		case 1:{ //Default BGM
-			if (!isWave){
-				ServerCommand("fb_operator 1000");
-				return Plugin_Continue;
-			}
-			return Plugin_Continue; // We continue here to not interrupt other songs.
-		}
-		case 2:{ //BGM 1
-			if (isWave && !bgmlock1){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 2);
-			}
-			return Plugin_Continue;
-		}
-		case 3:{ //BGM 2
-			if (isWave && !bgmlock2){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 3);
-			}
-			return Plugin_Continue;
-		}
-		case 4:{ //BGM 3
-			if (isWave && !bgmlock3 && !crusader){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 4);
-			}
-			return Plugin_Continue;
-		}
-		case 5:{ //BGM 4
-			if (isWave && !bgmlock4){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 5);
-			}
-			return Plugin_Continue;
-		}
-		case 6:{ //BGM 5
-			if (isWave && !bgmlock5 && !crusader){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 6);
-			}
-			return Plugin_Continue;
-		}
-		case 7:{ //BGM 6
-			if (isWave && !bgmlock6){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 7);
-			}
-			return Plugin_Continue;
-		}
-		case 8:{ //BGM 7
-			if (isWave && !bgmlock7){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 8);
-			}
-			return Plugin_Continue;
-		}
-		case 9:{ //BGM 8
-			if (isWave && !bgmlock8){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 9);
-			}
-			return Plugin_Continue;
-		}
-		case 10:{ //BGM 9
-			if (isWave && !bgmlock9){
-				ServerCommand("fb_operator 1001");
-				CreateTimer(0.1, TimedOperator, 10);
-			}
-		}
-	}
-	return Plugin_Continue;
-}*/
+}
 //Timed commands
 public Action TimedOperator(Handle timer, int job){
 	switch(job){
