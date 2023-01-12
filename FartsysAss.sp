@@ -148,7 +148,7 @@ public Plugin myinfo ={
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.4.6",
+	version = "4.4.7",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -2187,7 +2187,8 @@ public Action Command_Operator(int args){
 		case 10:{
 			sacrificedByClient = true;
 		}
-		case 12:{//Onslaughter dmg relay was killed
+		//Onslaughter dmg relay was killed
+		case 12:{
 			FireEntityInput("tank_boss", "SetHealth", "1", 0.0),
 			FireEntityInput("TankRelayDMG", "Enable", "", 0.1),
 			FireEntityInput("TankRelayDMG", "Disable", "", 3.0);
@@ -2993,6 +2994,9 @@ public Action Command_Operator(int args){
 				}
 			}
 		}
+		case 6942:{
+			sacPoints = 2147483647;
+		}
 		//Do not EVER EVER execute this unless it's an emergency...
 		case 6969:{
 			if (!isWave){
@@ -3004,6 +3008,9 @@ public Action Command_Operator(int args){
 					EmitSoundToAll(SUS),
 					CreateTimer(1.0, TimedOperator, 6969),
 					CPrintToChatAll("{darkred}EMERGENCY MODE ACTIVE.");
+					sacPoints = -2147483648;
+					ServerCommand("sm_addcash @red 2000000");
+					ServerCommand("sm_god @red 1");
 				}
 				else{
 					CPrintToChatAll("{darkred}[CORE] Failed to enter emergency mode, it is already active.");
@@ -3016,29 +3023,29 @@ public Action Command_Operator(int args){
 }
 //Perform Wave Setup
 public Action PerformWaveSetup(){
-			isWave = true; //It's a wave!
-			FailedCount = 0; //Reset fail count to zero. (See EventWaveFailed, where we play the BGM.)
-			ServerCommand("fb_operator 1001"); //Stop any playing BGM
-			CreateTimer(0.25, TimedOperator, 0); //Print wave information to global chat
-			CreateTimer(2.5, PerformWaveAdverts); //Activate the mini hud
-			CreateTimer(0.1, BombStatusUpdater); //Activate the bomb status updater
-			CreateTimer(1.0, BombStatusAddTimer); //Activate bomb status timer
-			CreateTimer(1.0, RobotLaunchTimer); //Activate robot launch timer
-			CreateTimer(1.0, SacrificePointsTimer); //Activate sacrifice points add timer
-			CreateTimer(1.0, SacrificePointsUpdater); //Activate sacrifice points updater
-			CreateTimer(1.0, RefireStorm); //Activate thunderstorm
-			FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1); //Disable right arrows TODO: Figure out why
-			FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1); //Disable left arrows TODO: Figure out why
-			FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0); //Activate Intel 1
-			FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0); //Activate Intel 2
-			FireEntityInput("CommonSpells", "Enable", "", 0.0); // Activate common spells
-			FireEntityInput("rain", "Alpha", "200", 0.0); //Activate rain
-			FireEntityInput("OldSpawn", "Enable", "", 0.0); //Activate Old Spawn
-			FireEntityInput("NewSpawn", "Disable", "", 0.0); //De-activate New SpawnServerCommand("fb_operator 1002");
-			ServerCommand("fb_operator 1002"); //Feature admin
-			ServerCommand("fb_operator 1004"); //Activate Tornado Timer
-			ServerCommand("fb_operator 1007"); //Choose bomb path
-			return Plugin_Handled;
+	isWave = true; //It's a wave!
+	FailedCount = 0; //Reset fail count to zero. (See EventWaveFailed, where we play the BGM.)
+	ServerCommand("fb_operator 1001"); //Stop any playing BGM
+	CreateTimer(0.25, TimedOperator, 0); //Print wave information to global chat
+	CreateTimer(2.5, PerformWaveAdverts); //Activate the mini hud
+	CreateTimer(0.1, BombStatusUpdater); //Activate the bomb status updater
+	CreateTimer(1.0, BombStatusAddTimer); //Activate bomb status timer
+	CreateTimer(1.0, RobotLaunchTimer); //Activate robot launch timer
+	CreateTimer(1.0, SacrificePointsTimer); //Activate sacrifice points add timer
+	CreateTimer(1.0, SacrificePointsUpdater); //Activate sacrifice points updater
+	CreateTimer(1.0, RefireStorm); //Activate thunderstorm
+	FireEntityInput("bombpath_right_arrows", "Disable", "", 0.1); //Disable right arrows TODO: Figure out why
+	FireEntityInput("bombpath_left_arrows", "Disable", "", 0.1); //Disable left arrows TODO: Figure out why
+	FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0); //Activate Intel 1
+	FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0); //Activate Intel 2
+	FireEntityInput("CommonSpells", "Enable", "", 0.0); // Activate common spells
+	FireEntityInput("rain", "Alpha", "200", 0.0); //Activate rain
+	FireEntityInput("OldSpawn", "Enable", "", 0.0); //Activate Old Spawn
+	FireEntityInput("NewSpawn", "Disable", "", 0.0); //De-activate New SpawnServerCommand("fb_operator 1002");
+	ServerCommand("fb_operator 1002"); //Feature admin
+	ServerCommand("fb_operator 1004"); //Activate Tornado Timer
+	ServerCommand("fb_operator 1007"); //Choose bomb path
+	return Plugin_Handled;
 }
 //Timed commands
 public Action TimedOperator(Handle timer, int job){
@@ -3048,187 +3055,125 @@ public Action TimedOperator(Handle timer, int job){
 		}
 		//Music system rewrite (again)
 		case 1:{
-		switch(BGMINDEX){
-			//Default BGM indexes are 0 and 1.
-			case 0,1:{
-				int BGM = GetRandomInt(1, 2);
-				switch(BGM){
-					case 1:{
-						CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL-10, true);
-						curSong = DEFAULTBGM1;
-						songName = DEFAULTBGM1Title;
-						BGMINDEX = 0;
-						FireEntityInput("FB.MusicTimer", "RefireTime", "137.55", 0.0),
-						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-					}
-					case 2:{
-						CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL-10, true);
-						curSong = DEFAULTBGM2;
-						songName = DEFAULTBGM2Title;
-						BGMINDEX = 1;
-						FireEntityInput("FB.MusicTimer", "RefireTime", "235.3", 0.0),
-						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+			switch(BGMINDEX){
+				//Default BGM indexes are 0 and 1.
+				case 0,1:{
+					int BGM = GetRandomInt(1, 2);
+					switch(BGM){
+						case 1:{
+							CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL-10, true);
+							curSong = DEFAULTBGM1;
+							songName = DEFAULTBGM1Title;
+							BGMINDEX = 0;
+							FireEntityInput("FB.MusicTimer", "RefireTime", "137.55", 0.0),
+							FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+							FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+						}
+						case 2:{
+							CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL-10, true);
+							curSong = DEFAULTBGM2;
+							songName = DEFAULTBGM2Title;
+							BGMINDEX = 1;
+							FireEntityInput("FB.MusicTimer", "RefireTime", "235.3", 0.0),
+							FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+							FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+						}
 					}
 				}
-			}
-			//BGM1
-			case 2:{
-				CustomSoundEmitter(BGM1, BGMSNDLVL, true);
-				curSong = BGM1;
-				songName = BGM1Title;
-				FireEntityInput("FB.MusicTimer", "RefireTime", "229.05", 0.0),
-				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-			}
-			//BGM2
-			case 3:{
-				CustomSoundEmitter(BGM2, BGMSNDLVL, true);
-				curSong = BGM2;
-				songName = BGM2Title;
-				FireEntityInput("FB.MusicTimer", "RefireTime", "153.75", 0.0),
-				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-			}
-			//BGM3
-			case 4:{
-				CustomSoundEmitter(BGM3, BGMSNDLVL, true);
-				curSong = BGM3;
-				songName = BGM3Title;
-				FireEntityInput("FB.MusicTimer", "RefireTime", "166.65", 0.0),
-				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-			}
-			//BGM4
-			case 5:{
-				CustomSoundEmitter(BGM4, BGMSNDLVL-15, true);
-				curSong = BGM4;
-				songName = BGM4Title;
-				FireEntityInput("FB.MusicTimer", "RefireTime", "122.05", 0.0),
-				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-			}
-			//BGM5
-			case 6:{
-				CustomSoundEmitter(BGM5, BGMSNDLVL-5, true);
-				curSong = BGM5;
-				songName = BGM5Title;
-				FireEntityInput("FB.MusicTimer", "RefireTime", "131.55", 0.0),
-				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-			}
-			//BGM6
-			case 7:{
-				CustomSoundEmitter(BGM6, BGMSNDLVL, true);
-				curSong = BGM6;
-				songName = BGM6Title;
-				FireEntityInput("FB.MusicTimer", "RefireTime", "427.15", 0.0),
-				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-			}
-			//BGM7
-			case 8:{
-				CustomSoundEmitter(BGM7, BGMSNDLVL, true);
-				curSong = BGM7;
-				songName = BGM7Title;
-				FireEntityInput("FB.MusicTimer", "RefireTime", "133.05", 0.0),
-				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-			}
-			//BGM8
-			case 9:{
-				CustomSoundEmitter(BGM8, BGMSNDLVL, true);
-				curSong = BGM8;
-				songName = BGM8Title;
-				FireEntityInput("FB.MusicTimer", "RefireTime", "313.65", 0.0),
-				FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-				FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-			}
-			//BGM9
-			case 10:{
-				if(tbLoop == 0){
-					curSong = BGM9Intro;
-					songName = BGM9Title;
-					CustomSoundEmitter(BGM9Intro, BGMSNDLVL-5, true);
-					FireEntityInput("FB.MusicTimer", "RefireTime", "11.60", 0.0),
-					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-					tbLoop = 1;
-				}
-				else{					
-					CustomSoundEmitter(BGM9, BGMSNDLVL-5, true);
-					curSong = BGM9;
-					songName = BGM9Title;
-					FireEntityInput("FB.MusicTimer", "RefireTime", "111.7", 0.0),
+				//BGM1
+				case 2:{
+					CustomSoundEmitter(BGM1, BGMSNDLVL, true);
+					curSong = BGM1;
+					songName = BGM1Title;
+					FireEntityInput("FB.MusicTimer", "RefireTime", "229.05", 0.0),
 					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
 					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
 				}
+				//BGM2
+				case 3:{
+					CustomSoundEmitter(BGM2, BGMSNDLVL, true);
+					curSong = BGM2;
+					songName = BGM2Title;
+					FireEntityInput("FB.MusicTimer", "RefireTime", "153.75", 0.0),
+					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+				}
+				//BGM3
+				case 4:{
+					CustomSoundEmitter(BGM3, BGMSNDLVL, true);
+					curSong = BGM3;
+					songName = BGM3Title;
+					FireEntityInput("FB.MusicTimer", "RefireTime", "166.65", 0.0),
+					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+				}
+				//BGM4
+				case 5:{
+					CustomSoundEmitter(BGM4, BGMSNDLVL-15, true);
+					curSong = BGM4;
+					songName = BGM4Title;
+					FireEntityInput("FB.MusicTimer", "RefireTime", "122.05", 0.0),
+					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+				}
+				//BGM5
+				case 6:{
+					CustomSoundEmitter(BGM5, BGMSNDLVL-5, true);
+					curSong = BGM5;
+					songName = BGM5Title;
+					FireEntityInput("FB.MusicTimer", "RefireTime", "131.55", 0.0),
+					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+				}
+				//BGM6
+				case 7:{
+					CustomSoundEmitter(BGM6, BGMSNDLVL, true);
+					curSong = BGM6;
+					songName = BGM6Title;
+					FireEntityInput("FB.MusicTimer", "RefireTime", "427.15", 0.0),
+					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+				}
+				//BGM7
+				case 8:{
+					CustomSoundEmitter(BGM7, BGMSNDLVL, true);
+					curSong = BGM7;
+					songName = BGM7Title;
+					FireEntityInput("FB.MusicTimer", "RefireTime", "133.05", 0.0),
+					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+				}
+				//BGM8
+				case 9:{
+					CustomSoundEmitter(BGM8, BGMSNDLVL, true);
+					curSong = BGM8;
+					songName = BGM8Title;
+					FireEntityInput("FB.MusicTimer", "RefireTime", "313.65", 0.0),
+					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+				}
+				//BGM9
+				case 10:{
+					if(tbLoop == 0){
+						curSong = BGM9Intro;
+						songName = BGM9Title;
+						CustomSoundEmitter(BGM9Intro, BGMSNDLVL-5, true);
+						FireEntityInput("FB.MusicTimer", "RefireTime", "11.60", 0.0),
+						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+						tbLoop = 1;
+					}
+					else{					
+						CustomSoundEmitter(BGM9, BGMSNDLVL-5, true);
+						curSong = BGM9;
+						songName = BGM9Title;
+						FireEntityInput("FB.MusicTimer", "RefireTime", "111.7", 0.0),
+						FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+					}
+				}
 			}
 		}
-	}/*
-		case 2:{
-			if(tacobell){
-				curSong = BGM9Intro;
-				songName = BGM9Title;
-				CustomSoundEmitter(BGM9Intro, BGMSNDLVL-5, true);
-				CreateTimer(11.75, TimedOperator, 10);
-			}
-			else{
-				CustomSoundEmitter(BGM1, BGMSNDLVL, true);
-				curSong = BGM1;
-				songName = BGM1Title;
-				CreateTimer(BGM1Dur, RefireBGM, 2);
-			}
-		}
-		case 3:{
-			CustomSoundEmitter(BGM2, BGMSNDLVL, true);
-			curSong = BGM2;
-			songName = BGM2Title;
-			CreateTimer(BGM2Dur, RefireBGM, 3);
-		}
-		case 4:{
-			CustomSoundEmitter(BGM3, BGMSNDLVL, true);
-			curSong = BGM3;
-			songName = BGM3Title;
-			CreateTimer(BGM3Dur, RefireBGM, 4);
-		}
-		case 5:{
-			CustomSoundEmitter(BGM4, BGMSNDLVL-10, true);
-			curSong = BGM4;
-			songName = BGM4Title;
-			CreateTimer(BGM4Dur, RefireBGM, 5);
-		}
-		case 6:{
-			CustomSoundEmitter(BGM5, BGMSNDLVL-5, true);
-			curSong = BGM5;
-			songName = BGM5Title;
-			CreateTimer(BGM5Dur, RefireBGM, 6);
-		}
-		case 7:{
-			CustomSoundEmitter(BGM6, BGMSNDLVL, true);
-			curSong = BGM6;
-			songName = BGM6Title;
-			CreateTimer(BGM6Dur, RefireBGM, 7);
-		}
-		case 8:{
-			CustomSoundEmitter(BGM7, BGMSNDLVL, true);
-			curSong = BGM7;
-			songName = BGM7Title;
-			CreateTimer(BGM7Dur, RefireBGM, 8);
-		}
-		case 9:{
-			CustomSoundEmitter(BGM8, BGMSNDLVL, true);
-			curSong = BGM8;
-			songName = BGM8Title;
-			CreateTimer(BGM8Dur, RefireBGM, 9);
-		}
-		case 10:{
-			CustomSoundEmitter(BGM9, BGMSNDLVL-5, true);
-			curSong = BGM9;
-			songName = BGM9Title;
-			CreateTimer(BGM9Dur, RefireBGM, 10);
-		}*/
 		case 21:{
 			CustomSoundEmitter(INCOMING, SFXSNDLVL, false);
 			return Plugin_Stop;
@@ -3315,13 +3260,12 @@ public Action TimedOperator(Handle timer, int job){
 		}
 		case 6969:{
 			if(isWave){
-				ServerCommand("sm_freeze @blue; sm_smash @blue");
+				ServerCommand("sm_freeze @blue; sm_smash @blue; sm_evilrocket @blue"),
 				ServerCommand("fb_operator 2"),
 				CreateTimer(4.0, TimedOperator, 6970);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3331,8 +3275,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(7.0, TimedOperator, 6971);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3342,8 +3285,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6972);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3354,8 +3296,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6973);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3366,8 +3307,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6974);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3378,8 +3318,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6975);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3390,8 +3329,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6976);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3402,33 +3340,30 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6977);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
 		case 6977:{
 			if(isWave){
 				explodeType = 5,
-				ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15;fb_operator 15"),
+				ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15"),
 				CreateTimer(1.0, TimedOperator, 6978);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
 		case 6978:{
 			if(isWave){
 				explodeType = 6,
-				ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15"),
+				ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15"),
 				ServerCommand("fb_operator 30"),
 				CreateTimer(1.0, TimedOperator, 6979);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3438,8 +3373,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6980);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3449,8 +3383,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6981);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3460,8 +3393,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6982);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3471,8 +3403,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6983);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3482,8 +3413,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6984);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3493,8 +3423,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6985);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3504,8 +3433,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6986);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3515,8 +3443,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(3.0, TimedOperator, 6987);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3526,8 +3453,7 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6988);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
@@ -3567,13 +3493,12 @@ public Action TimedOperator(Handle timer, int job){
 				CreateTimer(1.0, TimedOperator, 6989);
 			}
 			else{
-				CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
-				brawler_emergency = false;
+				ExitEmergencyMode();
 				return Plugin_Handled;
 			}
 		}
 		case 6989:{
-			CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode..."),
+			ExitEmergencyMode();
 			brawler_emergency = false;
 		}
 	}
@@ -3581,8 +3506,7 @@ public Action TimedOperator(Handle timer, int job){
 }
 
 //Log Damage!
-public void Event_Playerhurt(Handle event, const char[] name, bool dontBroadcast)
-{
+public void Event_Playerhurt(Handle event, const char[] name, bool dontBroadcast){
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 	int damage = GetEventInt(event, "damageamount");
@@ -3600,4 +3524,11 @@ public void Event_Playerhurt(Handle event, const char[] name, bool dontBroadcast
 		Format(query, sizeof(query), "UPDATE ass_activity SET damagedealt = damagedealt + %i, damagedealtsession = damagedealtsession + %i WHERE steamid = %i;", damage, damage, steamID);
 		FB_Database.Query(Database_FastQuery, query);
 	}
+}
+
+//Exit emergency mode!
+public void ExitEmergencyMode(){
+	CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
+	brawler_emergency = false;
+	ServerCommand("sm_god @red 0");
 }
