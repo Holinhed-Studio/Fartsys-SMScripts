@@ -148,7 +148,7 @@ public Plugin myinfo ={
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.4.7",
+	version = "4.4.8",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -3498,8 +3498,10 @@ public Action TimedOperator(Handle timer, int job){
 			}
 		}
 		case 6989:{
-			ExitEmergencyMode();
+			CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode."),
 			brawler_emergency = false;
+			ServerCommand("sm_god @red 0");
+			return Plugin_Handled;
 		}
 	}
 	return Plugin_Stop;
