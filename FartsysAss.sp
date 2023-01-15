@@ -2185,7 +2185,7 @@ public Action Command_Operator(int args){
 			switch (waveFlags){
 				//Case 0, boss does not spawn. This is unreachable.
 				case 0:{
-					PrintToServer("Caught unhandled exception: waveFlags 0 but operator 4 was invoked.");
+					PrintToServer("Caught unhandled exception: waveFlags 0 but operator 5 was invoked.");
 					return Plugin_Handled;
 				}
 				//Case 1, summon Onslaughter.
