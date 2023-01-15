@@ -148,7 +148,7 @@ public Plugin myinfo ={
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.4.8",
+	version = "4.5.0",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -2098,16 +2098,6 @@ public Action Command_Operator(int args){
 					FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
 					FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
 					waveFlags = 1;
-					FireEntityInput("FB.BruteJustice", "Enable", "", 3.0);
-					FireEntityInput("FB.BruteJusticeTrain", "StartForward", "", 3.0);
-					CreateTimer(5.0, OnslaughterATK);
-					FireEntityInput("FB.BruteJusticeParticles", "Start", "", 3.0);
-					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 3.0);
-					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 4.0);
-					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 5.0);
-					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 6.0);
-					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 7.0);
-					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 8.0);
 					float f = GetRandomFloat(60.0, 180.0);
 					CreateTimer(f, TimedOperator, 70);
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
@@ -2183,6 +2173,45 @@ public Action Command_Operator(int args){
 			}
 			return Plugin_Handled;
 		}
+		//Signal that previous boss should spawn.
+		case 4:{
+			waveFlags-=1;
+		}
+		//Signal that a boss should spawn
+		case 5:{
+			if(waveFlags<0){
+				waveFlags = 0;
+			}
+			switch (waveFlags){
+				//Case 0, boss does not spawn. This is unreachable.
+				case 0:{
+					PrintToServer("Caught unhandled exception: waveFlags 0 but operator 4 was invoked.");
+					return Plugin_Handled;
+				}
+				//Case 1, summon Onslaughter.
+				case 1:{
+					FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.0),
+					FireEntityInput("FB.BruteJustice", "Enable", "", 3.0),
+					FireEntityInput("FB.BruteJusticeTrain", "StartForward", "", 3.0),
+					CreateTimer(5.0, OnslaughterATK),
+					FireEntityInput("FB.BruteJusticeParticles", "Start", "", 3.0),
+					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 3.0),
+					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 4.0),
+					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 5.0),
+					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 6.0),
+					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 7.0),
+					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 8.0);
+				}
+				//Case 2, summon Custom Boss 1
+				case 2:{
+					CPrintToChatAll("{darkred} ERR: NOT IMPLEMENTED.");
+				}
+			}
+		}
+		//Signal that next boss should spawn
+		case 6:{
+			waveFlags+=1;
+		}
 		//Client was Sacrificed.
 		case 10:{
 			sacrificedByClient = true;
@@ -2193,7 +2222,7 @@ public Action Command_Operator(int args){
 			FireEntityInput("TankRelayDMG", "Enable", "", 0.1),
 			FireEntityInput("TankRelayDMG", "Disable", "", 3.0);
 		}
-		//Tank Destroyed (+1), includes disabling onslaughter. Just as it was in the original map. Except now it checks if there's an onslaughter.
+		//Tank Destroyed (+1), includes disabling onslaughter.
 		case 13:{
 			switch(waveFlags){
 				case 0:{
