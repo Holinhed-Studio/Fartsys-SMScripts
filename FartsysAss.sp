@@ -44,9 +44,11 @@ static char BGM4[64] = "fartsy/music/ffxiv/tornfromtheheavens.mp3";
 static char BGM5[64] = "fartsy/music/ffxiv/metalbrutejusticemode.mp3";
 static char BGM6[64] = "fartsy/music/ffxiv/penitus.mp3";
 static char BGM7[64] = "fartsy/music/ffxiv/revengetwofold.mp3";
-static char BGM8[64] = "fartsy/music/ffxiv/undertheweight.mp3";
+static char BGM8[64] = "fartsy/music/ffxiv/landslide.mp3";
 static char BGM9[64] = "fartsy/music/brawler/xbc2/battle.mp3";
 static char BGM9Intro[64] = "fartsy/music/brawler/xbc2/battle_intro.mp3";
+static char BGM10Intro[32] = "fartsy/music/brawler/onewingedintro.mp3";
+static char BGM10[64] = "fartsy/music/brawler/onewingedangel.mp3";
 static char BGM1Title[32] = "FFXIV - Locus";
 static char BGM2Title[32] = "FFXIV - Metal";
 static char BGM3Title[32] = "FFXIV - Exponential Entropy";
@@ -54,8 +56,9 @@ static char BGM4Title[32] = "FFXIV - Torn From the Heavens";
 static char BGM5Title[64] = "FFXIV - Metal: Brute Justice Mode";
 static char BGM6Title[32] = "FFXIV - Penitus";
 static char BGM7Title[32] = "FFXIV - Revenge Twofold";
-static char BGM8Title[32] = "FFXIV - Under the Weight";
+static char BGM8Title[32] = "FFXIV - Landslide";
 static char BGM9Title[64] = "Xenoblade Chronicles 2 - Battle!!";
+static char BGM10Title[64] = "FF Advent Children - One Winged Angel";
 static char BMB1SND[32] = "fartsy/misc/murica.mp3";
 static char BMB2SND[32] = "fartsy/bl2/grenade_detonate.mp3";
 static char BMB3SND[32] = "fartsy/gbombs5/t_12.mp3";
@@ -70,6 +73,7 @@ static char DEFAULTBGM1[64] = "fartsy/music/ffxiv/TheSilentRegardOfStars.mp3";
 static char DEFAULTBGM2[64] = "fartsy/music/ffxiv/KnowledgeNeverSleeps.mp3";
 static char DEFAULTBGM1Title[64] = "FFXIV - The Silent Regard of Stars";
 static char DEFAULTBGM2Title[64] = "FFXIV - Knowledge Never Sleeps";
+static char EVENTSTART[32] = "fartsy/ffxiv/bossfatejoin.mp3";
 static char EXPLOSIVEPARADISE[64] = "fartsy/misc/explosiveparadise.mp3";
 static char FALLSND01[32] = "fartsy/vo/l4d2/billfall02.mp3";
 static char FALLSND02[32] = "fartsy/vo/l4d2/coachfall02.mp3";
@@ -117,6 +121,8 @@ static char SPEC03[64] = "fartsy/vo/inurat/nuclearwaffle.mp3";
 static char STRONGMAN[32] = "fartsy/misc/strongman_bell.wav";
 static char SUS[32] = "amongus/emergency.mp3";
 static char TRIGGERSCORE[32] = "fartsy/misc/triggerscore.wav";
+static char VICTORY[32] = "fartsy/ffxivvictoryedit.mp3";
+static char VO_SEPHMEMORY[32] = "fartsy/vo/sephiroth/memory.mp3";
 static char WTFBOOM[32] = "fartsy/misc/wtfboom.mp3";
 static float HWNMin = 210.0;
 static float HWNMax = 380.0;
@@ -148,7 +154,7 @@ public Plugin myinfo ={
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.5.0",
+	version = "4.5.3",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -164,6 +170,8 @@ public void OnPluginStart(){
     PrecacheSound(BGM8, true),
 	PrecacheSound(BGM9, true),
 	PrecacheSound(BGM9Intro, true),
+	PrecacheSound(BGM10, true),
+	PrecacheSound(BGM10Intro, true),
 	PrecacheSound(BMB1SND, true),
 	PrecacheSound(BMB2SND, true),
 	PrecacheSound(BMB3SND, true),
@@ -174,6 +182,7 @@ public void OnPluginStart(){
     PrecacheSound(CRUSADERATTACK, true),
     PrecacheSound(DEFAULTBGM1, true),
     PrecacheSound(DEFAULTBGM2, true),
+	PrecacheSound(EVENTSTART, true),
 	PrecacheSound(EXPLOSIVEPARADISE, true),
     PrecacheSound(FALLSND01, true),
     PrecacheSound(FALLSND02, true),
@@ -221,6 +230,8 @@ public void OnPluginStart(){
     PrecacheSound(STRONGMAN, true),
 	PrecacheSound(SUS, true),
     PrecacheSound(TRIGGERSCORE, true),
+	PrecacheSound(VICTORY, true),
+	PrecacheSound(VO_SEPHMEMORY, true),
     PrecacheSound(WTFBOOM, true),
 	PrecacheSound("mvm/ambient_mp3/mvm_siren.mp3", true),
 	PrecacheSound("fartsy/memes/priceisright_fail.wav", true),
@@ -2097,7 +2108,6 @@ public Action Command_Operator(int args){
 					FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
 					FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
-					waveFlags = 1;
 					float f = GetRandomFloat(60.0, 180.0);
 					CreateTimer(f, TimedOperator, 70);
 					float hwn = GetRandomFloat(HWNMin, HWNMax);
@@ -2150,7 +2160,6 @@ public Action Command_Operator(int args){
 					bombStatus = 30;
 					bombStatusMax = 66;
 					sacPointsMax = 100;
-					waveFlags = 2;
 					ServerCommand("fb_operator 1000");
 					FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
 					FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
@@ -2175,7 +2184,7 @@ public Action Command_Operator(int args){
 		}
 		//Signal that previous boss should spawn.
 		case 4:{
-			waveFlags-=1;
+			waveFlags--;
 		}
 		//Signal that a boss should spawn
 		case 5:{
@@ -2185,11 +2194,12 @@ public Action Command_Operator(int args){
 			switch (waveFlags){
 				//Case 0, boss does not spawn. This is unreachable.
 				case 0:{
-					PrintToServer("Caught unhandled exception: waveFlags 0 but operator 5 was invoked.");
+					PrintToChatAll("Caught unhandled exception: waveFlags 0 but operator 5 was invoked.");
 					return Plugin_Handled;
 				}
 				//Case 1, summon Onslaughter.
 				case 1:{
+					PrintToChatAll("Got 1. Spawning Onslaughter."),
 					FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.0),
 					FireEntityInput("FB.BruteJustice", "Enable", "", 3.0),
 					FireEntityInput("FB.BruteJusticeTrain", "StartForward", "", 3.0),
@@ -2204,13 +2214,32 @@ public Action Command_Operator(int args){
 				}
 				//Case 2, summon Custom Boss 1
 				case 2:{
-					CPrintToChatAll("{darkred} ERR: NOT IMPLEMENTED.");
+					PrintToChatAll("Got 2. Spawning Sephiroth."),
+					//FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.0),
+					//FireEntityInput("FB.BruteJustice", "Enable", "", 3.0),
+					//FireEntityInput("FB.BruteJusticeTrain", "StartForward", "", 3.0),
+					//CreateTimer(5.0, OnslaughterATK),
+					//FireEntityInput("FB.BruteJusticeParticles", "Start", "", 3.0),
+					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 3.0),
+					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 4.0),
+					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 5.0),
+					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 6.0),
+					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 7.0),
+					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 8.0);
 				}
 			}
 		}
 		//Signal that next boss should spawn
 		case 6:{
-			waveFlags+=1;
+			waveFlags++;
+		}
+		//Signal to fastforward boss spawn.
+		case 7:{
+			waveFlags = 2;
+			if (curWave == 8 && !tacobell){
+				ServerCommand("fb_operator 1001");
+				CreateTimer(0.0, TimedOperator, 8);
+			}
 		}
 		//Client was Sacrificed.
 		case 10:{
@@ -2240,8 +2269,9 @@ public Action Command_Operator(int args){
 					sacPoints+=25;
 				}
 				case 2:{
-					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has been destroyed. But wait, there's more! ({limegreen}+1 pt{white})");
-					sacPoints++;
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A boss has been destroyed.({limegreen}+100 pts{white})");
+					sacPoints+=100;
+					waveFlags = 0;
 				}
 			}
 			return Plugin_Handled;
@@ -3174,10 +3204,10 @@ public Action TimedOperator(Handle timer, int job){
 				}
 				//BGM8
 				case 9:{
-					CustomSoundEmitter(BGM8, BGMSNDLVL, true);
+					CustomSoundEmitter(BGM8, BGMSNDLVL-10, true);
 					curSong = BGM8;
 					songName = BGM8Title;
-					FireEntityInput("FB.MusicTimer", "RefireTime", "313.65", 0.0),
+					FireEntityInput("FB.MusicTimer", "RefireTime", "215.0", 0.0),
 					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
 					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
 				}
@@ -3193,7 +3223,7 @@ public Action TimedOperator(Handle timer, int job){
 						tbLoop = 1;
 					}
 					else{					
-						CustomSoundEmitter(BGM9, BGMSNDLVL-5, true);
+						CustomSoundEmitter(BGM9, BGMSNDLVL, true);
 						curSong = BGM9;
 						songName = BGM9Title;
 						FireEntityInput("FB.MusicTimer", "RefireTime", "111.7", 0.0),
@@ -3201,7 +3231,63 @@ public Action TimedOperator(Handle timer, int job){
 						FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
 					}
 				}
+				//BGM10
+				case 11:{
+					CustomSoundEmitter(BGM10, BGMSNDLVL, true);
+					curSong = BGM10;
+					songName = BGM10Title;
+					FireEntityInput("FB.MusicTimer", "RefireTime", "511.8", 0.0),
+					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+				}
 			}
+		}
+		//Boss script
+		case 2:{
+			ServerCommand("fb_operator 1001"); //Stop all bgm.
+			FireEntityInput("FB.MusicTimer", "Disable", "", 0.0); //Disable all bgm.
+			CreateTimer(0.0, TimedOperator, 3);
+		}
+		//Boss script pt 2
+		case 3:{
+			CustomSoundEmitter(BGM10Intro, BGMSNDLVL, true);
+			FireEntityInput("FB.FadeBLCK", "Fade", "", 3.0);
+			FireEntityInput("FB.FadeBLCK", "Fade", "", 5.0);
+			FireEntityInput("FB.FadeBLCK", "Fade", "", 7.0);
+			FireEntityInput("FB.FadeBLCK", "Fade", "", 9.0);
+			FireEntityInput("FB.FadeBLCK", "Fade", "", 12.0);
+			CreateTimer(23.0, TimedOperator, 4);
+		}
+		//Boss script pt 3
+		case 4:{
+			CustomSoundEmitter(EVENTSTART, SFXSNDLVL, false),
+			CreateTimer(4.1, TimedOperator, 5);
+		}
+		//Boss script pt 4
+		case 5:{
+			CustomSoundEmitter(VO_SEPHMEMORY, SFXSNDLVL, false),
+			CreateTimer(3.2, TimedOperator, 6);
+		}
+		//Boss script pt 5
+		case 6:{
+			CustomSoundEmitter(HINDENBURGBOOM, SFXSNDLVL-10, false),
+			FireEntityInput("FB.Fade", "Fade", "", 0.0),
+			CreateTimer(1.7, TimedOperator, 7);
+		}
+		//DO THE THING ALREADY
+		case 7:{
+			BGMINDEX = 11;
+			curSong = BGM10;
+			songName = BGM10Title;
+			CustomSoundEmitter(BGM10, BGMSNDLVL, true),
+			CreateTimer(312.0, TimedOperator, 1);
+		}
+		//Signal boss to actually spawn after delay.
+		case 8:{
+			CustomSoundEmitter(VICTORY, SFXSNDLVL, false);
+			CPrintToChatAll("{darkgreen}[CORE] You did it!!! {darkred}Or... did you...?");
+			FireEntityInput("FB.FadeBLCK", "Fade", "", 0.0);
+			CreateTimer(4.8, TimedOperator, 2);
 		}
 		case 21:{
 			CustomSoundEmitter(INCOMING, SFXSNDLVL, false);
