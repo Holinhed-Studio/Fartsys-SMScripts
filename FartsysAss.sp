@@ -154,7 +154,7 @@ public Plugin myinfo ={
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.5.4",
+	version = "4.5.5",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -1848,15 +1848,6 @@ public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast){
 }
 //When we win
 public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
-/*    bgmlock1 = true;
-    bgmlock2 = true;
-    bgmlock3 = true;
-    bgmlock4 = true;
-    bgmlock5 = true;
-    bgmlock6 = true;
-    bgmlock7 = true;
-    bgmlock8 = true;
-    bgmlock9 = true; */
     BGMINDEX = 0;
     tbLoop = 0;
     canHindenburg = false;
@@ -1867,7 +1858,6 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
     bombStatus = 5;
     explodeType = 0;
     waveFlags = 0;
-    //CreateTimer(3.0, RefireDefBGM1);
     ServerCommand("fb_operator 1000");
     CreateTimer(1.0, PerformAdverts);
     CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}You've defeated the wave!");
