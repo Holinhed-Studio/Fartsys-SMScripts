@@ -154,7 +154,7 @@ public Plugin myinfo ={
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.5.3",
+	version = "4.5.4",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -350,7 +350,7 @@ public void Database_OnConnect(Database db, const char[] error, any data){
 	FB_Database = db;
 	FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS ass_activity(name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '3', PRIMARY KEY (steamid));");
 }
-
+//Database Fastquery Manager
 public void Database_FastQuery(Database db, DBResultSet results, const char[] error, any data){
 	if (!results){	
 		LogError("Failed to query database: %s", error);
@@ -525,7 +525,7 @@ public Action Command_SacrificePointShop(int client, int args){
 public void ShowFartsysAss(int client){
 	if(sacPoints<=9 || !isWave){
 		if(isWave){
-			PrintToChat(client, "[CORE] ERROR: You do not have enough sacPoints. This command requires at least 10. You have %i", sacPoints);
+			CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {red}ERROR: You do not have enough sacPoints. This command requires at least {white}10{red}. You have {white}%i{red}.", sacPoints);
 		}
 		else{
 			CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}The sacrificial points counter is currently at %i of %i maximum for this wave.", sacPoints, sacPointsMax);
@@ -798,6 +798,62 @@ public Action SelectAdminTimer(Handle timer){
 
 //Brute Justice Timer
 public Action OnslaughterATK(Handle timer){
+	if (waveFlags != 1){
+		return Plugin_Stop;
+	}
+	else{
+		float f = GetRandomFloat(5.0, 7.0);
+		CreateTimer(f, OnslaughterATK);
+		FireEntityInput("BruteJusticeDefaultATK", "FireMultiple", "3", 5.0);
+		int i = GetRandomInt(1,10);
+		switch(i){
+			case 1,6:{
+				FireEntityInput("BruteJusticeLaserParticle", "Start", "", 0.0);
+				CustomSoundEmitter(OnslaughterLaserSND, SFXSNDLVL, false);
+				FireEntityInput("BruteJusticeLaser", "TurnOn", "", 1.40);
+				FireEntityInput("BruteJusticeLaserHurtAOE", "Enable", "", 1.40);
+				FireEntityInput("BruteJusticeLaserParticle", "Stop", "", 3.00);
+				FireEntityInput("BruteJusticeLaser", "TurnOff", "", 3.25);
+				FireEntityInput("BruteJusticeLaserHurtAOE", "Disable", "", 3.25);
+			}
+			case 2,8:{
+				FireEntityInput("BruteJustice", "FireUser1", "", 0.0);
+			}
+			case 3,7:{
+				FireEntityInput("BruteJusticeFlameParticle", "Start", "", 0.0);
+				FireEntityInput("BruteJusticeFlamethrowerHurtAOE", "Enable", "", 0.0);
+				CustomSoundEmitter(OnslaughterFlamePreATK, SFXSNDLVL, false);
+				FireEntityInput("SND.BruteJusticeFlameATK", "PlaySound", "", 1.25);
+				FireEntityInput("BruteJusticeFlamethrowerHurtAOE", "Disable", "", 5.0);
+				FireEntityInput("BruteJusticeFlameParticle", "Stop", "", 5.0);
+				FireEntityInput("SND.BruteJusticeFlameATK", "FadeOut", ".25", 5.0);
+				CreateTimer(5.0, TimedOperator, 60);
+				FireEntityInput("SND.BruteJusticeFlameATK", "StopSound", "", 5.10);
+			}
+			case 4:{
+				FireEntityInput("BruteJusticeGrenadeSpammer", "FireMultiple", "10", 0.0);
+				FireEntityInput("BruteJusticeGrenadeSpammer", "FireMultiple", "10", 3.0);
+				FireEntityInput("BruteJusticeGrenadeSpammer", "FireMultiple", "10", 5.0);
+			}
+			case 5:{
+				FireEntityInput("BruteJusticeGrenadeSpammer", "FireMultiple", "50", 0.0);
+			}
+			case 9:{
+				FireEntityInput("BruteJusticeRocketSpammer", "FireOnce", "", 0.00);
+				FireEntityInput("BruteJusticeRocketSpammer", "FireOnce", "", 5.00);
+			}
+			case 10:{
+				FireEntityInput("BruteJusticeRocketSpammer", "FireMultiple", "10", 0.00);
+				FireEntityInput("BruteJusticeRocketSpammer", "FireMultiple", "10", 3.00);
+				FireEntityInput("BruteJusticeRocketSpammer", "FireMultiple", "10", 5.00);
+			}
+		}
+	}
+	return Plugin_Stop;
+}
+
+//Sephiroth Timer
+public Action SephATK(Handle timer){
 	if (waveFlags != 1){
 		return Plugin_Stop;
 	}
