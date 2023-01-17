@@ -10,6 +10,7 @@
 *
 *                                       GL HF!!!
 * For Taco bell edition, target ass_relay with trigger for InitWaveOutput and FireUser2 for StartWaveOutput. FireUser3 still acts as boss dead relay, and FireUser4 will act as map completion.
+* Also for taco bell edition, pop file needs to be updated for boss spawns to work as intended. See normal edition pop script.
 */
 #include <sourcemod>
 #include <sdktools>
