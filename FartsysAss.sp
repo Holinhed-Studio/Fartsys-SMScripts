@@ -855,7 +855,7 @@ public Action OnslaughterATK(Handle timer){
 
 //Sephiroth Timer
 public Action SephATK(Handle timer){
-	if (waveFlags != 1){
+	if (waveFlags != 2){
 		return Plugin_Stop;
 	}
 	else{
