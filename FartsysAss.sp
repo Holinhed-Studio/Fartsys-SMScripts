@@ -2199,7 +2199,7 @@ public Action Command_Operator(int args){
 				}
 				//Case 1, summon Onslaughter.
 				case 1:{
-					PrintToChatAll("Got 1. Spawning Onslaughter."),
+					//PrintToChatAll("Got 1. Spawning Onslaughter."),
 					FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.0),
 					FireEntityInput("FB.BruteJustice", "Enable", "", 3.0),
 					FireEntityInput("FB.BruteJusticeTrain", "StartForward", "", 3.0),
@@ -2214,7 +2214,7 @@ public Action Command_Operator(int args){
 				}
 				//Case 2, summon Custom Boss 1
 				case 2:{
-					PrintToChatAll("Got 2. Spawning Sephiroth."),
+					//PrintToChatAll("Got 2. Spawning Sephiroth."),
 					//FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.0),
 					//FireEntityInput("FB.BruteJustice", "Enable", "", 3.0),
 					//FireEntityInput("FB.BruteJusticeTrain", "StartForward", "", 3.0),
