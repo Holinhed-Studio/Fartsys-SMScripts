@@ -155,7 +155,7 @@ public Plugin myinfo ={
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.5.6",
+	version = "4.6.0",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -860,18 +860,11 @@ public Action SephATK(Handle timer){
 	}
 	else{
 		float f = GetRandomFloat(5.0, 7.0);
-		CreateTimer(f, OnslaughterATK);
-		FireEntityInput("BruteJusticeDefaultATK", "FireMultiple", "3", 5.0);
+		CreateTimer(f, SephATK);
+		FireEntityInput("SephDefaultATK", "FireMultiple", "3", 5.0);
 		int i = GetRandomInt(1,10);
 		switch(i){
 			case 1,6:{
-				FireEntityInput("BruteJusticeLaserParticle", "Start", "", 0.0);
-				CustomSoundEmitter(OnslaughterLaserSND, SFXSNDLVL, false);
-				FireEntityInput("BruteJusticeLaser", "TurnOn", "", 1.40);
-				FireEntityInput("BruteJusticeLaserHurtAOE", "Enable", "", 1.40);
-				FireEntityInput("BruteJusticeLaserParticle", "Stop", "", 3.00);
-				FireEntityInput("BruteJusticeLaser", "TurnOff", "", 3.25);
-				FireEntityInput("BruteJusticeLaserHurtAOE", "Disable", "", 3.25);
 			}
 			case 2,8:{
 				FireEntityInput("BruteJustice", "FireUser1", "", 0.0);
@@ -2722,6 +2715,51 @@ public Action Command_Operator(int args){
 			FireEntityInput("HurtAll", "Enable", "", 0.1);
 			FireEntityInput("HurtAll", "Disable", "", 2.1);
 		}
+		//When a tornado intersects a tank and it is the front of the map.
+		case 60:{
+			if(tornado){
+				FireEntityInput("tank_path_a_30", "EnableAlternatePath", "", 0.0);
+				FireEntityInput("tank_path_a_40", "EnableAlternatePath", "", 0.0);
+				FireEntityInput("tank_path_a_50", "EnableAlternatePath", "", 0.0);
+				FireEntityInput("tank_path_a_70", "EnableAlternatePath", "", 0.0);
+				FireEntityInput("tank_path_a_80", "EnableAlternatePath", "", 0.0);
+				FireEntityInput("tank_path_a_90", "EnableAlternatePath", "", 0.0);
+				FireEntityInput("tank_path_a_100", "EnableAlternatePath", "", 0.0);
+				FireEntityInput("tank_path_a_30", "DisableAlternatePath", "", 0.0);
+				FireEntityInput("tank_path_a_40", "DisableAlternatePath", "", 0.0);
+				FireEntityInput("tank_path_a_50", "DisableAlternatePath", "", 0.0);
+				FireEntityInput("tank_path_a_70", "DisableAlternatePath", "", 0.0);
+				FireEntityInput("tank_path_a_80", "DisableAlternatePath", "", 0.0);
+				FireEntityInput("tank_path_a_90", "DisableAlternatePath", "", 0.0);
+				FireEntityInput("tank_path_a_100", "DisableAlternatePath", "", 0.0);
+				PrintToChatAll("Hello world, we have intersect at front.");
+			}
+		}
+		//When a tornado intersects a tank and it is the front of the map.
+		case 61:{
+			if(tornado){
+				PrintToChatAll("Hello world, we have intersect at front mid.");
+			}
+		}
+		//When a tornado intersects a tank and it is the front of the map.
+		case 62:{
+			if(tornado){
+				FireEntityInput("path_TRACK GOES HERE", "EnableAlternatePath", "", 0.0);
+				FireEntityInput("path_TRACK GOES HERE", "DisableAlternatePath", "", 5.0);
+			}
+		}
+		//When a tornado intersects a tank and it is the front of the map.
+		case 63:{
+			if(tornado){
+				PrintToChatAll("Hello world, we have intersect at rear.");
+			}
+		}
+		//When a tornado intersects a tank and it is the front of the map.
+		case 64:{
+			if(tornado){
+				PrintToChatAll("Hello world, we have intersect at final.");
+			}
+		}
 		//Prev wave
 		case 98:{
 			int ent = FindEntityByClassname(-1, "tf_objective_resource");
@@ -3336,6 +3374,7 @@ public Action TimedOperator(Handle timer, int job){
 			FireEntityInput("FB.FadeBLCK", "Fade", "", 0.0);
 			CreateTimer(4.8, TimedOperator, 2);
 		}
+		//Incoming
 		case 21:{
 			CustomSoundEmitter(INCOMING, SFXSNDLVL, false);
 			return Plugin_Stop;
