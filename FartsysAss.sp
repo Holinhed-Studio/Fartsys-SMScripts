@@ -155,7 +155,7 @@ public Plugin myinfo ={
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.6.0",
+	version = "4.6.2",
 	url = "https://forums.firehostredux.com"
 };
 
@@ -2725,14 +2725,16 @@ public Action Command_Operator(int args){
 				FireEntityInput("tank_path_a_80", "EnableAlternatePath", "", 0.0);
 				FireEntityInput("tank_path_a_90", "EnableAlternatePath", "", 0.0);
 				FireEntityInput("tank_path_a_100", "EnableAlternatePath", "", 0.0);
-				FireEntityInput("tank_path_a_30", "DisableAlternatePath", "", 0.0);
-				FireEntityInput("tank_path_a_40", "DisableAlternatePath", "", 0.0);
-				FireEntityInput("tank_path_a_50", "DisableAlternatePath", "", 0.0);
-				FireEntityInput("tank_path_a_70", "DisableAlternatePath", "", 0.0);
-				FireEntityInput("tank_path_a_80", "DisableAlternatePath", "", 0.0);
-				FireEntityInput("tank_path_a_90", "DisableAlternatePath", "", 0.0);
-				FireEntityInput("tank_path_a_100", "DisableAlternatePath", "", 0.0);
-				PrintToChatAll("Hello world, we have intersect at front.");
+				FireEntityInput("tank_boss", "AddOutput", "Speed 3200", 0.0);
+				FireEntityInput("tank_boss", "SetSpeed", "1.0", 5.0);
+				FireEntityInput("tank_boss", "ClearParent", "", 5.0);
+				FireEntityInput("tank_path_a_30", "DisableAlternatePath", "", 5.0);
+				FireEntityInput("tank_path_a_40", "DisableAlternatePath", "", 5.0);
+				FireEntityInput("tank_path_a_50", "DisableAlternatePath", "", 5.0);
+				FireEntityInput("tank_path_a_70", "DisableAlternatePath", "", 5.0);
+				FireEntityInput("tank_path_a_80", "DisableAlternatePath", "", 5.0);
+				FireEntityInput("tank_path_a_90", "DisableAlternatePath", "", 5.0);
+				FireEntityInput("tank_path_a_100", "DisableAlternatePath", "", 5.0);
 			}
 		}
 		//When a tornado intersects a tank and it is the front of the map.
