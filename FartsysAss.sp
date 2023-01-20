@@ -106,7 +106,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.6.6";
+static char PLUGIN_VERSION[8] = "4.6.7";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -3342,11 +3342,9 @@ public Action TimedOperator(Handle timer, int job){
 		//Boss script pt 2
 		case 3:{
 			CustomSoundEmitter(BGM10Intro, BGMSNDLVL, true);
-			FireEntityInput("FB.FadeBLCK", "Fade", "", 3.0);
-			FireEntityInput("FB.FadeBLCK", "Fade", "", 5.0);
-			FireEntityInput("FB.FadeBLCK", "Fade", "", 7.0);
-			FireEntityInput("FB.FadeBLCK", "Fade", "", 9.0);
-			FireEntityInput("FB.FadeBLCK", "Fade", "", 12.0);
+			FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 3.0);
+			FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 7.0);
+			FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 12.0);
 			CreateTimer(23.0, TimedOperator, 4);
 		}
 		//Boss script pt 3
