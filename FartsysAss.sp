@@ -106,7 +106,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.6.4";
+static char PLUGIN_VERSION[8] = "4.6.5";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -2327,8 +2327,6 @@ public Action Command_Operator(int args){
 		//When a tornado intersects a tank.
 		case 8:{
 			FireEntityInput("FB.FakeTankSpawner", "ForceSpawn", "", 0.1);
-			FireEntityInput("FB.FakeTankTank01", "Kill", "", 7.0);
-			FireEntityInput("FB.FakeTankPhys01", "Kill", "", 7.0);
 		}
 		//Client was Sacrificed.
 		case 10:{
@@ -3008,6 +3006,8 @@ public Action Command_Operator(int args){
 			FireEntityInput("tornadowindf1", "StopSound", "", 0.0),
 			FireEntityInput("shaketriggerf1", "Disable", "", 0.0),
 			FireEntityInput("tornadobutton", "Unlock", "", 30.0);
+			FireEntityInput("FB.FakeTankTank01", "Kill", "", 0.0);
+			FireEntityInput("FB.FakeTankPhys01", "Kill", "", 0.0);
 			tornado = false;
 			return Plugin_Handled;
 		}
