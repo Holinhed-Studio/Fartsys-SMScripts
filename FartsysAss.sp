@@ -106,7 +106,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.6.5";
+static char PLUGIN_VERSION[8] = "4.6.6";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -2286,8 +2286,8 @@ public Action Command_Operator(int args){
 					FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.0),
 					FireEntityInput("FB.BruteJustice", "Enable", "", 3.0),
 					FireEntityInput("FB.BruteJusticeTrain", "StartForward", "", 3.0),
-					CreateTimer(5.0, OnslaughterATK),
 					FireEntityInput("FB.BruteJusticeParticles", "Start", "", 3.0),
+					CreateTimer(5.0, OnslaughterATK),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 3.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 4.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 5.0),
@@ -2297,12 +2297,12 @@ public Action Command_Operator(int args){
 				}
 				//Case 2, summon Custom Boss 1
 				case 2:{
-					//PrintToChatAll("Got 2. Spawning Sephiroth."),
-					//FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.0),
-					//FireEntityInput("FB.BruteJustice", "Enable", "", 3.0),
-					//FireEntityInput("FB.BruteJusticeTrain", "StartForward", "", 3.0),
-					//CreateTimer(5.0, OnslaughterATK),
-					//FireEntityInput("FB.BruteJusticeParticles", "Start", "", 3.0),
+					FireEntityInput("FB.Sephiroth", "Enable", "", 0.0),
+					FireEntityInput("SephTrain", "SetSpeed", "0.5", 0.0),
+					FireEntityInput("SephTrain", "TeleportToPathTrack", "Seph01", 0.0),
+					FireEntityInput("SephTrain", "StartForward", "", 0.1),
+					FireEntityInput("FB.SephParticles", "Start", "", 3.0),
+					CreateTimer(5.0, SephATK),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 3.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 4.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 5.0),
