@@ -106,7 +106,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.6.7";
+static char PLUGIN_VERSION[8] = "4.6.8";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -3345,6 +3345,7 @@ public Action TimedOperator(Handle timer, int job){
 			FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 3.0);
 			FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 7.0);
 			FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 12.0);
+			FireEntityInput("SephMeteor", "ForceSpawn", "", 19.6);
 			CreateTimer(23.0, TimedOperator, 4);
 		}
 		//Boss script pt 3
@@ -3355,6 +3356,7 @@ public Action TimedOperator(Handle timer, int job){
 		//Boss script pt 4
 		case 5:{
 			CustomSoundEmitter(VO_SEPHMEMORY, SFXSNDLVL, false),
+			FireEntityInput("SephNuke", "ForceSpawn", "", 2.0),
 			CreateTimer(3.2, TimedOperator, 6);
 		}
 		//Boss script pt 5
