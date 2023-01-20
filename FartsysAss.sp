@@ -104,8 +104,9 @@ static char HINDENBURGBOOM[64] = "fartsy/gbombs5/tsar_detonate.mp3";
 static char HINDENCRASH[32] = "fartsy/vo/jeffy/hinden.wav";
 static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
-static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav"; //CHECK WITH BRAWLER IF THIS IS NEEDED IN THE PAK....
-static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav"; // LIKEWISE WITH THIS ONE.	
+static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
+static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
+static char PLUGIN_VERSION[8] = "4.6.3";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -155,7 +156,7 @@ public Plugin myinfo ={
 	name = "Fartsy's Ass - Framework",
 	author = "Fartsy#8998",
 	description = "Framework for Fartsy's Ass (MvM Mods)",
-	version = "4.6.2",
+	version = PLUGIN_VERSION,
 	url = "https://forums.firehostredux.com"
 };
 
@@ -2281,6 +2282,12 @@ public Action Command_Operator(int args){
 				CreateTimer(0.0, TimedOperator, 8);
 			}
 		}
+		//When a tornado intersects a tank and it is the front of the map.
+		case 8:{
+			FireEntityInput("FB.FakeTankSpawner", "ForceSpawn", "", 0.1);
+			FireEntityInput("FB.FakeTankTank01", "Kill", "", 7.0);
+			FireEntityInput("FB.FakeTankPhys01", "Kill", "", 7.0);
+		}
 		//Client was Sacrificed.
 		case 10:{
 			sacrificedByClient = true;
@@ -2714,53 +2721,6 @@ public Action Command_Operator(int args){
 			FireEntityInput("HurtAll", "AddOutput", "damagetype 1048576", 0.0);
 			FireEntityInput("HurtAll", "Enable", "", 0.1);
 			FireEntityInput("HurtAll", "Disable", "", 2.1);
-		}
-		//When a tornado intersects a tank and it is the front of the map.
-		case 60:{
-			if(tornado){
-				FireEntityInput("tank_path_a_30", "EnableAlternatePath", "", 0.0);
-				FireEntityInput("tank_path_a_40", "EnableAlternatePath", "", 0.0);
-				FireEntityInput("tank_path_a_50", "EnableAlternatePath", "", 0.0);
-				FireEntityInput("tank_path_a_70", "EnableAlternatePath", "", 0.0);
-				FireEntityInput("tank_path_a_80", "EnableAlternatePath", "", 0.0);
-				FireEntityInput("tank_path_a_90", "EnableAlternatePath", "", 0.0);
-				FireEntityInput("tank_path_a_100", "EnableAlternatePath", "", 0.0);
-				FireEntityInput("tank_boss", "AddOutput", "Speed 3200", 0.0);
-				FireEntityInput("tank_boss", "SetSpeed", "1.0", 5.0);
-				FireEntityInput("tank_boss", "ClearParent", "", 5.0);
-				FireEntityInput("tank_path_a_30", "DisableAlternatePath", "", 5.0);
-				FireEntityInput("tank_path_a_40", "DisableAlternatePath", "", 5.0);
-				FireEntityInput("tank_path_a_50", "DisableAlternatePath", "", 5.0);
-				FireEntityInput("tank_path_a_70", "DisableAlternatePath", "", 5.0);
-				FireEntityInput("tank_path_a_80", "DisableAlternatePath", "", 5.0);
-				FireEntityInput("tank_path_a_90", "DisableAlternatePath", "", 5.0);
-				FireEntityInput("tank_path_a_100", "DisableAlternatePath", "", 5.0);
-			}
-		}
-		//When a tornado intersects a tank and it is the front of the map.
-		case 61:{
-			if(tornado){
-				PrintToChatAll("Hello world, we have intersect at front mid.");
-			}
-		}
-		//When a tornado intersects a tank and it is the front of the map.
-		case 62:{
-			if(tornado){
-				FireEntityInput("path_TRACK GOES HERE", "EnableAlternatePath", "", 0.0);
-				FireEntityInput("path_TRACK GOES HERE", "DisableAlternatePath", "", 5.0);
-			}
-		}
-		//When a tornado intersects a tank and it is the front of the map.
-		case 63:{
-			if(tornado){
-				PrintToChatAll("Hello world, we have intersect at rear.");
-			}
-		}
-		//When a tornado intersects a tank and it is the front of the map.
-		case 64:{
-			if(tornado){
-				PrintToChatAll("Hello world, we have intersect at final.");
-			}
 		}
 		//Prev wave
 		case 98:{
