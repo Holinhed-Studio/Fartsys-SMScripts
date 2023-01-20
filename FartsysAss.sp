@@ -109,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.7.0";
+static char PLUGIN_VERSION[8] = "4.7.1";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -2343,11 +2343,6 @@ public Action Command_Operator(int args){
 		case 8:{
 			FireEntityInput("FB.FakeTankSpawner", "ForceSpawn", "", 0.1);
 		}
-		//Crusader Nuke activation
-		case 9:{
-			canCrusaderNuke = true;
-			CreateTimer(1.0, CrusaderNukeTimer);
-		}
 		//Client was Sacrificed.
 		case 10:{
 			sacrificedByClient = true;
@@ -3399,6 +3394,11 @@ public Action TimedOperator(Handle timer, int job){
 			CPrintToChatAll("{darkgreen}[CORE] You did it!!! {darkred}Or... did you...?");
 			FireEntityInput("FB.FadeBLCK", "Fade", "", 0.0);
 			CreateTimer(4.8, TimedOperator, 2);
+		}
+		//Crusader Nuke activation
+		case 9:{
+			canCrusaderNuke = true;
+			CreateTimer(1.0, CrusaderNukeTimer);
 		}
 		//Incoming
 		case 21:{
