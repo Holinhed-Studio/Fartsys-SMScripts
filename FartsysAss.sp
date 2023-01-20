@@ -109,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.7.1";
+static char PLUGIN_VERSION[8] = "4.7.2";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -1118,7 +1118,7 @@ public Action DisableSENTMeteors(Handle timer){
 //SENTNukes (Scripted Entity Nukes)
 public Action SENTNukeTimer(Handle timer){
 	if(canSENTNukes){
-		FireEntityInput("FB.DropNuke", "PlaySound", "", 0.0);
+		CustomSoundEmitter(DROPNUKE, SFXSNDLVL-10, false);
 		int i = GetRandomInt(1, 8);
 		switch(i){
 			case 1:{
@@ -1157,11 +1157,6 @@ public Action CrusaderNukeTimer(Handle timer){
 		float f = GetRandomFloat(1.5, 3.0);
 		CreateTimer(f, CrusaderNukeTimer);
 	}
-	return Plugin_Stop;
-}
-
-public Action StopCrusaderNukeTimer(Handle timer){
-	canCrusaderNuke = false;
 	return Plugin_Stop;
 }
 
@@ -3040,6 +3035,7 @@ public Action Command_Operator(int args){
 			FireEntityInput("FB.CRUSADER", "Enable", "", 25.20),
 			FireEntityInput("CrusaderTrain", "StartForward", "", 25.20),
 			FireEntityInput("CrusaderLaserBase*", "StartForward", "", 25.20),
+			CreateTimer(25.20, TimedOperator, 9),
 			FireEntityInput("CrusaderTrain", "SetSpeed", "0.9", 38.0),
 			FireEntityInput("CrusaderTrain", "SetSpeed", "0.7", 38.60),
 			FireEntityInput("CrusaderTrain", "SetSpeed", "0.5", 39.20),
@@ -3047,7 +3043,7 @@ public Action Command_Operator(int args){
 			FireEntityInput("CrusaderTrain", "SetSpeed", "0.1", 41.40),
 			FireEntityInput("CrusaderTrain", "Stop", "", 42.60),
 			FireEntityInput("FB.CrusaderLaserKill01", "Disable", "", 42.60),
-			FireEntityInput("FB.CrusaderNukeTimer", "Disable", "", 42.60), //REPLACE ME.
+			CreateTimer(42.60, TimedOperator, 10),
 			FireEntityInput("FB.LaserCore", "TurnOn", "", 45.80),
 			FireEntityInput("CrusaderLaserBase*", "SetSpeed", "0.35", 45.80),
 			FireEntityInput("FB.ShakeCore", "StartShake", "", 45.80),
@@ -3399,6 +3395,10 @@ public Action TimedOperator(Handle timer, int job){
 		case 9:{
 			canCrusaderNuke = true;
 			CreateTimer(1.0, CrusaderNukeTimer);
+		}
+		//Crusader Nuke Deactivation
+		case 10:{
+			canCrusaderNuke = false;
 		}
 		//Incoming
 		case 21:{
