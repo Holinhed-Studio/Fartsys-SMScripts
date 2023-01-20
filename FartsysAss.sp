@@ -109,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.7.2";
+static char PLUGIN_VERSION[8] = "4.7.4";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -873,16 +873,17 @@ public Action SephATK(Handle timer){
 		return Plugin_Stop;
 	}
 	else{
-		float f = GetRandomFloat(5.0, 7.0);
+		float f = GetRandomFloat(5.0, 10.0);
 		CreateTimer(f, SephATK);
 		FireEntityInput("SephArrows", "FireMultiple", "3", 5.0);
-		int i = GetRandomInt(1,10);
+		int i = GetRandomInt(1,12);
 		switch(i){
 			case 1,6:{
-				FireEntityInput("SephNuke", "ForceSpawn", "", 0.0),
-				CustomSoundEmitter(DROPNUKE, SFXSNDLVL-10, false);
+				CreateTimer(1.0, SephNukeTimer),
+				canSephNuke = true;
 			}
 			case 2,8:{
+				CPrintToChatAll("{blue}Sephiroth: Say goodbye!"),
 				FireEntityInput("SephMeteor", "ForceSpawn", "", 0.0);
 			}
 			case 3,7:{
@@ -892,9 +893,11 @@ public Action SephATK(Handle timer){
 			case 4:{
 				FireEntityInput("SephRocketSpammer", "FireMultiple", "10", 0.0);
 				FireEntityInput("SephRocketSpammer", "FireMultiple", "10", 3.0);
-				FireEntityInput("SephRocketSpammer", "FireMultiple", "10", 5.0);
+				FireEntityInput("SkeleSpawner", "Enable", "", 0.0),
+				FireEntityInput("SkeleSpawner", "Disable", "", 20.0);
 			}
 			case 5:{
+				CPrintToChatAll("{blue}Sephiroth: Have at thee!"),
 				FireEntityInput("SephRocketSpammer", "FireMultiple", "50", 0.0);
 			}
 			case 9:{
@@ -902,9 +905,18 @@ public Action SephATK(Handle timer){
 				FireEntityInput("SephRocketSpammer", "FireOnce", "", 5.00);
 			}
 			case 10:{
+				CPrintToChatAll("{blue}Sephiroth: I dare say you will go off with a bang! HAHAHAHAHAHAHAA"),
 				FireEntityInput("SephRocketSpammer", "FireMultiple", "10", 0.00);
 				FireEntityInput("SephRocketSpammer", "FireMultiple", "10", 3.00);
 				FireEntityInput("SephRocketSpammer", "FireMultiple", "10", 5.00);
+			}
+			case 11:{
+				CPrintToChatAll("{blue}Sephiroth: Hahaha, let's see how you like THIS!"),
+				ServerCommand("sm_smash @red");
+			}
+			case 12:{
+				CPrintToChatAll("{blue}Sephiroth: Ohhhh, you dare oppose ME?"),
+				ServerCommand("sm_smite @red");
 			}
 		}
 	}
@@ -1156,6 +1168,17 @@ public Action CrusaderNukeTimer(Handle timer){
 		FireEntityInput("FB.CrusaderNuke", "ForceSpawn", "", 0.0);
 		float f = GetRandomFloat(1.5, 3.0);
 		CreateTimer(f, CrusaderNukeTimer);
+	}
+	return Plugin_Stop;
+}
+
+//SephSentNukes
+public Action SephNukeTimer(Handle timer){
+	if(canSephNuke){
+		CustomSoundEmitter(DROPNUKE, SFXSNDLVL-10, false),
+		FireEntityInput("SephNuke", "ForceSpawn", "", 0.0);
+		float f = GetRandomFloat(1.5, 3.0);
+		CreateTimer(f, SephNukeTimer);
 	}
 	return Plugin_Stop;
 }
@@ -3399,6 +3422,10 @@ public Action TimedOperator(Handle timer, int job){
 		//Crusader Nuke Deactivation
 		case 10:{
 			canCrusaderNuke = false;
+		}
+		//Seph Nuke Deactivation
+		case 11:{
+			canSephNuke = false;
 		}
 		//Incoming
 		case 21:{
