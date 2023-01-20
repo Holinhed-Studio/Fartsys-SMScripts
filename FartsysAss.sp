@@ -23,12 +23,14 @@
 bool bombProgression = false;
 bool bombReset = false; //used for notifying us when Event mvm_bomb_reset_by_player doesn't....
 bool brawler_emergency = false;
+bool canCrusaderNuke = false;
 bool canHindenburg = false;
 bool canHWBoss = false;
 bool canSENTMeteors = false;
 bool canSENTNukes = false;
 bool canSENTShark = false;
 bool canSENTStars = false;
+bool canSephNuke = false;
 bool canTornado = false;
 bool crusader = false;
 bool isWave = false;
@@ -74,6 +76,7 @@ static char DEFAULTBGM1[64] = "fartsy/music/ffxiv/TheSilentRegardOfStars.mp3";
 static char DEFAULTBGM2[64] = "fartsy/music/ffxiv/KnowledgeNeverSleeps.mp3";
 static char DEFAULTBGM1Title[64] = "FFXIV - The Silent Regard of Stars";
 static char DEFAULTBGM2Title[64] = "FFXIV - Knowledge Never Sleeps";
+static char DROPNUKE[32] = "items/cart_warning_single.wav";
 static char EVENTSTART[32] = "fartsy/ffxiv/bossfatejoin.mp3";
 static char EXPLOSIVEPARADISE[64] = "fartsy/misc/explosiveparadise.mp3";
 static char FALLSND01[32] = "fartsy/vo/l4d2/billfall02.mp3";
@@ -106,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.6.8";
+static char PLUGIN_VERSION[8] = "4.7.0";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -184,6 +187,7 @@ public void OnPluginStart(){
     PrecacheSound(CRUSADERATTACK, true),
     PrecacheSound(DEFAULTBGM1, true),
     PrecacheSound(DEFAULTBGM2, true),
+	PrecacheSound(DROPNUKE, true),
 	PrecacheSound(EVENTSTART, true),
 	PrecacheSound(EXPLOSIVEPARADISE, true),
     PrecacheSound(FALLSND01, true),
@@ -871,41 +875,36 @@ public Action SephATK(Handle timer){
 	else{
 		float f = GetRandomFloat(5.0, 7.0);
 		CreateTimer(f, SephATK);
-		FireEntityInput("SephDefaultATK", "FireMultiple", "3", 5.0);
+		FireEntityInput("SephArrows", "FireMultiple", "3", 5.0);
 		int i = GetRandomInt(1,10);
 		switch(i){
 			case 1,6:{
+				FireEntityInput("SephNuke", "ForceSpawn", "", 0.0),
+				CustomSoundEmitter(DROPNUKE, SFXSNDLVL-10, false);
 			}
 			case 2,8:{
-				FireEntityInput("BruteJustice", "FireUser1", "", 0.0);
+				FireEntityInput("SephMeteor", "ForceSpawn", "", 0.0);
 			}
 			case 3,7:{
-				FireEntityInput("BruteJusticeFlameParticle", "Start", "", 0.0);
-				FireEntityInput("BruteJusticeFlamethrowerHurtAOE", "Enable", "", 0.0);
-				CustomSoundEmitter(OnslaughterFlamePreATK, SFXSNDLVL, false);
-				FireEntityInput("SND.BruteJusticeFlameATK", "PlaySound", "", 1.25);
-				FireEntityInput("BruteJusticeFlamethrowerHurtAOE", "Disable", "", 5.0);
-				FireEntityInput("BruteJusticeFlameParticle", "Stop", "", 5.0);
-				FireEntityInput("SND.BruteJusticeFlameATK", "FadeOut", ".25", 5.0);
-				CreateTimer(5.0, TimedOperator, 60);
-				FireEntityInput("SND.BruteJusticeFlameATK", "StopSound", "", 5.10);
+				FireEntityInput("SephNuke", "ForceSpawn", "", 0.0),
+				CustomSoundEmitter(DROPNUKE, SFXSNDLVL-10, false);
 			}
 			case 4:{
-				FireEntityInput("BruteJusticeGrenadeSpammer", "FireMultiple", "10", 0.0);
-				FireEntityInput("BruteJusticeGrenadeSpammer", "FireMultiple", "10", 3.0);
-				FireEntityInput("BruteJusticeGrenadeSpammer", "FireMultiple", "10", 5.0);
+				FireEntityInput("SephRocketSpammer", "FireMultiple", "10", 0.0);
+				FireEntityInput("SephRocketSpammer", "FireMultiple", "10", 3.0);
+				FireEntityInput("SephRocketSpammer", "FireMultiple", "10", 5.0);
 			}
 			case 5:{
-				FireEntityInput("BruteJusticeGrenadeSpammer", "FireMultiple", "50", 0.0);
+				FireEntityInput("SephRocketSpammer", "FireMultiple", "50", 0.0);
 			}
 			case 9:{
-				FireEntityInput("BruteJusticeRocketSpammer", "FireOnce", "", 0.00);
-				FireEntityInput("BruteJusticeRocketSpammer", "FireOnce", "", 5.00);
+				FireEntityInput("SephRocketSpammer", "FireOnce", "", 0.00);
+				FireEntityInput("SephRocketSpammer", "FireOnce", "", 5.00);
 			}
 			case 10:{
-				FireEntityInput("BruteJusticeRocketSpammer", "FireMultiple", "10", 0.00);
-				FireEntityInput("BruteJusticeRocketSpammer", "FireMultiple", "10", 3.00);
-				FireEntityInput("BruteJusticeRocketSpammer", "FireMultiple", "10", 5.00);
+				FireEntityInput("SephRocketSpammer", "FireMultiple", "10", 0.00);
+				FireEntityInput("SephRocketSpammer", "FireMultiple", "10", 3.00);
+				FireEntityInput("SephRocketSpammer", "FireMultiple", "10", 5.00);
 			}
 		}
 	}
@@ -3032,7 +3031,7 @@ public Action Command_Operator(int args){
 			FireEntityInput("CrusaderTrain", "SetSpeed", "0.1", 41.40),
 			FireEntityInput("CrusaderTrain", "Stop", "", 42.60),
 			FireEntityInput("FB.CrusaderLaserKill01", "Disable", "", 42.60),
-			FireEntityInput("FB.CrusaderNukeTimer", "Disable", "", 42.60),
+			FireEntityInput("FB.CrusaderNukeTimer", "Disable", "", 42.60), //REPLACE ME.
 			FireEntityInput("FB.LaserCore", "TurnOn", "", 45.80),
 			FireEntityInput("CrusaderLaserBase*", "SetSpeed", "0.35", 45.80),
 			FireEntityInput("FB.ShakeCore", "StartShake", "", 45.80),
