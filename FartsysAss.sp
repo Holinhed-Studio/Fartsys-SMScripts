@@ -106,7 +106,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.6.3";
+static char PLUGIN_VERSION[8] = "4.6.4";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -331,11 +331,13 @@ public void MyStats(Database db, DBResultSet results, const char[] error, any da
 	CPrintToChat(client,"{white}Damage Dealt: %i (Session: %i) || Kills: %i (Session: %i) || Deaths: %i (Session: %i) || Bombs Reset: %i (Session: %i)", damagedealt, damagedealtsession, kills, killssession, deaths, deathssession, bombsreset, bombsresetsession);
 	CPrintToChat(client,"Sacrifices: %i(Session:%i) || Killed %s (using %s) || Last killed by: %s (using %s)", sacrifices, sacrificessession, lastkilledname, lastusedweapon, killedbyname, killedbyweapon);
 }
+
 public void OnConfigsExecuted(){
 	if (!FB_Database){
 		Database.Connect(Database_OnConnect, "ass");
 	}
 }
+
 //DB setup
 public void Database_OnConnect(Database db, const char[] error, any data){
 	if (!db){
@@ -352,6 +354,7 @@ public void Database_OnConnect(Database db, const char[] error, any data){
 	FB_Database = db;
 	FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS ass_activity(name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '3', PRIMARY KEY (steamid));");
 }
+
 //Database Fastquery Manager
 public void Database_FastQuery(Database db, DBResultSet results, const char[] error, any data){
 	if (!results){	
@@ -380,6 +383,8 @@ public void OnClientDisconnect(int client){
 	PrintToServer("%s", query);
 	FB_Database.Query(Database_FastQuery, query);
 }
+
+//Calculate time spent on server in seconds
 int GetClientMapTime(int client){
 	float clientTime = GetClientTime(client), gameTime = GetGameTime();
 	if (clientTime > gameTime)
@@ -389,6 +394,7 @@ int GetClientMapTime(int client){
 	
 	return RoundToZero(clientTime);
 }
+
 //Clientprefs built in menu
 public void FartsysSNDSelected(int client, CookieMenuAction action, any info, char[] buffer, int maxlen) {
 	if (action == CookieMenuAction_SelectOption)
@@ -427,6 +433,7 @@ public void OnClientPutInServer(int client){
 	}
 }
 
+//Get client sound prefs
 public void SQL_SNDPrefs(Database db, DBResultSet results, const char[] error, any data){
 	DataPack pk = view_as<DataPack>(data);
 	pk.Reset();
@@ -449,6 +456,7 @@ public void SQL_SNDPrefs(Database db, DBResultSet results, const char[] error, a
 	}
 }
 
+//Send client sound menu
 public void ShowFartsyMenu(int client){
     Menu menu = new Menu(MenuHandlerFartsy, MENU_ACTIONS_DEFAULT);
     char buffer[100];
@@ -523,6 +531,7 @@ public Action Command_SacrificePointShop(int client, int args){
 	ShowFartsysAss(client);
 	return Plugin_Handled;
 }
+
 //Fartsy's A.S.S
 public void ShowFartsysAss(int client){
 	if(sacPoints<=9 || !isWave){
@@ -1101,6 +1110,7 @@ public Action SENTMeteorTimer(Handle timer){
 	return Plugin_Stop;
 }
 
+//SENTMeteor Timeout
 public Action DisableSENTMeteors(Handle timer){
 	canSENTMeteors = false;
 	return Plugin_Stop;
@@ -1134,6 +1144,7 @@ public Action SENTNukeTimer(Handle timer){
 	return Plugin_Stop;
 }
 
+//SENTNukes Timeout
 public Action DisableSENTNukes(Handle timer){
 	canSENTNukes = false;
 	return Plugin_Stop;
@@ -1165,6 +1176,8 @@ public Action SENTStarTimer(Handle timer){
 	}
 	return Plugin_Stop;
 }
+
+//SENTStars Timeout
 public Action SENTStarDisable(Handle timer){
 	canSENTStars = false;
 	return Plugin_Handled;
@@ -1240,6 +1253,7 @@ public Action HWBosses(Handle timer){
 	return Plugin_Stop;
 }
 
+//Repeat HWBosses Timer
 public Action HWBossesRefire(Handle timer){
 	if (isWave){
 		float hwn = GetRandomFloat(HWNMin, HWNMax);
@@ -1247,6 +1261,7 @@ public Action HWBossesRefire(Handle timer){
 	}
 	return Plugin_Stop;
 }
+
 //SacPoints (Add points to Sacrifice Points occasionally)
 public Action SacrificePointsTimer(Handle timer){
 	if (isWave && (sacPoints < sacPointsMax)){
@@ -1256,6 +1271,18 @@ public Action SacrificePointsTimer(Handle timer){
 	}
 	return Plugin_Stop;
 }
+
+//Track SacPoints and update entities every 0.1 seconds
+public Action SacrificePointsUpdater(Handle timer){
+	if (isWave){
+		CreateTimer(0.1, SacrificePointsUpdater);
+		if (sacPoints > sacPointsMax){
+			sacPoints = sacPointsMax;
+		}
+	}
+	return Plugin_Stop;
+}
+
 //BombStatus (Add points to Bomb Status occasionally)
 public Action BombStatusAddTimer(Handle timer){
 	if (isWave && (bombStatus < bombStatusMax)){
@@ -1369,17 +1396,6 @@ public Action BombStatusUpdater(Handle timer){
 			bombStatus = bombStatusMax-4;
 		}
 		return Plugin_Continue;
-	}
-	return Plugin_Stop;
-}
-
-//Track SacPoints and update entities every 0.1 seconds
-public Action SacrificePointsUpdater(Handle timer){
-	if (isWave){
-		CreateTimer(0.1, SacrificePointsUpdater);
-		if (sacPoints > sacPointsMax){
-			sacPoints = sacPointsMax;
-		}
 	}
 	return Plugin_Stop;
 }
@@ -1520,6 +1536,7 @@ public Action Command_Return(int client, int args){
 	return Plugin_Handled;
 }
 
+//Return the client to spawn
 public Action ReturnClient(Handle timer, int clientID){
 	TeleportEntity(clientID, Return, NULL_VECTOR, NULL_VECTOR);
 	if(soundPreference[clientID] >= 2){
@@ -1791,6 +1808,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 	}
 	return Plugin_Handled;
 }
+
 //Check who spawned and log their class
 public Action EventSpawn(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
 	int client = GetClientOfUserId(Spawn_Event.GetInt("userid"));
@@ -1836,11 +1854,13 @@ public Action EventSpawn(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 	}
 	return Plugin_Handled;
 }
+
 //Silence cvar changes to minimize chat spam.
 public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast){
 	event.BroadcastDisabled = true;
 	return Plugin_Handled;
 }
+
 //When we win
 public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
     BGMINDEX = 0;
@@ -1919,6 +1939,27 @@ public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool S
     return Plugin_Handled;
 }
 
+//Log Damage!
+public void Event_Playerhurt(Handle event, const char[] name, bool dontBroadcast){
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+	int damage = GetEventInt(event, "damageamount");
+	if(IsValidClient(attacker) && attacker != client)
+	{
+		char query[256];
+		int steamID = GetSteamAccountID(attacker);
+		PrintToConsole(attacker, "Writing new myDmg value %i", damage);
+		if (!FB_Database){
+			return;
+		}
+		if (!steamID){	
+			return;
+		}
+		Format(query, sizeof(query), "UPDATE ass_activity SET damagedealt = damagedealt + %i, damagedealtsession = damagedealtsession + %i WHERE steamid = %i;", damage, damage, steamID);
+		FB_Database.Query(Database_FastQuery, query);
+	}
+}
+
 //Functions
 //Create a temp entity and fire an input
 public Action FireEntityInput(char[] strTargetname, char[] strInput, char[] strParameter, float flDelay){
@@ -1971,6 +2012,7 @@ public Action DeleteEdict(Handle timer, any entity){
 	return Plugin_Stop;
 }
 
+//Sacrifice target and grant bonus points
 public Action SacrificeClient(int client, int attacker, bool wasBombReset){
     if (attacker <= MaxClients && IsClientInGame(attacker) && wasBombReset == true){
 		CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%N {white}has reset the ass! ({limegreen}+5 pts{white})", attacker);
@@ -2000,7 +2042,7 @@ public Action SacrificeClient(int client, int attacker, bool wasBombReset){
     return Plugin_Handled;
 }	
 
-//Operator
+//Operator, core of the entire map
 public Action Command_Operator(int args){
 	char arg1[16];
 	GetCmdArg(1, arg1, sizeof(arg1));
@@ -2282,7 +2324,7 @@ public Action Command_Operator(int args){
 				CreateTimer(0.0, TimedOperator, 8);
 			}
 		}
-		//When a tornado intersects a tank and it is the front of the map.
+		//When a tornado intersects a tank.
 		case 8:{
 			FireEntityInput("FB.FakeTankSpawner", "ForceSpawn", "", 0.1);
 			FireEntityInput("FB.FakeTankTank01", "Kill", "", 7.0);
@@ -3127,6 +3169,7 @@ public Action Command_Operator(int args){
 	}
 	return Plugin_Handled;
 }
+
 //Perform Wave Setup
 public Action PerformWaveSetup(){
 	isWave = true; //It's a wave!
@@ -3153,6 +3196,7 @@ public Action PerformWaveSetup(){
 	ServerCommand("fb_operator 1007"); //Choose bomb path
 	return Plugin_Handled;
 }
+
 //Timed commands
 public Action TimedOperator(Handle timer, int job){
 	switch(job){
@@ -3668,27 +3712,6 @@ public Action TimedOperator(Handle timer, int job){
 		}
 	}
 	return Plugin_Stop;
-}
-
-//Log Damage!
-public void Event_Playerhurt(Handle event, const char[] name, bool dontBroadcast){
-	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-	int damage = GetEventInt(event, "damageamount");
-	if(IsValidClient(attacker) && attacker != client)
-	{
-		char query[256];
-		int steamID = GetSteamAccountID(attacker);
-		PrintToConsole(attacker, "Writing new myDmg value %i", damage);
-		if (!FB_Database){
-			return;
-		}
-		if (!steamID){	
-			return;
-		}
-		Format(query, sizeof(query), "UPDATE ass_activity SET damagedealt = damagedealt + %i, damagedealtsession = damagedealtsession + %i WHERE steamid = %i;", damage, damage, steamID);
-		FB_Database.Query(Database_FastQuery, query);
-	}
 }
 
 //Exit emergency mode!
