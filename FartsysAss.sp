@@ -109,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.7.4";
+static char PLUGIN_VERSION[8] = "4.7.6";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -1121,12 +1121,6 @@ public Action SENTMeteorTimer(Handle timer){
 	return Plugin_Stop;
 }
 
-//SENTMeteor Timeout
-public Action DisableSENTMeteors(Handle timer){
-	canSENTMeteors = false;
-	return Plugin_Stop;
-}
-
 //SENTNukes (Scripted Entity Nukes)
 public Action SENTNukeTimer(Handle timer){
 	if(canSENTNukes){
@@ -1152,12 +1146,6 @@ public Action SENTNukeTimer(Handle timer){
 		float f = GetRandomFloat(1.5, 3.0);
 		CreateTimer(f, SENTNukeTimer);
 	}
-	return Plugin_Stop;
-}
-
-//SENTNukes Timeout
-public Action DisableSENTNukes(Handle timer){
-	canSENTNukes = false;
 	return Plugin_Stop;
 }
 
@@ -1208,12 +1196,6 @@ public Action SENTStarTimer(Handle timer){
 		CreateTimer(f, SENTStarTimer);
 	}
 	return Plugin_Stop;
-}
-
-//SENTStars Timeout
-public Action SENTStarDisable(Handle timer){
-	canSENTStars = false;
-	return Plugin_Handled;
 }
 
 //Crusader Incoming Timer for Crusader
@@ -1735,7 +1717,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 							CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {white}Uh oh, a {red}METEOR SHOWER{white}has been reported from Dovah's Ass!!!");
 							canSENTMeteors = true,
 							CreateTimer(1.0, SENTMeteorTimer),
-							CreateTimer(30.0, DisableSENTMeteors);
+							CreateTimer(30.0, TimedOperator, 12);
 						}
 						case 11:{
 							FireEntityInput("FB.Slice", "Enable", "", 0.0),
@@ -1746,7 +1728,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
 							CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {white}Uh oh, it's begun to rain {red}ATOM BOMBS{white}! TAKE COVER!"),
 							canSENTNukes = true,
 							CreateTimer(1.0, SENTNukeTimer),
-							CreateTimer(30.0, DisableSENTNukes);
+							CreateTimer(30.0, TimedOperator, 13);
 						}
 					}
 				}
@@ -2476,7 +2458,7 @@ public Action Command_Operator(int args){
 					CreateTimer(3.0, BombStatusAddTimer);
 					CustomSoundEmitter(COUNTDOWN, SFXSNDLVL, false),
 					CreateTimer(1.0, SENTStarTimer),
-					CreateTimer(60.0, SENTStarDisable);
+					CreateTimer(60.0, TimedOperator, 14);
 					if(bombStatus>=bombStatusMax){
 						return Plugin_Handled;
 					}
@@ -2706,7 +2688,7 @@ public Action Command_Operator(int args){
 			sacPoints-=60;
 			canSENTNukes = true;
 			CreateTimer(1.0, SENTNukeTimer);
-			CreateTimer(45.0, DisableSENTNukes);
+			CreateTimer(45.0, TimedOperator, 13);
 		}
 		//Meteor shower spend
 		case 37:{
@@ -2714,7 +2696,7 @@ public Action Command_Operator(int args){
 			sacPoints-=70;
 			canSENTMeteors = true;
 			CreateTimer(1.0, SENTMeteorTimer);
-			CreateTimer(30.0, DisableSENTMeteors);
+			CreateTimer(30.0, TimedOperator, 12);
 		}
 		//150K UbUp Cash
 		case 38:{
@@ -3422,10 +3404,27 @@ public Action TimedOperator(Handle timer, int job){
 		//Crusader Nuke Deactivation
 		case 10:{
 			canCrusaderNuke = false;
+			return Plugin_Stop;
 		}
 		//Seph Nuke Deactivation
 		case 11:{
 			canSephNuke = false;
+			return Plugin_Stop;
+		}
+		//SENTMeteor Timeout
+		case 12:{
+			canSENTMeteors = false;
+			return Plugin_Stop;
+		}
+		//SENTNukes Timeout
+		case 13:{
+			canSENTNukes = false;
+			return Plugin_Stop;
+		}
+		//SENTStars Timeout
+		case 14:{
+			canSENTStars = false;
+			return Plugin_Stop;
 		}
 		//Incoming
 		case 21:{
