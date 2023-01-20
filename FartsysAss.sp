@@ -109,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.7.6";
+static char PLUGIN_VERSION[8] = "4.7.8";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -1880,8 +1880,10 @@ public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast){
 public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
     BGMINDEX = 0;
     tbLoop = 0;
+    canCrusaderNuke = false;
     canHindenburg = false;
     canHWBoss = false;
+    canSephNuke = false;
     canTornado = false;
     isWave = false;
     bombStatusMax = 7;
@@ -1919,8 +1921,10 @@ public Action EventWarning(Event Spawn_Event, const char[] Spawn_Name, bool Spaw
 public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast){
     BGMINDEX = 0;
     tbLoop = 0;
+    canCrusaderNuke = false;
     canHindenburg = false;
     canHWBoss = false;
+    canSephNuke = false;
     canTornado = false;
     isWave = false;
     bombStatusMax = 7;
