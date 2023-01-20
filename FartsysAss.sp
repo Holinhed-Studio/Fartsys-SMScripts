@@ -109,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.7.8";
+static char PLUGIN_VERSION[8] = "4.7.9";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -2350,6 +2350,11 @@ public Action Command_Operator(int args){
 		//Client was Sacrificed.
 		case 10:{
 			sacrificedByClient = true;
+		}
+		//Damage relay took damage
+		case 11:{
+			FireEntityInput("TankRelayDMG", "Enable", "", 0.0),
+			FireEntityInput("TankRelayDMG", "Disable", "", 1.0);
 		}
 		//Onslaughter dmg relay was killed
 		case 12:{
