@@ -109,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.7.9";
+static char PLUGIN_VERSION[8] = "4.8.0";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -259,7 +259,6 @@ public void OnPluginStart(){
     HookEvent("mvm_wave_complete", EventWaveComplete),
     HookEvent("mvm_wave_failed", EventWaveFailed),
     HookEvent("mvm_bomb_alarm_triggered", EventWarning),
-	AddFileToDownloadsTable("sound/amongus/emergency.mp3");
     HookEventEx("player_hurt", Event_Playerhurt, EventHookMode_Pre);
     CPrintToChatAll("{darkred}Plugin Loaded.");
     cvarSNDDefault = CreateConVar("sm_fartsysass_sound", "3", "Default sound for new users, 3 = Everything, 2 = Sounds Only, 1 = Music Only, 0 = Nothing");
@@ -880,6 +879,7 @@ public Action SephATK(Handle timer){
 		switch(i){
 			case 1,6:{
 				CreateTimer(1.0, SephNukeTimer),
+				CreateTimer(7.0, TimedOperator, 11),
 				canSephNuke = true;
 			}
 			case 2,8:{
@@ -915,8 +915,7 @@ public Action SephATK(Handle timer){
 				ServerCommand("sm_smash @red");
 			}
 			case 12:{
-				CPrintToChatAll("{blue}Sephiroth: Ohhhh, you dare oppose ME?"),
-				ServerCommand("sm_smite @red");
+				CPrintToChatAll("{blue}Sephiroth: Ohhhh, you dare oppose ME?");
 			}
 		}
 	}
@@ -2317,11 +2316,12 @@ public Action Command_Operator(int args){
 				//Case 2, summon Custom Boss 1
 				case 2:{
 					FireEntityInput("FB.Sephiroth", "Enable", "", 0.0),
-					FireEntityInput("SephTrain", "SetSpeed", "0.5", 0.0),
+					FireEntityInput("SephTrain", "SetSpeedReal", "7", 0.0),
 					FireEntityInput("SephTrain", "TeleportToPathTrack", "Seph01", 0.0),
 					FireEntityInput("SephTrain", "StartForward", "", 0.1),
+					FireEntityInput("SephTrain", "SetSpeedReal", "7", 20.5),
 					FireEntityInput("FB.SephParticles", "Start", "", 3.0),
-					CreateTimer(5.0, SephATK),
+					FireEntityInput("tank_boss", "SetHealth", "2400000", 1.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 3.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 4.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 5.0),
@@ -2356,17 +2356,17 @@ public Action Command_Operator(int args){
 			FireEntityInput("TankRelayDMG", "Enable", "", 0.0),
 			FireEntityInput("TankRelayDMG", "Disable", "", 1.0);
 		}
-		//Onslaughter dmg relay was killed
+		//dmg relay was killed
 		case 12:{
 			FireEntityInput("tank_boss", "SetHealth", "1", 0.0),
 			FireEntityInput("TankRelayDMG", "Enable", "", 0.1),
-			FireEntityInput("TankRelayDMG", "Disable", "", 3.0);
+			FireEntityInput("TankRelayDMG", "Disable", "", 10.0);
 		}
 		//Tank Destroyed (+1), includes disabling onslaughter.
 		case 13:{
 			switch(waveFlags){
 				case 0:{
-					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has been destroyed. waveFlags was 0. ({limegreen}+1 pt{white})");
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has been destroyed. ({limegreen}+1 pt{white})");
 					sacPoints++;
 				}
 				case 1:{
@@ -2380,9 +2380,14 @@ public Action Command_Operator(int args){
 					sacPoints+=25;
 				}
 				case 2:{
-					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A boss has been destroyed.({limegreen}+100 pts{white})");
-					sacPoints+=100;
+					CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}SEPHIROTH {white}has been destroyed. ({limegreen}+100 pts{white})");
+					FireEntityInput("FB.Sephiroth", "Disable", "", 0.0),
+					FireEntityInput("SephTrain", "TeleportToPathTrack", "Seph01", 0.0),
+					FireEntityInput("SephTrain", "Stop", "", 0.0),
+					canSephNuke = false,
+					sacPoints+=100,
 					waveFlags = 0;
+					canTornado = false;
 				}
 			}
 			return Plugin_Handled;
@@ -3016,10 +3021,18 @@ public Action Command_Operator(int args){
 		//Activate Tornado Timer
 		case 1004:{
 			if (isWave && canTornado){
-				float f = GetRandomFloat(210.0, 500.0);
-				float t = f - 30.0;
-				CreateTimer (t, TimedOperator, 40);
-				CreateTimer(f, TimedOperator, 41);
+				if(curWave == 4){
+					float f = GetRandomFloat(30.0, 60.0);
+					float t = f - 30.0;
+					CreateTimer (t, TimedOperator, 40);
+					CreateTimer(f, TimedOperator, 41);
+				}
+				else{
+					float f = GetRandomFloat(210.0, 500.0);
+					float t = f - 30.0;
+					CreateTimer (t, TimedOperator, 40);
+					CreateTimer(f, TimedOperator, 41);
+				}
 			}
 		}
 		//Despawn the tornado
@@ -3284,7 +3297,7 @@ public Action TimedOperator(Handle timer, int job){
 				}
 				//BGM4
 				case 5:{
-					CustomSoundEmitter(BGM4, BGMSNDLVL-15, true);
+					CustomSoundEmitter(BGM4, BGMSNDLVL-30, true);
 					curSong = BGM4;
 					songName = BGM4Title;
 					FireEntityInput("FB.MusicTimer", "RefireTime", "122.05", 0.0),
@@ -3320,7 +3333,7 @@ public Action TimedOperator(Handle timer, int job){
 				}
 				//BGM8
 				case 9:{
-					CustomSoundEmitter(BGM8, BGMSNDLVL-10, true);
+					CustomSoundEmitter(BGM8, BGMSNDLVL+20, true);
 					curSong = BGM8;
 					songName = BGM8Title;
 					FireEntityInput("FB.MusicTimer", "RefireTime", "215.0", 0.0),
@@ -3349,7 +3362,7 @@ public Action TimedOperator(Handle timer, int job){
 				}
 				//BGM10
 				case 11:{
-					CustomSoundEmitter(BGM10, BGMSNDLVL, true);
+					CustomSoundEmitter(BGM10, BGMSNDLVL+10, true);
 					curSong = BGM10;
 					songName = BGM10Title;
 					FireEntityInput("FB.MusicTimer", "RefireTime", "511.8", 0.0),
@@ -3366,7 +3379,8 @@ public Action TimedOperator(Handle timer, int job){
 		}
 		//Boss script pt 2
 		case 3:{
-			CustomSoundEmitter(BGM10Intro, BGMSNDLVL, true);
+			CustomSoundEmitter(BGM10Intro, BGMSNDLVL+10, true);
+			FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 0.0);
 			FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 3.0);
 			FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 7.0);
 			FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 12.0);
@@ -3388,6 +3402,7 @@ public Action TimedOperator(Handle timer, int job){
 		case 6:{
 			CustomSoundEmitter(HINDENBURGBOOM, SFXSNDLVL-10, false),
 			FireEntityInput("FB.Fade", "Fade", "", 0.0),
+			CreateTimer(1.0, SephATK),
 			CreateTimer(1.7, TimedOperator, 7);
 		}
 		//DO THE THING ALREADY
