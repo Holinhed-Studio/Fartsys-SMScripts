@@ -1149,6 +1149,22 @@ public Action DisableSENTNukes(Handle timer){
 	return Plugin_Stop;
 }
 
+//CrusaderSentNukes
+public Action CrusaderNukeTimer(Handle timer){
+	if(canCrusaderNuke){
+		CustomSoundEmitter(DROPNUKE, SFXSNDLVL-10, false),
+		FireEntityInput("FB.CrusaderNuke", "ForceSpawn", "", 0.0);
+		float f = GetRandomFloat(1.5, 3.0);
+		CreateTimer(f, CrusaderNukeTimer);
+	}
+	return Plugin_Stop;
+}
+
+public Action StopCrusaderNukeTimer(Handle timer){
+	canCrusaderNuke = false;
+	return Plugin_Stop;
+}
+
 //SENTStars (Scripted Entity Stars)
 public Action SENTStarTimer(Handle timer){
 	if(canSENTStars){
@@ -2326,6 +2342,11 @@ public Action Command_Operator(int args){
 		//When a tornado intersects a tank.
 		case 8:{
 			FireEntityInput("FB.FakeTankSpawner", "ForceSpawn", "", 0.1);
+		}
+		//Crusader Nuke activation
+		case 9:{
+			canCrusaderNuke = true;
+			CreateTimer(1.0, CrusaderNukeTimer);
 		}
 		//Client was Sacrificed.
 		case 10:{
