@@ -109,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.8.0";
+static char PLUGIN_VERSION[8] = "4.9.0";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -866,6 +866,25 @@ public Action OnslaughterATK(Handle timer){
 	return Plugin_Stop;
 }
 
+//Onslaughter Health Timer
+public Action OnslaughterHPTimer(Handle timer){
+	if(waveFlags != 1){
+		return Plugin_Stop;
+	}
+	else{
+		int OnsEnt = FindEntityByClassname(-1, "tank_boss"); //Get index of Sephiroth Tank
+		int OnsRelayEnt = FindEntityByClassname(-1, "func_physbox"); //Get index of Onslaughter Relay
+		if(OnsEnt == -1){
+			PrintToChatAll("Onslaughter not found");
+			return Plugin_Handled;
+		}
+		int OnsHP = GetEntProp(OnsEnt, Prop_Data, "m_iHealth");
+		int OnsRelayHP = GetEntProp(OnsRelayEnt, Prop_Data, "m_iHealth");
+		CPrintToChatAll("{blue}Onslaughter's HP: %i (%i)", OnsHP, OnsRelayHP);
+		CreateTimer(10.0, OnslaughterHPTimer);
+	}
+	return Plugin_Stop;
+}
 //Sephiroth Timer
 public Action SephATK(Handle timer){
 	if (waveFlags != 2){
@@ -918,6 +937,26 @@ public Action SephATK(Handle timer){
 				CPrintToChatAll("{blue}Sephiroth: Ohhhh, you dare oppose ME?");
 			}
 		}
+	}
+	return Plugin_Stop;
+}
+
+//Sephiroth Health Timer
+public Action SephHPTimer(Handle timer){
+	if(waveFlags != 2){
+		return Plugin_Stop;
+	}
+	else{
+		int SephEnt = FindEntityByClassname(-1, "tank_boss"); //Get index of Sephiroth Tank
+		int SephRelayEnt = FindEntityByClassname(-1, "func_physbox"); //Get index of Seph Relay
+		if(SephEnt == -1){
+			PrintToChatAll("Sephiroth not found");
+			return Plugin_Handled;
+		}
+		int SephHP = GetEntProp(SephEnt, Prop_Data, "m_iHealth");
+		int SephRelayHP = GetEntProp(SephRelayEnt, Prop_Data, "m_iHealth");
+		CPrintToChatAll("{blue}Sephiroth's HP: %i (%i)", SephHP, SephRelayHP);
+		CreateTimer(10.0, SephHPTimer);
 	}
 	return Plugin_Stop;
 }
@@ -2312,22 +2351,57 @@ public Action Command_Operator(int args){
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 6.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 7.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 8.0);
+					CreateTimer(10.0, OnslaughterHPTimer);
 				}
 				//Case 2, summon Custom Boss 1
 				case 2:{
 					FireEntityInput("FB.Sephiroth", "Enable", "", 0.0),
-					FireEntityInput("SephTrain", "SetSpeedReal", "7", 0.0),
+					FireEntityInput("SephTrain", "SetSpeedReal", "12", 0.0),
 					FireEntityInput("SephTrain", "TeleportToPathTrack", "Seph01", 0.0),
 					FireEntityInput("SephTrain", "StartForward", "", 0.1),
-					FireEntityInput("SephTrain", "SetSpeedReal", "7", 20.5),
+					FireEntityInput("SephTrain", "SetSpeedReal", "12", 20.5),
 					FireEntityInput("FB.SephParticles", "Start", "", 3.0),
-					FireEntityInput("tank_boss", "SetHealth", "2400000", 1.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 3.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 4.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 5.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 6.0),
 					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 7.0),
-					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 8.0);
+					FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 8.0),
+					FireEntityInput("FB.BruteJusticeDMGRelay", "Kill", "", 0.0);
+					int players = 0;
+					for (int i = 1; i <= MaxClients; i++){
+						if (IsClientInGame(i) && !IsFakeClient(i))
+						players++;
+					} 
+					PrintToServer("We have %i player(s), setting boss attributes accordingly!", players);
+					switch (players){
+						case 1:{
+							FireEntityInput("SephTrain", "SetSpeedReal", "40", 23.0),
+							FireEntityInput("tank_boss", "SetHealth", "409600", 1.0),
+							FireEntityInput("FB.SephDMGRelay", "SetHealth", "32768000", 1.0);
+						}
+						case 2:{
+							FireEntityInput("SephTrain", "SetSpeedReal", "35", 23.0),
+							FireEntityInput("tank_boss", "SetHealth", "614400", 1.0),
+							FireEntityInput("FB.SephDMGRelay", "SetHealth", "32768000", 1.0);
+						}
+						case 3:{
+							FireEntityInput("SephTrain", "SetSpeedReal", "35", 23.0),
+							FireEntityInput("tank_boss", "SetHealth", "614400", 1.0),
+							FireEntityInput("FB.SephDMGRelay", "SetHealth", "131072000", 1.0);
+						}
+						case 4:{
+							FireEntityInput("SephTrain", "SetSpeedReal", "30", 23.0),
+							FireEntityInput("tank_boss", "SetHealth", "819200", 1.0),
+							FireEntityInput("FB.SephDMGRelay", "SetHealth", "262144000", 1.0);
+						}
+						case 5,6,7,8,9,10:{
+							FireEntityInput("SephTrain", "SetSpeedReal", "25", 23.0),
+							FireEntityInput("tank_boss", "SetHealth", "819200", 1.0),
+							FireEntityInput("FB.SephDMGRelay", "SetHealth", "655360000", 1.0);
+						}
+					}
+					CreateTimer(30.0, SephHPTimer);
 				}
 			}
 		}
@@ -2354,12 +2428,14 @@ public Action Command_Operator(int args){
 		//Damage relay took damage
 		case 11:{
 			FireEntityInput("TankRelayDMG", "Enable", "", 0.0),
-			FireEntityInput("TankRelayDMG", "Disable", "", 1.0);
+			FireEntityInput("TankRelayDMG", "Disable", "", 0.5);
 		}
 		//dmg relay was killed
 		case 12:{
-			FireEntityInput("tank_boss", "SetHealth", "1", 0.0),
-			FireEntityInput("TankRelayDMG", "Enable", "", 0.1),
+			FireEntityInput("tank_boss", "SetHealth", "1", 0.0);
+			FireEntityInput("TankRelayDMG", "Enable", "", 0.1);
+			FireEntityInput("TankRelayDMG", "Enable", "", 0.5);
+			FireEntityInput("TankRelayDMG", "Enable", "", 1.0);
 			FireEntityInput("TankRelayDMG", "Disable", "", 10.0);
 		}
 		//Tank Destroyed (+1), includes disabling onslaughter.
@@ -3204,6 +3280,10 @@ public Action Command_Operator(int args){
 				}
 			}
 		}
+		//DEBUG
+		case 9000:{
+			CreateTimer(10.0, SephHPTimer);
+		}
 	}
 	return Plugin_Handled;
 }
@@ -3333,7 +3413,7 @@ public Action TimedOperator(Handle timer, int job){
 				}
 				//BGM8
 				case 9:{
-					CustomSoundEmitter(BGM8, BGMSNDLVL+20, true);
+					CustomSoundEmitter(BGM8, BGMSNDLVL+30, true);
 					curSong = BGM8;
 					songName = BGM8Title;
 					FireEntityInput("FB.MusicTimer", "RefireTime", "215.0", 0.0),
@@ -3365,7 +3445,7 @@ public Action TimedOperator(Handle timer, int job){
 					CustomSoundEmitter(BGM10, BGMSNDLVL+10, true);
 					curSong = BGM10;
 					songName = BGM10Title;
-					FireEntityInput("FB.MusicTimer", "RefireTime", "511.8", 0.0),
+					FireEntityInput("FB.MusicTimer", "RefireTime", "310.8", 0.0),
 					FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
 					FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
 				}
@@ -3395,7 +3475,7 @@ public Action TimedOperator(Handle timer, int job){
 		//Boss script pt 4
 		case 5:{
 			CustomSoundEmitter(VO_SEPHMEMORY, SFXSNDLVL, false),
-			FireEntityInput("SephNuke", "ForceSpawn", "", 2.0),
+			FireEntityInput("SephNuke", "ForceSpawn", "", 3.0),
 			CreateTimer(3.2, TimedOperator, 6);
 		}
 		//Boss script pt 5
@@ -3411,7 +3491,7 @@ public Action TimedOperator(Handle timer, int job){
 			curSong = BGM10;
 			songName = BGM10Title;
 			CustomSoundEmitter(BGM10, BGMSNDLVL, true),
-			CreateTimer(312.0, TimedOperator, 1);
+			CreateTimer(313.0, TimedOperator, 1);
 		}
 		//Signal boss to actually spawn after delay.
 		case 8:{
