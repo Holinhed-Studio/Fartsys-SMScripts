@@ -50,7 +50,7 @@ static char BGM7[64] = "fartsy/music/ffxiv/revengetwofold.mp3";
 static char BGM8[64] = "fartsy/music/ffxiv/landslide.mp3";
 static char BGM9[64] = "fartsy/music/brawler/xbc2/battle.mp3";
 static char BGM9Intro[64] = "fartsy/music/brawler/xbc2/battle_intro.mp3";
-static char BGM10Intro[32] = "fartsy/music/brawler/onewingedintro.mp3";
+static char BGM10Intro[48] = "fartsy/music/brawler/onewingedintro.mp3";
 static char BGM10[64] = "fartsy/music/brawler/onewingedangel.mp3";
 static char BGM1Title[32] = "FFXIV - Locus";
 static char BGM2Title[32] = "FFXIV - Metal";
@@ -109,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.9.0";
+static char PLUGIN_VERSION[8] = "4.9.1";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -659,12 +659,20 @@ public int MenuHandlerFartsysAss(Menu menu, MenuAction action, int param1, int p
 					ServerCommand("fb_operator 33");
 				}
 			}
-			case 4,5:{
+			case 4:{
 				if (sacPoints <=49){
 					return;
 				}
 				else{
 					ServerCommand("fb_operator 34");
+				}
+			}
+			case 5:{
+				if (sacPoints <=49){
+					return;
+				}
+				else{
+					ServerCommand("fb_operator 35");
 				}
 			}
 			case 6:{
