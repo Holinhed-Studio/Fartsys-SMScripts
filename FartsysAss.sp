@@ -109,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.9.2";
+static char PLUGIN_VERSION[8] = "4.9.3";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -2319,6 +2319,7 @@ public Action Command_Operator(int args) {
     //Case 2, summon Custom Boss 1
     case 2: {
       FireEntityInput("FB.Sephiroth", "Enable", "", 0.0),
+        FireEntityInput("SephMeteor", "SetParent", "FB.Sephiroth", 0.0),
         FireEntityInput("SephTrain", "SetSpeedReal", "12", 0.0),
         FireEntityInput("SephTrain", "TeleportToPathTrack", "Seph01", 0.0),
         FireEntityInput("SephTrain", "StartForward", "", 0.1),
