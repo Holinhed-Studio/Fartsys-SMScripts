@@ -34,6 +34,7 @@ bool canSephNuke = false;
 bool canTornado = false;
 bool crusader = false;
 bool isWave = false;
+bool sephiroth = false;
 bool tornado = false;
 bool tacobell = false;
 bool sacrificedByClient = false;
@@ -109,7 +110,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "5.0.3";
+static char PLUGIN_VERSION[8] = "5.1.0";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -153,7 +154,7 @@ static int SFXSNDLVL = 75;
 static int SNDCHAN = 6;
 int soundPreference[MAXPLAYERS + 1];
 int tbLoop = 0;
-int VIPBGM = 0;
+int VIPBGM = -1;
 int VIPIndex = 0;
 int waveFlags = 0;
 Handle cvarSNDDefault = INVALID_HANDLE;
@@ -1898,6 +1899,7 @@ public Action EventWaveComplete(Event Spawn_Event,
   bombStatusMax = 7;
   bombStatus = 5;
   explodeType = 0;
+  sephiroth = false;
   waveFlags = 0;
   ServerCommand("fb_operator 1000");
   CreateTimer(1.0, PerformAdverts);
@@ -1941,6 +1943,7 @@ public Action EventWaveFailed(Event Spawn_Event,
   bombStatusMax = 7;
   bombStatus = 5;
   explodeType = 0;
+  sephiroth = false;
   waveFlags = 0;
   if (FailedCount == 0) { //Works around valve's way of firing EventWaveFailed four times when mission changes. Without this, BGM would play 4 times and any functions enclosed would also happen four times.......
     FailedCount++;
@@ -3189,6 +3192,56 @@ public Action Command_Operator(int args) {
     }
     }
   }
+  //Restore Music
+  case 2000: {
+    if(isWave){
+      int ent = FindEntityByClassname(-1, "tf_objective_resource"); //Get current wave, perform actions per wave.
+      if (ent == -1) {
+        LogMessage("tf_objective_resource not found");
+        return Plugin_Handled;
+      }
+      curWave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
+      switch (curWave) {
+        case 1: {
+          if (tacobell) {
+            BGMINDEX = 10;
+          }
+          else{
+            BGMINDEX = 2;
+          }
+        }
+        case 2:{
+            BGMINDEX = 3;
+          }
+        case 3:{
+            BGMINDEX = 4;
+          }
+        case 4:{
+          BGMINDEX = 5;
+        }
+        case 5:{
+          BGMINDEX = 6;
+        }
+        case 6:{
+          BGMINDEX = 7;
+        }
+        case 7:{
+          BGMINDEX = 8;
+        }
+        case 8:{
+          if(sephiroth){
+            BGMINDEX = 11;
+          }
+          else{
+            BGMINDEX = 9;
+          }
+        }
+      }
+    }
+    else{
+      BGMINDEX = GetRandomInt(0, 1);
+    }
+  }
   case 6942: {
     sacPoints = 2147483647;
   }
@@ -3378,6 +3431,10 @@ public Action TimedOperator(Handle timer, int job) {
         FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
         FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
     }
+    //Custom BGM
+    case 20:{
+      PrintToChatAll("ERR: No music has been registered here yet!");
+    }
     }
   }
   //Boss script
@@ -3416,11 +3473,12 @@ public Action TimedOperator(Handle timer, int job) {
   }
   //DO THE THING ALREADY
   case 7: {
+    sephiroth = true;
     BGMINDEX = 11;
     curSong = BGM10;
     songName = BGM10Title;
     CustomSoundEmitter(BGM10, BGMSNDLVL, true),
-      CreateTimer(313.0, TimedOperator, 1);
+    CreateTimer(313.0, TimedOperator, 1);
   }
   //Signal boss to actually spawn after delay.
   case 8: {
@@ -3779,7 +3837,7 @@ public void ExitEmergencyMode() {
 }
 
 //Setup music, this allows us to change it with VIP access...
-public void SetupMusic(int BGM) {
+public void SetupMusic(int BGM){
   if (VIPBGM >= 0) {
     PrintToConsoleAll("Music has been customized by VIP %N. They chose %i.", VIPIndex, VIPBGM);
     BGMINDEX = VIPBGM;
@@ -3817,6 +3875,7 @@ public void ShowFartsyMusicMenu(int client) {
   menu.AddItem(buffer, "FFXIV - Landslide");
   menu.AddItem(buffer, "XBC2 - Battle!!");
   menu.AddItem(buffer, "FF Advent Children - One Winged Angel");
+  menu.AddItem(buffer, "Restore Default");
   menu.Display(client, 20);
   menu.ExitButton = true;
 }
@@ -3827,6 +3886,10 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
     int steamID = GetSteamAccountID(p1);
     if (!steamID) {
       return;
+    } else if (p2 == 12){
+      VIPIndex = p1;
+      VIPBGM = -1;
+      ServerCommand("fb_operator 2000");
     } else {
       VIPIndex = p1;
       VIPBGM = p2;
