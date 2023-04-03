@@ -109,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "4.9.3";
+static char PLUGIN_VERSION[8] = "5.0.0";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -153,6 +153,8 @@ static int SFXSNDLVL = 75;
 static int SNDCHAN = 6;
 int soundPreference[MAXPLAYERS + 1];
 int tbLoop = 0;
+int VIPBGM = 0;
+int VIPIndex = 0;
 int waveFlags = 0;
 Handle cvarSNDDefault = INVALID_HANDLE;
 stock bool IsValidClient(int client) {
@@ -250,6 +252,7 @@ public void OnPluginStart() {
     PrecacheSound("ambient/sawblade_impact1.wav", true),
     PrecacheSound("vo/sandwicheat09.mp3", true),
     RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client."),
+    RegAdminCmd("sm_music", Command_Music, ADMFLAG_RESERVATION, "Set music to be played for the next wave"),
     RegConsoleCmd("sm_bombstatus", Command_FBBombStatus, "Check bomb status"),
     RegConsoleCmd("sm_song", Command_GetCurrentSong, "Get current song name"),
     RegConsoleCmd("sm_stats", Command_MyStats, "Print current statistics"),
@@ -2130,28 +2133,25 @@ public Action Command_Operator(int args) {
     switch (curWave) {
     case 1: {
       if (tacobell) {
-        BGMINDEX = 10;
         canTornado = true;
         bombStatus = 0;
         bombStatusMax = 10;
         sacPointsMax = 90;
-        ServerCommand("fb_operator 1000");
+        SetupMusic(10);
       } else {
-        BGMINDEX = 2;
         bombStatus = 0;
         bombStatusMax = 10;
         sacPointsMax = 90;
-        ServerCommand("fb_operator 1000");
+        SetupMusic(2);
       }
     }
     case 2, 9, 16: {
-      BGMINDEX = 3;
       canHWBoss = true;
       canTornado = true;
       bombStatus = 4;
       bombStatusMax = 18;
       sacPointsMax = 90;
-      ServerCommand("fb_operator 1000");
+      SetupMusic(3);
       //CreateTimer(0.1, TimedOperator, 3);
       FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
       FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
@@ -2159,14 +2159,13 @@ public Action Command_Operator(int args) {
       CreateTimer(hwn, HWBosses);
     }
     case 3, 10, 17: {
-      BGMINDEX = 4;
       canHWBoss = true;
       canTornado = true;
       HWNMax = 360.0;
       bombStatus = 7;
       bombStatusMax = 26;
       sacPointsMax = 90;
-      ServerCommand("fb_operator 1000");
+      SetupMusic(4);
       //CreateTimer(0.1, TimedOperator, 4);
       FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
       FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
@@ -2178,7 +2177,6 @@ public Action Command_Operator(int args) {
       CreateTimer(hwn, HWBosses);
     }
     case 4, 11, 18: {
-      BGMINDEX = 5;
       canHWBoss = true;
       canTornado = true;
       HWNMax = 360.0;
@@ -2186,7 +2184,7 @@ public Action Command_Operator(int args) {
       bombStatus = 12;
       bombStatusMax = 34;
       sacPointsMax = 90;
-      ServerCommand("fb_operator 1000");
+      SetupMusic(5);
       //CreateTimer(0.1, TimedOperator, 5);
       FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
       FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
@@ -2196,7 +2194,6 @@ public Action Command_Operator(int args) {
       CreateTimer(hwn, HWBosses);
     }
     case 5, 12, 19: {
-      BGMINDEX = 6;
       canHWBoss = true;
       canTornado = true;
       HWNMax = 260.0;
@@ -2205,7 +2202,7 @@ public Action Command_Operator(int args) {
       bombStatus = 14;
       bombStatusMax = 42;
       sacPointsMax = 100;
-      ServerCommand("fb_operator 1000");
+      SetupMusic(6);
       //CreateTimer(0.1, TimedOperator, 6);
       FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
       FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
@@ -2218,7 +2215,6 @@ public Action Command_Operator(int args) {
       CreateTimer(hwn, HWBosses);
     }
     case 6, 13, 20: {
-      BGMINDEX = 7;
       canHWBoss = true;
       canTornado = true;
       HWNMax = 260.0;
@@ -2227,7 +2223,7 @@ public Action Command_Operator(int args) {
       bombStatus = 20;
       bombStatusMax = 50;
       sacPointsMax = 100;
-      ServerCommand("fb_operator 1000");
+      SetupMusic(7);
       FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
       FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
       FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
@@ -2236,7 +2232,6 @@ public Action Command_Operator(int args) {
       CreateTimer(hwn, HWBosses);
     }
     case 7, 14, 21: {
-      BGMINDEX = 8;
       canHWBoss = true;
       canTornado = true;
       HWNMax = 240.0;
@@ -2245,7 +2240,7 @@ public Action Command_Operator(int args) {
       bombStatus = 28;
       bombStatusMax = 58;
       sacPointsMax = 100;
-      ServerCommand("fb_operator 1000");
+      SetupMusic(8);
       FireEntityInput("rain", "Alpha", "200", 0.0);
       FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
       FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
@@ -2256,7 +2251,6 @@ public Action Command_Operator(int args) {
       CreateTimer(hwn, HWBosses);
     }
     case 8, 15: {
-      BGMINDEX = 9;
       canHWBoss = true;
       canTornado = true;
       HWNMax = 240.0;
@@ -2264,7 +2258,7 @@ public Action Command_Operator(int args) {
       bombStatus = 30;
       bombStatusMax = 66;
       sacPointsMax = 100;
-      ServerCommand("fb_operator 1000");
+      SetupMusic(9);
       FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
       FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
       FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
@@ -3269,7 +3263,7 @@ public Action TimedOperator(Handle timer, int job) {
         CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL - 10, true);
         curSong = DEFAULTBGM1;
         songName = DEFAULTBGM1Title;
-        BGMINDEX = 0;
+        SetupMusic(0);
         FireEntityInput("FB.MusicTimer", "RefireTime", "137.55", 0.0),
           FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
           FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
@@ -3278,7 +3272,7 @@ public Action TimedOperator(Handle timer, int job) {
         CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL - 10, true);
         curSong = DEFAULTBGM2;
         songName = DEFAULTBGM2Title;
-        BGMINDEX = 1;
+        SetupMusic(1);
         FireEntityInput("FB.MusicTimer", "RefireTime", "235.3", 0.0),
           FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
           FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
@@ -3783,4 +3777,131 @@ public void ExitEmergencyMode() {
   CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended."),
     brawler_emergency = false;
   ServerCommand("sm_god @red 0");
+}
+
+//Setup music, this allows us to change it with VIP access...
+public void SetupMusic(int BGM){
+  if(VIPBGM > 0){
+    PrintToConsoleAll("Music has been customized by VIP %N. They chose %i.", VIPINDEX, VIPBGM);
+    switch(VIPBGM){
+      case 0:{
+          BGMINDEX = 0;
+        }
+        case 1:{
+          BGMINDEX = 1;
+        }
+        case 2:{
+          BGMINDEX = 2;
+        }
+        case 3:{
+          BGMINDEX = 3;
+        }
+        case 4:{
+          BGMINDEX = 4;
+        }
+        case 5:{
+          BGMINDEX = 5;
+        }
+        case 6:{
+          BGMINDEX = 6;
+        }
+        case 7:{
+          BGMINDEX = 7;
+        }
+        case 8:{
+          BGMINDEX = 8;
+        }
+        case 9:{
+          BGMINDEX = 9;
+        }
+        case 10:{
+          BGMINDEX = 10;
+      }
+    }
+    ServerCommand("fb_operator 1000");
+  }
+  else{
+      switch(BGM){
+        case 0:{
+          BGMINDEX = 0;
+        }
+        case 1:{
+          BGMINDEX = 1;
+        }
+        case 2:{
+          BGMINDEX = 2;
+        }
+        case 3:{
+          BGMINDEX = 3;
+        }
+        case 4:{
+          BGMINDEX = 4;
+        }
+        case 5:{
+          BGMINDEX = 5;
+        }
+        case 6:{
+          BGMINDEX = 6;
+        }
+        case 7:{
+          BGMINDEX = 7;
+        }
+        case 8:{
+          BGMINDEX = 8;
+        }
+        case 9:{
+          BGMINDEX = 9;
+        }
+        case 10:{
+        BGMINDEX = 10;
+      }
+    }
+    ServerCommand("fb_operator 1000");
+  }
+}
+
+public action Command_Music(int client, int args){
+  int steamID = GetSteamAccountID(client);
+  if (!steamID || steamID <= 10000) {
+    return Plugin_Handled;
+  } else {
+    ShowFartsyMusicMenu(client);
+    return Plugin_Handled;
+  }
+}
+
+//Send client sound menu
+public void ShowFartsyMusicMenu(int client) {
+  Menu menu = new Menu(MenuHandlerFartsyMusic, MENU_ACTIONS_DEFAULT);
+  char buffer[100];
+  menu.SetTitle("FartsysAss Music Menu");
+  menu.AddItem(buffer, "0");
+  menu.AddItem(buffer, "1");
+  menu.AddItem(buffer, "2");
+  menu.AddItem(buffer, "3");
+  menu.AddItem(buffer, "4");
+  menu.AddItem(buffer, "5");
+  menu.AddItem(buffer, "6");
+  menu.AddItem(buffer, "7");
+  menu.AddItem(buffer, "8");
+  menu.AddItem(buffer, "9");
+  menu.AddItem(buffer, "10");
+  menu.Display(client, 20);
+  menu.ExitButton = true;
+}
+
+// This selects the music
+public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) {
+  if (action == MenuAction_Select) {
+    char query[256];
+    int steamID = GetSteamAccountID(p1);
+    if (!steamID) {
+      return;
+    } else {
+      VIPINDEX = p1;
+      VIPBGM = p2;
+    }
+  } else if (action == MenuAction_End) {
+    CloseHandle(menu);
+  }
 }
