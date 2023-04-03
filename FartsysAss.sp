@@ -109,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "5.0.0";
+static char PLUGIN_VERSION[8] = "5.0.1";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -3254,6 +3254,7 @@ public Action TimedOperator(Handle timer, int job) {
   }
   //Music system rewrite (again)
   case 1: {
+    PrintToConsoleAll("Music system got BGMINDEX %i and VIPBGM %i due to %N", BGMINDEX, VIPBGM, VIPIndex);
     switch (BGMINDEX) {
       //Default BGM indexes are 0 and 1.
     case 0, 1: {
