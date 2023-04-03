@@ -109,7 +109,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "5.0.1";
+static char PLUGIN_VERSION[8] = "5.0.3";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -3254,7 +3254,7 @@ public Action TimedOperator(Handle timer, int job) {
   }
   //Music system rewrite (again)
   case 1: {
-    PrintToConsoleAll("Music system got BGMINDEX %i and VIPBGM %i due to %N", BGMINDEX, VIPBGM, VIPIndex);
+    //PrintToConsoleAll("Music system got BGMINDEX %i and VIPBGM %i due to %N", BGMINDEX, VIPBGM, VIPIndex);
     switch (BGMINDEX) {
       //Default BGM indexes are 0 and 1.
     case 0, 1: {
@@ -3264,7 +3264,6 @@ public Action TimedOperator(Handle timer, int job) {
         CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL - 10, true);
         curSong = DEFAULTBGM1;
         songName = DEFAULTBGM1Title;
-        SetupMusic(0);
         FireEntityInput("FB.MusicTimer", "RefireTime", "137.55", 0.0),
           FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
           FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
@@ -3273,7 +3272,6 @@ public Action TimedOperator(Handle timer, int job) {
         CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL - 10, true);
         curSong = DEFAULTBGM2;
         songName = DEFAULTBGM2Title;
-        SetupMusic(1);
         FireEntityInput("FB.MusicTimer", "RefireTime", "235.3", 0.0),
           FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
           FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
@@ -3781,87 +3779,18 @@ public void ExitEmergencyMode() {
 }
 
 //Setup music, this allows us to change it with VIP access...
-public void SetupMusic(int BGM){
-  if(VIPBGM > 0){
+public void SetupMusic(int BGM) {
+  if (VIPBGM >= 0) {
     PrintToConsoleAll("Music has been customized by VIP %N. They chose %i.", VIPIndex, VIPBGM);
-    switch(VIPBGM){
-      case 0:{
-          BGMINDEX = 0;
-        }
-        case 1:{
-          BGMINDEX = 1;
-        }
-        case 2:{
-          BGMINDEX = 2;
-        }
-        case 3:{
-          BGMINDEX = 3;
-        }
-        case 4:{
-          BGMINDEX = 4;
-        }
-        case 5:{
-          BGMINDEX = 5;
-        }
-        case 6:{
-          BGMINDEX = 6;
-        }
-        case 7:{
-          BGMINDEX = 7;
-        }
-        case 8:{
-          BGMINDEX = 8;
-        }
-        case 9:{
-          BGMINDEX = 9;
-        }
-        case 10:{
-          BGMINDEX = 10;
-      }
-    }
+    BGMINDEX = VIPBGM;
     ServerCommand("fb_operator 1000");
-  }
-  else{
-      switch(BGM){
-        case 0:{
-          BGMINDEX = 0;
-        }
-        case 1:{
-          BGMINDEX = 1;
-        }
-        case 2:{
-          BGMINDEX = 2;
-        }
-        case 3:{
-          BGMINDEX = 3;
-        }
-        case 4:{
-          BGMINDEX = 4;
-        }
-        case 5:{
-          BGMINDEX = 5;
-        }
-        case 6:{
-          BGMINDEX = 6;
-        }
-        case 7:{
-          BGMINDEX = 7;
-        }
-        case 8:{
-          BGMINDEX = 8;
-        }
-        case 9:{
-          BGMINDEX = 9;
-        }
-        case 10:{
-        BGMINDEX = 10;
-      }
-    }
+  } else {
+    BGMINDEX = BGM;
     ServerCommand("fb_operator 1000");
   }
 }
 
-public Action Command_Music(int client, int args){
+public Action Command_Music(int client, int args) {
   int steamID = GetSteamAccountID(client);
   if (!steamID || steamID <= 10000) {
     return Plugin_Handled;
@@ -3876,17 +3805,18 @@ public void ShowFartsyMusicMenu(int client) {
   Menu menu = new Menu(MenuHandlerFartsyMusic, MENU_ACTIONS_DEFAULT);
   char buffer[100];
   menu.SetTitle("FartsysAss Music Menu");
-  menu.AddItem(buffer, "0");
-  menu.AddItem(buffer, "1");
-  menu.AddItem(buffer, "2");
-  menu.AddItem(buffer, "3");
-  menu.AddItem(buffer, "4");
-  menu.AddItem(buffer, "5");
-  menu.AddItem(buffer, "6");
-  menu.AddItem(buffer, "7");
-  menu.AddItem(buffer, "8");
-  menu.AddItem(buffer, "9");
-  menu.AddItem(buffer, "10");
+  menu.AddItem(buffer, "FFXIV - Knowledge Never Sleeps");
+  menu.AddItem(buffer, "FFXIV - Silent Regard of Stars");
+  menu.AddItem(buffer, "FFXIV - Locus");
+  menu.AddItem(buffer, "FFXIV - Metal");
+  menu.AddItem(buffer, "FFXIV - Exponential Entropy");
+  menu.AddItem(buffer, "FFXIV - Torn From the Heavens");
+  menu.AddItem(buffer, "FFXIV - Metal Brute Justice Mode");
+  menu.AddItem(buffer, "FFXIV - Penitus");
+  menu.AddItem(buffer, "FFXIV - Revenge Twofold");
+  menu.AddItem(buffer, "FFXIV - Landslide");
+  menu.AddItem(buffer, "XBC2 - Battle!!");
+  menu.AddItem(buffer, "FF Advent Children - One Winged Angel");
   menu.Display(client, 20);
   menu.ExitButton = true;
 }
@@ -3900,6 +3830,7 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
     } else {
       VIPIndex = p1;
       VIPBGM = p2;
+      BGMINDEX = p2;
     }
   } else if (action == MenuAction_End) {
     CloseHandle(menu);
