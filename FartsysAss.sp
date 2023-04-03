@@ -3782,7 +3782,7 @@ public void ExitEmergencyMode() {
 //Setup music, this allows us to change it with VIP access...
 public void SetupMusic(int BGM){
   if(VIPBGM > 0){
-    PrintToConsoleAll("Music has been customized by VIP %N. They chose %i.", VIPINDEX, VIPBGM);
+    PrintToConsoleAll("Music has been customized by VIP %N. They chose %i.", VIPIndex, VIPBGM);
     switch(VIPBGM){
       case 0:{
           BGMINDEX = 0;
@@ -3860,7 +3860,7 @@ public void SetupMusic(int BGM){
   }
 }
 
-public action Command_Music(int client, int args){
+public Action Command_Music(int client, int args){
   int steamID = GetSteamAccountID(client);
   if (!steamID || steamID <= 10000) {
     return Plugin_Handled;
@@ -3893,12 +3893,11 @@ public void ShowFartsyMusicMenu(int client) {
 // This selects the music
 public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) {
   if (action == MenuAction_Select) {
-    char query[256];
     int steamID = GetSteamAccountID(p1);
     if (!steamID) {
       return;
     } else {
-      VIPINDEX = p1;
+      VIPIndex = p1;
       VIPBGM = p2;
     }
   } else if (action == MenuAction_End) {
