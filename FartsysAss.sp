@@ -3416,7 +3416,7 @@ public Action TimedOperator(Handle timer, int job) {
       }
       //BGM4
       case 5: {
-        CustomSoundEmitter(BGM4, BGMSNDLVL - 30, true, 0, 1.0, 100);
+        CustomSoundEmitter(BGM4, BGMSNDLVL-50, true, 1, 0.8, 100);
         curSong = BGM4;
         songName = BGM4Title;
         CreateTimer(74.0, TimedOperator, 1000);
