@@ -1987,6 +1987,9 @@ public void Event_Playerhurt(Handle event,
   int client = GetClientOfUserId(GetEventInt(event, "userid"));
   int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
   int damage = GetEventInt(event, "damageamount");
+  int health = GetEventInt(event, "health");
+  int attackerhp = GetClientHealth(attacker);
+  PrintToConsoleAll("[CORE-DBG] player hurt triggered by %N with %i hp. The attacker was %N with %i HP.", client, health, attacker, attackerhp);
   if (IsValidClient(attacker) && attacker != client) {
     char query[256];
     int steamID = GetSteamAccountID(attacker);
@@ -2455,6 +2458,7 @@ public Action Command_Operator(int args) {
   }
   //Bomb Deployed
   case 15: {
+    FireEntityInput("FB.PayloadWarning", "Disable", "", 0.0);
     switch (explodeType) {
       //Invalid
     case 0: {
@@ -2630,6 +2634,7 @@ public Action Command_Operator(int args) {
   case 20: {
     bombProgression = true;
     CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Bomb push in progress.");
+    FireEntityInput("FB.PayloadWarning", "Enable", "", 0.0);
     CreateTimer(3.0, SharkTimer);
   }
   //Shark Disable
