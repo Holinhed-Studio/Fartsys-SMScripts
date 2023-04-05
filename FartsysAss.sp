@@ -57,6 +57,7 @@ static char BGM9Intro[64] = "fartsy/music/brawler/xbc2/battle_intro.mp3";
 static char BGM10Intro[48] = "fartsy/music/brawler/onewingedintro.mp3";
 static char BGM10[64] = "fartsy/music/brawler/onewingedangel.mp3";
 static char BGM11[64] = "fartsy/music/brawler/xbc/youwillknowournames.mp3";
+static char BGM12[64] = "fartsy/music/demetori/unowen.mp3";
 static char BGM100[48] = "fartsy/music/ffxiv/TornColossusPhase1.mp3";
 static char BGM101[48] = "fartsy/music/ffxiv/TornColossusPhase2.mp3";
 static char BGM1Title[32] = "FFXIV - Locus";
@@ -70,6 +71,7 @@ static char BGM8Title[32] = "FFXIV - Landslide";
 static char BGM9Title[64] = "Xenoblade Chronicles 2 - Battle!!";
 static char BGM10Title[64] = "FF Advent Children - One Winged Angel";
 static char BGM11Title[64] = "Xenoblade Chronicles - You Will Know Our Names";
+static char BGM12Title[64] = "Demetori - U.N. Owen Was Her?";
 static char BGM100Title[64] = "FFXIV - Torn From The Heavens Dark Colossus (Phase 1)";
 static char BGM101Title[64] = "FFXIV - Torn From The Heavens Dark Colossus (Phase 2)";
 static char BMB1SND[32] = "fartsy/misc/murica.mp3";
@@ -122,7 +124,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "5.3.2";
+static char PLUGIN_VERSION[8] = "5.3.5";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -199,6 +201,7 @@ public void OnPluginStart() {
     PrecacheSound(BGM10, true),
     PrecacheSound(BGM10Intro, true),
     PrecacheSound(BGM11, true),
+    PrecacheSound(BGM12, true),
     PrecacheSound(BGM100, true),
     PrecacheSound(BGM101, true),
     PrecacheSound(BMB1SND, true),
@@ -2124,10 +2127,10 @@ public Action Command_Operator(int args) {
     char mapName[64];
     tacobell = false;
     ServerCommand("fb_startmoney 50000");
-    CPrintToChatAll("{darkviolet}[{yellow}INFO{darkviolet}] {red}PROFESSOR'S ASS {white}v0x1D. Prepare yourself for the unpredictable... [{limegreen}by TTV/ProfessorFartsalot{white}]");
+    CPrintToChatAll("{darkviolet}[{yellow}INFO{darkviolet}] {red}PROFESSOR'S ASS {white}v0x1E. Prepare yourself for the unpredictable... [{limegreen}by TTV/ProfessorFartsalot{white}]");
     GetCurrentMap(mapName, sizeof(mapName));
     FireEntityInput("rain", "Alpha", "0", 0.0);
-    //Prepare for the end times....
+    /*Prepare for the end times....
     if (StrContains(mapName, "R1A", true) || StrContains(mapName, "R1B", true) || StrContains(mapName, "R1C", true) || StrContains(mapName, "R1D", true) || StrContains(mapName, "R1E", true) || StrContains(mapName, "R1F", true)) {
       int i = GetRandomInt(1, 7);
       switch (i) {
@@ -2153,7 +2156,7 @@ public Action Command_Operator(int args) {
         CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}Come... JOIN US. Throw wide the gates!");
       }
       }
-    }
+    }*/
   }
   //Wave init
   case 2: {
@@ -3318,42 +3321,54 @@ public Action Command_Operator(int args) {
     switch(camSel){
       case -1:{
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
         camSel = 4;
       }
       case 0:{
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
       }
       case 1:{
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.Mid", 0.0);
+        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Mid", 0.0);
       }
       case 2:{
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.MidTwo", 0.0);
+        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.MidTwo", 0.0);
       }
       case 3:{
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.Rear", 0.0);
+        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Rear", 0.0);
       }
       case 4:{
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.Kissone", 0.0);
+        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Kissone", 0.0);
       }
       case 5:{
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
         camSel = 0;
       }
     }
   }
   //Enable black and white.
   case 1011:{
-    if (!monitorColor){
-      monitorColor = true;
-      FireEntityInput("FB.MonitorSprite", "Color", "0 255 0", 0.0);
-      FireEntityInput("FB.Monitor", "Enable", "", 0.0);
-      FireEntityInput("FB.MonitorBW", "Disable", "", 0.0);
+    if(!monitorOn){
+      return Plugin_Stop;
     }
     else{
-      monitorColor = false;
-      FireEntityInput("FB.MonitorSprite", "Color", "0 0 255", 0.0);
-      FireEntityInput("FB.Monitor", "Disable", "", 0.0);
-      FireEntityInput("FB.MonitorBW", "Enable", "", 0.0);
+      if (!monitorColor){
+        monitorColor = true;
+        FireEntityInput("FB.MonitorSprite", "Color", "0 255 0", 0.0);
+        FireEntityInput("FB.Monitor", "Enable", "", 0.0);
+        FireEntityInput("FB.MonitorBW", "Disable", "", 0.0);
+      }
+      else{
+        monitorColor = false;
+        FireEntityInput("FB.MonitorSprite", "Color", "0 0 255", 0.0);
+        FireEntityInput("FB.Monitor", "Disable", "", 0.0);
+        FireEntityInput("FB.MonitorBW", "Enable", "", 0.0);
+      }
     }
   }
   //
@@ -3613,11 +3628,20 @@ public Action TimedOperator(Handle timer, int job) {
           FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
       }
       //BGM11
-      case 12:{
+      case 13:{
         CustomSoundEmitter(BGM11, BGMSNDLVL + 10, true, 0, 1.0, 100);
         curSong = BGM11;
         songName = BGM11Title;
-        FireEntityInput("FB.MusicTimer", "RefireTime", "120.1", 0.0),
+        FireEntityInput("FB.MusicTimer", "RefireTime", "128.8", 0.0),
+          FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+          FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+      }
+      //BGM12
+      case 14:{
+        CustomSoundEmitter(BGM12, BGMSNDLVL + 10, true, 0, 1.0, 100);
+        curSong = BGM12;
+        songName = BGM12Title;
+        FireEntityInput("FB.MusicTimer", "RefireTime", "268.1", 0.0),
           FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
           FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
       }
@@ -3629,6 +3653,7 @@ public Action TimedOperator(Handle timer, int job) {
       case 100:{
         curSong = BGM100;
         songName = BGM100Title;
+        CustomSoundEmitter(BGM4, BGMSNDLVL-10, true, 1, 0.01, 100);
         CustomSoundEmitter(BGM100, BGMSNDLVL-10, true, 1, 1.0, 100);
         FireEntityInput("FB.MusicTimer", "Disable", "", 0.0);
         FireEntityInput("FB.MusicTimer", "RefireTime", "149.6", 0.1);
@@ -3638,6 +3663,7 @@ public Action TimedOperator(Handle timer, int job) {
       case 101:{
         curSong = BGM101;
         songName = BGM101Title;
+        CustomSoundEmitter(BGM4, BGMSNDLVL-10, true, 1, 0.01, 100);
         CustomSoundEmitter(BGM100, BGMSNDLVL-10, true, 1, 0.001, 100);
         CustomSoundEmitter(BGM101, BGMSNDLVL-10, true, 1, 1.0, 100);
         FireEntityInput("FB.MusicTimer", "Disable", "", 0.0);
@@ -4091,6 +4117,7 @@ public void ShowFartsyMusicMenu(int client) {
   menu.AddItem(buffer, "FF Advent Children - One Winged Angel");
   menu.AddItem(buffer, "FFXIV - From Mud");
   menu.AddItem(buffer, "XBC - You Will Know Our Names");
+  menu.AddItem(buffer, "Demetori - U.N. Owen Was Her?");
   menu.AddItem(buffer, "Restore Default");
   menu.Display(client, 20);
   menu.ExitButton = true;
@@ -4102,7 +4129,7 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
     int steamID = GetSteamAccountID(p1);
     if (!steamID) {
       return;
-    } else if (p2 == 14){
+    } else if (p2 == 15){
       VIPIndex = p1;
       VIPBGM = -1;
       CPrintToChat(p1, "{darkgreen}[CORE] Confirmed. Next song set to {aqua}Default{darkgreen}.");
@@ -4150,6 +4177,9 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
         }
         case 13:{
           s = BGM11Title;
+        }
+        case 14:{
+          s = BGM12Title;
         }
       }
       CPrintToChat(p1, "{limegreen}[CORE] Confirmed. Next song set to {aqua}%s{limegreen}.", s);
