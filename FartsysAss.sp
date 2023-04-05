@@ -36,6 +36,7 @@ bool canTornado = false;
 bool crusader = false;
 bool isWave = false;
 bool monitorOn = false;
+bool monitorColor = true;
 bool sephiroth = false;
 bool tornado = false;
 bool tacobell = false;
@@ -117,7 +118,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "5.3.0";
+static char PLUGIN_VERSION[8] = "5.3.1";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -3255,14 +3256,22 @@ public Action Command_Operator(int args) {
   case 1008:{
     if(!monitorOn){
       monitorOn = true;
-      FireEntityInput("FB.MonitorSprite", "Color", "0 100 255", 0.0);
-      FireEntityInput("FB.MonitorBlank", "Disable", "", 0.0);
-      FireEntityInput("FB.Monitor", "Enable", "", 0.0);
+      if(!monitorColor){
+        FireEntityInput("FB.MonitorSprite", "Color", "0 0 255", 0.0);
+        FireEntityInput("FB.MonitorBlank", "Disable", "", 0.0);
+        FireEntityInput("FB.MonitorBW", "Enable", "", 0.0);
+      }
+      else{
+        FireEntityInput("FB.MonitorSprite", "Color", "0 255 0", 0.0);
+        FireEntityInput("FB.MonitorBlank", "Disable", "", 0.0);
+        FireEntityInput("FB.Monitor", "Enable", "", 0.0);
+      }
     }
     else{
       monitorOn = false;
       FireEntityInput("FB.MonitorSprite", "Color", "255 0 0", 0.0);
       FireEntityInput("FB.Monitor", "Disable", "", 0.0);
+      FireEntityInput("FB.MonitorBW", "Disable", "", 0.0);
       FireEntityInput("FB.MonitorBlank", "Enable", "", 0.0);
     }
   }
@@ -3272,21 +3281,27 @@ public Action Command_Operator(int args) {
     switch(camSel){
       case 0:{
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
       }
       case 1:{
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.Mid", 0.0);
+        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Mid", 0.0);
       }
       case 2:{
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.MidTwo", 0.0);
+        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.MidTwo", 0.0);
       }
       case 3:{
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.Rear", 0.0);
+        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Rear", 0.0);
       }
       case 4:{
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.Kissone", 0.0);
+        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Kissone", 0.0);
       }
       case 5:{
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
         camSel = 0;
       }
     }
@@ -3318,6 +3333,21 @@ public Action Command_Operator(int args) {
         FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
         camSel = 0;
       }
+    }
+  }
+  //Enable black and white.
+  case 1011:{
+    if (!monitorColor){
+      monitorColor = true;
+      FireEntityInput("FB.MonitorSprite", "Color", "0 255 0", 0.0);
+      FireEntityInput("FB.Monitor", "Enable", "", 0.0);
+      FireEntityInput("FB.MonitorBW", "Disable", "", 0.0);
+    }
+    else{
+      monitorColor = false;
+      FireEntityInput("FB.MonitorSprite", "Color", "0 0 255", 0.0);
+      FireEntityInput("FB.Monitor", "Disable", "", 0.0);
+      FireEntityInput("FB.MonitorBW", "Enable", "", 0.0);
     }
   }
   //
