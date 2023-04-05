@@ -35,6 +35,7 @@ bool canSephNuke = false;
 bool canTornado = false;
 bool crusader = false;
 bool isWave = false;
+bool monitorOn = false;
 bool sephiroth = false;
 bool tornado = false;
 bool tacobell = false;
@@ -116,7 +117,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "5.2.0";
+static char PLUGIN_VERSION[8] = "5.3.0";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -147,6 +148,7 @@ int BGMINDEX = 0;
 static int BGMSNDLVL = 95;
 int FailedCount = 0;
 int INCOMINGDISPLAYED = 0;
+int camSel = 0;
 int CodeEntry = 0;
 static int DEFBGMSNDLVL = 50;
 int bombStatus = 0;
@@ -3249,6 +3251,76 @@ public Action Command_Operator(int args) {
     }
     }
   }
+  //Monitor power up/down!
+  case 1008:{
+    if(!monitorOn){
+      monitorOn = true;
+      FireEntityInput("FB.MonitorSprite", "Color", "0 100 255", 0.0);
+      FireEntityInput("FB.MonitorBlank", "Disable", "", 0.0);
+      FireEntityInput("FB.Monitor", "Enable", "", 0.0);
+    }
+    else{
+      monitorOn = false;
+      FireEntityInput("FB.MonitorSprite", "Color", "255 0 0", 0.0);
+      FireEntityInput("FB.Monitor", "Disable", "", 0.0);
+      FireEntityInput("FB.MonitorBlank", "Enable", "", 0.0);
+    }
+  }
+  //Cycle monitor forward
+  case 1009:{
+    camSel++;
+    switch(camSel){
+      case 0:{
+        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+      }
+      case 1:{
+        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Mid", 0.0);
+      }
+      case 2:{
+        FireEntityInput("FB.Monitor", "SetCamera", "CAM.MidTwo", 0.0);
+      }
+      case 3:{
+        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Rear", 0.0);
+      }
+      case 4:{
+        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Kissone", 0.0);
+      }
+      case 5:{
+        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+        camSel = 0;
+      }
+    }
+  }
+  //Cycle monitor back
+  case 1010:{
+    camSel--;
+    switch(camSel){
+      case -1:{
+        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+        camSel = 4;
+      }
+      case 0:{
+        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+      }
+      case 1:{
+        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Mid", 0.0);
+      }
+      case 2:{
+        FireEntityInput("FB.Monitor", "SetCamera", "CAM.MidTwo", 0.0);
+      }
+      case 3:{
+        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Rear", 0.0);
+      }
+      case 4:{
+        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Kissone", 0.0);
+      }
+      case 5:{
+        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+        camSel = 0;
+      }
+    }
+  }
+  //
   //Restore Music
   case 2000: {
     if(isWave){
