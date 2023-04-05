@@ -56,10 +56,9 @@ static char BGM9[64] = "fartsy/music/brawler/xbc2/battle.mp3";
 static char BGM9Intro[64] = "fartsy/music/brawler/xbc2/battle_intro.mp3";
 static char BGM10Intro[48] = "fartsy/music/brawler/onewingedintro.mp3";
 static char BGM10[64] = "fartsy/music/brawler/onewingedangel.mp3";
+static char BGM11[64] = "fartsy/music/brawler/xbc/youwillknowournames.mp3";
 static char BGM100[48] = "fartsy/music/ffxiv/TornColossusPhase1.mp3";
 static char BGM101[48] = "fartsy/music/ffxiv/TornColossusPhase2.mp3";
-static char BGM100Title[64] = "FFXIV - Torn From The Heavens Dark Colossus (Phase 1)";
-static char BGM101Title[64] = "FFXIV - Torn From The Heavens Dark Colossus (Phase 2)";
 static char BGM1Title[32] = "FFXIV - Locus";
 static char BGM2Title[32] = "FFXIV - Metal";
 static char BGM3Title[32] = "FFXIV - Exponential Entropy";
@@ -70,6 +69,9 @@ static char BGM7Title[32] = "FFXIV - Revenge Twofold";
 static char BGM8Title[32] = "FFXIV - Landslide";
 static char BGM9Title[64] = "Xenoblade Chronicles 2 - Battle!!";
 static char BGM10Title[64] = "FF Advent Children - One Winged Angel";
+static char BGM11Title[64] = "Xenoblade Chronicles - You Will Know Our Names";
+static char BGM100Title[64] = "FFXIV - Torn From The Heavens Dark Colossus (Phase 1)";
+static char BGM101Title[64] = "FFXIV - Torn From The Heavens Dark Colossus (Phase 2)";
 static char BMB1SND[32] = "fartsy/misc/murica.mp3";
 static char BMB2SND[32] = "fartsy/bl2/grenade_detonate.mp3";
 static char BMB3SND[32] = "fartsy/gbombs5/t_12.mp3";
@@ -83,8 +85,10 @@ char s[128] = "null";
 char songName[64] = "null";
 static char DEFAULTBGM1[64] = "fartsy/music/ffxiv/TheSilentRegardOfStars.mp3";
 static char DEFAULTBGM2[64] = "fartsy/music/ffxiv/KnowledgeNeverSleeps.mp3";
+static char DEFAULTBGM3[64] = "fartsy/music/ffxiv/frommud.mp3";
 static char DEFAULTBGM1Title[64] = "FFXIV - The Silent Regard of Stars";
 static char DEFAULTBGM2Title[64] = "FFXIV - Knowledge Never Sleeps";
+static char DEFAULTBGM3Title[64] = "FFXIV - From Mud";
 static char DROPNUKE[32] = "items/cart_warning_single.wav";
 static char EVENTSTART[32] = "fartsy/ffxiv/bossfatejoin.mp3";
 static char EXPLOSIVEPARADISE[64] = "fartsy/misc/explosiveparadise.mp3";
@@ -118,7 +122,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "5.3.1";
+static char PLUGIN_VERSION[8] = "5.3.2";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -194,6 +198,7 @@ public void OnPluginStart() {
     PrecacheSound(BGM9Intro, true),
     PrecacheSound(BGM10, true),
     PrecacheSound(BGM10Intro, true),
+    PrecacheSound(BGM11, true),
     PrecacheSound(BGM100, true),
     PrecacheSound(BGM101, true),
     PrecacheSound(BMB1SND, true),
@@ -206,6 +211,7 @@ public void OnPluginStart() {
     PrecacheSound(CRUSADERATTACK, true),
     PrecacheSound(DEFAULTBGM1, true),
     PrecacheSound(DEFAULTBGM2, true),
+    PrecacheSound(DEFAULTBGM3, true),
     PrecacheSound(DROPNUKE, true),
     PrecacheSound(EVENTSTART, true),
     PrecacheSound(EXPLOSIVEPARADISE, true),
@@ -3473,10 +3479,11 @@ public Action TimedOperator(Handle timer, int job) {
   case 1: {
     canMusicLoop = false;
     switch (BGMINDEX) {
-      case 0, 1: {
-        int BGM = GetRandomInt(1, 2);
+      case 0, 1, 12: {
+        int BGM = GetRandomInt(1, 3);
         switch (BGM) {
         case 1: {
+          BGMINDEX = 0;
           CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL - 10, true, 0, 1.0, 100);
           curSong = DEFAULTBGM1;
           songName = DEFAULTBGM1Title;
@@ -3485,10 +3492,20 @@ public Action TimedOperator(Handle timer, int job) {
             FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
         }
         case 2: {
+          BGMINDEX = 1;
           CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL - 10, true, 0, 1.0, 100);
           curSong = DEFAULTBGM2;
           songName = DEFAULTBGM2Title;
           FireEntityInput("FB.MusicTimer", "RefireTime", "235.3", 0.0),
+            FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+            FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+        }
+        case 3: {
+          BGMINDEX = 12;
+          CustomSoundEmitter(DEFAULTBGM3, DEFBGMSNDLVL - 10, true, 0, 1.0, 100);
+          curSong = DEFAULTBGM3;
+          songName = DEFAULTBGM3Title;
+          FireEntityInput("FB.MusicTimer", "RefireTime", "137.7", 0.0),
             FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
             FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
         }
@@ -3592,6 +3609,15 @@ public Action TimedOperator(Handle timer, int job) {
         curSong = BGM10;
         songName = BGM10Title;
         FireEntityInput("FB.MusicTimer", "RefireTime", "310.8", 0.0),
+          FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
+          FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
+      }
+      //BGM11
+      case 12:{
+        CustomSoundEmitter(BGM11, BGMSNDLVL + 10, true, 0, 1.0, 100);
+        curSong = BGM11;
+        songName = BGM11Title;
+        FireEntityInput("FB.MusicTimer", "RefireTime", "120.1", 0.0),
           FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
           FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
       }
@@ -4063,6 +4089,8 @@ public void ShowFartsyMusicMenu(int client) {
   menu.AddItem(buffer, "FFXIV - Landslide");
   menu.AddItem(buffer, "XBC2 - Battle!!");
   menu.AddItem(buffer, "FF Advent Children - One Winged Angel");
+  menu.AddItem(buffer, "FFXIV - From Mud");
+  menu.AddItem(buffer, "XBC - You Will Know Our Names");
   menu.AddItem(buffer, "Restore Default");
   menu.Display(client, 20);
   menu.ExitButton = true;
@@ -4074,7 +4102,7 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
     int steamID = GetSteamAccountID(p1);
     if (!steamID) {
       return;
-    } else if (p2 == 12){
+    } else if (p2 == 14){
       VIPIndex = p1;
       VIPBGM = -1;
       CPrintToChat(p1, "{darkgreen}[CORE] Confirmed. Next song set to {aqua}Default{darkgreen}.");
@@ -4116,6 +4144,12 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
         }
         case 11:{
           s = BGM10Title;
+        }
+        case 12:{
+          s = DEFAULTBGM3Title;
+        }
+        case 13:{
+          s = BGM11Title;
         }
       }
       CPrintToChat(p1, "{limegreen}[CORE] Confirmed. Next song set to {aqua}%s{limegreen}.", s);
