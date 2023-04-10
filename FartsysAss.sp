@@ -40,6 +40,7 @@ bool monitorColor = true;
 bool sephiroth = false;
 bool tornado = false;
 bool tacobell = false;
+bool tickingClientHealth = false;
 bool sacrificedByClient = false;
 bool TornadoWarningIssued = false;
 Database FB_Database;
@@ -335,7 +336,7 @@ public void MyStats(Database db, DBResultSet results,
   }
   char name[64];
   char class [64];
-  int steamID, damagedealt, damagedealtsession, kills, killssession, deaths, deathssession, bombsreset, bombsresetsession, sacrifices, sacrificessession;
+  int health, healthMax, steamID, damagedealt, damagedealtsession, kills, killssession, deaths, deathssession, bombsreset, bombsresetsession, sacrifices, sacrificessession;
   char lastkilledname[128];
   char lastusedweapon[128];
   char killedbyname[128];
@@ -344,22 +345,24 @@ public void MyStats(Database db, DBResultSet results,
     results.FetchString(0, name, 64); //name
     steamID = results.FetchInt(1); //steamid
     results.FetchString(4, class, 64); //class
-    damagedealt = results.FetchInt(5); //damage dealt
-    damagedealtsession = results.FetchInt(6); //damage dealt session
-    kills = results.FetchInt(7); //kills
-    killssession = results.FetchInt(8); //kills session
-    deaths = results.FetchInt(9); //deaths
-    deathssession = results.FetchInt(10); //deaths session
-    bombsreset = results.FetchInt(11); //bombs reset
-    bombsresetsession = results.FetchInt(12); //bombs reset session
-    sacrifices = results.FetchInt(13); //sacrifices
-    sacrificessession = results.FetchInt(14); //sacrifices session
-    results.FetchString(15, lastkilledname, sizeof(lastkilledname)); //last client killed
-    results.FetchString(16, lastusedweapon, sizeof(lastusedweapon)); //using weapon
-    results.FetchString(17, killedbyname, sizeof(killedbyname)); //last client that killed
-    results.FetchString(18, killedbyweapon, sizeof(killedbyweapon)); //using weapon
+    health = results.FetchInt(5); //health
+    healthMax = results.FetchInt(6); //health
+    damagedealt = results.FetchInt(7); //damage dealt
+    damagedealtsession = results.FetchInt(8); //damage dealt session
+    kills = results.FetchInt(9); //kills
+    killssession = results.FetchInt(10); //kills session
+    deaths = results.FetchInt(11); //deaths
+    deathssession = results.FetchInt(12); //deaths session
+    bombsreset = results.FetchInt(13); //bombs reset
+    bombsresetsession = results.FetchInt(14); //bombs reset session
+    sacrifices = results.FetchInt(15); //sacrifices
+    sacrificessession = results.FetchInt(16); //sacrifices session
+    results.FetchString(17, lastkilledname, sizeof(lastkilledname)); //last client killed
+    results.FetchString(18, lastusedweapon, sizeof(lastusedweapon)); //using weapon
+    results.FetchString(19, killedbyname, sizeof(killedbyname)); //last client that killed
+    results.FetchString(20, killedbyweapon, sizeof(killedbyweapon)); //using weapon
   }
-  CPrintToChat(client, "\x07AAAAAA[CORE] Showing stats of %s   [%s] || SteamID: %i ", name, class, steamID);
+  CPrintToChat(client, "\x07AAAAAA[CORE] Showing stats of %s   [%s, %i/%i hp] || SteamID: %i ", name, class, health, healthMax, steamID);
   CPrintToChat(client, "{white}Damage Dealt: %i (Session: %i) || Kills: %i (Session: %i) || Deaths: %i (Session: %i) || Bombs Reset: %i (Session: %i)", damagedealt, damagedealtsession, kills, killssession, deaths, deathssession, bombsreset, bombsresetsession);
   CPrintToChat(client, "Sacrifices: %i(Session:%i) || Killed %s (using %s) || Last killed by: %s (using %s)", sacrifices, sacrificessession, lastkilledname, lastusedweapon, killedbyname, killedbyweapon);
 }
@@ -385,7 +388,7 @@ public void Database_OnConnect(Database db,
     return;
   }
   FB_Database = db;
-  FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS ass_activity(name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '3', PRIMARY KEY (steamid));");
+  FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS ass_activity(name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', health TEXT DEFAULT '-1', maxHealth INT UNSIGNED DEFAULT '0', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '3', PRIMARY KEY (steamid));");
 }
 
 //Database Fastquery Manager
@@ -405,7 +408,6 @@ public void OnClientDisconnect(int client) {
   if (!FB_Database) {
     return;
   }
-
   int steamID = GetSteamAccountID(client);
   if (!steamID || steamID <= 10000) {
     return;
@@ -447,10 +449,14 @@ public void OnClientPutInServer(int client) {
     if (!steamID || steamID <= 10000) {
       return;
     } else {
+      if(!tickingClientHealth){
+        PrintToServer("Creating timer for tickclienthealth");
+        CreateTimer(1.0, TickClientHealth);
+        tickingClientHealth = true;
+      }
       char query[1024];
       Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
       FB_Database.Query(Database_FastQuery, query);
-
       DataPack pk = new DataPack();
       pk.WriteCell(client ? GetClientUserId(client) : 0);
       pk.WriteString("steamid");
@@ -4233,4 +4239,28 @@ public Action cLoopTimer(Handle timer){
     }
     return Plugin_Stop;
   }
+}
+
+stock int TF2_GetPlayerMaxHealth(int client) {
+	return GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client);
+}
+
+public Action TickClientHealth(Handle timer){
+  for (int i = 1; i <= MaxClients; i++) {
+    if (IsClientInGame(i) && !IsFakeClient(i) && (GetClientTeam(i) == 2)){
+      int health = GetClientHealth(i);
+      int healthMax = TF2_GetPlayerMaxHealth(i);
+      PrintToServer("Client %N joined RED TEAM and is being tracked with %i/%i health! UwU", i, health, healthMax);
+      if (!FB_Database) {
+        return;
+      }
+      else{
+        char query[256];
+        int steamID = GetSteamAccountID(i);
+        Format(query, sizeof(query), "UPDATE ass_activity SET health = %i, maxHealth = %i WHERE steamid = %i;", health, healthMax, steamID);
+        FB_Database.Query(Database_FastQuery, query);
+      }
+    }
+  }
+  CreateTimer(1.0, TickClientHealth);
 }
