@@ -145,6 +145,12 @@ static char TRIGGERSCORE[32] = "fartsy/misc/triggerscore.wav";
 static char VICTORY[32] = "fartsy/ffxivvictoryedit.mp3";
 static char VO_SEPHMEMORY[32] = "fartsy/vo/sephiroth/memory.mp3";
 static char WTFBOOM[32] = "fartsy/misc/wtfboom.mp3";
+static char TBGM0[16] = "test/bgm0.mp3";
+static char TBGM1[16] = "test/bgm1.mp3";
+static char TBGM3[16] = "test/bgm3.mp3";
+static char TBGM4[16] = "test/bgm4.mp3";
+static char TBGM5[16] = "test/bgm5.mp3";
+static char TBGM6[16] = "test/bgm6.mp3";
 static float HWNMin = 210.0;
 static float HWNMax = 380.0;
 static float Return[3] = {
@@ -188,6 +194,12 @@ public Plugin myinfo = {
 };
 
 public void OnPluginStart() {
+  PrecacheSound(TBGM0, true),
+  PrecacheSound(TBGM1, true),
+  PrecacheSound(TBGM3, true),
+  PrecacheSound(TBGM4, true),
+  PrecacheSound(TBGM5, true),
+  PrecacheSound(TBGM6, true),
   PrecacheSound(BELL, true),
     PrecacheSound(BGM1, true),
     PrecacheSound(BGM2, true),
@@ -3453,6 +3465,72 @@ public Action Command_Operator(int args) {
   //DEBUG
   case 9000: {
     CreateTimer(10.0, SephHPTimer);
+  }
+  case 9001:{
+  //Phases
+    CustomSoundEmitter(BGM10, BGMSNDLVL-10, true, 1, 0.05, 100);
+    CustomSoundEmitter(BGM5, BGMSNDLVL-10, true, 1, 1.0, 100);
+  }
+  case 9002:{
+  CustomSoundEmitter(BGM10, BGMSNDLVL-10, true, 1, 1.0, 100);
+  CustomSoundEmitter(BGM5, BGMSNDLVL-10, true, 1, 0.05, 100);
+  }
+  case 9010:{
+    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 0.05, 100);
+  }
+  case 9011:{
+    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 0.05, 100);
+  }
+  case 9012:{
+    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 0.05, 100);
+  }
+  case 9013:{
+    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 1.0, 100);
+  }
+  case 9014:{
+    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 1.0, 100);
+  }
+  case 9015:{
+    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 1.0, 100);
+  }
+  case 9016:{
+    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 1.0, 100);
+  }
+  //Play Instrumental
+  case 9020:{
+    CustomSoundEmitter(TBGM0, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM1, BGMSNDLVL-10, true, 1, 0.05, 100);
+  }
+  //Play Both
+  case 9021:{
+    CustomSoundEmitter(TBGM0, BGMSNDLVL-10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM1, BGMSNDLVL-10, true, 1, 1.0, 100);
+  }
+  //Play vocal only
+  case 9022:{
+    CustomSoundEmitter(TBGM0, BGMSNDLVL-10, true, 1, 0.5, 100);
+    CustomSoundEmitter(TBGM1, BGMSNDLVL-10, true, 1, 1.0, 100);
   }
   }
   return Plugin_Handled;
