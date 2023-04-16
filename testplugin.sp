@@ -44,6 +44,8 @@ public Action Command_Operator(int args) {
   }
   //PL1 Deployed, spawn tank
   case 3: {
+    FireEntityInput("PL.Spawn01", "Disable", "", 0.0);
+    FireEntityInput("PL.Spawn02", "Enable", "", 0.0);
     FireEntityInput("PL1.Const", "Break", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
     FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
@@ -99,6 +101,10 @@ public Action Command_Operator(int args) {
   //PL2 (Tank) Successfully Deployed!
   case 7: {
     isTankAlive = false;
+    FireEntityInput("PL.Spawn00", "Kill", "", 0.0);
+    FireEntityInput("PL.FilterSpawn01", "SetTeam", "2", 0.0);
+    FireEntityInput("PL.Spawn02", "SetTeam", "3", 0.0);
+    FireEntityInput("PL.Spawn02", "Enable", "", 0.1);
     PrintToChatAll("TankDeployed!");
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
