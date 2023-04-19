@@ -34,7 +34,7 @@ public Action GetClosestEnemy(int entity) {
   float yPos[3];
   GetEntPropVector(entity, Prop_Send, "m_vecOrigin", position);
   for (int y = 1; y <= MaxClients; y++)
-    if (IsClientInGame(y) && IsPlayerAlive(y)) {
+    if (IsClientInGame(y) && IsPlayerAlive(y) && GetClientTeam(y) == 2) {
       GetClientAbsOrigin(y, yPos);
       flDist = GetVectorDistance(position, yPos);
       if (flDist < 0.0)
