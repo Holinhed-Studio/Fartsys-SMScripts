@@ -3476,6 +3476,8 @@ public Action Command_Operator(int args) {
   CustomSoundEmitter(BGM5, BGMSNDLVL-10, true, 1, 0.05, 100);
   }
   case 9010:{
+    BGMINDEX = 9010;
+    CreatePhaseTimer(90.1);
     CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 1.0, 100);
     CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 0.05, 100);
     CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 0.05, 100);
@@ -3561,6 +3563,16 @@ public Action PerformWaveSetup() {
   ServerCommand("fb_operator 1004"); //Activate Tornado Timer
   ServerCommand("fb_operator 1007"); //Choose bomb path
   return Plugin_Handled;
+}
+
+//Phase timer
+public void CreatePhaseTimer(Handle timer, float time){
+  if looping return Plugin_Handled;//...
+  else
+    FireEntityInput("FB.MusicTimer", "Disable", "", 0.0);
+    FireEntityInput("FB.MusicTimer", "RefireTime", "", 0.0);
+    FireEntityInput("FB.MusicTimer", "RefireTime", "89.7", 0.0), //VERIFY THIS IS CORRECT...
+    FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.20);
 }
 
 //Timed commands
