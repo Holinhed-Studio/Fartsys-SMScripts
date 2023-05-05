@@ -132,7 +132,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "6.0.0";
+static char PLUGIN_VERSION[8] = "6.0.4";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -319,7 +319,7 @@ public void OnPluginStart() {
 public void OnGameFrame() {
   if (tickMusic) {
     ticksMusic++;
-    PrintToConsoleAll("Ticks %i", ticksMusic);
+    //PrintToConsoleAll("Ticks %i, BGM %i", ticksMusic, BGMINDEX);
     if (!bgmPlaying) {
       refireTime = 0;
       ticksMusic = 0;
@@ -327,7 +327,7 @@ public void OnGameFrame() {
     if ((shouldStopMusic && ticksMusic == refireTime - 1) || forceStopMusic) {
       for (int i = 1; i <= MaxClients; i++) {
         StopSound(i, SNDCHAN, prevSong);
-        PrintToChatAll("Stopped %s", prevSong);
+        //PrintToChatAll("Stopped %s", prevSong);
         forceStopMusic = false;
       }
     }
@@ -948,6 +948,7 @@ public void OnMapStart() {
   FireEntityInput("rain", "Alpha", "0", 0.0);
   ServerCommand("fb_operator 1002");
   CreateTimer(1.0, SelectAdminTimer);
+  tickMusic = true;
 }
 
 //Repeating Timers
@@ -2224,7 +2225,7 @@ public void Event_Playerhurt(Handle event,
   int damage = GetEventInt(event, "damageamount");
   int health = GetEventInt(event, "health");
   int attackerhp = GetClientHealth(attacker);
-  PrintToConsoleAll("[CORE-DBG] player hurt triggered by %N with %i hp. The attacker was %N with %i HP.", client, health, attacker, attackerhp);
+  //PrintToConsoleAll("[CORE-DBG] player hurt triggered by %N with %i hp. The attacker was %N with %i HP.", client, health, attacker, attackerhp);
   if (IsValidClient(attacker) && attacker != client) {
     char query[256];
     int steamID = GetSteamAccountID(attacker);
@@ -3207,7 +3208,7 @@ public Action Command_Operator(int args) {
   // FINAL Music system rewrite (again) AGAINNNNNNNNNNNN....
   case 1000: {
     tickMusic = true;
-    PrintToChatAll("%i", BGMINDEX);
+    //PrintToChatAll("%i", BGMINDEX);
     switch (BGMINDEX) {
     case 0, 1, 12: {
       int BGM = GetRandomInt(1, 3);
@@ -4202,6 +4203,8 @@ public void ExitEmergencyMode() {
 
 //Setup music, this allows us to change it with VIP access...
 public void SetupMusic(int BGM) {
+  ticksMusic = 0;
+  refireTime = 0;
   if (VIPBGM >= 0) {
     PrintToConsoleAll("Music has been customized by VIP %N. They chose %i.", VIPIndex, VIPBGM);
     BGMINDEX = VIPBGM;
