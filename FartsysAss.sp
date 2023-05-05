@@ -132,7 +132,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "6.0.4";
+static char PLUGIN_VERSION[8] = "6.0.5";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -991,32 +991,38 @@ public Action PerformAdverts(Handle timer) {
 //Adverts for wave information
 public Action PerformWaveAdverts(Handle timer) {
   if (isWave) {
+      char buffer[16];
+  char tbuffer[16];
+  int sPos = RoundToFloor(ticksMusic/66.6666666666);
+  int tPos = RoundToFloor(refireTime/66.6666666666);
+  Format(buffer, 16, "%02d:%02d", sPos / 60, sPos % 60);
+  Format(tbuffer, 16, "%02d:%02d", tPos / 60, tPos % 60);
     CreateTimer(2.5, PerformWaveAdverts);
     for (int i = 1; i <= MaxClients; i++) {
       switch (bombStatus) {
       case 8, 16, 24, 32, 40, 48, 56, 64: {
         if (TornadoWarningIssued && IsClientInGame(i)) {
           if (bombProgression) {
-            PrintHintText(i, "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%i) \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, ticksMusic);
+            PrintHintText(i, "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s) \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
             StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
           } else {
-            PrintHintText(i, "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%i) \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, ticksMusic);
+            PrintHintText(i, "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s) \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
             StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
           }
         } else if (bombProgression && IsClientInGame(i)) {
-          PrintHintText(i, "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%i)", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, ticksMusic);
+          PrintHintText(i, "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
           StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
         } else if (IsClientInGame(i)) {
-          PrintHintText(i, "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%i)", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, ticksMusic);
+          PrintHintText(i, "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
           StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
         }
       }
       case 0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45, 46, 47, 49, 50, 51, 52, 53, 54, 55, 57, 58, 59, 60, 61, 62, 63: {
         if (TornadoWarningIssued && IsClientInGame(i)) {
-          PrintHintText(i, "Payload: %i/%i | !sacpoints: %i/%i \n Music: %s (%i) \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, ticksMusic);
+          PrintHintText(i, "Payload: %i/%i | !sacpoints: %i/%i \n Music: %s (%s/%s) \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
           StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
         } else if (IsClientInGame(i)) {
-          PrintHintText(i, "Payload: %i/%i | !sacpoints: %i/%i \n Music: %s (%i)", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, ticksMusic);
+          PrintHintText(i, "Payload: %i/%i | !sacpoints: %i/%i \n Music: %s (%s/%s)", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
           StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
         }
       }
@@ -1688,7 +1694,13 @@ public Action RobotLaunchTimer(Handle timer) {
 //Command action definitions
 //Get current song
 public Action Command_GetCurrentSong(int client, int args) {
-  PrintToChat(client, "The current song is: %s", songName);
+  char buffer[16];
+  char tbuffer[16];
+  int sPos = RoundToFloor(ticksMusic/66.6666666666);
+  int tPos = RoundToFloor(refireTime/66.6666666666);
+  Format(buffer, 16, "%02d:%02d", sPos / 60, sPos % 60);
+  Format(tbuffer, 16, "%02d:%02d", tPos / 60, tPos % 60);
+  PrintToChat(client, "The current song is: %s (%s / %s)", songName, buffer, tbuffer);
   return Plugin_Handled;
 }
 
