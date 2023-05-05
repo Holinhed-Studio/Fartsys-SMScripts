@@ -18,15 +18,17 @@
 #include <morecolors>
 #include <regex>
 #include <tf2_stocks>
+
 #pragma newdecls required
 #pragma semicolon 1
+
+bool bgmPlaying = false;
 bool bombProgression = false;
 bool bombReset = false; //used for notifying us when Event mvm_bomb_reset_by_player doesn't....
 bool brawler_emergency = false;
 bool canCrusaderNuke = false;
 bool canHindenburg = false;
 bool canHWBoss = false;
-bool canMusicLoop = false;
 bool canSENTMeteors = false;
 bool canSENTNukes = false;
 bool canSENTShark = false;
@@ -34,16 +36,21 @@ bool canSENTStars = false;
 bool canSephNuke = false;
 bool canTornado = false;
 bool crusader = false;
+bool forceStopMusic = false;
 bool isWave = false;
 bool monitorOn = false;
 bool monitorColor = true;
+bool sacrificedByClient = false;
 bool sephiroth = false;
+bool shouldStopMusic = true;
 bool tornado = false;
 bool tacobell = false;
 bool tickingClientHealth = false;
-bool sacrificedByClient = false;
+bool tickMusic = false;
 bool TornadoWarningIssued = false;
+
 Database FB_Database;
+
 static char BELL[32] = "fartsy/misc/bell.wav";
 static char BGM1[32] = "fartsy/music/ffxiv/locus.mp3";
 static char BGM2[32] = "fartsy/music/ffxiv/metal.mp3";
@@ -83,7 +90,7 @@ static char BOOM[32] = "fartsy/vo/spongebob/boom.mp3";
 static char CLOCKTICK[32] = "fartsy/misc/clock_tick.wav";
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
 static char CRUSADERATTACK[64] = "fartsy/misc/fartsyscrusader_attack.mp3";
-char curSong[64] = "null";
+char curSong[64], prevSong[64] = "null";
 char s[128] = "null";
 char songName[64] = "null";
 static char DEFAULTBGM1[64] = "fartsy/music/ffxiv/TheSilentRegardOfStars.mp3";
@@ -125,7 +132,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "5.3.5";
+static char PLUGIN_VERSION[8] = "6.0.0";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -171,12 +178,14 @@ int curWave = 0;
 int explodeType = 0;
 int lastAdmin = 0;
 int loopingFlags = 0;
+int refireTime = 0;
 int sacPoints = 0;
 int sacPointsMax = 60;
 static int SFXSNDLVL = 75;
 static int SNDCHAN = 6;
 int soundPreference[MAXPLAYERS + 1];
 int tbLoop = 0;
+int ticksMusic = 0;
 int VIPBGM = -1;
 int VIPIndex = 0;
 int waveFlags = 0;
@@ -195,12 +204,12 @@ public Plugin myinfo = {
 
 public void OnPluginStart() {
   PrecacheSound(TBGM0, true),
-  PrecacheSound(TBGM1, true),
-  PrecacheSound(TBGM3, true),
-  PrecacheSound(TBGM4, true),
-  PrecacheSound(TBGM5, true),
-  PrecacheSound(TBGM6, true),
-  PrecacheSound(BELL, true),
+    PrecacheSound(TBGM1, true),
+    PrecacheSound(TBGM3, true),
+    PrecacheSound(TBGM4, true),
+    PrecacheSound(TBGM5, true),
+    PrecacheSound(TBGM6, true),
+    PrecacheSound(BELL, true),
     PrecacheSound(BGM1, true),
     PrecacheSound(BGM2, true),
     PrecacheSound(BGM3, true),
@@ -305,6 +314,196 @@ public void OnPluginStart() {
   CPrintToChatAll("{darkred}Plugin Loaded.");
   cvarSNDDefault = CreateConVar("sm_fartsysass_sound", "3", "Default sound for new users, 3 = Everything, 2 = Sounds Only, 1 = Music Only, 0 = Nothing");
   SetCookieMenuItem(FartsysSNDSelected, 0, "Fartsys Ass Sound Preferences");
+}
+
+public void OnGameFrame() {
+  if (tickMusic) {
+    ticksMusic++;
+    PrintToConsoleAll("Ticks %i", ticksMusic);
+    if (!bgmPlaying) {
+      refireTime = 0;
+      ticksMusic = 0;
+    }
+    if ((shouldStopMusic && ticksMusic == refireTime - 1) || forceStopMusic) {
+      for (int i = 1; i <= MaxClients; i++) {
+        StopSound(i, SNDCHAN, prevSong);
+        PrintToChatAll("Stopped %s", prevSong);
+        forceStopMusic = false;
+      }
+    }
+    if (loopingFlags > 0) {
+      shouldStopMusic = true;
+      switch (loopingFlags) {
+      case 1: {
+        BGMINDEX = 100;
+        curSong = BGM100;
+        loopingFlags = 0;
+        songName = BGM100Title;
+        refireTime = 4933;
+      }
+      case 2: {
+        BGMINDEX = 101;
+        loopingFlags = 0;
+        refireTime = 9986;
+      }
+      }
+    }
+    if (ticksMusic >= refireTime) {
+      CreateTimer(1.0, UpdateMusic);
+      bgmPlaying = true;
+      shouldStopMusic = true;
+      switch (BGMINDEX) {
+      case 0: {
+        ticksMusic = 0;
+        CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL - 10, true, 0, 1.0, 100);
+        curSong = DEFAULTBGM1;
+        songName = DEFAULTBGM1Title;
+        refireTime = 9170;
+      }
+      case 1: {
+        ticksMusic = 0;
+        CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL - 10, true, 0, 1.0, 100);
+        curSong = DEFAULTBGM2;
+        songName = DEFAULTBGM2Title;
+        refireTime = 15686;
+      }
+      case 12: {
+        ticksMusic = 0;
+        CustomSoundEmitter(DEFAULTBGM3, DEFBGMSNDLVL - 10, true, 0, 1.0, 100);
+        curSong = DEFAULTBGM3;
+        songName = DEFAULTBGM3Title;
+        refireTime = 9180;
+      }
+      //BGM1
+      case 2: {
+        ticksMusic = 0;
+        CustomSoundEmitter(BGM1, BGMSNDLVL, true, 0, 1.0, 100);
+        curSong = BGM1;
+        songName = BGM1Title;
+        refireTime = 15270;
+      }
+      //BGM2
+      case 3: {
+        ticksMusic = 0;
+        CustomSoundEmitter(BGM2, BGMSNDLVL, true, 0, 1.0, 100);
+        curSong = BGM2;
+        songName = BGM2Title;
+        refireTime = 10250;
+      }
+      //BGM3
+      case 4: {
+        ticksMusic = 0;
+        CustomSoundEmitter(BGM3, BGMSNDLVL, true, 0, 1.0, 100);
+        curSong = BGM3;
+        songName = BGM3Title;
+        refireTime = 11110;
+      }
+      //BGM4
+      case 5: {
+        ticksMusic = 0;
+        CustomSoundEmitter(BGM4, BGMSNDLVL - 50, true, 1, 0.8, 100);
+        curSong = BGM4;
+        songName = BGM4Title;
+        refireTime = 8137;
+      }
+      //BGM5
+      case 6: {
+        ticksMusic = 0;
+        CustomSoundEmitter(BGM5, BGMSNDLVL - 5, true, 0, 1.0, 100);
+        curSong = BGM5;
+        songName = BGM5Title;
+        refireTime = 8770;
+      }
+      //BGM6
+      case 7: {
+        ticksMusic = 0;
+        CustomSoundEmitter(BGM6, BGMSNDLVL, true, 0, 1.0, 100);
+        curSong = BGM6;
+        songName = BGM6Title;
+        refireTime = 28476;
+      }
+      //BGM7
+      case 8: {
+        ticksMusic = 0;
+        CustomSoundEmitter(BGM7, BGMSNDLVL, true, 0, 1.0, 100);
+        curSong = BGM7;
+        songName = BGM7Title;
+        refireTime = 8870;
+      }
+      //BGM8
+      case 9: {
+        ticksMusic = 0;
+        CustomSoundEmitter(BGM8, BGMSNDLVL + 30, true, 0, 1.0, 100);
+        curSong = BGM8;
+        songName = BGM8Title;
+        refireTime = 14333;
+      }
+      case 10: {
+        shouldStopMusic = false;
+        if (tbLoop == 0) {
+          ticksMusic = 0;
+          curSong = BGM9Intro;
+          songName = BGM9Title;
+          tbLoop = 1;
+          refireTime = 792;
+          CustomSoundEmitter(BGM9Intro, BGMSNDLVL, true, 1, 1.0, 100);
+        } else {
+          ticksMusic = 0;
+          CustomSoundEmitter(BGM9, BGMSNDLVL, true, 0, 1.0, 100);
+          curSong = BGM9;
+          songName = BGM9Title;
+          refireTime = 7440;
+        }
+      }
+      //BGM10
+      case 11: {
+        ticksMusic = 0;
+        CustomSoundEmitter(BGM10, BGMSNDLVL + 10, true, 0, 1.0, 100);
+        curSong = BGM10;
+        songName = BGM10Title;
+        refireTime = 20720;
+      }
+      //BGM11
+      case 13: {
+        ticksMusic = 0;
+        CustomSoundEmitter(BGM11, BGMSNDLVL + 10, true, 0, 1.0, 100);
+        curSong = BGM11;
+        songName = BGM11Title;
+        refireTime = 8587;
+      }
+      //BGM12
+      case 14: {
+        ticksMusic = 0;
+        CustomSoundEmitter(BGM12, BGMSNDLVL + 10, true, 0, 1.0, 100);
+        curSong = BGM12;
+        songName = BGM12Title;
+        refireTime = 17873;
+      }
+      //Custom BGM
+      case 20: {
+        PrintToChatAll("ERR: No music has been registered here yet!");
+      }
+      //Phases
+      case 100: {
+        ticksMusic = 0;
+        curSong = BGM100;
+        songName = BGM100Title;
+        CustomSoundEmitter(BGM4, BGMSNDLVL - 10, true, 1, 0.01, 100);
+        CustomSoundEmitter(BGM100, BGMSNDLVL - 10, true, 1, 1.0, 100);
+        refireTime = 9986;
+      }
+      case 101: {
+        ticksMusic = 0;
+        curSong = BGM101;
+        songName = BGM101Title;
+        CustomSoundEmitter(BGM4, BGMSNDLVL - 10, true, 1, 0.05, 100);
+        CustomSoundEmitter(BGM100, BGMSNDLVL - 10, true, 1, 0.05, 100);
+        CustomSoundEmitter(BGM101, BGMSNDLVL - 10, true, 1, 1.0, 100);
+        refireTime = 5286;
+      }
+      }
+    }
+  }
 }
 
 public Action Command_MyStats(int client, int args) {
@@ -461,7 +660,7 @@ public void OnClientPutInServer(int client) {
     if (!steamID || steamID <= 10000) {
       return;
     } else {
-      if(!tickingClientHealth){
+      if (!tickingClientHealth) {
         PrintToServer("Creating timer for tickclienthealth");
         CreateTimer(1.0, TickClientHealth);
         tickingClientHealth = true;
@@ -797,26 +996,26 @@ public Action PerformWaveAdverts(Handle timer) {
       case 8, 16, 24, 32, 40, 48, 56, 64: {
         if (TornadoWarningIssued && IsClientInGame(i)) {
           if (bombProgression) {
-            PrintHintText(i, "Bomb Status: MOVING (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+            PrintHintText(i, "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%i) \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, ticksMusic);
             StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
           } else {
-            PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+            PrintHintText(i, "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%i) \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, ticksMusic);
             StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
           }
         } else if (bombProgression && IsClientInGame(i)) {
-          PrintHintText(i, "Bomb Status: MOVING (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+          PrintHintText(i, "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%i)", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, ticksMusic);
           StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
         } else if (IsClientInGame(i)) {
-          PrintHintText(i, "Bomb Status: READY (%i/%i) || Sacrifice Points: %i/%i \nCurrent song: %s", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+          PrintHintText(i, "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%i)", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, ticksMusic);
           StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
         }
       }
       case 0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45, 46, 47, 49, 50, 51, 52, 53, 54, 55, 57, 58, 59, 60, 61, 62, 63: {
         if (TornadoWarningIssued && IsClientInGame(i)) {
-          PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+          PrintHintText(i, "Payload: %i/%i | !sacpoints: %i/%i \n Music: %s (%i) \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, ticksMusic);
           StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
         } else if (IsClientInGame(i)) {
-          PrintHintText(i, "Bomb Status: %i/%i || Sacrifice Points: %i/%i \nCurrent song: %s", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName);
+          PrintHintText(i, "Payload: %i/%i | !sacpoints: %i/%i \n Music: %s (%i)", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, ticksMusic);
           StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
         }
       }
@@ -1927,6 +2126,10 @@ public Action Event_Cvar(Event event,
 //When we win
 public Action EventWaveComplete(Event Spawn_Event,
   const char[] Spawn_Name, bool Spawn_Broadcast) {
+  forceStopMusic = true;
+  BGMINDEX = 0;
+  bgmPlaying = false;
+  tbLoop = 0;
   BGMINDEX = 0;
   tbLoop = 0;
   canCrusaderNuke = false;
@@ -1971,7 +2174,9 @@ public Action EventWarning(Event Spawn_Event,
 //When the wave fails
 public Action EventWaveFailed(Event Spawn_Event,
   const char[] Spawn_Name, bool Spawn_Broadcast) {
+  forceStopMusic = true;
   BGMINDEX = 0;
+  bgmPlaying = false;
   tbLoop = 0;
   canCrusaderNuke = false;
   canHindenburg = false;
@@ -1992,10 +2197,10 @@ public Action EventWaveFailed(Event Spawn_Event,
   }
   FireEntityInput("rain", "Alpha", "0", 0.0);
   CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave {red}failed {white}successfully!");
-  FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
-    FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
-  FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
-    FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
+  FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0);
+  FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
+  FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0);
+  FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
   FireEntityInput("Barricade_Rebuild_Relay", "Trigger", "", 0.0);
   FireEntityInput("FB.KP*", "Lock", "", 0.0);
   FireEntityInput("OldSpawn", "Disable", "", 0.0);
@@ -2968,42 +3173,57 @@ public Action Command_Operator(int args) {
     CPrintToChatAll("{darkviolet}[{orange}INFO{darkviolet}] {white}You have chosen {red}DOVAH'S ASS - TACO BELL EDITION{white}. Why... Why would you DO THIS?! Do you not realize what you've just done?????");
   }
   //TEMP FUNCTIONS
-  case 301:{
+  case 301: {
     EmitSoundToAll(BGM1, _, SNDCHAN, BGMSNDLVL, SND_CHANGEVOL, 0.05, _, _, _, _, _, _);
   }
   //TEMP FUNCTIONS
-  case 302:{
+  case 302: {
     EmitSoundToAll(BGM1, _, SNDCHAN, BGMSNDLVL, SND_CHANGEVOL, 1.0, _, _, _, _, _, _);
   }
-  case 304:{
+  case 304: {
     EmitSoundToAll(BGM2, _, SNDCHAN, BGMSNDLVL, SND_CHANGEVOL, 0.05, _, _, _, _, _, _);
   }
-  case 305:{
+  case 305: {
     EmitSoundToAll(BGM2, _, SNDCHAN, BGMSNDLVL, SND_CHANGEVOL, 1.0, _, _, _, _, _, _);
   }
-  case 400:{
+  case 400: {
     isWave = true;
-    CustomSoundEmitter(BGM4, BGMSNDLVL-50, true, 1, 0.8, 100);
+    CustomSoundEmitter(BGM4, BGMSNDLVL - 50, true, 1, 0.8, 100);
     curSong = BGM4;
     songName = BGM4Title;
-    CreateTimer(73.9, TimedOperator, 1000);
-    FireEntityInput("FB.MusicTimer", "RefireTime", "122.05", 0.0),
-    FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-    FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);   
   }
   //LOOP SYSTEM
-  case 500:{
+  case 500: {
     PrintToConsoleAll("[CORE] Phase Change started... phase 2!");
     loopingFlags = 1;
   }
-  case 501:{
+  case 501: {
     PrintToConsoleAll("[CORE] Phase Change started... phase 3!");
     loopingFlags = 2;
   }
-  // Select BGM
+  case 502: {
+    PrintToConsoleAll("Got 502 but not implemented, please report this to fartsy!");
+  }
+  // FINAL Music system rewrite (again) AGAINNNNNNNNNNNN....
   case 1000: {
-    ServerCommand("fb_operator 1001");
-    CreateTimer(0.0, TimedOperator, 1); //Create a timer to use a CPU cycle so that we don't confuse stopSound with our target song.
+    tickMusic = true;
+    PrintToChatAll("%i", BGMINDEX);
+    switch (BGMINDEX) {
+    case 0, 1, 12: {
+      int BGM = GetRandomInt(1, 3);
+      switch (BGM) {
+      case 1: {
+        BGMINDEX = 0;
+      }
+      case 2: {
+        BGMINDEX = 1;
+      }
+      case 3: {
+        BGMINDEX = 12;
+      }
+      }
+    }
+    }
   }
   //Stop current song
   case 1001: {
@@ -3280,21 +3500,19 @@ public Action Command_Operator(int args) {
     }
   }
   //Monitor power up/down!
-  case 1008:{
-    if(!monitorOn){
+  case 1008: {
+    if (!monitorOn) {
       monitorOn = true;
-      if(!monitorColor){
+      if (!monitorColor) {
         FireEntityInput("FB.MonitorSprite", "Color", "0 0 255", 0.0);
         FireEntityInput("FB.MonitorBlank", "Disable", "", 0.0);
         FireEntityInput("FB.MonitorBW", "Enable", "", 0.0);
-      }
-      else{
+      } else {
         FireEntityInput("FB.MonitorSprite", "Color", "0 255 0", 0.0);
         FireEntityInput("FB.MonitorBlank", "Disable", "", 0.0);
         FireEntityInput("FB.Monitor", "Enable", "", 0.0);
       }
-    }
-    else{
+    } else {
       monitorOn = false;
       FireEntityInput("FB.MonitorSprite", "Color", "255 0 0", 0.0);
       FireEntityInput("FB.Monitor", "Disable", "", 0.0);
@@ -3303,85 +3521,83 @@ public Action Command_Operator(int args) {
     }
   }
   //Cycle monitor forward
-  case 1009:{
+  case 1009: {
     camSel++;
-    switch(camSel){
-      case 0:{
-        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
-        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
-      }
-      case 1:{
-        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Mid", 0.0);
-        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Mid", 0.0);
-      }
-      case 2:{
-        FireEntityInput("FB.Monitor", "SetCamera", "CAM.MidTwo", 0.0);
-        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.MidTwo", 0.0);
-      }
-      case 3:{
-        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Rear", 0.0);
-        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Rear", 0.0);
-      }
-      case 4:{
-        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Kissone", 0.0);
-        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Kissone", 0.0);
-      }
-      case 5:{
-        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
-        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
-        camSel = 0;
-      }
+    switch (camSel) {
+    case 0: {
+      FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
+    }
+    case 1: {
+      FireEntityInput("FB.Monitor", "SetCamera", "CAM.Mid", 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Mid", 0.0);
+    }
+    case 2: {
+      FireEntityInput("FB.Monitor", "SetCamera", "CAM.MidTwo", 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.MidTwo", 0.0);
+    }
+    case 3: {
+      FireEntityInput("FB.Monitor", "SetCamera", "CAM.Rear", 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Rear", 0.0);
+    }
+    case 4: {
+      FireEntityInput("FB.Monitor", "SetCamera", "CAM.Kissone", 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Kissone", 0.0);
+    }
+    case 5: {
+      FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
+      camSel = 0;
+    }
     }
   }
   //Cycle monitor back
-  case 1010:{
+  case 1010: {
     camSel--;
-    switch(camSel){
-      case -1:{
-        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
-        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
-        camSel = 4;
-      }
-      case 0:{
-        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
-        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
-      }
-      case 1:{
-        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Mid", 0.0);
-        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Mid", 0.0);
-      }
-      case 2:{
-        FireEntityInput("FB.Monitor", "SetCamera", "CAM.MidTwo", 0.0);
-        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.MidTwo", 0.0);
-      }
-      case 3:{
-        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Rear", 0.0);
-        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Rear", 0.0);
-      }
-      case 4:{
-        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Kissone", 0.0);
-        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Kissone", 0.0);
-      }
-      case 5:{
-        FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
-        FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
-        camSel = 0;
-      }
+    switch (camSel) {
+    case -1: {
+      FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
+      camSel = 4;
+    }
+    case 0: {
+      FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
+    }
+    case 1: {
+      FireEntityInput("FB.Monitor", "SetCamera", "CAM.Mid", 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Mid", 0.0);
+    }
+    case 2: {
+      FireEntityInput("FB.Monitor", "SetCamera", "CAM.MidTwo", 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.MidTwo", 0.0);
+    }
+    case 3: {
+      FireEntityInput("FB.Monitor", "SetCamera", "CAM.Rear", 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Rear", 0.0);
+    }
+    case 4: {
+      FireEntityInput("FB.Monitor", "SetCamera", "CAM.Kissone", 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Kissone", 0.0);
+    }
+    case 5: {
+      FireEntityInput("FB.Monitor", "SetCamera", "CAM.Front", 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", "CAM.Front", 0.0);
+      camSel = 0;
+    }
     }
   }
   //Enable black and white.
-  case 1011:{
-    if(!monitorOn){
+  case 1011: {
+    if (!monitorOn) {
       return Plugin_Stop;
-    }
-    else{
-      if (!monitorColor){
+    } else {
+      if (!monitorColor) {
         monitorColor = true;
         FireEntityInput("FB.MonitorSprite", "Color", "0 255 0", 0.0);
         FireEntityInput("FB.Monitor", "Enable", "", 0.0);
         FireEntityInput("FB.MonitorBW", "Disable", "", 0.0);
-      }
-      else{
+      } else {
         monitorColor = false;
         FireEntityInput("FB.MonitorSprite", "Color", "0 0 255", 0.0);
         FireEntityInput("FB.Monitor", "Disable", "", 0.0);
@@ -3389,10 +3605,10 @@ public Action Command_Operator(int args) {
       }
     }
   }
-  //
   //Restore Music
   case 2000: {
-    if(isWave){
+    CreateTimer(1.0, UpdateMusic);
+    if (isWave) {
       int ent = FindEntityByClassname(-1, "tf_objective_resource"); //Get current wave, perform actions per wave.
       if (ent == -1) {
         LogMessage("tf_objective_resource not found");
@@ -3400,43 +3616,40 @@ public Action Command_Operator(int args) {
       }
       curWave = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
       switch (curWave) {
-        case 1: {
-          if (tacobell) {
-            BGMINDEX = 10;
-          }
-          else{
-            BGMINDEX = 2;
-          }
-        }
-        case 2:{
-            BGMINDEX = 3;
-          }
-        case 3:{
-            BGMINDEX = 4;
-          }
-        case 4:{
-          BGMINDEX = 5;
-        }
-        case 5:{
-          BGMINDEX = 6;
-        }
-        case 6:{
-          BGMINDEX = 7;
-        }
-        case 7:{
-          BGMINDEX = 8;
-        }
-        case 8:{
-          if(sephiroth){
-            BGMINDEX = 11;
-          }
-          else{
-            BGMINDEX = 9;
-          }
+      case 1: {
+        if (tacobell) {
+          BGMINDEX = 10;
+        } else {
+          BGMINDEX = 2;
         }
       }
-    }
-    else{
+      case 2: {
+        BGMINDEX = 3;
+      }
+      case 3: {
+        BGMINDEX = 4;
+      }
+      case 4: {
+        BGMINDEX = 5;
+      }
+      case 5: {
+        BGMINDEX = 6;
+      }
+      case 6: {
+        BGMINDEX = 7;
+      }
+      case 7: {
+        BGMINDEX = 8;
+      }
+      case 8: {
+        if (sephiroth) {
+          BGMINDEX = 11;
+        } else {
+          BGMINDEX = 9;
+        }
+      }
+      }
+    } else {
       BGMINDEX = GetRandomInt(0, 1);
     }
   }
@@ -3466,76 +3679,86 @@ public Action Command_Operator(int args) {
   case 9000: {
     CreateTimer(10.0, SephHPTimer);
   }
-  case 9001:{
-  //Phases
-    CustomSoundEmitter(BGM10, BGMSNDLVL-10, true, 1, 0.05, 100);
-    CustomSoundEmitter(BGM5, BGMSNDLVL-10, true, 1, 1.0, 100);
+  case 9001: {
+    //Phases
+    CustomSoundEmitter(BGM10, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(BGM5, BGMSNDLVL - 10, true, 1, 1.0, 100);
   }
-  case 9002:{
-  CustomSoundEmitter(BGM10, BGMSNDLVL-10, true, 1, 1.0, 100);
-  CustomSoundEmitter(BGM5, BGMSNDLVL-10, true, 1, 0.05, 100);
+  case 9002: {
+    CustomSoundEmitter(BGM10, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(BGM5, BGMSNDLVL - 10, true, 1, 0.05, 100);
   }
-  case 9010:{
-    BGMINDEX = 9010;
-    CreatePhaseTimer(90.1);
-    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 0.05, 100);
+  case 9010: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 0.05, 100);
   }
-  case 9011:{
-    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 0.05, 100);
+  case 9011: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 0.05, 100);
   }
-  case 9012:{
-    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 0.05, 100);
+  case 9012: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 0.05, 100);
   }
-  case 9013:{
-    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 1.0, 100);
+  case 9013: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100);
   }
-  case 9014:{
-    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 1.0, 100);
+  case 9014: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100);
   }
-  case 9015:{
-    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 1.0, 100);
+  case 9015: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100);
   }
-  case 9016:{
-    CustomSoundEmitter(TBGM6, BGMSNDLVL-10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL-10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL-10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL-10, true, 1, 1.0, 100);
+  case 9016: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100);
   }
   //Play Instrumental
-  case 9020:{
-    CustomSoundEmitter(TBGM0, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM1, BGMSNDLVL-10, true, 1, 0.05, 100);
+  case 9020: {
+    CustomSoundEmitter(TBGM0, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM1, BGMSNDLVL - 10, true, 1, 0.05, 100);
   }
   //Play Both
-  case 9021:{
-    CustomSoundEmitter(TBGM0, BGMSNDLVL-10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM1, BGMSNDLVL-10, true, 1, 1.0, 100);
+  case 9021: {
+    CustomSoundEmitter(TBGM0, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM1, BGMSNDLVL - 10, true, 1, 1.0, 100);
   }
   //Play vocal only
-  case 9022:{
-    CustomSoundEmitter(TBGM0, BGMSNDLVL-10, true, 1, 0.5, 100);
-    CustomSoundEmitter(TBGM1, BGMSNDLVL-10, true, 1, 1.0, 100);
+  case 9022: {
+    CustomSoundEmitter(TBGM0, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM1, BGMSNDLVL - 10, true, 1, 1.0, 100);
+  }
+  case 10000: {
+    BGMINDEX = 10;
+    tbLoop = 1;
+    CustomSoundEmitter(BGM9Intro, BGMSNDLVL, true, 1, 1.0, 100);
+    FireEntityInput("FB.MusicTimer", "Disable", "", 0.0);
+    FireEntityInput("FB.MusicTimer", "RefireTime", "11.81", 0.0);
+    FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.01);
+    FireEntityInput("FB.MusicTimer", "Enable", "", 0.01);
   }
   }
   return Plugin_Handled;
+}
+public Action BGMTest(Handle timer) {
+  CustomSoundEmitter(BGM9, BGMSNDLVL, true, 1, 1.0, 100);
 }
 
 //Perform Wave Setup
@@ -3565,212 +3788,18 @@ public Action PerformWaveSetup() {
   return Plugin_Handled;
 }
 
-//Phase timer
-public void CreatePhaseTimer(Handle timer, float time){
-  if looping return Plugin_Handled;//...
-  else
-    FireEntityInput("FB.MusicTimer", "Disable", "", 0.0);
-    FireEntityInput("FB.MusicTimer", "RefireTime", "", 0.0);
-    FireEntityInput("FB.MusicTimer", "RefireTime", "89.7", 0.0), //VERIFY THIS IS CORRECT...
-    FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.20);
-}
-
 //Timed commands
 public Action TimedOperator(Handle timer, int job) {
   switch (job) {
   case 0: {
-    if(VIPBGM>=0){
-      CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave %i: {forestgreen}%s{white} (requested by VIP {forestgreen}%N{white})", curWave, songName, VIPIndex);  
-    }
-    else{
+    if (VIPBGM >= 0) {
+      CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave %i: {forestgreen}%s{white} (requested by VIP {forestgreen}%N{white})", curWave, songName, VIPIndex);
+    } else {
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave %i: {forestgreen}%s", curWave, songName);
     }
   }
-  //Music system rewrite (again)
-  case 1: {
-    canMusicLoop = false;
-    switch (BGMINDEX) {
-      case 0, 1, 12: {
-        int BGM = GetRandomInt(1, 3);
-        switch (BGM) {
-        case 1: {
-          BGMINDEX = 0;
-          CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL - 10, true, 0, 1.0, 100);
-          curSong = DEFAULTBGM1;
-          songName = DEFAULTBGM1Title;
-          FireEntityInput("FB.MusicTimer", "RefireTime", "137.55", 0.0),
-            FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-            FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-        }
-        case 2: {
-          BGMINDEX = 1;
-          CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL - 10, true, 0, 1.0, 100);
-          curSong = DEFAULTBGM2;
-          songName = DEFAULTBGM2Title;
-          FireEntityInput("FB.MusicTimer", "RefireTime", "235.3", 0.0),
-            FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-            FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-        }
-        case 3: {
-          BGMINDEX = 12;
-          CustomSoundEmitter(DEFAULTBGM3, DEFBGMSNDLVL - 10, true, 0, 1.0, 100);
-          curSong = DEFAULTBGM3;
-          songName = DEFAULTBGM3Title;
-          FireEntityInput("FB.MusicTimer", "RefireTime", "137.7", 0.0),
-            FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-            FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-        }
-        }
-      }
-      //BGM1
-      case 2: {
-        CustomSoundEmitter(BGM1, BGMSNDLVL, true, 0, 1.0, 100);
-        curSong = BGM1;
-        songName = BGM1Title;
-        FireEntityInput("FB.MusicTimer", "RefireTime", "229.05", 0.0),
-          FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-          FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-      }
-      //BGM2
-      case 3: {
-        CustomSoundEmitter(BGM2, BGMSNDLVL, true, 0, 1.0, 100);
-        curSong = BGM2;
-        songName = BGM2Title;
-        FireEntityInput("FB.MusicTimer", "RefireTime", "153.75", 0.0),
-          FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-          FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-      }
-      //BGM3
-      case 4: {
-        CustomSoundEmitter(BGM3, BGMSNDLVL, true, 0, 1.0, 100);
-        curSong = BGM3;
-        songName = BGM3Title;
-        FireEntityInput("FB.MusicTimer", "RefireTime", "166.65", 0.0),
-          FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-          FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-      }
-      //BGM4
-      case 5: {
-        CustomSoundEmitter(BGM4, BGMSNDLVL-50, true, 1, 0.8, 100);
-        curSong = BGM4;
-        songName = BGM4Title;
-        CreateTimer(74.0, TimedOperator, 1000);
-        FireEntityInput("FB.MusicTimer", "RefireTime", "122.05", 0.0),
-        FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-        FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-      }
-      //BGM5
-      case 6: {
-        CustomSoundEmitter(BGM5, BGMSNDLVL - 5, true, 0, 1.0, 100);
-        curSong = BGM5;
-        songName = BGM5Title;
-        FireEntityInput("FB.MusicTimer", "RefireTime", "131.55", 0.0),
-          FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-          FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-      }
-      //BGM6
-      case 7: {
-        CustomSoundEmitter(BGM6, BGMSNDLVL, true, 0, 1.0, 100);
-        curSong = BGM6;
-        songName = BGM6Title;
-        FireEntityInput("FB.MusicTimer", "RefireTime", "427.15", 0.0),
-          FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-          FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-      }
-      //BGM7
-      case 8: {
-        CustomSoundEmitter(BGM7, BGMSNDLVL, true, 0, 1.0, 100);
-        curSong = BGM7;
-        songName = BGM7Title;
-        FireEntityInput("FB.MusicTimer", "RefireTime", "133.05", 0.0),
-          FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-          FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-      }
-      //BGM8
-      case 9: {
-        CustomSoundEmitter(BGM8, BGMSNDLVL + 30, true, 0, 1.0, 100);
-        curSong = BGM8;
-        songName = BGM8Title;
-        FireEntityInput("FB.MusicTimer", "RefireTime", "215.0", 0.0),
-          FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-          FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-      }
-      //BGM9
-      case 10: {
-        if (tbLoop == 0) {
-          curSong = BGM9Intro;
-          songName = BGM9Title;
-          CustomSoundEmitter(BGM9Intro, BGMSNDLVL - 5, true, 0, 1.0, 100);
-          FireEntityInput("FB.MusicTimer", "RefireTime", "11.60", 0.0),
-            FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-            FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-          tbLoop = 1;
-        } else {
-          CustomSoundEmitter(BGM9, BGMSNDLVL, true, 0, 1.0, 100);
-          curSong = BGM9;
-          songName = BGM9Title;
-          FireEntityInput("FB.MusicTimer", "RefireTime", "111.7", 0.0),
-            FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-            FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-        }
-      }
-      //BGM10
-      case 11: {
-        CustomSoundEmitter(BGM10, BGMSNDLVL + 10, true, 0, 1.0, 100);
-        curSong = BGM10;
-        songName = BGM10Title;
-        FireEntityInput("FB.MusicTimer", "RefireTime", "310.8", 0.0),
-          FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-          FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-      }
-      //BGM11
-      case 13:{
-        CustomSoundEmitter(BGM11, BGMSNDLVL + 10, true, 0, 1.0, 100);
-        curSong = BGM11;
-        songName = BGM11Title;
-        FireEntityInput("FB.MusicTimer", "RefireTime", "128.8", 0.0),
-          FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-          FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-      }
-      //BGM12
-      case 14:{
-        CustomSoundEmitter(BGM12, BGMSNDLVL + 10, true, 0, 1.0, 100);
-        curSong = BGM12;
-        songName = BGM12Title;
-        FireEntityInput("FB.MusicTimer", "RefireTime", "268.1", 0.0),
-          FireEntityInput("FB.MusicTimer", "Enable", "", 0.1),
-          FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.1);
-      }
-      //Custom BGM
-      case 20:{
-        PrintToChatAll("ERR: No music has been registered here yet!");
-      }
-      //Phases
-      case 100:{
-        curSong = BGM100;
-        songName = BGM100Title;
-        CustomSoundEmitter(BGM4, BGMSNDLVL-10, true, 1, 0.01, 100);
-        CustomSoundEmitter(BGM100, BGMSNDLVL-10, true, 1, 1.0, 100);
-        FireEntityInput("FB.MusicTimer", "Disable", "", 0.0);
-        FireEntityInput("FB.MusicTimer", "RefireTime", "149.6", 0.1);
-        FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.2);
-        FireEntityInput("FB.MusicTimer", "Enable", "", 0.3);
-      }
-      case 101:{
-        curSong = BGM101;
-        songName = BGM101Title;
-        CustomSoundEmitter(BGM4, BGMSNDLVL-10, true, 1, 0.01, 100);
-        CustomSoundEmitter(BGM100, BGMSNDLVL-10, true, 1, 0.001, 100);
-        CustomSoundEmitter(BGM101, BGMSNDLVL-10, true, 1, 1.0, 100);
-        FireEntityInput("FB.MusicTimer", "Disable", "", 0.0);
-        FireEntityInput("FB.MusicTimer", "RefireTime", "79.3", 0.1);
-        FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.2);
-        FireEntityInput("FB.MusicTimer", "Enable", "", 0.3);
-      }
-    }
-  }
   //Boss script
-  case 2:{
+  case 2: {
     ServerCommand("fb_operator 1001"); //Stop all bgm.
     FireEntityInput("FB.MusicTimer", "Disable", "", 0.0); //Disable all bgm.
     CreateTimer(0.0, TimedOperator, 3);
@@ -3810,7 +3839,7 @@ public Action TimedOperator(Handle timer, int job) {
     curSong = BGM10;
     songName = BGM10Title;
     CustomSoundEmitter(BGM10, BGMSNDLVL, true, 0, 1.0, 100),
-    CreateTimer(313.0, TimedOperator, 1);
+      CreateTimer(313.0, TimedOperator, 1);
   }
   //Signal boss to actually spawn after delay.
   case 8: {
@@ -3932,9 +3961,8 @@ public Action TimedOperator(Handle timer, int job) {
   case 100: {
     ServerCommand("_restart");
   }
-  case 1000:{
-    canMusicLoop = true;
-    CreateTimer(0.1, cLoopTimer);
+  case 1000: {
+    PrintToConsoleAll("This shouldn't be showing in your console. If it is, contact Fartsy#8998 .");
   }
   case 6969: {
     if (isWave) {
@@ -4173,7 +4201,7 @@ public void ExitEmergencyMode() {
 }
 
 //Setup music, this allows us to change it with VIP access...
-public void SetupMusic(int BGM){
+public void SetupMusic(int BGM) {
   if (VIPBGM >= 0) {
     PrintToConsoleAll("Music has been customized by VIP %N. They chose %i.", VIPIndex, VIPBGM);
     BGMINDEX = VIPBGM;
@@ -4225,58 +4253,58 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
     int steamID = GetSteamAccountID(p1);
     if (!steamID) {
       return;
-    } else if (p2 == 15){
+    } else if (p2 == 15) {
       VIPIndex = p1;
       VIPBGM = -1;
       CPrintToChat(p1, "{darkgreen}[CORE] Confirmed. Next song set to {aqua}Default{darkgreen}.");
       ServerCommand("fb_operator 2000");
     } else {
-      switch (p2){
-        case 0:{
-          s = DEFAULTBGM1Title;
-        }
-        case 1:{
-          s = DEFAULTBGM2Title;
-        }
-        case 2:{
-          s = BGM1Title;
-        }
-        case 3:{
-          s = BGM2Title;
-        }
-        case 4:{
-          s = BGM3Title;
-        }
-        case 5:{
-          s = BGM4Title;
-        }
-        case 6:{
-          s = BGM5Title;
-        }
-        case 7:{
-          s = BGM6Title;
-        }
-        case 8:{
-          s = BGM7Title;
-        }
-        case 9:{
-          s = BGM8Title;
-        }
-        case 10:{
-          s = BGM9Title;
-        }
-        case 11:{
-          s = BGM10Title;
-        }
-        case 12:{
-          s = DEFAULTBGM3Title;
-        }
-        case 13:{
-          s = BGM11Title;
-        }
-        case 14:{
-          s = BGM12Title;
-        }
+      switch (p2) {
+      case 0: {
+        s = DEFAULTBGM1Title;
+      }
+      case 1: {
+        s = DEFAULTBGM2Title;
+      }
+      case 2: {
+        s = BGM1Title;
+      }
+      case 3: {
+        s = BGM2Title;
+      }
+      case 4: {
+        s = BGM3Title;
+      }
+      case 5: {
+        s = BGM4Title;
+      }
+      case 6: {
+        s = BGM5Title;
+      }
+      case 7: {
+        s = BGM6Title;
+      }
+      case 8: {
+        s = BGM7Title;
+      }
+      case 9: {
+        s = BGM8Title;
+      }
+      case 10: {
+        s = BGM9Title;
+      }
+      case 11: {
+        s = BGM10Title;
+      }
+      case 12: {
+        s = DEFAULTBGM3Title;
+      }
+      case 13: {
+        s = BGM11Title;
+      }
+      case 14: {
+        s = BGM12Title;
+      }
       }
       CPrintToChat(p1, "{limegreen}[CORE] Confirmed. Next song set to {aqua}%s{limegreen}.", s);
       VIPIndex = p1;
@@ -4288,63 +4316,19 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
   }
 }
 
-public Action cLoopTimer(Handle timer){
-  if(!isWave || !canMusicLoop){
-    return Plugin_Stop;
-  }
-  else{
-    switch(loopingFlags){
-      case 0:{
-        PrintToConsoleAll("Creating timer for loop...");
-        CreateTimer(0.1, cLoopTimer);
-      }
-      case 1:{
-        BGMINDEX = 100;
-        canMusicLoop = false;
-        curSong = BGM100;
-        loopingFlags = 0;
-        songName = BGM100Title;
-        CreateTimer(126.5, TimedOperator, 1000);
-        CustomSoundEmitter(BGM4, BGMSNDLVL-10, true, 1, 0.01, 1);
-        CustomSoundEmitter(BGM100, BGMSNDLVL-10, true, 1, 1.0, 100);
-        FireEntityInput("FB.MusicTimer", "Disable", "", 0.0);
-        FireEntityInput("FB.MusicTimer", "RefireTime", "149.6", 0.1);
-        FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.2);
-        FireEntityInput("FB.MusicTimer", "Enable", "", 0.3);
-      }
-      case 2:{
-        BGMINDEX = 101;
-        canMusicLoop = false;
-        curSong = BGM101;
-        loopingFlags = 0;
-        songName = BGM101Title;
-        CreateTimer(79.2, TimedOperator, 1000);
-        CustomSoundEmitter(BGM100, BGMSNDLVL-10, true, 1, 0.001, 1);
-        CustomSoundEmitter(BGM101, BGMSNDLVL-10, true, 1, 1.0, 100);
-        FireEntityInput("FB.MusicTimer", "Disable", "", 0.0);
-        FireEntityInput("FB.MusicTimer", "RefireTime", "79.3", 0.1);
-        FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.2);
-        FireEntityInput("FB.MusicTimer", "Enable", "", 0.3);
-      }
-    }
-    return Plugin_Stop;
-  }
-}
-
 stock int TF2_GetPlayerMaxHealth(int client) {
-	return GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client);
+  return GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client);
 }
 
-public Action TickClientHealth(Handle timer){
+public Action TickClientHealth(Handle timer) {
   for (int i = 1; i <= MaxClients; i++) {
-    if (IsClientInGame(i) && !IsFakeClient(i) && (GetClientTeam(i) == 2)){
+    if (IsClientInGame(i) && !IsFakeClient(i) && (GetClientTeam(i) == 2)) {
       int health = GetClientHealth(i);
       int healthMax = TF2_GetPlayerMaxHealth(i);
       PrintToServer("Client %N joined RED TEAM and is being tracked with %i/%i health! UwU", i, health, healthMax);
       if (!FB_Database) {
         return;
-      }
-      else{
+      } else {
         char query[256];
         int steamID = GetSteamAccountID(i);
         Format(query, sizeof(query), "UPDATE ass_activity SET health = %i, maxHealth = %i WHERE steamid = %i;", health, healthMax, steamID);
@@ -4353,4 +4337,9 @@ public Action TickClientHealth(Handle timer){
     }
   }
   CreateTimer(1.0, TickClientHealth);
+}
+
+public Action UpdateMusic(Handle timer) {
+  prevSong = curSong;
+  return Plugin_Stop;
 }
