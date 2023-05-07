@@ -1,7 +1,5 @@
 #include <sdktools>
-
 #include <sourcemod>
-
 #pragma newdecls required
 bool isTankAlive = false;
 bool tankDeploy = false;
@@ -167,10 +165,10 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL.CannonPitch", "SetPosition", aimP, 5.0);
     FireEntityInput("PL.CannonYaw", "SetPosition", aimY, 5.0);
     FireEntityInput("PL.CannonSND", "PlaySound", "", 10.0);
+    FireEntityInput("PL.CannonShake", "StartShake", "", 10.0);
     FireEntityInput("PL.CannonFodder", "Enable", "", 10.0);
     FireEntityInput("PL.SentCartPhys", "SetDamageFilter", "NuBooliMe", 10.5);
     FireEntityInput("PL.CannonFodder", "Disable", "", 11.0);
-    FireEntityInput("PL.CannonShake", "StartShake", "", 11.0);
     FireEntityInput("PL.CannonPitch", "SetPosition", "0.0", 20.0);
     FireEntityInput("PL.CannonYaw", "SetPosition", "0.0", 20.0);
   }
