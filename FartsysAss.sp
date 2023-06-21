@@ -36,7 +36,6 @@ bool canSENTStars = false;
 bool canSephNuke = false;
 bool canTornado = false;
 bool crusader = false;
-bool forceStopMusic = false;
 bool isWave = false;
 bool monitorOn = false;
 bool monitorColor = true;
@@ -131,7 +130,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "6.1.0";
+static char PLUGIN_VERSION[8] = "6.2.0";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -323,11 +322,10 @@ public void OnGameFrame() {
       ticksMusic = 0;
     }
     //Stop music if requested or forced.
-    if ((!useOptimisedMusic || forceStopMusic) && (shouldStopMusic && ticksMusic == refireTime - 1)) {
-      //PrintToConsoleAll("Stopped: %s because shouldStop was %b or forceStop was %b", prevSong, shouldStopMusic, forceStopMusic);
+    if (shouldStopMusic && (ticksMusic == refireTime - 1)) {
+      //PrintToConsoleAll("Stopped: %s because shouldStop was %b or forceStop was %b", prevSong, shouldStopMusic);
       for (int i = 1; i <= MaxClients; i++) {
         StopSound(i, SNDCHAN, prevSong);
-        forceStopMusic = false;
         shouldStopMusic = false;
         useOptimisedMusic = false;
       }
@@ -388,6 +386,7 @@ public void OnGameFrame() {
         refireTime = 15270;
         if(!useOptimisedMusic){
           CustomSoundEmitter(BGM1, BGMSNDLVL, true, 0, 1.0, 100);
+          shouldStopMusic = false;
           useOptimisedMusic = true;
         }
       }
@@ -397,6 +396,7 @@ public void OnGameFrame() {
         curSong = BGM2;
         songName = BGM2Title;
         if(!useOptimisedMusic){
+          shouldStopMusic = false;
           useOptimisedMusic = true;
           CustomSoundEmitter(BGM2, BGMSNDLVL, true, 0, 1.0, 100);
         }
@@ -407,6 +407,7 @@ public void OnGameFrame() {
         ticksMusic = 0;
         if(!useOptimisedMusic){
           CustomSoundEmitter(BGM3, BGMSNDLVL, true, 0, 1.0, 100);
+          shouldStopMusic = false;
           useOptimisedMusic = true;
         }
         curSong = BGM3;
@@ -415,6 +416,7 @@ public void OnGameFrame() {
       }
       //BGM4
       case 5: {
+        shouldStopMusic = true;
         useOptimisedMusic = false;
         ticksMusic = 0;
         CustomSoundEmitter(BGM4, BGMSNDLVL - 50, true, 1, 0.8, 100);
@@ -427,6 +429,7 @@ public void OnGameFrame() {
         ticksMusic = 0;
         if(!useOptimisedMusic){
           CustomSoundEmitter(BGM5, BGMSNDLVL - 5, true, 0, 1.0, 100);
+          shouldStopMusic = false;
           useOptimisedMusic = true;
         }
         curSong = BGM5;
@@ -438,6 +441,7 @@ public void OnGameFrame() {
         ticksMusic = 0;
         if(!useOptimisedMusic){
           CustomSoundEmitter(BGM6, BGMSNDLVL, true, 0, 1.0, 100);
+          shouldStopMusic = false;
           useOptimisedMusic = true;
         }
         curSong = BGM6;
@@ -449,6 +453,7 @@ public void OnGameFrame() {
         ticksMusic = 0;
         if(!useOptimisedMusic){
           CustomSoundEmitter(BGM7, BGMSNDLVL, true, 0, 1.0, 100);
+          shouldStopMusic = false;
           useOptimisedMusic = true;
         }
         curSong = BGM7;
@@ -460,6 +465,7 @@ public void OnGameFrame() {
         ticksMusic = 0;
         if(!useOptimisedMusic){
           CustomSoundEmitter(BGM8, BGMSNDLVL + 30, true, 0, 1.0, 100);
+          shouldStopMusic = false;
           useOptimisedMusic = true;
         }
         curSong = BGM8;
@@ -469,6 +475,7 @@ public void OnGameFrame() {
       case 10: {
         if(!useOptimisedMusic){
           CustomSoundEmitter(BGM9, BGMSNDLVL, true, 0, 1.0, 100);
+          shouldStopMusic = false;
           useOptimisedMusic = true;
         }
         ticksMusic = 0;
@@ -2161,7 +2168,6 @@ public Action Event_Cvar(Event event,
 public Action EventWaveComplete(Event Spawn_Event,
   const char[] Spawn_Name, bool Spawn_Broadcast) {
   shouldStopMusic = true;
-  forceStopMusic = true;
   BGMINDEX = 0;
   ticksMusic = -2;
   refireTime = 2;
@@ -2208,7 +2214,6 @@ public Action EventWarning(Event Spawn_Event,
 //When the wave fails
 public Action EventWaveFailed(Event Spawn_Event,
   const char[] Spawn_Name, bool Spawn_Broadcast) {
-  forceStopMusic = true;
   shouldStopMusic = true;
   ticksMusic = -2;
   refireTime = 2;
@@ -4241,16 +4246,34 @@ public void SetupMusic(int BGM) {
     case 3:{
       curSong = BGM2;
     }
+    case 4:{
+      curSong = BGM3;
+    }
+    case 5:{
+      curSong = BGM4;
+    }
+    case 6:{
+      curSong = BGM5;
+    }
+    case 7:{
+      curSong = BGM6;
+    }
+    case 8:{
+      curSong = BGM7;
+    }
+    case 9:{
+      curSong = BGM8;
+    }
     case 10:{
       curSong = BGM9;
     }
   }
   if (!StrEqual(prevSong, curSong)){
-    forceStopMusic = true;
-    //PrintToChatAll("forceStop because prev %s and cur %s", prevSong, curSong);
+    shouldStopMusic = true;
+    //PrintToChatAll("shouldStop because prev %s and cur %s", prevSong, curSong);
   } else {
-    //PrintToChatAll("forceStop cancel because prev %s and cur %s", prevSong, curSong);
-    forceStopMusic = false;
+    //PrintToChatAll("shouldStop cancel because prev %s and cur %s", prevSong, curSong);
+    shouldStopMusic = false;
   }
 }
 
@@ -4358,11 +4381,11 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
       VIPIndex = p1;
       VIPBGM = p2;
       if (!StrEqual(prevSong, curSong)){
-        forceStopMusic = true;
+        shouldStopMusic = true;
         //PrintToChatAll("forceStop because prev %s and cur %s", prevSong, curSong);
       }
       else{
-        forceStopMusic = false;
+        shouldStopMusic = false;
         //PrintToChatAll("forceStop cancel because prev %s and cur %s", prevSong, curSong);
       }
       BGMINDEX = p2;
