@@ -24,7 +24,7 @@
 
 bool bgmPlaying = false;
 bool bombProgression = false;
-bool bombReset = false; //used for notifying us when Event mvm_bomb_reset_by_player doesn't....
+bool bombReset = false;
 bool brawler_emergency = false;
 bool canCrusaderNuke = false;
 bool canHindenburg = false;
@@ -47,24 +47,23 @@ bool tornado = false;
 bool tacobell = false;
 bool tickingClientHealth = false;
 bool tickMusic = false;
+bool useOptimisedMusic = false;
 bool TornadoWarningIssued = false;
 
 Database FB_Database;
-
 static char BELL[32] = "fartsy/misc/bell.wav";
-static char BGM1[32] = "fartsy/music/ffxiv/locus.mp3";
-static char BGM2[32] = "fartsy/music/ffxiv/metal.mp3";
-static char BGM3[64] = "fartsy/music/ffxiv/exponentialentropy.mp3";
+static char BGM1[32] = "fartsy/music/ffxiv/locus.wav";
+static char BGM2[32] = "fartsy/music/ffxiv/metal.wav";
+static char BGM3[64] = "fartsy/music/ffxiv/exponentialentropy.wav";
 static char BGM4[64] = "fartsy/music/ffxiv/tornfromtheheavens.mp3";
-static char BGM5[64] = "fartsy/music/ffxiv/metalbrutejusticemode.mp3";
-static char BGM6[64] = "fartsy/music/ffxiv/penitus.mp3";
-static char BGM7[64] = "fartsy/music/ffxiv/revengetwofold.mp3";
-static char BGM8[64] = "fartsy/music/ffxiv/landslide.mp3";
-static char BGM9[64] = "fartsy/music/brawler/xbc2/battle.mp3";
-static char BGM9Intro[64] = "fartsy/music/brawler/xbc2/battle_intro.mp3";
+static char BGM5[64] = "fartsy/music/ffxiv/metalbrutejusticemode.wav";
+static char BGM6[64] = "fartsy/music/ffxiv/penitus.wav";
+static char BGM7[64] = "fartsy/music/ffxiv/revengetwofold.wav";
+static char BGM8[64] = "fartsy/music/ffxiv/landslide.wav";
+static char BGM9[64] = "fartsy/music/brawler/xbc2/battle.wav"; 
 static char BGM10Intro[48] = "fartsy/music/brawler/onewingedintro.mp3";
 static char BGM10[64] = "fartsy/music/brawler/onewingedangel.mp3";
-static char BGM11[64] = "fartsy/music/brawler/xbc/youwillknowournames.mp3";
+static char BGM11[64] = "fartsy/music/brawler/xbc/youwillknowournames.mp3"; 
 static char BGM12[64] = "fartsy/music/demetori/unowen.mp3";
 static char BGM100[48] = "fartsy/music/ffxiv/TornColossusPhase1.mp3";
 static char BGM101[48] = "fartsy/music/ffxiv/TornColossusPhase2.mp3";
@@ -132,7 +131,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "6.0.5";
+static char PLUGIN_VERSION[8] = "6.1.0";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -184,7 +183,6 @@ int sacPointsMax = 60;
 static int SFXSNDLVL = 75;
 static int SNDCHAN = 6;
 int soundPreference[MAXPLAYERS + 1];
-int tbLoop = 0;
 int ticksMusic = 0;
 int VIPBGM = -1;
 int VIPIndex = 0;
@@ -196,7 +194,7 @@ stock bool IsValidClient(int client) {
 
 public Plugin myinfo = {
   name = "Fartsy's Ass - Framework",
-  author = "Fartsy#8998",
+  author = "Fartsy",
   description = "Framework for Fartsy's Ass (MvM Mods)",
   version = PLUGIN_VERSION,
   url = "https://forums.firehostredux.com"
@@ -219,7 +217,6 @@ public void OnPluginStart() {
     PrecacheSound(BGM7, true),
     PrecacheSound(BGM8, true),
     PrecacheSound(BGM9, true),
-    PrecacheSound(BGM9Intro, true),
     PrecacheSound(BGM10, true),
     PrecacheSound(BGM10Intro, true),
     PrecacheSound(BGM11, true),
@@ -304,13 +301,13 @@ public void OnPluginStart() {
     RegConsoleCmd("sm_sacpoints", Command_SacrificePointShop, "Fartsy's Annihilation Supply Shop"),
     RegConsoleCmd("sm_discord", Command_Discord, "Join our Discord server!"),
     RegConsoleCmd("sm_sounds", Command_Sounds, "Toggle sounds on or off via menu"),
-    HookEvent("player_death", EventDeath),
-    HookEvent("player_spawn", EventSpawn),
-    HookEvent("server_cvar", Event_Cvar, EventHookMode_Pre),
-    HookEvent("mvm_wave_complete", EventWaveComplete),
-    HookEvent("mvm_wave_failed", EventWaveFailed),
-    HookEvent("mvm_bomb_alarm_triggered", EventWarning),
-    HookEventEx("player_hurt", Event_Playerhurt, EventHookMode_Pre);
+    HookEvent("player_death", EventDeath);
+  HookEvent("player_spawn", EventSpawn);
+  HookEvent("server_cvar", Event_Cvar, EventHookMode_Pre);
+  HookEvent("mvm_wave_complete", EventWaveComplete);
+  HookEvent("mvm_wave_failed", EventWaveFailed);
+  HookEvent("mvm_bomb_alarm_triggered", EventWarning);
+  HookEventEx("player_hurt", Event_Playerhurt, EventHookMode_Pre);
   CPrintToChatAll("{darkred}Plugin Loaded.");
   cvarSNDDefault = CreateConVar("sm_fartsysass_sound", "3", "Default sound for new users, 3 = Everything, 2 = Sounds Only, 1 = Music Only, 0 = Nothing");
   SetCookieMenuItem(FartsysSNDSelected, 0, "Fartsys Ass Sound Preferences");
@@ -319,19 +316,25 @@ public void OnPluginStart() {
 public void OnGameFrame() {
   if (tickMusic) {
     ticksMusic++;
-    //PrintToConsoleAll("Ticks %i, BGM %i", ticksMusic, BGMINDEX);
+    //PrintToConsoleAll("ticks %i", ticksMusic);
+    //Start something if bgm is not playing
     if (!bgmPlaying) {
       refireTime = 0;
       ticksMusic = 0;
     }
-    if ((shouldStopMusic && ticksMusic == refireTime - 1) || forceStopMusic) {
+    //Stop music if requested or forced.
+    if ((!useOptimisedMusic || forceStopMusic) && (shouldStopMusic && ticksMusic == refireTime - 1)) {
+      //PrintToConsoleAll("Stopped: %s because shouldStop was %b or forceStop was %b", prevSong, shouldStopMusic, forceStopMusic);
       for (int i = 1; i <= MaxClients; i++) {
         StopSound(i, SNDCHAN, prevSong);
-        //PrintToChatAll("Stopped %s", prevSong);
         forceStopMusic = false;
+        shouldStopMusic = false;
+        useOptimisedMusic = false;
       }
     }
+    //Legacy Looping system
     if (loopingFlags > 0) {
+      useOptimisedMusic = false;
       shouldStopMusic = true;
       switch (loopingFlags) {
       case 1: {
@@ -348,12 +351,13 @@ public void OnGameFrame() {
       }
       }
     }
+    //Track and play music
     if (ticksMusic >= refireTime) {
-      CreateTimer(1.0, UpdateMusic);
+      CreateTimer(0.5, UpdateMusic);
       bgmPlaying = true;
-      shouldStopMusic = true;
       switch (BGMINDEX) {
       case 0: {
+        useOptimisedMusic = false;
         ticksMusic = 0;
         CustomSoundEmitter(DEFAULTBGM1, DEFBGMSNDLVL - 10, true, 0, 1.0, 100);
         curSong = DEFAULTBGM1;
@@ -361,6 +365,7 @@ public void OnGameFrame() {
         refireTime = 9170;
       }
       case 1: {
+        useOptimisedMusic = false;
         ticksMusic = 0;
         CustomSoundEmitter(DEFAULTBGM2, DEFBGMSNDLVL - 10, true, 0, 1.0, 100);
         curSong = DEFAULTBGM2;
@@ -368,6 +373,7 @@ public void OnGameFrame() {
         refireTime = 15686;
       }
       case 12: {
+        useOptimisedMusic = false;
         ticksMusic = 0;
         CustomSoundEmitter(DEFAULTBGM3, DEFBGMSNDLVL - 10, true, 0, 1.0, 100);
         curSong = DEFAULTBGM3;
@@ -377,29 +383,39 @@ public void OnGameFrame() {
       //BGM1
       case 2: {
         ticksMusic = 0;
-        CustomSoundEmitter(BGM1, BGMSNDLVL, true, 0, 1.0, 100);
         curSong = BGM1;
         songName = BGM1Title;
         refireTime = 15270;
+        if(!useOptimisedMusic){
+          CustomSoundEmitter(BGM1, BGMSNDLVL, true, 0, 1.0, 100);
+          useOptimisedMusic = true;
+        }
       }
       //BGM2
       case 3: {
         ticksMusic = 0;
-        CustomSoundEmitter(BGM2, BGMSNDLVL, true, 0, 1.0, 100);
         curSong = BGM2;
         songName = BGM2Title;
+        if(!useOptimisedMusic){
+          useOptimisedMusic = true;
+          CustomSoundEmitter(BGM2, BGMSNDLVL, true, 0, 1.0, 100);
+        }
         refireTime = 10250;
       }
       //BGM3
       case 4: {
         ticksMusic = 0;
-        CustomSoundEmitter(BGM3, BGMSNDLVL, true, 0, 1.0, 100);
+        if(!useOptimisedMusic){
+          CustomSoundEmitter(BGM3, BGMSNDLVL, true, 0, 1.0, 100);
+          useOptimisedMusic = true;
+        }
         curSong = BGM3;
         songName = BGM3Title;
         refireTime = 11110;
       }
       //BGM4
       case 5: {
+        useOptimisedMusic = false;
         ticksMusic = 0;
         CustomSoundEmitter(BGM4, BGMSNDLVL - 50, true, 1, 0.8, 100);
         curSong = BGM4;
@@ -409,7 +425,10 @@ public void OnGameFrame() {
       //BGM5
       case 6: {
         ticksMusic = 0;
-        CustomSoundEmitter(BGM5, BGMSNDLVL - 5, true, 0, 1.0, 100);
+        if(!useOptimisedMusic){
+          CustomSoundEmitter(BGM5, BGMSNDLVL - 5, true, 0, 1.0, 100);
+          useOptimisedMusic = true;
+        }
         curSong = BGM5;
         songName = BGM5Title;
         refireTime = 8770;
@@ -417,7 +436,10 @@ public void OnGameFrame() {
       //BGM6
       case 7: {
         ticksMusic = 0;
-        CustomSoundEmitter(BGM6, BGMSNDLVL, true, 0, 1.0, 100);
+        if(!useOptimisedMusic){
+          CustomSoundEmitter(BGM6, BGMSNDLVL, true, 0, 1.0, 100);
+          useOptimisedMusic = true;
+        }
         curSong = BGM6;
         songName = BGM6Title;
         refireTime = 28476;
@@ -425,7 +447,10 @@ public void OnGameFrame() {
       //BGM7
       case 8: {
         ticksMusic = 0;
-        CustomSoundEmitter(BGM7, BGMSNDLVL, true, 0, 1.0, 100);
+        if(!useOptimisedMusic){
+          CustomSoundEmitter(BGM7, BGMSNDLVL, true, 0, 1.0, 100);
+          useOptimisedMusic = true;
+        }
         curSong = BGM7;
         songName = BGM7Title;
         refireTime = 8870;
@@ -433,27 +458,23 @@ public void OnGameFrame() {
       //BGM8
       case 9: {
         ticksMusic = 0;
-        CustomSoundEmitter(BGM8, BGMSNDLVL + 30, true, 0, 1.0, 100);
+        if(!useOptimisedMusic){
+          CustomSoundEmitter(BGM8, BGMSNDLVL + 30, true, 0, 1.0, 100);
+          useOptimisedMusic = true;
+        }
         curSong = BGM8;
         songName = BGM8Title;
         refireTime = 14333;
       }
       case 10: {
-        shouldStopMusic = false;
-        if (tbLoop == 0) {
-          ticksMusic = 0;
-          curSong = BGM9Intro;
-          songName = BGM9Title;
-          tbLoop = 1;
-          refireTime = 792;
-          CustomSoundEmitter(BGM9Intro, BGMSNDLVL, true, 1, 1.0, 100);
-        } else {
-          ticksMusic = 0;
+        if(!useOptimisedMusic){
           CustomSoundEmitter(BGM9, BGMSNDLVL, true, 0, 1.0, 100);
-          curSong = BGM9;
-          songName = BGM9Title;
-          refireTime = 7440;
+          useOptimisedMusic = true;
         }
+        ticksMusic = 0;
+        curSong = BGM9;
+        songName = BGM9Title;
+        refireTime = 8120;
       }
       //BGM10
       case 11: {
@@ -991,15 +1012,15 @@ public Action PerformAdverts(Handle timer) {
 //Adverts for wave information
 public Action PerformWaveAdverts(Handle timer) {
   if (isWave) {
-      char buffer[16];
+  char buffer[16];
   char tbuffer[16];
   int sPos = RoundToFloor(ticksMusic/66.6666666666);
   int tPos = RoundToFloor(refireTime/66.6666666666);
   Format(buffer, 16, "%02d:%02d", sPos / 60, sPos % 60);
   Format(tbuffer, 16, "%02d:%02d", tPos / 60, tPos % 60);
-    CreateTimer(2.5, PerformWaveAdverts);
-    for (int i = 1; i <= MaxClients; i++) {
-      switch (bombStatus) {
+  CreateTimer(2.5, PerformWaveAdverts);
+  for (int i = 1; i <= MaxClients; i++) {
+    switch (bombStatus) {
       case 8, 16, 24, 32, 40, 48, 56, 64: {
         if (TornadoWarningIssued && IsClientInGame(i)) {
           if (bombProgression) {
@@ -2139,12 +2160,12 @@ public Action Event_Cvar(Event event,
 //When we win
 public Action EventWaveComplete(Event Spawn_Event,
   const char[] Spawn_Name, bool Spawn_Broadcast) {
+  shouldStopMusic = true;
   forceStopMusic = true;
   BGMINDEX = 0;
-  bgmPlaying = false;
-  tbLoop = 0;
+  ticksMusic = -2;
+  refireTime = 2;
   BGMINDEX = 0;
-  tbLoop = 0;
   canCrusaderNuke = false;
   canHindenburg = false;
   canHWBoss = false;
@@ -2188,9 +2209,10 @@ public Action EventWarning(Event Spawn_Event,
 public Action EventWaveFailed(Event Spawn_Event,
   const char[] Spawn_Name, bool Spawn_Broadcast) {
   forceStopMusic = true;
+  shouldStopMusic = true;
+  ticksMusic = -2;
+  refireTime = 2;
   BGMINDEX = 0;
-  bgmPlaying = false;
-  tbLoop = 0;
   canCrusaderNuke = false;
   canHindenburg = false;
   canHWBoss = false;
@@ -2235,8 +2257,8 @@ public void Event_Playerhurt(Handle event,
   int client = GetClientOfUserId(GetEventInt(event, "userid"));
   int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
   int damage = GetEventInt(event, "damageamount");
-  int health = GetEventInt(event, "health");
-  int attackerhp = GetClientHealth(attacker);
+  //int health = GetEventInt(event, "health");
+  //int attackerhp = GetClientHealth(attacker);
   //PrintToConsoleAll("[CORE-DBG] player hurt triggered by %N with %i hp. The attacker was %N with %i HP.", client, health, attacker, attackerhp);
   if (IsValidClient(attacker) && attacker != client) {
     char query[256];
@@ -3219,24 +3241,15 @@ public Action Command_Operator(int args) {
   }
   // FINAL Music system rewrite (again) AGAINNNNNNNNNNNN....
   case 1000: {
-    tickMusic = true;
-    //PrintToChatAll("%i", BGMINDEX);
-    switch (BGMINDEX) {
-    case 0, 1, 12: {
-      int BGM = GetRandomInt(1, 3);
-      switch (BGM) {
-      case 1: {
-        BGMINDEX = 0;
-      }
-      case 2: {
-        BGMINDEX = 1;
-      }
-      case 3: {
-        BGMINDEX = 12;
-      }
-      }
-    }
-    }
+    SetupMusic(BGMINDEX);
+  }
+  case 1080:{
+    CustomSoundEmitter(BGM1, BGMSNDLVL, true, 0, 1.0, 100);
+    SetupMusic(2);
+  }
+  case 1081:{
+    CustomSoundEmitter(BGM2, BGMSNDLVL, true, 0, 1.0, 100);
+    SetupMusic(3);
   }
   //Stop current song
   case 1001: {
@@ -3759,17 +3772,13 @@ public Action Command_Operator(int args) {
     CustomSoundEmitter(TBGM1, BGMSNDLVL - 10, true, 1, 1.0, 100);
   }
   case 10000: {
-    BGMINDEX = 10;
-    tbLoop = 1;
-    CustomSoundEmitter(BGM9Intro, BGMSNDLVL, true, 1, 1.0, 100);
-    FireEntityInput("FB.MusicTimer", "Disable", "", 0.0);
-    FireEntityInput("FB.MusicTimer", "RefireTime", "11.81", 0.0);
-    FireEntityInput("FB.MusicTimer", "ResetTimer", "", 0.01);
-    FireEntityInput("FB.MusicTimer", "Enable", "", 0.01);
+    BGMINDEX = 11;
+    CustomSoundEmitter(BGM9, BGMSNDLVL, true, 1, 1.0, 100);
   }
   }
   return Plugin_Handled;
 }
+
 public Action BGMTest(Handle timer) {
   CustomSoundEmitter(BGM9, BGMSNDLVL, true, 1, 1.0, 100);
 }
@@ -4215,15 +4224,33 @@ public void ExitEmergencyMode() {
 
 //Setup music, this allows us to change it with VIP access...
 public void SetupMusic(int BGM) {
-  ticksMusic = 0;
+  ticksMusic = -2;
   refireTime = 0;
+  tickMusic = true;
   if (VIPBGM >= 0) {
     PrintToConsoleAll("Music has been customized by VIP %N. They chose %i.", VIPIndex, VIPBGM);
     BGMINDEX = VIPBGM;
-    ServerCommand("fb_operator 1000");
   } else {
     BGMINDEX = BGM;
-    ServerCommand("fb_operator 1000");
+  }
+  shouldStopMusic = true;
+  switch(BGM){
+    case 2:{
+      curSong = BGM1;
+    }
+    case 3:{
+      curSong = BGM2;
+    }
+    case 10:{
+      curSong = BGM9;
+    }
+  }
+  if (!StrEqual(prevSong, curSong)){
+    forceStopMusic = true;
+    //PrintToChatAll("forceStop because prev %s and cur %s", prevSong, curSong);
+  } else {
+    //PrintToChatAll("forceStop cancel because prev %s and cur %s", prevSong, curSong);
+    forceStopMusic = false;
   }
 }
 
@@ -4277,18 +4304,23 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
       switch (p2) {
       case 0: {
         s = DEFAULTBGM1Title;
+        curSong = DEFAULTBGM1;
       }
       case 1: {
         s = DEFAULTBGM2Title;
+        curSong = DEFAULTBGM2;
       }
       case 2: {
         s = BGM1Title;
+        curSong = BGM1;
       }
       case 3: {
         s = BGM2Title;
+        curSong = BGM2;
       }
       case 4: {
         s = BGM3Title;
+        curSong = BGM3;
       }
       case 5: {
         s = BGM4Title;
@@ -4306,6 +4338,7 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
         s = BGM8Title;
       }
       case 10: {
+        curSong = BGM9;
         s = BGM9Title;
       }
       case 11: {
@@ -4324,6 +4357,14 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
       CPrintToChat(p1, "{limegreen}[CORE] Confirmed. Next song set to {aqua}%s{limegreen}.", s);
       VIPIndex = p1;
       VIPBGM = p2;
+      if (!StrEqual(prevSong, curSong)){
+        forceStopMusic = true;
+        //PrintToChatAll("forceStop because prev %s and cur %s", prevSong, curSong);
+      }
+      else{
+        forceStopMusic = false;
+        //PrintToChatAll("forceStop cancel because prev %s and cur %s", prevSong, curSong);
+      }
       BGMINDEX = p2;
     }
   } else if (action == MenuAction_End) {
@@ -4340,7 +4381,7 @@ public Action TickClientHealth(Handle timer) {
     if (IsClientInGame(i) && !IsFakeClient(i) && (GetClientTeam(i) == 2)) {
       int health = GetClientHealth(i);
       int healthMax = TF2_GetPlayerMaxHealth(i);
-      PrintToServer("Client %N joined RED TEAM and is being tracked with %i/%i health! UwU", i, health, healthMax);
+      //PrintToServer("Client %N joined RED TEAM and is being tracked with %i/%i health! UwU", i, health, healthMax);
       if (!FB_Database) {
         return;
       } else {
