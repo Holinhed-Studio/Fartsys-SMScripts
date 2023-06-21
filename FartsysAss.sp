@@ -130,7 +130,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "6.2.0";
+static char PLUGIN_VERSION[8] = "6.2.1";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -323,7 +323,7 @@ public void OnGameFrame() {
     }
     //Stop music if requested or forced.
     if (shouldStopMusic && (ticksMusic == refireTime - 1)) {
-      //PrintToConsoleAll("Stopped: %s because shouldStop was %b or forceStop was %b", prevSong, shouldStopMusic);
+      //PrintToConsoleAll("Stopped: %s because shouldStop was %b or shouldStop was %b", prevSong, shouldStopMusic);
       for (int i = 1; i <= MaxClients; i++) {
         StopSound(i, SNDCHAN, prevSong);
         shouldStopMusic = false;
@@ -4382,11 +4382,11 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
       VIPBGM = p2;
       if (!StrEqual(prevSong, curSong)){
         shouldStopMusic = true;
-        //PrintToChatAll("forceStop because prev %s and cur %s", prevSong, curSong);
+        //PrintToChatAll("shouldStop because prev %s and cur %s", prevSong, curSong);
       }
       else{
         shouldStopMusic = false;
-        //PrintToChatAll("forceStop cancel because prev %s and cur %s", prevSong, curSong);
+        //PrintToChatAll("shouldStop cancel because prev %s and cur %s", prevSong, curSong);
       }
       BGMINDEX = p2;
     }
