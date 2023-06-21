@@ -4,8 +4,9 @@
 bool isTankAlive = false;
 bool tankDeploy = false;
 char charHP[16];
+static char CANNONECHO[32] = "test/cannon_echo.mp3";
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.0.2";
+static char PLG_VER[8] = "1.0.3";
 
 public Plugin myinfo = {
   author = "Fartsy#8998",
@@ -16,6 +17,7 @@ public Plugin myinfo = {
 
 public void OnPluginStart() {
   PrecacheSound(COUNTDOWN, true);
+  PrecacheSound(CANNONECHO, true);
   RegServerCmd("fb_operator", Command_Operator, "Server-side only. Does nothing when excecuted as client.");
 }
 
@@ -148,23 +150,27 @@ public Action Command_Operator(int args) {
     case 2: {
       aimPitch = 0.7;
       aimYaw = 0.1;
+      CreateTimer(15.0, TimedOperator, 4);
     }
     //Aim at Red spawn
     case 3: {
       aimPitch = 0.8;
       aimYaw = 0.65;
+      CreateTimer(15.0, TimedOperator, 4);
     }
     }
     FloatToString(aimPitch, aimP, sizeof(aimP));
     FloatToString(aimYaw, aimY, sizeof(aimY));
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
     FireEntityInput("PL3.Payload", "Kill", "", 0.0);
+    FireEntityInput("PL3.Const", "Kill", "", 0.0);
     FireEntityInput("PL.SentCart", "ForceSpawn", "", 0.0);
     FireEntityInput("PL.CannonLift", "SetSpeed", "40", 0.0);
     FireEntityInput("PL.CannonLift", "Open", "", 0.1);
     FireEntityInput("PL.CannonPitch", "SetPosition", aimP, 5.0);
     FireEntityInput("PL.CannonYaw", "SetPosition", aimY, 5.0);
     FireEntityInput("PL.CannonSND", "PlaySound", "", 10.0);
+    CreateTimer(10.35, TimedOperator, 3);
     FireEntityInput("PL.CannonShake", "StartShake", "", 10.0);
     FireEntityInput("PL.CannonFodder", "Enable", "", 10.0);
     FireEntityInput("PL.SentCartPhys", "SetDamageFilter", "NuBooliMe", 10.5);
@@ -191,6 +197,18 @@ public Action TimedOperator(Handle timer, int opCode) {
     PrintToChatAll("ToggleAltPath!");
     FireEntityInput("PL1.Track40", "EnableAlternatePath", "", 0.0);
     FireEntityInput("PL1.Track40", "DisableAlternatePath", "", 10.0);
+  }
+  case 3:{
+    PrintToChatAll("Echo called!");
+    EmitSoundToAll(CANNONECHO);
+  }
+  case 4:{
+    PrintToChatAll("Resetting payload.");
+    FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track41", 0.0);
+    FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
+    FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL3.CP", 1.0);
+    FireEntityInput("PL1.CaptureArea", "Enable", "", 1.0);
+    FireEntityInput("PL3.PayloadSpawner", "ForceSpawn", "", 1.0);
   }
   }
 }
