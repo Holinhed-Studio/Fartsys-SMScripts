@@ -130,7 +130,7 @@ static char INCOMING[64] = "fartsy/vo/ddo/koboldincoming.wav";
 static char OnslaughterLaserSND[32] = "fartsy/misc/antimatter.mp3";
 static char OnslaughterFlamePreATK[32] = "weapons/flame_thrower_start.wav";
 static char OnslaughterFlamePostATK[32] = "weapons/flame_thrower_end.wav";
-static char PLUGIN_VERSION[8] = "6.2.1";
+static char PLUGIN_VERSION[8] = "6.2.2";
 static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
 static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char SHARKSND01[32] = "fartsy/memes/babyshark/baby.mp3";
@@ -4266,6 +4266,15 @@ public void SetupMusic(int BGM) {
     }
     case 10:{
       curSong = BGM9;
+    }
+    case 11:{
+      curSong = BGM10;
+    }
+    case 13:{
+      curSong = BGM11;
+    }
+    case 14:{
+      curSong = BGM12;
     }
   }
   if (!StrEqual(prevSong, curSong)){
