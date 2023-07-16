@@ -5,9 +5,10 @@
 bool isTankAlive = false;
 bool tankDeploy = false;
 char charHP[16];
+char tankStatus[128];
 static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.0.6";
+static char PLG_VER[8] = "1.0.7";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
@@ -230,6 +231,7 @@ public Action TimedOperator(Handle timer, int opCode) {
   switch (opCode) {
   case 0: {
     EmitSoundToAll(COUNTDOWN);
+    CreateTimer(15.0, TankHealthTimer);
   }
   case 1: {
     int newHP = GetRandomInt(30000, 50000);
@@ -276,15 +278,22 @@ public Action TankPingTimer(Handle timer) {
       PrintToChatAll("BLUE TANK IS DEPLOYING ITS BOMB.");
       return Plugin_Stop;
     } else {
-      char tankStatus[128];
-      Format(tankStatus, sizeof(tankStatus), "{blue}Blue Tank's HP: %i (%i)", tankHP, tankMaxHP);
-      PotatoLogger(LOG_CORE, tankStatus);
+      float p = float(tankHP) / float(tankMaxHP);
+      Format(tankStatus, sizeof(tankStatus), "{blue}Tank HP: %i%% (%i/%i)", RoundFloat(p * 100), tankHP, tankMaxHP);
       CreateTimer(1.0, TankPingTimer);
     }
   }
   return Plugin_Stop;
 }
 
+//Tank Health Status
+public Action TankHealthTimer(Handle timer) {
+  if(isTankAlive){
+    PotatoLogger(LOG_CORE, tankStatus);
+    CreateTimer(15.0, TankHealthTimer);
+  }
+  return Plugin_Stop;
+}
 //Create temp entity, fire input
 public Action FireEntityInput(char[] strTargetname, char[] strInput, char[] strParameter, float flDelay) {
   char strBuffer[255];
@@ -313,7 +322,7 @@ void PotatoLogger(int logLvl, char[] dbgMsg){
   switch(logLvl){
     //Normal log
     case 0:{
-      CPrintToChatAll("{green}[Potato/CORE]{white}: %s", GetGameTime(), dbgMsg);
+      CPrintToChatAll("{green}[Potato/CORE]{white}: %s", dbgMsg);
     }
     //Info log
     case 1:{
