@@ -4,12 +4,12 @@
 bool isTankAlive = false;
 bool tankDeploy = false;
 char charHP[16];
-static char CANNONECHO[32] = "test/cannon_echo.mp3";
+static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.0.3";
+static char PLG_VER[8] = "1.0.4";
 
 public Plugin myinfo = {
-  author = "Fartsy#8998",
+  author = "Fartsy",
   description = "Don't worry about it...",
   version = PLG_VER,
   url = "https://forums.firehostredux.com"
@@ -178,6 +178,23 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL.CannonPitch", "SetPosition", "0.0", 20.0);
     FireEntityInput("PL.CannonYaw", "SetPosition", "0.0", 20.0);
   }
+  //PL4 deployed
+  case 11:{
+    PrintToChatAll("PL4 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
+    FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track64", 0.0);
+    FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
+    FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL5.CP", 1.0);
+    FireEntityInput("PL1.CaptureArea", "Enable", "", 1.0);
+    FireEntityInput("PL4.CP", "SetOwner", "3", 1.0);
+  }
+  //PL5 deployed
+  case 12:{
+    PrintToChatAll("PL5 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
+    FireEntityInput("PL1.TrackTrain", "Kill", "", 0.0);
+    FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
+    FireEntityInput("PL1.CaptureArea", "Kill", "PL5.CP", 1.0);
+    FireEntityInput("PL5.CP", "SetOwner", "3", 1.0);
+  }
   }
   return Plugin_Handled;
 }
@@ -229,7 +246,7 @@ void PlayStartupSound() {
 }
 //Unlock setup gates
 void UnlockSetupGates() {
-  PrintToChatAll("FIRE ENTITY INPUT SHOULD BE USED HERE.");
+  PrintToChatAll("FIRE ENTITY INPUT SHOULD BE USED HERE. - UNLOCK SETUP GATES ETC.");
 }
 //Tank Checker
 public Action TankPingTimer(Handle timer) {
