@@ -8,7 +8,7 @@ char charHP[16];
 char tankStatus[128];
 static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.0.9";
+static char PLG_VER[8] = "1.1.0";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
@@ -163,7 +163,6 @@ public Action Command_Operator(int args) {
     char aimP[8];
     char aimY[8];
     float aimPitch, aimYaw;
-    int CannonPos = GetRandomInt(1, 3);
     if(failCount == 2){
       aimPitch = 0.85;
       aimYaw = 0.85;
@@ -171,9 +170,10 @@ public Action Command_Operator(int args) {
       FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL4.CP", 5.0);
     }
     else{
+      int CannonPos = GetRandomInt(1, 9);
       switch (CannonPos) {
         //Normal outcome
-        case 1: {
+        case 1,3,5,7,9: {
           failCount = 0;
           aimPitch = 0.85;
           aimYaw = 0.85;
@@ -188,7 +188,7 @@ public Action Command_Operator(int args) {
           CreateTimer(15.0, TimedOperator, 4);
         }
         //Aim at Red spawn
-        case 3: {
+        case 4,6,8: {
           failCount++;
           aimPitch = 0.8;
           aimYaw = 0.65;
