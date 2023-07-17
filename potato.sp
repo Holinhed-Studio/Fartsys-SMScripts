@@ -8,7 +8,7 @@ char charHP[16];
 char tankStatus[128];
 static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.1.1";
+static char PLG_VER[8] = "1.1.2";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
@@ -263,6 +263,11 @@ public Action Command_Operator(int args) {
   case 17:{
     //game win?
   }
+  //Setup begin
+  case 99:{
+    //Do something
+  }
+  //Setup finished
   case 100:{
     QueueMusicSystem();
     FireEntityInput("PL.SpawnDoor00", "Unlock", "", 0.0);
