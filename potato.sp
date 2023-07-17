@@ -31,12 +31,12 @@ public Plugin myinfo = {
 };
 
 public void OnPluginStart() {
-  PrecacheSound(TBGM0, true),
-  PrecacheSound(TBGM1, true),
-  PrecacheSound(TBGM3, true),
-  PrecacheSound(TBGM4, true),
-  PrecacheSound(TBGM5, true),
-  PrecacheSound(TBGM6, true),
+  PrecacheSound(TBGM0, true);
+  PrecacheSound(TBGM1, true);
+  PrecacheSound(TBGM3, true);
+  PrecacheSound(TBGM4, true);
+  PrecacheSound(TBGM5, true);
+  PrecacheSound(TBGM6, true);
   PrecacheSound(COUNTDOWN, true);
   PrecacheSound(CANNONECHO, true);
   RegServerCmd("fb_operator", Command_Operator, "Server-side only. Does nothing when excecuted as client.");
