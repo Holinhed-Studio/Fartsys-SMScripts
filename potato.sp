@@ -8,7 +8,7 @@ char charHP[16];
 char tankStatus[128];
 static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.1.2";
+static char PLG_VER[8] = "1.1.3";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
@@ -48,7 +48,7 @@ public Action Command_Operator(int args) {
   GetCmdArg(1, arg1, sizeof(arg1));
   int x = StringToInt(arg1);
   switch (x) {
-    //Red Win
+  //Red Win
   case 0: {
     PrintToChatAll("RED WON.");
     FireEntityInput("WinRed", "RoundWin", "", 0.0);
@@ -129,7 +129,7 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL.FilterSpawn01", "SetTeam", "2", 0.0);
     FireEntityInput("PL.Spawn02", "SetTeam", "3", 0.0);
     FireEntityInput("PL.Spawn02", "Enable", "", 0.1);
-    PrintToChatAll("TankDeployed!");
+    PotatoLogger(LOG_DBG, "TankDeployed!");
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
     FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
@@ -140,7 +140,11 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track41", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
     FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL3.CP", 1.0);
-    FireEntityInput("TankBossA", "Kill", "", 10.0);
+    FireEntityInput("PL.TankBoomSND", "PlaySound", "", 8.0);
+    FireEntityInput("PL.TankExplo", "Explode", "", 8.0);
+    FireEntityInput("PL.TankParticle", "Start", "", 8.0);
+    FireEntityInput("PL.TankShake", "StartShake", "", 8.0);
+    FireEntityInput("TankBossA", "Kill", "", 8.0);
     FireEntityInput("PL1.CaptureArea", "Enable", "", 10.0);
     FireEntityInput("PL3.PayloadSpawner", "ForceSpawn", "", 10.0);
   }
@@ -150,13 +154,14 @@ public Action Command_Operator(int args) {
   }
   //PL3 arrived at cannon
   case 9: {
-    FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
-    FireEntityInput("PL.CannonLift", "Open", "", 0.0);
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
-    FireEntityInput("PL1.CannonLift", "SetSpeed", "0.0", 0.10);
-    FireEntityInput("PL1.CannonLift", "Close", "", 3.10);
-    FireEntityInput("PL1.TrackTrain", "StartForward", "", 3.20);
+    FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
     FireEntityInput("PL.WatcherA", "SetTrainCanRecede", "0", 0.0);
+    FireEntityInput("PL.CannonDoor", "Open", "", 0.0)
+    FireEntityInput("PL.CannonLift", "Open", "", 2.0);
+    FireEntityInput("PL1.CannonLift", "SetSpeed", "0.0", 2.10);
+    FireEntityInput("PL1.CannonLift", "Close", "", 5.10);
+    FireEntityInput("PL1.TrackTrain", "StartForward", "", 5.20);
   }
   //PL3 cannon loaded, aim and fire!
   case 10: {
