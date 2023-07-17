@@ -8,7 +8,7 @@ char charHP[16];
 char tankStatus[128];
 static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.1.0";
+static char PLG_VER[8] = "1.1.1";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
@@ -215,33 +215,53 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL.CannonPitch", "SetPosition", "0.0", 20.0);
     FireEntityInput("PL.CannonYaw", "SetPosition", "0.0", 20.0);
   }
-  //PL4 deployed (testing function, fix me)
+  //PL3 deployed (testing function, fix me)
   case 11:{
-    PrintToChatAll("PL4 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
-    FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track62", 0.2);
+    PotatoLogger(LOG_DBG, "PL3 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
+    /*FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track62", 0.2);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "5", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 30.0);
     FireEntityInput("PL1.CaptureArea", "Enable", "", 0.0);
-    FireEntityInput("PL1.CaptureArea", "Disable", "", 30.0);
-    FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL4.CP", 1.0);
-    FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 30.0);
-    FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 30.0);
-    FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL5.CP", 30.2);
+    FireEntityInput("PL1.CaptureArea", "Disable", "", 3.0);
+    FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL3.CP", 1.0);
+    FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 3.0);
+    FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 3.0);
+    FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL5.CP", 3.2);
     FireEntityInput("PL1.CaptureArea", "Enable", "", 1.0);
-    FireEntityInput("PL4.CP", "SetOwner", "3", 30.0);
+    FireEntityInput("PL3.CP", "SetOwner", "3", 30.0);
+    */
   }
-  //PL5 deployed
+  //PL4 deployed
   case 12:{
-    PrintToChatAll("PL5 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
+    PotatoLogger(LOG_DBG, "PL4 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
     FireEntityInput("PL1.TrackTrain", "Kill", "", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
     FireEntityInput("PL1.CaptureArea", "Kill", "", 1.0);
     FireEntityInput("PL5.CP", "SetOwner", "3", 1.0);
   }
+  //PL5 deployed
+  case 13:{
+    PotatoLogger(LOG_DBG, "PL4 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
+    FireEntityInput("PL1.TrackTrain", "Kill", "", 0.0);
+    FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
+    FireEntityInput("PL1.CaptureArea", "Kill", "", 1.0);
+    FireEntityInput("PL5.CP", "SetOwner", "3", 1.0);
+  }
+  //CP1 Captured
+  case 14:{
+  }
   //CTF1 Captured
-  case 20:{
+  case 15:{
     FireEntityInput("PL.Spawn01", "Disable", "", 0.0);
     FireEntityInput("PL.Spawn02", "Enable", "", 0.0);
+  }
+  //CTF2 Captured
+  case 16:{
+    //unlock cp2
+  }
+  //CP2 Captured
+  case 17:{
+    //game win?
   }
   case 100:{
     QueueMusicSystem();
