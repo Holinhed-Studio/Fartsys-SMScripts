@@ -8,11 +8,19 @@ char charHP[16];
 char tankStatus[128];
 static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.0.7";
+static char PLG_VER[8] = "1.0.8";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
 static int LOG_ERR = 3;
+static int BGMSNDLVL = 95;
+static int SNDCHAN = 6;
+static char TBGM0[16] = "test/bgm0.mp3";
+static char TBGM1[16] = "test/bgm1.mp3";
+static char TBGM3[16] = "test/bgm3.mp3";
+static char TBGM4[16] = "test/bgm4.mp3";
+static char TBGM5[16] = "test/bgm5.mp3";
+static char TBGM6[16] = "test/bgm6.mp3";
 
 public Plugin myinfo = {
   author = "Fartsy",
@@ -22,6 +30,12 @@ public Plugin myinfo = {
 };
 
 public void OnPluginStart() {
+  PrecacheSound(TBGM0, true),
+    PrecacheSound(TBGM1, true),
+    PrecacheSound(TBGM3, true),
+    PrecacheSound(TBGM4, true),
+    PrecacheSound(TBGM5, true),
+    PrecacheSound(TBGM6, true),
   PrecacheSound(COUNTDOWN, true);
   PrecacheSound(CANNONECHO, true);
   RegServerCmd("fb_operator", Command_Operator, "Server-side only. Does nothing when excecuted as client.");
@@ -218,6 +232,48 @@ public Action Command_Operator(int args) {
     QueueMusicSystem();
     FireEntityInput("PL.SpawnDoor00", "Unlock", "", 0.0);
   }
+  case 9010: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 0.05, 100);
+  }
+  case 9011: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 0.05, 100);
+  }
+  case 9012: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 0.05, 100);
+  }
+  case 9013: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100);
+  }
+  case 9014: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100);
+  }
+  case 9015: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100);
+  }
+  case 9016: {
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100);
+  }
   default:{
     char E[128];
     Format(E, sizeof(E), "{red}Attempted to call unimplemented {white}fb_operator %i{red}!", x);
@@ -335,6 +391,34 @@ void PotatoLogger(int logLvl, char[] dbgMsg){
     //Error log
     case 3:{
       CPrintToChatAll("{red}[Potato/ERROR @ %f]{white}: %s", GetGameTime(), dbgMsg);
+    }
+  }
+}
+
+//Custom sound processor, this should make handling sounds easier. (Yoinked straight from Fartsy's Ass MvM)
+// int flags:
+//	SND_NOFLAGS= 0,             /**< Nothing */
+//	SND_CHANGEVOL = 1,          /**< Change sound volume */
+//	SND_CHANGEPITCH = 2,        /**< Change sound pitch */
+//	SND_STOP = 3,               /**< Stop the sound */
+//	SND_SPAWNING = 4,           /**< Used in some cases for ambients */
+//	SND_DELAY = 5,              /**< Sound has an initial delay */
+//	SND_STOPLOOPING = 6,        /**< Stop looping all sounds on the entity */
+//	SND_SPEAKER = 7,            /**< Being played by a mic through a speaker */
+//	SND_SHOULDPAUSE = 8         /**< Pause if game is paused */
+void CustomSoundEmitter(char[] sndName, int SNDLVL, bool isBGM, int flags, float vol, int pitch) {
+  char dbgWarn[255];
+  Format(dbgWarn, sizeof(dbgWarn), "{orange}WARNING: soundPreference is bypassed. Sound %s will play regardless of sound preference settings! testplugin.sp:414 testplugin.sp:419 are commented out!", sndName);
+  for (int i = 1; i <= MaxClients; i++) {
+    //If it's music
+    //if (IsClientInGame(i) && !IsFakeClient(i) && (soundPreference[i] == 1 || soundPreference[i] == 3) && isBGM) {
+      if (IsClientInGame(i) && !IsFakeClient(i) && isBGM) {
+      EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
+    }
+    //If it's sound effects
+    //else if (IsClientInGame(i) && !IsFakeClient(i) && soundPreference[i] >= 2 && !isBGM) {
+      else if (IsClientInGame(i) && !IsFakeClient(i) && !isBGM) {
+      EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
     }
   }
 }
