@@ -8,7 +8,7 @@ char charHP[16];
 char tankStatus[128];
 static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.0.8";
+static char PLG_VER[8] = "1.0.9";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
@@ -21,6 +21,7 @@ static char TBGM3[16] = "test/bgm3.mp3";
 static char TBGM4[16] = "test/bgm4.mp3";
 static char TBGM5[16] = "test/bgm5.mp3";
 static char TBGM6[16] = "test/bgm6.mp3";
+int failCount = 0;
 
 public Plugin myinfo = {
   author = "Fartsy",
@@ -62,8 +63,6 @@ public Action Command_Operator(int args) {
   }
   //PL1 Deployed, spawn tank
   case 3: {
-    FireEntityInput("PL.Spawn01", "Disable", "", 0.0);
-    FireEntityInput("PL.Spawn02", "Enable", "", 0.0);
     FireEntityInput("PL1.Const", "Break", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
     FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
@@ -165,25 +164,36 @@ public Action Command_Operator(int args) {
     char aimY[8];
     float aimPitch, aimYaw;
     int CannonPos = GetRandomInt(1, 3);
-    switch (CannonPos) {
-      //Normal outcome
-      case 1: {
-        aimPitch = 0.85;
-        aimYaw = 0.85;
-        FireEntityInput("PL1.CaptureArea", "Enable", "", 1.0);
-        FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL4.CP", 5.0);
-      }
-      //Aim at blue spawn
-      case 2: {
-        aimPitch = 0.7;
-        aimYaw = 0.1;
-        CreateTimer(15.0, TimedOperator, 4);
-      }
-      //Aim at Red spawn
-      case 3: {
-        aimPitch = 0.8;
-        aimYaw = 0.65;
-        CreateTimer(15.0, TimedOperator, 4);
+    if(failCount == 2){
+      aimPitch = 0.85;
+      aimYaw = 0.85;
+      FireEntityInput("PL1.CaptureArea", "Enable", "", 1.0);
+      FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL4.CP", 5.0);
+    }
+    else{
+      switch (CannonPos) {
+        //Normal outcome
+        case 1: {
+          failCount = 0;
+          aimPitch = 0.85;
+          aimYaw = 0.85;
+          FireEntityInput("PL1.CaptureArea", "Enable", "", 1.0);
+          FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL4.CP", 5.0);
+        }
+        //Aim at blue spawn
+        case 2: {
+          failCount++;
+          aimPitch = 0.7;
+          aimYaw = 0.1;
+          CreateTimer(15.0, TimedOperator, 4);
+        }
+        //Aim at Red spawn
+        case 3: {
+          failCount++;
+          aimPitch = 0.8;
+          aimYaw = 0.65;
+          CreateTimer(15.0, TimedOperator, 4);
+        }
       }
     }
     FloatToString(aimPitch, aimP, sizeof(aimP));
@@ -228,51 +238,56 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.CaptureArea", "Kill", "", 1.0);
     FireEntityInput("PL5.CP", "SetOwner", "3", 1.0);
   }
+  //CTF1 Captured
+  case 20:{
+    FireEntityInput("PL.Spawn01", "Disable", "", 0.0);
+    FireEntityInput("PL.Spawn02", "Enable", "", 0.0);
+  }
   case 100:{
     QueueMusicSystem();
     FireEntityInput("PL.SpawnDoor00", "Unlock", "", 0.0);
   }
   case 9010: {
-    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 0.05, 100, 0);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 0.05, 100, 0);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 0.05, 100, 0);
   }
   case 9011: {
-    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 0.05, 100, 0);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 0.05, 100, 0);
   }
   case 9012: {
-    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 0.05, 100);
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 0.05, 100, 0);
   }
   case 9013: {
-    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
   }
   case 9014: {
-    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 0.05, 100, 2);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 1.0, 100, 2);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100, 2);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100, 2);
   }
   case 9015: {
-    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 0.05, 100, 0);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 0.05, 100, 0);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
   }
   case 9016: {
-    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 0.05, 100);
-    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100);
+    CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 0.05, 100, 0);
+    CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 0.05, 100, 0);
+    CustomSoundEmitter(TBGM5, BGMSNDLVL - 10, true, 1, 0.05, 100, 0);
+    CustomSoundEmitter(TBGM3, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
   }
   default:{
     char E[128];
@@ -395,8 +410,8 @@ void PotatoLogger(int logLvl, char[] dbgMsg){
   }
 }
 
-//Custom sound processor, this should make handling sounds easier. (Yoinked straight from Fartsy's Ass MvM)
-// int flags:
+//Custom sound emitter, I don't know how many fucking times I've rewritten this! See FartsysAss.sp
+//int flags:
 //	SND_NOFLAGS= 0,             /**< Nothing */
 //	SND_CHANGEVOL = 1,          /**< Change sound volume */
 //	SND_CHANGEPITCH = 2,        /**< Change sound pitch */
@@ -406,19 +421,40 @@ void PotatoLogger(int logLvl, char[] dbgMsg){
 //	SND_STOPLOOPING = 6,        /**< Stop looping all sounds on the entity */
 //	SND_SPEAKER = 7,            /**< Being played by a mic through a speaker */
 //	SND_SHOULDPAUSE = 8         /**< Pause if game is paused */
-void CustomSoundEmitter(char[] sndName, int SNDLVL, bool isBGM, int flags, float vol, int pitch) {
+
+void CustomSoundEmitter(char[] sndName, int SNDLVL, bool isBGM, int flags, float vol, int pitch, int team){
   char dbgWarn[255];
-  Format(dbgWarn, sizeof(dbgWarn), "{orange}WARNING: soundPreference is bypassed. Sound %s will play regardless of sound preference settings! testplugin.sp:414 testplugin.sp:419 are commented out!", sndName);
-  for (int i = 1; i <= MaxClients; i++) {
-    //If it's music
-    //if (IsClientInGame(i) && !IsFakeClient(i) && (soundPreference[i] == 1 || soundPreference[i] == 3) && isBGM) {
-      if (IsClientInGame(i) && !IsFakeClient(i) && isBGM) {
-      EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
-    }
-    //If it's sound effects
-    //else if (IsClientInGame(i) && !IsFakeClient(i) && soundPreference[i] >= 2 && !isBGM) {
-      else if (IsClientInGame(i) && !IsFakeClient(i) && !isBGM) {
-      EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
+  Format(dbgWarn, sizeof(dbgWarn), "{orange}WARNING: soundpreference is bypassed. Sound %s will play regardless of preference.", sndName);
+  PotatoLogger(LOG_DBG, dbgWarn);
+  for (int i = 1; i <= MaxClients; i++){
+    if(IsClientInGame(i) && !IsFakeClient(i)){
+      if(team == 0){
+        if(isBGM && true){//see below
+          PotatoLogger(LOG_DBG, "Client on ALL teams got BGM!");
+          EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
+        } else if (!isBGM && true){
+          PotatoLogger(LOG_DBG, "Client on ALL teams got SFX!");
+          EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
+        }
+      }
+      else if(GetClientTeam(i) == 2 && team == 2){
+        if(isBGM && true){ //instead of using true, use soundPreference(i)
+          PotatoLogger(LOG_DBG, "Client on Red team got BGM!");
+          EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
+        } else if(!isBGM && true) {
+          PotatoLogger(LOG_DBG, "Client on Red team got SFX!");
+          EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
+        }
+      }
+      else if(GetClientTeam(i) == 3 && team == 3){
+        if(isBGM && true){//see above
+          PotatoLogger(LOG_DBG, "Client on Blu team got BGM!");
+          EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
+        } else if (!isBGM && true){
+          PotatoLogger(LOG_DBG, "Client on Blu team got SFX!");
+          EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
+        }
+      }
     }
   }
 }
