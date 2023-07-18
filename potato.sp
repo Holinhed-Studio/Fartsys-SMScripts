@@ -8,13 +8,14 @@ char charHP[16];
 char tankStatus[128];
 static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.1.3";
+static char PLG_VER[8] = "1.1.4";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
 static int LOG_ERR = 3;
 static int BGMSNDLVL = 95;
 static int SNDCHAN = 6;
+static char TSPWN[32] = "fartsy/misc/brawler/pl_tank.mp3";
 static char TBGM0[16] = "test/bgm0.mp3";
 static char TBGM1[16] = "test/bgm1.mp3";
 static char TBGM3[16] = "test/bgm3.mp3";
@@ -31,6 +32,7 @@ public Plugin myinfo = {
 };
 
 public void OnPluginStart() {
+  PrecacheSound(TSPWN, true);
   PrecacheSound(TBGM0, true);
   PrecacheSound(TBGM1, true);
   PrecacheSound(TBGM3, true);
@@ -63,6 +65,7 @@ public Action Command_Operator(int args) {
   }
   //PL1 Deployed, spawn tank
   case 3: {
+    CustomSoundEmitter(TSPWN, BGMSNDLVL, false, 0, 1.0, 100, 0);
     FireEntityInput("PL1.Const", "Break", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
     FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
@@ -222,19 +225,10 @@ public Action Command_Operator(int args) {
   }
   //PL3 deployed (testing function, fix me)
   case 11:{
-    PotatoLogger(LOG_DBG, "PL3 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
-    /*FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track62", 0.2);
-    FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "5", 0.0);
-    FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 30.0);
-    FireEntityInput("PL1.CaptureArea", "Enable", "", 0.0);
-    FireEntityInput("PL1.CaptureArea", "Disable", "", 3.0);
-    FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL3.CP", 1.0);
-    FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 3.0);
-    FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 3.0);
-    FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL5.CP", 3.2);
-    FireEntityInput("PL1.CaptureArea", "Enable", "", 1.0);
-    FireEntityInput("PL3.CP", "SetOwner", "3", 30.0);
-    */
+    PotatoLogger(LOG_DBG, "PL3 Captured!");
+    FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track50", 0.0);
+    FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
+    FireEntityInput("PL3.CP", "SetOwner", "3", 0.0);
   }
   //PL4 deployed
   case 12:{
@@ -254,6 +248,7 @@ public Action Command_Operator(int args) {
   }
   //CP1 Captured
   case 14:{
+    //Unlock CTF1 after 60 seconds
   }
   //CTF1 Captured
   case 15:{
@@ -262,9 +257,9 @@ public Action Command_Operator(int args) {
   }
   //CTF2 Captured
   case 16:{
-    //unlock cp2
+    FireEntityInput("CP2.CP", "SetLocked", "0", 0.0);
   }
-  //CP2 Captured
+  //CP2 Captured - Does not need an operator command, actually. Maybe stop music for all clients then requeue normal BGM by setting BGMINDEX to 0?
   case 17:{
     //game win?
   }
@@ -487,4 +482,19 @@ void CustomSoundEmitter(char[] sndName, int SNDLVL, bool isBGM, int flags, float
       }
     }
   }
+}
+
+
+//Phase Reaction Chamber
+void PhaseChange(int type){
+  PL1 changes to thunder and base once cart goes underground for BLU ONLY.
+  PL1 red team ONLY HEARS one song. They are not affected by any changes to blue.
+  PL2 NO CHANGES (if pl2, return;)
+  PL3 NO CHANGES (if pl3, return;)
+  PL4 River sticks red, blue gets calm version when not pushing, intense when pushing
+  PL5 red gets battle at big bridge no changes, blue gets apex pt 2 calm, upon reaching bridge blue gets intense apex pt 2
+  CP1 no changes, once capped and 60 second timer will have a music segment
+  CTF1 Kirby phase 2 red, you will know our names remastered blue
+  CTF2 no changes
+  CP2 both teams on capping, song changes for BOTH teams. Red: Immediate Threat/Alt Immediate Threat, Blue: You will know our names/Alt You will know our names
 }
