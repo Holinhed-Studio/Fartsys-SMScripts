@@ -248,23 +248,23 @@ public Action Command_Operator(int args) {
   //PL4 deployed
   case 13:{
     PotatoLogger(LOG_DBG, "PL4 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
+    FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track63", 0.0);
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
+    FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
+    FireEntityInput("PL4.CP", "SetOwner", "3", 0.0);
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
     FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
-    FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
-    FireEntityInput("PL4.CP", "SetOwner", "3", 1.0);
-    FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track64", 0.0);
-    FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL5.CP", 1.0);
+    FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL5.CP", 2.0);
     FireEntityInput("PL1.CaptureArea", "Enable", "", 2.0);
   }
   //PL5 deployed
   case 14:{
     PotatoLogger(LOG_DBG, "PL5 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
+    FireEntityInput("PL5.CP", "SetOwner", "3", 0.0);
     FireEntityInput("PL1.TrackTrain", "Kill", "", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
     FireEntityInput("PL1.CaptureArea", "Kill", "", 1.0);
-    FireEntityInput("PL5.CP", "SetOwner", "3", 1.0);
   }
   //CP1 Captured
   case 15:{
