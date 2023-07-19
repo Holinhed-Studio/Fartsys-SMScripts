@@ -9,7 +9,7 @@ char charHP[16];
 char tankStatus[128];
 static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.1.7";
+static char PLG_VER[8] = "1.1.8";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
@@ -261,9 +261,21 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL4.PayloadBomb", "Kill", "", 2.0);
     FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL5.CP", 2.0);
     FireEntityInput("PL1.CaptureArea", "Enable", "", 2.0);
+    FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track64", 3.0);
+  }
+  // Pipe up!
+  case 14:{
+    FireEntityInput("PL4.PipeUpSND", "PlaySound", "", 0.0);
+  }
+  //Pipe dn!
+  case 15:{
+    FireEntityInput("PL4.PipeDnSND", "PlaySound", "", 0.0);
+    FireEntityInput("PL4.MarioSND", "PlaySound", "", 2.0);
+    FireEntityInput("PL4.BoomSND", "PlaySound", "", 2.7);
+    FireEntityInput("PL4.BoomShake", "StartShake", "", 2.7);
   }
   //PL5 deployed
-  case 14:{
+  case 16:{
     PotatoLogger(LOG_DBG, "PL5 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
     FireEntityInput("PL5.CP", "SetOwner", "3", 0.0);
     FireEntityInput("PL1.TrackTrain", "Kill", "", 0.0);
@@ -271,22 +283,37 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.CaptureArea", "Kill", "", 1.0);
     FireEntityInput("CP1.CP", "SetLocked", "0", 0.0);
   }
+  //CP1 Start Capture
+  case 17:{
+
+  }
+  //CP1 Capture Break
+  case 18:{
+
+  }
   //CP1 Captured
-  case 15:{
+  case 19:{
     //Unlock CTF1 after 60 seconds
   }
   //CTF1 Captured
-  case 16:{
+  case 20:{
     FireEntityInput("PL.Spawn01", "Disable", "", 0.0);
     FireEntityInput("PL.Spawn02", "Enable", "", 0.0);
   }
   //CTF2 Captured
-  case 17:{
+  case 21:{
     FireEntityInput("CP2.CP", "SetLocked", "0", 0.0);
   }
-  //CP2 Captured - Does not need an operator command, actually. Maybe stop music for all clients then requeue normal BGM by setting BGMINDEX to 0?
-  case 18:{
-    //game win?
+  //CP2 began capture
+  case 22:{
+  }
+  //CP2 capture break
+  case 23:{
+
+  }
+  //CP2 captured
+  case 24:{
+
   }
   //Setup begin
   case 99:{
