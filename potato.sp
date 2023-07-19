@@ -9,7 +9,7 @@ char charHP[16];
 char tankStatus[128];
 static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.1.6";
+static char PLG_VER[8] = "1.1.7";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
@@ -247,7 +247,8 @@ public Action Command_Operator(int args) {
   }
   //PL4 deployed
   case 13:{
-    PotatoLogger(LOG_DBG, "PL4 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
+    FireEntityInput("PL4.Payload", "DisableMotion", "", 0.0);
+    FireEntityInput("PL4.PayloadBomb", "DisableMotion", "", 0.0);
     FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track63", 0.0);
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
@@ -255,6 +256,9 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
     FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
+    FireEntityInput("PL4.Pipe", "Open", "", 0.0);
+    FireEntityInput("PL4.Payload", "Kill", "", 2.0);
+    FireEntityInput("PL4.PayloadBomb", "Kill", "", 2.0);
     FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL5.CP", 2.0);
     FireEntityInput("PL1.CaptureArea", "Enable", "", 2.0);
   }
@@ -265,6 +269,7 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.TrackTrain", "Kill", "", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
     FireEntityInput("PL1.CaptureArea", "Kill", "", 1.0);
+    FireEntityInput("CP1.CP", "SetLocked", "0", 0.0);
   }
   //CP1 Captured
   case 15:{
@@ -290,7 +295,7 @@ public Action Command_Operator(int args) {
   //Setup finished
   case 100:{
     QueueMusicSystem();
-    FireEntityInput("PL.SpawnDoor00", "Unlock", "", 0.0);
+    FireEntityInput("PL.SpawnDoorTrigger00", "Enable", "", 0.0);
   }
   case 9010: {
     CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
@@ -337,7 +342,7 @@ public Action Command_Operator(int args) {
   default:{
     char E[128];
     Format(E, sizeof(E), "{red}Attempted to call unimplemented {white}fb_operator %i{red}!", x);
-    PotatoLogger(3, E);
+    PotatoLogger(LOG_ERR, E);
   }
   }
   return Plugin_Handled;
