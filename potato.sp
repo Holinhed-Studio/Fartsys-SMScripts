@@ -4,11 +4,12 @@
 #pragma newdecls required
 bool isTankAlive = false;
 bool tankDeploy = false;
+bool spawnPl4 = true;
 char charHP[16];
 char tankStatus[128];
 static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.1.4";
+static char PLG_VER[8] = "1.1.5";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
@@ -185,8 +186,6 @@ public Action Command_Operator(int args) {
           failCount = 0;
           aimPitch = 0.85;
           aimYaw = 0.85;
-          FireEntityInput("PL1.CaptureArea", "Enable", "", 1.0);
-          FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL4.CP", 5.0);
         }
         //Aim at blue spawn
         case 2: {
@@ -222,45 +221,62 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL.CannonFodder", "Disable", "", 11.0);
     FireEntityInput("PL.CannonPitch", "SetPosition", "0.0", 20.0);
     FireEntityInput("PL.CannonYaw", "SetPosition", "0.0", 20.0);
+    FireEntityInput("PL.CannonDoor", "Close", "", 20.0);
+    //ALSO REMEMBER TO UH.... TRY REMOVING THE IF SPAWNPL4 METHOD TOMORROW. THANKS. ALSO NOTICE: Try the current compile, removed the bobomb in case maybe it's just conflicting...
   }
-  //PL3 deployed (testing function, fix me)
+  //PL3 deployed
   case 11:{
-    PotatoLogger(LOG_DBG, "PL3 Captured!");
-    FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track50", 0.0);
-    FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
-    FireEntityInput("PL3.CP", "SetOwner", "3", 0.0);
+    //Quick and dirty workaround for PL3 triggering multiple times.
+    if(spawnPl4){
+      PotatoLogger(LOG_DBG, "PL3 Captured! Spawning PL4!");
+      FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track50", 0.0);
+      FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
+      FireEntityInput("PL3.CP", "SetOwner", "3", 0.0);
+      FireEntityInput("PL1.TrackTrain", "AddOutput", "height 16", 0.0);
+      FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track51", 0.20);
+      FireEntityInput("PL4.PayloadSpawner", "ForceSpawn", "", 1.0);
+      FireEntityInput("PL1.CaptureArea", "Enable", "", 1.0);
+      FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL4.CP", 1.0);
+      spawnPl4 = false;
+      CreateTimer(5.0, TimedOperator, 5);
+    }
+  }
+  //PL4 Spawned
+  case 12:{
+    FireEntityInput("PL4.Const", "TurnOn", "", 2.1);
   }
   //PL4 deployed
-  case 12:{
-    PotatoLogger(LOG_DBG, "PL4 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
-    FireEntityInput("PL1.TrackTrain", "Kill", "", 0.0);
-    FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
-    FireEntityInput("PL1.CaptureArea", "Kill", "", 1.0);
-    FireEntityInput("PL5.CP", "SetOwner", "3", 1.0);
-  }
-  //PL5 deployed
   case 13:{
     PotatoLogger(LOG_DBG, "PL4 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
+    FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
+    FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
+    FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.5);
+    FireEntityInput("PL1.CaptureArea", "Disable", "", 1.0);
+    FireEntityInput("PL4.CP", "SetOwner", "3", 1.0);
+  }
+  //PL5 deployed
+  case 14:{
+    PotatoLogger(LOG_DBG, "PL5 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
     FireEntityInput("PL1.TrackTrain", "Kill", "", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
     FireEntityInput("PL1.CaptureArea", "Kill", "", 1.0);
     FireEntityInput("PL5.CP", "SetOwner", "3", 1.0);
   }
   //CP1 Captured
-  case 14:{
+  case 15:{
     //Unlock CTF1 after 60 seconds
   }
   //CTF1 Captured
-  case 15:{
+  case 16:{
     FireEntityInput("PL.Spawn01", "Disable", "", 0.0);
     FireEntityInput("PL.Spawn02", "Enable", "", 0.0);
   }
   //CTF2 Captured
-  case 16:{
+  case 17:{
     FireEntityInput("CP2.CP", "SetLocked", "0", 0.0);
   }
   //CP2 Captured - Does not need an operator command, actually. Maybe stop music for all clients then requeue normal BGM by setting BGMINDEX to 0?
-  case 17:{
+  case 18:{
     //game win?
   }
   //Setup begin
@@ -350,6 +366,9 @@ public Action TimedOperator(Handle timer, int opCode) {
     FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL3.CP", 1.0);
     FireEntityInput("PL1.CaptureArea", "Enable", "", 1.0);
     FireEntityInput("PL3.PayloadSpawner", "ForceSpawn", "", 1.0);
+  }
+  case 5:{
+    spawnPl4 = true;
   }
   }
 }
@@ -484,7 +503,7 @@ void CustomSoundEmitter(char[] sndName, int SNDLVL, bool isBGM, int flags, float
   }
 }
 
-
+/*
 //Phase Reaction Chamber
 void PhaseChange(int type){
   PL1 changes to thunder and base once cart goes underground for BLU ONLY.
@@ -497,4 +516,4 @@ void PhaseChange(int type){
   CTF1 Kirby phase 2 red, you will know our names remastered blue
   CTF2 no changes
   CP2 both teams on capping, song changes for BOTH teams. Red: Immediate Threat/Alt Immediate Threat, Blue: You will know our names/Alt You will know our names
-}
+}*/
