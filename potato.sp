@@ -9,7 +9,7 @@ char charHP[16];
 char tankStatus[128];
 static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.1.5";
+static char PLG_VER[8] = "1.1.6";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
@@ -251,8 +251,8 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
     FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.5);
-    FireEntityInput("PL1.CaptureArea", "Disable", "", 1.0);
     FireEntityInput("PL4.CP", "SetOwner", "3", 1.0);
+    FireEntityInput("PL1.CaptureArea", "Disable", "", 2.0);
   }
   //PL5 deployed
   case 14:{
