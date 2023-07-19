@@ -129,10 +129,10 @@ public Action Command_Operator(int args) {
   //PL2 (Tank) Successfully Deployed!
   case 7: {
     isTankAlive = false;
-    FireEntityInput("PL.Spawn00", "Kill", "", 0.0);
-    FireEntityInput("PL.FilterSpawn01", "SetTeam", "2", 0.0);
-    FireEntityInput("PL.Spawn02", "SetTeam", "3", 0.0);
-    FireEntityInput("PL.Spawn02", "Enable", "", 0.1);
+    //FireEntityInput("PL.Spawn00", "Kill", "", 0.0); //why am i doin dis
+    //FireEntityInput("PL.FilterSpawn01", "SetTeam", "2", 0.0);
+   // FireEntityInput("PL.Spawn02", "SetTeam", "3", 0.0);
+    //FireEntityInput("PL.Spawn02", "Enable", "", 0.1);
     PotatoLogger(LOG_DBG, "TankDeployed!");
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
@@ -249,10 +249,14 @@ public Action Command_Operator(int args) {
   case 13:{
     PotatoLogger(LOG_DBG, "PL4 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
+    FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
+    FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
-    FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.5);
+    FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
     FireEntityInput("PL4.CP", "SetOwner", "3", 1.0);
-    FireEntityInput("PL1.CaptureArea", "Disable", "", 2.0);
+    FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track64", 0.0);
+    FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL5.CP", 1.0);
+    FireEntityInput("PL1.CaptureArea", "Enable", "", 2.0);
   }
   //PL5 deployed
   case 14:{
