@@ -2,14 +2,38 @@
 #include <sdktools>
 #include <sourcemod>
 #pragma newdecls required
+
+bool bgmPlaying = false;
 bool isTankAlive = false;
+bool musicInitializedBlu, musicInitializedRed = false;
+bool shouldStopMusic = false;
 bool tankDeploy = false;
+bool tickMusic = false;
 bool spawnPl4 = true;
+
 char charHP[16];
+char curPhaseBlu[256];
+char curPhaseRed[256];
+char curSongBlu[256];
+char curSongRed[256];
+char prevPhaseBlu[256];
+char prevPhaseRed[256];
+char prevSongBlu[256];
+char prevSongRed[256];
+char songNameRed[256], songNameBlu[256] = "null";
 char tankStatus[128];
-static char CANNONECHO[32] = "fartsy/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
+
+static char BGM0[64] = "fartsy/music/brawler/hw_aoc/aquietmoment.mp3";
+static char BGM1[64] = "fartsy/music/brawler/fe_w/chaossilence.wav";
+static char BGM2[64] = "fartsy/music/brawler/fe_3h/thelongroad_rain.wav";
+static char BGM3[64] = "fartsy/music/brawler/fe_3h/thelongroad_thunder.wav";
+static char BGM0Title[64] = "fartsy/music/brawler/hw_aoc/aquietmoment.mp3";
+static char BGM1Title[64] = "fartsy/music/brawler/fe_w/chaossilence.wav";
+static char BGM2Title[64] = "fartsy/music/brawler/fe_3h/thelongroad_rain.wav";
+static char BGM3Title[64] = "fartsy/music/brawler/fe_3h/thelongroad_thunder.wav";
+static char CANNONECHO[48] = "fartsy/misc/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.1.8";
+static char PLG_VER[8] = "1.1.9";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
@@ -23,7 +47,12 @@ static char TBGM3[16] = "test/bgm3.mp3";
 static char TBGM4[16] = "test/bgm4.mp3";
 static char TBGM5[16] = "test/bgm5.mp3";
 static char TBGM6[16] = "test/bgm6.mp3";
+
 int failCount = 0;
+int BGMINDEX = 0;
+int ChkPt = 1;
+int refireTicksBlu, refireTicksRed = 0;
+int ticksMusicBlu, ticksMusicRed = 0;
 
 public Plugin myinfo = {
   author = "Fartsy",
@@ -33,6 +62,10 @@ public Plugin myinfo = {
 };
 
 public void OnPluginStart() {
+  PrecacheSound(BGM0, true);
+  PrecacheSound(BGM1, true);
+  PrecacheSound(BGM2, true);
+  PrecacheSound(BGM3, true);
   PrecacheSound(TSPWN, true);
   PrecacheSound(TBGM0, true);
   PrecacheSound(TBGM1, true);
@@ -45,6 +78,114 @@ public void OnPluginStart() {
   RegServerCmd("fb_operator", Command_Operator, "Server-side only. Does nothing when excecuted as client.");
 }
 
+///Music system
+public void OnGameFrame(){
+  if (tickMusic){
+  //Stop music if requested.
+  //&& (ticksMusicRed == refireTicksRed - 1)
+  if (shouldStopMusic) {
+    for (int i = 1; i <= MaxClients; i++) {
+      PotatoLogger(LOG_DBG, "Stopping Music.");
+      StopSound(i, SNDCHAN, prevPhaseBlu);
+      StopSound(i, SNDCHAN, prevPhaseRed);
+      StopSound(i, SNDCHAN, prevSongBlu);
+      StopSound(i, SNDCHAN, prevSongRed);
+      shouldStopMusic = false;
+    }
+  }
+  //Start something if bgm is not playing
+  if (!bgmPlaying) {
+    refireTicksRed = 5900;
+    ticksMusicRed = 0;
+    refireTicksBlu = 5900;
+    ticksMusicBlu = 0;
+    bgmPlaying = true;
+    curSongBlu = BGM0;
+    curSongRed = BGM0;
+    CreateTimer(0.5, UpdateMusicBlu);
+    CreateTimer(0.5, UpdateMusicRed);
+    CustomSoundEmitter(BGM0, BGMSNDLVL, true, 0, 1.0, 100, 0);
+  }
+  tickMusicRed();
+  tickMusicBlu();
+  }
+}
+
+//Tick Music for Blu Team
+void tickMusicBlu(){
+  ticksMusicBlu++;
+  //Track and play music
+  if (ticksMusicBlu >= refireTicksBlu) {
+    CreateTimer(0.5, UpdateMusicBlu);
+    bgmPlaying = true;
+    switch (BGMINDEX){
+      //Setup Music, 90s clip
+      case 0:{
+        ticksMusicBlu = 0;
+        curSongBlu = BGM0;
+        songNameBlu = BGM0Title;
+      }
+      //PL 1, BLU Long Road
+      case 1:{
+        ticksMusicBlu = 0;
+        curSongBlu = BGM2;
+        songNameBlu = BGM2Title;
+        refireTicksBlu = 15270; //CHANGE ME SO TIMER SHOWS CORRECTLY PLEASE...
+        if(!musicInitializedBlu){
+          CustomSoundEmitter(BGM2, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Long Road Rain
+          CustomSoundEmitter(BGM3, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Long Road Thunder (Play at 0.5 when phase change happens.)
+          shouldStopMusic = false;
+          musicInitializedBlu = true;
+        }
+      }
+      //PL2 BLU Resolute Heart Siilence
+      case 2:{
+        
+      }
+    }
+  }
+}
+
+//Tick Music for Red Team
+void tickMusicRed(){
+  ticksMusicRed++;
+  //Track and play music
+  if (ticksMusicRed >= refireTicksRed) {
+    CreateTimer(0.5, UpdateMusicRed);
+    bgmPlaying = true;
+    switch (BGMINDEX){
+      //Setup Music, 90s clip
+      case 0:{
+        ticksMusicRed = 0;
+        curSongRed = BGM0;
+        songNameRed = BGM0Title;
+      }
+      //PL 1, RED Chaos Silence
+      case 1:{
+        ticksMusicRed = 0;
+        curSongRed = BGM1;
+        songNameRed = BGM1Title;
+        refireTicksRed = 15270; //CHANGE ME SO TIMER SHOWS CORRECTLY PLEASE...
+        if(!musicInitializedRed){
+          CustomSoundEmitter(BGM1, BGMSNDLVL, true, 0, 1.0, 100, 2); //RED: Chaos Silence
+          shouldStopMusic = false;
+          musicInitializedRed = true;
+        }
+      }
+    }
+  }
+}
+
+public Action UpdateMusicBlu(Handle timer){
+  prevPhaseBlu = curPhaseBlu;
+  prevSongBlu = curSongBlu;
+}
+
+public Action UpdateMusicRed(Handle timer){
+  prevPhaseRed = curPhaseRed;
+  prevSongRed = curSongRed;
+}
+
 //Operator, handle all map requests
 public Action Command_Operator(int args) {
   char arg1[16];
@@ -53,11 +194,13 @@ public Action Command_Operator(int args) {
   switch (x) {
   //Red Win
   case 0: {
+    tickMusic = false;
     PrintToChatAll("RED WON.");
     FireEntityInput("WinRed", "RoundWin", "", 0.0);
   }
   //Blu Win
   case 1: {
+    tickMusic = false;
     PrintToChatAll("BLUE WON.");
   }
   //Round Start
@@ -66,6 +209,8 @@ public Action Command_Operator(int args) {
   }
   //PL1 Deployed, spawn tank
   case 3: {
+    StopMusic();
+    BGMINDEX = 2;
     CustomSoundEmitter(TSPWN, BGMSNDLVL, false, 0, 1.0, 100, 0);
     FireEntityInput("PL1.Const", "Break", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
@@ -89,6 +234,7 @@ public Action Command_Operator(int args) {
   }
   //PL2 (Tank) started push
   case 4: {
+    ChkPt = 2;
     isTankAlive = true;
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "69", 0.0);
     FireEntityInput("PL.WatcherA", "SetSpeedForwardModifier", "0.5", 0.0);
@@ -111,7 +257,7 @@ public Action Command_Operator(int args) {
   //PL2 (Tank) Requested to Deploy
   case 6: {
     if (isTankAlive) {
-      PrintToChatAll("TANK ALIVE. DEPLOY TRUE.");
+      PotatoLogger(LOG_DBG, "TANK ALIVE. DEPLOY TRUE.");
       tankDeploy = true;
       FireEntityInput("TankBossA", "SetHealth", "900000", 0.0);
       FireEntityInput("PL1.TrackTrain", "Stop", "", 0.1);
@@ -120,7 +266,7 @@ public Action Command_Operator(int args) {
       CreateTimer(0.2, TimedOperator, 2);
     } else {
       tankDeploy = false;
-      PrintToChatAll("TANK NOT ALIVE. DEPLOY FALSE.");
+      PotatoLogger(LOG_DBG, "TANK NOT ALIVE. DEPLOY FALSE.");
       FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
       FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track17", 0.0);
       FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
@@ -128,6 +274,7 @@ public Action Command_Operator(int args) {
   }
   //PL2 (Tank) Successfully Deployed!
   case 7: {
+    ChkPt = 3;
     isTankAlive = false;
     //FireEntityInput("PL.Spawn00", "Kill", "", 0.0); //why am i doin dis
     //FireEntityInput("PL.FilterSpawn01", "SetTeam", "2", 0.0);
@@ -228,6 +375,7 @@ public Action Command_Operator(int args) {
   case 11:{
     //Quick and dirty workaround for PL3 triggering multiple times.
     if(spawnPl4){
+      ChkPt = 4;
       PotatoLogger(LOG_DBG, "PL3 Captured! Spawning PL4!");
       FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track50", 0.0);
       FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
@@ -269,10 +417,12 @@ public Action Command_Operator(int args) {
   }
   //Pipe dn!
   case 15:{
+    ChkPt = 5;
     FireEntityInput("PL4.PipeDnSND", "PlaySound", "", 0.0);
     FireEntityInput("PL4.MarioSND", "PlaySound", "", 2.0);
     FireEntityInput("PL4.BoomSND", "PlaySound", "", 2.7);
     FireEntityInput("PL4.BoomShake", "StartShake", "", 2.7);
+    FireEntityInput("PL5.Spawner", "ForceSpawn", "", 3.0);
   }
   //PL5 deployed
   case 16:{
@@ -282,9 +432,11 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
     FireEntityInput("PL1.CaptureArea", "Kill", "", 1.0);
     FireEntityInput("CP1.CP", "SetLocked", "0", 0.0);
+    FireEntityInput("PL5.Payload", "SetAnimation", "taunt_yetipunch", 0.0);
   }
   //CP1 Start Capture
   case 17:{
+
 
   }
   //CP1 Capture Break
@@ -302,26 +454,54 @@ public Action Command_Operator(int args) {
   }
   //CTF2 Captured
   case 21:{
+    ChkPt = 6;
     FireEntityInput("CP2.CP", "SetLocked", "0", 0.0);
   }
   //CP2 began capture
   case 22:{
+    PhaseChange(0);
   }
   //CP2 capture break
   case 23:{
-
+    PhaseChange(1);
   }
   //CP2 captured
   case 24:{
 
   }
+  //Cart entered the mine
+  case 95:{
+    PhaseChange(2);
+  }
+  //Cart Forward
+  case 96:{
+    PhaseChange(1);
+    FireEntityInput("PL5.Payload", "SetAnimation", "run_ITEM1", 0.0);
+    FireEntityInput("PL5.Payload", "SetDefaultAnimation", "run_ITEM1", 0.0);
+    FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.9", 0.1); // invoking 0.1 here might cause trouble, testing needed.
+  }
+  //Cart Stopped
+  case 97:{
+    PhaseChange(0);
+    FireEntityInput("PL5.Payload", "SetAnimation", "stand_ITEM1", 0.0);
+    FireEntityInput("PL5.Payload", "SetDefaultAnimation", "stand_ITEM1", 0.0);
+    FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.9", 0.1);
+  }
+  //Cart Backward
+  case 98:{
+    FireEntityInput("PL5.Payload", "SetAnimation", "run_ITEM1", 0.0);
+    FireEntityInput("PL5.Payload", "SetDefaultAnimation", "run_ITEM1", 0.0);
+    FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.1", 0.1);
+
+  }
   //Setup begin
   case 99:{
-    //Do something
+    QueueMusicSystem();
   }
   //Setup finished
   case 100:{
-    QueueMusicSystem();
+    BGMINDEX = 1;
+    StopMusic();
     FireEntityInput("PL.SpawnDoorTrigger00", "Enable", "", 0.0);
   }
   case 9010: {
@@ -412,6 +592,7 @@ public Action TimedOperator(Handle timer, int opCode) {
 //Prepare the music system
 void QueueMusicSystem() {
   PotatoLogger(LOG_INFO, "{lime}Music system queued.");
+  tickMusic = true;
 }
 
 //Tank Checker
@@ -445,6 +626,7 @@ public Action TankHealthTimer(Handle timer) {
   }
   return Plugin_Stop;
 }
+
 //Create temp entity, fire input
 public Action FireEntityInput(char[] strTargetname, char[] strInput, char[] strParameter, float flDelay) {
   char strBuffer[255];
@@ -462,6 +644,7 @@ public Action FireEntityInput(char[] strTargetname, char[] strInput, char[] strP
   }
   return Plugin_Handled;
 }
+
 //Remove edict allocated by temp entity
 public Action DeleteEdict(Handle timer, any entity) {
   if (IsValidEdict(entity)) RemoveEdict(entity);
@@ -553,3 +736,44 @@ void PhaseChange(int type){
   CTF2 no changes
   CP2 both teams on capping, song changes for BOTH teams. Red: Immediate Threat/Alt Immediate Threat, Blue: You will know our names/Alt You will know our names
 }*/
+
+void PhaseChange(int reason){
+  switch(ChkPt){
+    case 0:{
+      PotatoLogger(LOG_ERR, "PhaseChange at chkpt 0 received, check code?");
+    }
+    case 1:{
+      //Payload enterred the cave
+      if(reason == 2){
+        curPhaseBlu = BGM3;
+        CreateTimer(0.5, UpdateMusicBlu);
+        CustomSoundEmitter(BGM3, BGMSNDLVL, true, 1, 1.0, 100, 3);
+      }
+    }
+    case 2:{
+
+    }
+    case 3:{
+
+    }
+    case 4:{ //Inferno plays to blue while pushing
+
+    }
+    case 5:{
+      if(reason == 3){//Inferno plays to blue when cart is on the bridge
+
+      }
+    }
+    case 6:{
+
+    }
+  }
+}
+
+void StopMusic(){
+  shouldStopMusic = true;
+  ticksMusicBlu = 0;
+  refireTicksBlu = -1;
+  ticksMusicRed = 0;
+  refireTicksRed = -1;
+}
