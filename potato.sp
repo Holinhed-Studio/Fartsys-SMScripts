@@ -33,7 +33,7 @@ static char BGM2Title[64] = "fartsy/music/brawler/fe_3h/thelongroad_rain.wav";
 static char BGM3Title[64] = "fartsy/music/brawler/fe_3h/thelongroad_thunder.wav";
 static char CANNONECHO[48] = "fartsy/misc/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.1.9";
+static char PLG_VER[8] = "1.2.0";
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
@@ -134,6 +134,7 @@ void tickMusicBlu(){
         if(!musicInitializedBlu){
           CustomSoundEmitter(BGM2, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Long Road Rain
           CustomSoundEmitter(BGM3, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Long Road Thunder (Play at 0.5 when phase change happens.)
+          curPhaseBlu = BGM3;
           shouldStopMusic = false;
           musicInitializedBlu = true;
         }
@@ -296,8 +297,9 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL.TankParticle", "Start", "", 8.0);
     FireEntityInput("PL.TankShake", "StartShake", "", 8.0);
     FireEntityInput("TankBossA", "Kill", "", 8.0);
-    FireEntityInput("PL1.CaptureArea", "Enable", "", 10.0);
-    FireEntityInput("PL3.PayloadSpawner", "ForceSpawn", "", 10.0);
+    FireEntityInput("PL3.CrateSpawner", "ForceSpawn", "", 12.0);
+    FireEntityInput("PL1.CaptureArea", "Enable", "", 15.0);
+    FireEntityInput("PL3.PayloadSpawner", "ForceSpawn", "", 15.0);
   }
   //PL3 Spawned
   case 8: {
@@ -422,21 +424,35 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL4.MarioSND", "PlaySound", "", 2.0);
     FireEntityInput("PL4.BoomSND", "PlaySound", "", 2.7);
     FireEntityInput("PL4.BoomShake", "StartShake", "", 2.7);
-    FireEntityInput("PL5.Spawner", "ForceSpawn", "", 3.0);
+    FireEntityInput("PL5.PayloadSpawner", "ForceSpawn", "", 3.0);
+    FireEntityInput("PL5.Payload", "SetAnimation", "stand_ITEM1", 3.1);
+    FireEntityInput("PL5.Payload", "SetDefaultAnimation", "stand_ITEM1", 3.1);
+    FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.9", 3.2);
   }
   //PL5 deployed
   case 16:{
-    PotatoLogger(LOG_DBG, "PL5 Captured. To Do: Make cool thing happen instead of *ding* you captured lulululululu~");
+    PotatoLogger(LOG_DBG, "PL5 Captured. To Do: Play sound and blow up gate instead of *ding* you captured lulululululu~");
     FireEntityInput("PL5.CP", "SetOwner", "3", 0.0);
-    FireEntityInput("PL1.TrackTrain", "Kill", "", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
     FireEntityInput("PL1.CaptureArea", "Kill", "", 1.0);
     FireEntityInput("CP1.CP", "SetLocked", "0", 0.0);
     FireEntityInput("PL5.Payload", "SetAnimation", "taunt_yetipunch", 0.0);
+    FireEntityInput("PL5.Payload", "SetDefaultAnimation", "taunt_yetipunch", 0.1);
+    FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.9", 1.2);
+    FireEntityInput("PL5.Payload", "ClearParent", "", 4.0);
+    FireEntityInput("PL5.BoomSND", "PlaySound", "", 4.5);
+    FireEntityInput("PL5.Explo", "Explode", "", 4.5);
+    FireEntityInput("PL5.Shake", "StartShake", "", 4.5);
+    FireEntityInput("PL5.Door", "Kill", "", 4.5);
+    FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track64", 4.9);
+    FireEntityInput("PL1.TrackTrain", "Kill", "", 5.0);
+    FireEntityInput("PL5.Payload", "Kill", "", 5.0);
   }
   //CP1 Start Capture
   case 17:{
-
+    FireEntityInput("PL5.Payload", "SetAnimation", "taunt_yetipunch", 0.0);
+    FireEntityInput("PL5.Payload", "SetDefaultAnimation", "taunt_yetipunch", 1.0);
+    FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.9", 1.2);
 
   }
   //CP1 Capture Break
@@ -469,6 +485,15 @@ public Action Command_Operator(int args) {
   case 24:{
 
   }
+  //Gilgamesh Spawned
+  case 25:{
+    FireEntityInput("PL5.Payload", "SetAnimation", "run_ITEM1", 0.0);
+    FireEntityInput("PL5.Payload", "SetDefaultAnimation", "run_ITEM1", 0.0);
+    FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.9", 0.1);
+    FireEntityInput("PL5.Payload", "SetAnimation", "stand_ITEM1", 1.0);
+    FireEntityInput("PL5.Payload", "SetDefaultAnimation", "stand_ITEM1", 0.2);
+    FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.5", 1.1);
+  }
   //Cart entered the mine
   case 95:{
     PhaseChange(2);
@@ -478,7 +503,7 @@ public Action Command_Operator(int args) {
     PhaseChange(1);
     FireEntityInput("PL5.Payload", "SetAnimation", "run_ITEM1", 0.0);
     FireEntityInput("PL5.Payload", "SetDefaultAnimation", "run_ITEM1", 0.0);
-    FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.9", 0.1); // invoking 0.1 here might cause trouble, testing needed.
+    FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.9", 0.1);
   }
   //Cart Stopped
   case 97:{
@@ -496,6 +521,8 @@ public Action Command_Operator(int args) {
   }
   //Setup begin
   case 99:{
+    musicInitializedBlu = false;
+    musicInitializedRed = false;
     QueueMusicSystem();
   }
   //Setup finished
