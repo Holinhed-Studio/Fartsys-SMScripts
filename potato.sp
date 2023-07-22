@@ -2,7 +2,7 @@
 #include <sdktools>
 #include <sourcemod>
 #pragma newdecls required
-static char PLG_VER[8] = "1.2.6";
+static char PLG_VER[8] = "1.2.7";
 
 bool bgmPlaying = false;
 bool isTankAlive = false;
@@ -869,10 +869,6 @@ public Action Command_Operator(int args) {
   }
   //Setup begin
   case 99:{
-    musicInitializedBlu = false;
-    musicInitializedRed = false;
-    ChkPt = 1;
-    BGMINDEX = 0;
     QueueMusicSystem();
   }
   //Setup finished
@@ -969,6 +965,11 @@ public Action TimedOperator(Handle timer, int opCode) {
 //Prepare the music system
 void QueueMusicSystem() {
   PotatoLogger(LOG_INFO, "{lime}Music system queued.");
+  BGMINDEX = 0;
+  bgmPlaying = false;
+  ChkPt = 1;
+  stopForTeam = 0;
+  RestartMusic();
   tickMusic = true;
 }
 
@@ -1198,7 +1199,6 @@ void PhaseChange(int reason){
     case 9:{
       //Cap Stopped
       if(reason == 0){
-
         curSongRed = BGM20;
         curPhaseRed = BGM22;
         curSongBlu = BGM21;
