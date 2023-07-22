@@ -490,6 +490,7 @@ public Action Command_Operator(int args) {
   case 0: {
     stopForTeam = 0;
     BGMINDEX = 0;
+    bgmPlaying = false;
     RestartMusic();
     tickMusic = false;
     PrintToChatAll("RED WON.");
@@ -497,6 +498,10 @@ public Action Command_Operator(int args) {
   }
   //Blu Win
   case 1: {
+    stopForTeam = 0;
+    BGMINDEX = 0;
+    bgmPlaying = false;
+    RestartMusic();
     tickMusic = false;
     PrintToChatAll("BLUE WON.");
   }
