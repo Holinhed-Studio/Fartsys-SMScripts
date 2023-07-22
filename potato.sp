@@ -2,12 +2,12 @@
 #include <sdktools>
 #include <sourcemod>
 #pragma newdecls required
-static char PLG_VER[8] = "1.2.2";
+static char PLG_VER[8] = "1.2.5";
 
 bool bgmPlaying = false;
 bool isTankAlive = false;
 bool musicInitializedBlu, musicInitializedRed = false;
-bool shouldStopMusic = false;
+bool shouldMusicRestart = false;
 bool tankDeploy = false;
 bool tickMusic = false;
 bool spawnPl4 = true;
@@ -28,10 +28,51 @@ static char BGM0[64] = "fartsy/music/brawler/hw_aoc/aquietmoment.mp3";
 static char BGM1[64] = "fartsy/music/brawler/fe_w/chaossilence.wav";
 static char BGM2[64] = "fartsy/music/brawler/fe_3h/thelongroad_rain.wav";
 static char BGM3[64] = "fartsy/music/brawler/fe_3h/thelongroad_thunder.wav";
+static char BGM4[64] = "fartsy/music/brawler/fe_w/chaoshellishblaze.wav";
+static char BGM5[64] = "fartsy/music/brawler/fe_w/resoluteheartsilence.wav";
+static char BGM6[64] = "fartsy/music/brawler/demetori/nuclearfusion.wav";
+static char BGM7[64] = "fartsy/music/brawler/fe_w/resoluteheart.wav";
+static char BGM8[64] = "fartsy/music/brawler/demetori/riverstyx.wav";
+static char BGM9[64] = "fartsy/music/brawler/fe_3h/apex1_calm.wav";
+static char BGM10[64] = "fartsy/music/brawler/fe_3h/apex1_inferno.wav";
+static char BGM11[64] = "fartsy/music/brawler/ffxiv/battleatthebigbridgexiv.wav";
+static char BGM12[64] = "fartsy/music/brawler/fe_3h/apex2_calm.wav";
+static char BGM13[64] = "fartsy/music/brawler/fe_3h/apex2_inferno.wav";
+static char BGM14[64] = "fartsy/music/brawler/kirbyfl/rochelimitp1.wav";
+static char BGM15[64] = "fartsy/music/brawler/ssbb/bossbattle1.wav";
+static char BGM16[64] = "fartsy/music/brawler/kirbyfl/rochelimitp2.wav";
+static char BGM17[64] = "fartsy/music/brawler/xbcr/youwillknowournames_remaster.wav";
+static char BGM18[64] = "fartsy/music/brawler/xbcr/visionsofthefuture_remaster.wav";
+static char BGM19[64] = "fartsy/music/brawler/xbc2/youwillrecallournames.wav";
+static char BGM20[64] = "fartsy/music/brawler/xbc3/immediatethreat.wav";
+static char BGM21[64] = "fartsy/music/brawler/xbc3/youwillknowournames_finale.wav";
+static char BGM22[64] = "fartsy/music/brawler/xbc3/immediatethreatpre.wav";
+static char BGM23[64] = "fartsy/music/brawler/xbc3/youwillknowournames_pre.wav";
 static char BGM0Title[64] = "fartsy/music/brawler/hw_aoc/aquietmoment.mp3";
 static char BGM1Title[64] = "fartsy/music/brawler/fe_w/chaossilence.wav";
 static char BGM2Title[64] = "fartsy/music/brawler/fe_3h/thelongroad_rain.wav";
 static char BGM3Title[64] = "fartsy/music/brawler/fe_3h/thelongroad_thunder.wav";
+static char BGM4Title[64] = "fartsy/music/brawler/fe_w/chaoshellishblaze.wav";
+static char BGM5Title[64] = "fartsy/music/brawler/fe_w/resoluteheartsilence.wav";
+static char BGM6Title[64] = "fartsy/music/brawler/demetori/nuclearfusion.wav";
+static char BGM7Title[64] = "fartsy/music/brawler/fe_w/resoluteheart.wav";
+static char BGM8Title[64] = "fartsy/music/brawler/demetori/riverstyx.wav";
+static char BGM9Title[64] = "fartsy/music/brawler/fe_3h/apex1_calm.wav";
+static char BGM10Title[64] = "fartsy/music/brawler/fe_3h/apex1_inferno.wav";
+static char BGM11Title[64] = "fartsy/music/brawler/ffxiv/battleatthebigbridgexiv.wav";
+static char BGM12Title[64] = "fartsy/music/brawler/fe_3h/apex2_calm.wav";
+static char BGM13Title[64] = "fartsy/music/brawler/fe_3h/apex2_inferno.wav";
+static char BGM14Title[64] = "";
+static char BGM15Title[64] = "";
+static char BGM16Title[64] = "";
+static char BGM17Title[64] = "";
+static char BGM18Title[64] = "";
+static char BGM19Title[64] = "";
+static char BGM20Title[64] = "";
+static char BGM21Title[64] = "";
+static char BGM22Title[64] = "";
+static char BGM23Title[64] = "";
+static char BGM24Title[64] = "";
 static char CANNONECHO[48] = "fartsy/misc/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
 //WARNING: Kill unused Teleports and Dests once swapped. PL1.RegenField to be enabled/disabled at the same time as PL1.CaptureArea. CRITICAL: Fire on pl.filterspawn<XX> team <x> when spawns change!
@@ -53,6 +94,7 @@ int failCount = 0;
 int BGMINDEX = 0;
 int ChkPt = 1;
 int refireTicksBlu, refireTicksRed = 0;
+int stopForTeam = 0;
 int ticksMusicBlu, ticksMusicRed = 0;
 
 public Plugin myinfo = {
@@ -67,6 +109,26 @@ public void OnPluginStart() {
   PrecacheSound(BGM1, true);
   PrecacheSound(BGM2, true);
   PrecacheSound(BGM3, true);
+  PrecacheSound(BGM4, true);
+  PrecacheSound(BGM5, true);
+  PrecacheSound(BGM6, true);
+  PrecacheSound(BGM7, true);
+  PrecacheSound(BGM8, true);
+  PrecacheSound(BGM9, true);
+  PrecacheSound(BGM10, true);
+  PrecacheSound(BGM11, true);
+  PrecacheSound(BGM12, true);
+  PrecacheSound(BGM13, true);
+  PrecacheSound(BGM14, true);
+  PrecacheSound(BGM15, true);
+  PrecacheSound(BGM16, true);
+  PrecacheSound(BGM17, true);
+  PrecacheSound(BGM18, true);
+  PrecacheSound(BGM19, true);
+  PrecacheSound(BGM20, true);
+  PrecacheSound(BGM21, true);
+  PrecacheSound(BGM22, true);
+  PrecacheSound(BGM23, true);
   PrecacheSound(TSPWN, true);
   PrecacheSound(TBGM0, true);
   PrecacheSound(TBGM1, true);
@@ -84,14 +146,40 @@ public void OnGameFrame(){
   if (tickMusic){
   //Stop music if requested.
   //&& (ticksMusicRed == refireTicksRed - 1)
-  if (shouldStopMusic) {
+  if (shouldMusicRestart) {
     for (int i = 1; i <= MaxClients; i++) {
-      PotatoLogger(LOG_DBG, "Stopping Music.");
-      StopSound(i, SNDCHAN, prevPhaseBlu);
-      StopSound(i, SNDCHAN, prevPhaseRed);
-      StopSound(i, SNDCHAN, prevSongBlu);
-      StopSound(i, SNDCHAN, prevSongRed);
-      shouldStopMusic = false;
+      PotatoLogger(LOG_DBG, "Stopping Music");
+      switch(stopForTeam){
+        case 0:{
+          StopSound(i, SNDCHAN, prevPhaseBlu);
+          StopSound(i, SNDCHAN, prevPhaseRed);
+          StopSound(i, SNDCHAN, prevSongBlu);
+          StopSound(i, SNDCHAN, prevSongRed);
+          musicInitializedBlu = false;
+          musicInitializedRed = false;
+          ticksMusicBlu = -5;
+          refireTicksBlu = 0;
+          ticksMusicRed = -5;
+          refireTicksRed = 0;
+        }
+        case 2:{
+          PotatoLogger(LOG_DBG, "Stopping for Team RED prevPhaseRed %s prevSongRed %s");
+          StopSound(i, SNDCHAN, prevPhaseRed);
+          StopSound(i, SNDCHAN, prevSongRed);
+          musicInitializedRed = false;
+          ticksMusicRed = -5;
+          refireTicksRed = 0;
+        }
+        case 3:{
+          StopSound(i, SNDCHAN, prevPhaseBlu);
+          StopSound(i, SNDCHAN, prevSongBlu);
+          musicInitializedBlu = false;
+          ticksMusicBlu = -5;
+          refireTicksBlu = 0;
+        }
+      }
+      stopForTeam = 0;
+      shouldMusicRestart = false;
     }
   }
   //Start something if bgm is not playing
@@ -129,20 +217,122 @@ void tickMusicBlu(){
       //PL 1, BLU Long Road
       case 1:{
         ticksMusicBlu = 0;
+        curPhaseBlu = BGM3;
         curSongBlu = BGM2;
         songNameBlu = BGM2Title;
-        refireTicksBlu = 15270; //CHANGE ME SO TIMER SHOWS CORRECTLY PLEASE...
+        refireTicksBlu = 10890;
         if(!musicInitializedBlu){
           CustomSoundEmitter(BGM2, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Long Road Rain
           CustomSoundEmitter(BGM3, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Long Road Thunder (Play at 0.5 when phase change happens.)
-          curPhaseBlu = BGM3;
-          shouldStopMusic = false;
+          shouldMusicRestart = false;
           musicInitializedBlu = true;
         }
       }
       //PL2 BLU Resolute Heart Siilence
       case 2:{
-        
+        ticksMusicBlu = 0;
+        curPhaseBlu = BGM7;
+        curSongBlu = BGM5;
+        songNameBlu = BGM5Title;
+        refireTicksBlu = 5544;
+        if(!musicInitializedBlu){
+          CustomSoundEmitter(BGM5, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Resolute Heart Silence
+          CustomSoundEmitter(BGM7, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Resolute Heart
+          shouldMusicRestart = false;
+          musicInitializedBlu = true;
+        }
+      }
+      //PL3 BLU Resolute Heart
+      case 3:{
+        ticksMusicBlu = 0;
+        curPhaseBlu = BGM5;
+        curSongBlu = BGM7;
+        songNameBlu = BGM7Title;
+        refireTicksBlu = 5544;
+        if(!musicInitializedBlu){
+          CustomSoundEmitter(BGM5, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Resolute Heart Silence
+          CustomSoundEmitter(BGM7, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Resolute Heart 
+          shouldMusicRestart = false;
+          musicInitializedBlu = true;
+        }
+      }
+      //PL4 BLU Apex of the World P1, changes phase when cart pushing.
+      case 4:{
+        ticksMusicBlu = 0;
+        curPhaseBlu = BGM10;
+        curSongBlu = BGM9;
+        songNameBlu = BGM9Title;
+        refireTicksBlu = 12210;
+        if(!musicInitializedBlu){
+          CustomSoundEmitter(BGM9, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Apex pt1 Calm
+          CustomSoundEmitter(BGM10, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Apex pt1 Inferno 
+          shouldMusicRestart = false;
+          musicInitializedBlu = true;
+        }
+      }
+      //PL5 BLU Apex of the World P2, changes when cart on bridge.
+      case 5:{
+        ticksMusicBlu = 0;
+        curPhaseBlu = BGM13;
+        curSongBlu = BGM12;
+        songNameBlu = BGM12Title;
+        refireTicksBlu = 8382;
+        if(!musicInitializedBlu){
+          CustomSoundEmitter(BGM12, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Apex pt2 Calm
+          CustomSoundEmitter(BGM13, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Apex pt2 Inferno 
+          shouldMusicRestart = false;
+          musicInitializedBlu = true;
+        }
+      }
+      //CP1 BLU SSBB Boss Battle 1
+      case 6:{
+        ticksMusicBlu = 0;
+        curSongBlu = BGM15;
+        songNameBlu = BGM15Title;
+        refireTicksBlu = 7260;
+        if(!musicInitializedBlu){
+          CustomSoundEmitter(BGM15, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Smash Brawl Boss Battle 1
+          shouldMusicRestart = false;
+          musicInitializedBlu = true;
+        }
+      }
+      //Int 1 BLU You Will Know Our Names XBR
+      case 7:{
+        ticksMusicBlu = 0;
+        curSongBlu = BGM17;
+        songNameBlu = BGM17Title;
+        refireTicksBlu = 11682;
+        if(!musicInitializedBlu){
+          CustomSoundEmitter(BGM17, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: You Will Know Our Names Remaster
+          shouldMusicRestart = false;
+          musicInitializedBlu = true;
+        }
+      }
+      //Int 2 BLU You Will Recall Our Names XBC2
+      case 8:{
+        ticksMusicBlu = 0;
+        curSongBlu = BGM19;
+        songNameBlu = BGM19Title;
+        refireTicksBlu = 13068;
+        if(!musicInitializedBlu){
+          CustomSoundEmitter(BGM19, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: You Will Recall Our Names XBC2
+          shouldMusicRestart = false;
+          musicInitializedBlu = true;
+        }
+      }
+      //CP 2 Blu You Will Know Our Names Finale XBC3, Pre End while capping
+      case 9:{
+        ticksMusicBlu = 0;
+        curPhaseBlu = BGM23;
+        curSongBlu = BGM21;
+        songNameBlu = BGM21Title;
+        refireTicksBlu = 12276;
+        if(!musicInitializedBlu){
+          CustomSoundEmitter(BGM21, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: You Will Know Our Names Finale XBC3
+          CustomSoundEmitter(BGM23, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: You Will Know Our Names Finale Pre End XBC3
+          shouldMusicRestart = false;
+          musicInitializedBlu = true;
+        }
       }
     }
   }
@@ -165,12 +355,114 @@ void tickMusicRed(){
       //PL 1, RED Chaos Silence
       case 1:{
         ticksMusicRed = 0;
+        curPhaseRed = BGM4;
         curSongRed = BGM1;
         songNameRed = BGM1Title;
-        refireTicksRed = 15270; //CHANGE ME SO TIMER SHOWS CORRECTLY PLEASE...
+        refireTicksRed = 6930;
         if(!musicInitializedRed){
-          CustomSoundEmitter(BGM1, BGMSNDLVL, true, 0, 1.0, 100, 2); //RED: Chaos Silence
-          shouldStopMusic = false;
+          CustomSoundEmitter(BGM1, BGMSNDLVL, true, 1, 1.0, 100, 2); //RED: Chaos Silence
+          CustomSoundEmitter(BGM4, BGMSNDLVL, true, 1, 0.05, 100, 2); //RED: Chaos Hellish Blaze
+          shouldMusicRestart = false;
+          musicInitializedRed = true;
+        }
+      }
+      //PL 2, RED Chaos Hellish Blaze
+      case 2:{
+        ticksMusicRed = 0;
+        curPhaseRed = BGM1;
+        curSongRed = BGM4;
+        songNameRed = BGM4Title;
+        refireTicksRed = 6930;
+        if(!musicInitializedRed){
+          CustomSoundEmitter(BGM1, BGMSNDLVL, true, 1, 0.05, 100, 2); //RED: Chaos Silence
+          CustomSoundEmitter(BGM4, BGMSNDLVL, true, 1, 1.0, 100, 2); //RED: Chaos Hellish Blaze
+          shouldMusicRestart = false;
+          musicInitializedRed = true;
+        }
+      }
+      //PL 3, RED Demetori Nuclear Fusion
+      case 3:{
+        ticksMusicRed = 0;
+        curSongRed = BGM6;
+        songNameRed = BGM6Title;
+        refireTicksRed = 15114;
+        if(!musicInitializedRed){
+          CustomSoundEmitter(BGM6, BGMSNDLVL, true, 0, 1.0, 100, 2); //RED: Nuclear Fusion
+          shouldMusicRestart = false;
+          musicInitializedRed = true;
+        }
+      }
+      //PL 4, RED View of the River Styx
+      case 4:{
+        ticksMusicRed = 0;
+        curSongRed = BGM8;
+        songNameRed = BGM8Title;
+        refireTicksRed = 28776;
+        if(!musicInitializedRed){
+          CustomSoundEmitter(BGM8, BGMSNDLVL, true, 0, 1.0, 100, 2); //RED: View of the River Styx
+          shouldMusicRestart = false;
+          musicInitializedRed = true;
+        }
+      }
+      //PL 5, Battle at the Big Bridge XIV
+      case 5:{
+        ticksMusicRed = 0;
+        curSongRed = BGM11;
+        songNameRed = BGM11Title;
+        refireTicksRed = 9306;
+        if(!musicInitializedRed){
+          CustomSoundEmitter(BGM11, BGMSNDLVL, true, 0, 1.0, 100, 2); //RED: Battle at the Big Bridge XIV
+          shouldMusicRestart = false;
+          musicInitializedRed = true;
+        }
+      }
+      //CP1, Two Planets Approach the Roche Limit P1
+      case 6:{
+        ticksMusicRed = 0;
+        curSongRed = BGM14;
+        songNameRed = BGM14Title;
+        refireTicksRed = 14520;
+        if(!musicInitializedRed){
+          CustomSoundEmitter(BGM14, BGMSNDLVL, true, 0, 1.0, 100, 2); //RED: Two Planets Approach the Roche Limit Phase 1
+          shouldMusicRestart = false;
+          musicInitializedRed = true;
+        }
+      }
+      //Int 1 Two Planets Approach the Roche Limit P2
+      case 7:{
+        ticksMusicRed = 0;
+        curSongRed = BGM16;
+        songNameRed = BGM16Title;
+        refireTicksRed = 13662;
+        if(!musicInitializedRed){
+          CustomSoundEmitter(BGM16, BGMSNDLVL, true, 0, 1.0, 100, 2); //RED: Two Planets Approach the Roche Limit Phase 2
+          shouldMusicRestart = false;
+          musicInitializedRed = true;
+        }
+      }
+      //Int 2 Visions of the Future XBR
+      case 8:{
+        ticksMusicRed = 0;
+        curSongRed = BGM18;
+        songNameRed = BGM18Title;
+        refireTicksRed = 9174;
+        if(!musicInitializedRed){
+          CustomSoundEmitter(BGM18, BGMSNDLVL, true, 0, 1.0, 100, 2); //RED: Visions of the Future XBR
+          shouldMusicRestart = false;
+          musicInitializedRed = true;
+        }
+      }
+      //CP 2 Immediate Threat, pre end while being capped.
+      case 9:{
+        ticksMusicRed = 0;
+        curPhaseRed = BGM22;
+        curSongRed = BGM20;
+        songNameRed = BGM20Title;
+        refireTicksRed = 16500;
+        if(!musicInitializedRed){
+          CustomSoundEmitter(BGM20, BGMSNDLVL, true, 1, 1.0, 100, 2); //RED: Immediate Threat XB3
+          CustomSoundEmitter(BGM22, BGMSNDLVL, true, 1, 0.05, 100, 2); //RED: Immediate Threat Pre End XB3
+          shouldMusicRestart = false;
           musicInitializedRed = true;
         }
       }
@@ -196,6 +488,9 @@ public Action Command_Operator(int args) {
   switch (x) {
   //Red Win
   case 0: {
+    stopForTeam = 0;
+    BGMINDEX = 0;
+    RestartMusic();
     tickMusic = false;
     PrintToChatAll("RED WON.");
     FireEntityInput("WinRed", "RoundWin", "", 0.0);
@@ -211,8 +506,7 @@ public Action Command_Operator(int args) {
   }
   //PL1 Deployed, spawn tank
   case 3: {
-    StopMusic();
-    BGMINDEX = 2;
+    PhaseChange(4);
     CustomSoundEmitter(TSPWN, BGMSNDLVL, false, 0, 1.0, 100, 0);
     FireEntityInput("PL1.Const", "Break", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
@@ -276,13 +570,14 @@ public Action Command_Operator(int args) {
   }
   //PL2 (Tank) Successfully Deployed!
   case 7: {
-    ChkPt = 3;
     isTankAlive = false;
     //FireEntityInput("PL.Spawn00", "Kill", "", 0.0); //why am i doin dis
     //FireEntityInput("PL.FilterSpawn01", "SetTeam", "2", 0.0);
    // FireEntityInput("PL.Spawn02", "SetTeam", "3", 0.0);
     //FireEntityInput("PL.Spawn02", "Enable", "", 0.1);
+    ChkPt = 2;
     PotatoLogger(LOG_DBG, "TankDeployed!");
+    PhaseChange(4);
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
     FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
@@ -306,6 +601,7 @@ public Action Command_Operator(int args) {
   }
   //PL3 Spawned
   case 8: {
+    ChkPt = 3;
     FireEntityInput("PL3.Const", "TurnOn", "", 0.1);
   }
   //PL3 arrived at cannon
@@ -381,6 +677,9 @@ public Action Command_Operator(int args) {
     //Quick and dirty workaround for PL3 triggering multiple times.
     if(spawnPl4){
       ChkPt = 4;
+      BGMINDEX = 4;
+      stopForTeam = 0;
+      RestartMusic();
       PotatoLogger(LOG_DBG, "PL3 Captured! Spawning PL4!");
       FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track50", 0.0);
       FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
@@ -400,6 +699,10 @@ public Action Command_Operator(int args) {
   }
   //PL4 deployed
   case 13:{
+    ChkPt = 5;
+    BGMINDEX = 5;
+    stopForTeam = 0;
+    RestartMusic();
     FireEntityInput("PL4.Payload", "DisableMotion", "", 0.0);
     FireEntityInput("PL4.PayloadBomb", "DisableMotion", "", 0.0);
     FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track63", 0.0);
@@ -434,7 +737,10 @@ public Action Command_Operator(int args) {
   }
   //PL5 deployed
   case 16:{
+    BGMINDEX = 6;
     ChkPt = 6;
+    stopForTeam = 0;
+    RestartMusic();
     PotatoLogger(LOG_DBG, "PL5 Captured. To Do: Play sound and blow up gate instead of *ding* you captured lulululululu~");
     FireEntityInput("PL5.CP", "SetOwner", "3", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
@@ -468,7 +774,10 @@ public Action Command_Operator(int args) {
   }
   //CP1 Captured
   case 19:{
+    BGMINDEX = 7;
     ChkPt = 7;
+    stopForTeam = 0;
+    RestartMusic();
     FireEntityInput("PL.Tele01", "Kill", "", 0.0);
     FireEntityInput("PL.Tele02", "Kill", "", 0.0);
     FireEntityInput("CP1.SirenMDL", "AddOutput", "Skin 3", 0.0);
@@ -481,8 +790,10 @@ public Action Command_Operator(int args) {
   }
   //CTF1 Captured
   case 20:{
-    //Swap spawn points, this isn't done yet
+    BGMINDEX = 8;
     ChkPt = 8;
+    stopForTeam = 0;
+    RestartMusic();
     FireEntityInput("PL.Teleport00", "Disable", "", 0.0);
     FireEntityInput("PL.Teleport04", "Enable", "", 0.1);
     FireEntityInput("PL.FilterSpawn02", "setteam", "2", 0.1);
@@ -493,18 +804,21 @@ public Action Command_Operator(int args) {
   }
   //CTF2 Captured
   case 21:{
+    BGMINDEX = 9;
     ChkPt = 9;
+    stopForTeam = 0;
+    RestartMusic();
     FireEntityInput("CTF2.CTF", "Kill", "", 0.1);
     FireEntityInput("PL.Spawn03_FlagDetZone", "Kill", "", 0.1);
     FireEntityInput("CP2.CP", "SetLocked", "0", 0.0);
   }
   //CP2 began capture
   case 22:{
-    PhaseChange(0);
+    PhaseChange(1);
   }
   //CP2 capture break
   case 23:{
-    PhaseChange(1);
+    PhaseChange(0);
   }
   //CP2 captured
   case 24:{
@@ -518,6 +832,10 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL5.Payload", "SetAnimation", "stand_ITEM1", 1.0);
     FireEntityInput("PL5.Payload", "SetDefaultAnimation", "stand_ITEM1", 0.2);
     FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.5", 1.1);
+  }
+  //Cart on Bridge
+  case 94:{
+    PhaseChange(3);
   }
   //Cart entered the mine
   case 95:{
@@ -548,12 +866,14 @@ public Action Command_Operator(int args) {
   case 99:{
     musicInitializedBlu = false;
     musicInitializedRed = false;
+    ChkPt = 1;
+    BGMINDEX = 0;
     QueueMusicSystem();
   }
   //Setup finished
   case 100:{
     BGMINDEX = 1;
-    StopMusic();
+    RestartMusic();
     FireEntityInput("PL.SpawnDoorTrigger00", "Enable", "", 0.0);
   }
   case 9010: {
@@ -799,43 +1119,126 @@ void PhaseChange(int reason){
       //Payload enterred the cave
       if(reason == 2){
         curPhaseBlu = BGM3;
-        CreateTimer(0.5, UpdateMusicBlu);
+        CreateTimer(0.1, UpdateMusicBlu);
         CustomSoundEmitter(BGM3, BGMSNDLVL, true, 1, 1.0, 100, 3);
+      }
+      //Payload deployed
+      else if(reason == 4){
+        BGMINDEX = 2;
+        stopForTeam = 3;
+        RestartMusic();
+        curSongRed = BGM4;
+        curPhaseRed = BGM1;
+        CreateTimer(0.1, UpdateMusicRed);
+        CustomSoundEmitter(BGM1, BGMSNDLVL, true, 1, 0.05, 100, 2); //RED: Chaos Silence
+        CustomSoundEmitter(BGM4, BGMSNDLVL, true, 1, 1.0, 100, 2); //RED: Chaos Hellish Blaze
       }
     }
     case 2:{
-
+      //Payload deployed
+      if(reason == 4){
+        BGMINDEX = 3;
+        stopForTeam = 2;
+        RestartMusic();
+        curSongBlu = BGM7;
+        curPhaseBlu = BGM5;
+        CreateTimer(0.1, UpdateMusicBlu);
+        CustomSoundEmitter(BGM5, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Resolute Heart Silence
+        CustomSoundEmitter(BGM7, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Resolute Heart 
+      }
     }
     case 3:{
 
     }
     case 4:{ //Inferno plays to blue while pushing
-
+      //Cart stopped
+      if(reason == 0){
+        curSongBlu = BGM9;
+        curPhaseBlu = BGM10;
+        CreateTimer(0.1, UpdateMusicBlu);
+        CustomSoundEmitter(BGM9, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Apex pt1 Calm
+        CustomSoundEmitter(BGM10, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Apex pt1 Inferno 
+      }
+      //Cart started
+      else if(reason == 1){
+        curSongBlu = BGM10;
+        curPhaseBlu = BGM9;
+        CreateTimer(0.1, UpdateMusicBlu);
+        CustomSoundEmitter(BGM9, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Apex pt1 Calm
+        CustomSoundEmitter(BGM10, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Apex pt1 Inferno 
+      }
     }
     case 5:{
       if(reason == 3){//Inferno plays to blue when cart is on the bridge
-
+        curSongBlu = BGM13;
+        curPhaseBlu = BGM12;
+        CreateTimer(0.1, UpdateMusicBlu);
+        CustomSoundEmitter(BGM12, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Apex pt2 Calm
+        CustomSoundEmitter(BGM13, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Apex pt2 Inferno 
       }
     }
+    //CP 1
     case 6:{
 
     }
+    //Int 1
     case 7:{
 
     }
+    //Int 2
     case 8:{
 
     }
+    //CP 2
     case 9:{
+      //Cap Stopped
+      if(reason == 0){
 
+        curSongBlu = BGM20;
+        curPhaseBlu = BGM22;
+        curSongRed = BGM21;
+        curPhaseRed = BGM23;
+        CreateTimer(0.1, UpdateMusicBlu);
+        CreateTimer(0.1, UpdateMusicRed);
+        CustomSoundEmitter(BGM20, BGMSNDLVL, true, 0, 1.0, 100, 2); //RED: Immediate Threat XB3
+        CustomSoundEmitter(BGM22, BGMSNDLVL, true, 0, 0.05, 100, 2); //RED: Immediate Threat Pre End XB3
+        CustomSoundEmitter(BGM21, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: You Will Know Our Names Finale XBC3
+        CustomSoundEmitter(BGM23, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: You Will Know Our Names Finale Pre End XBC3
+      }
+      //Cap Started
+      else if(reason == 1){
+        curSongBlu = BGM22;
+        curPhaseBlu = BGM20;
+        curSongRed = BGM23;
+        curPhaseRed = BGM21;
+        CreateTimer(0.1, UpdateMusicBlu);
+        CreateTimer(0.1, UpdateMusicRed);
+        CustomSoundEmitter(BGM20, BGMSNDLVL, true, 0, 0.05, 100, 2); //RED: Immediate Threat XB3
+        CustomSoundEmitter(BGM22, BGMSNDLVL, true, 0, 1.0, 100, 2); //RED: Immediate Threat Pre End XB3
+        CustomSoundEmitter(BGM21, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: You Will Know Our Names Finale XBC3
+        CustomSoundEmitter(BGM23, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: You Will Know Our Names Finale Pre End XBC3
+      }
     }
   }
 }
 
-void StopMusic(){
-  shouldStopMusic = true;
-  ticksMusicBlu = 0;
-  refireTicksBlu = -1;
-  ticksMusicRed = 0;
-  refireTicksRed = -1;
+void RestartMusic(){
+  shouldMusicRestart = true;
+  /*
+  switch(stopForTeam){
+    case 0:{
+      ticksMusicBlu = -1;
+      refireTicksBlu = 0;
+      ticksMusicRed = -1;
+      refireTicksRed = 0;
+    }
+    case 2:{
+      ticksMusicRed = -1;
+      refireTicksRed = 0;
+    }
+    case 3:{
+      ticksMusicBlu = -1;
+      refireTicksBlu = 0;
+    }
+  }*/
 }
