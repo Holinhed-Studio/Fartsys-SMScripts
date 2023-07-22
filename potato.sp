@@ -2,7 +2,7 @@
 #include <sdktools>
 #include <sourcemod>
 #pragma newdecls required
-static char PLG_VER[8] = "1.2.5";
+static char PLG_VER[8] = "1.2.6";
 
 bool bgmPlaying = false;
 bool isTankAlive = false;
@@ -1199,27 +1199,27 @@ void PhaseChange(int reason){
       //Cap Stopped
       if(reason == 0){
 
-        curSongBlu = BGM20;
-        curPhaseBlu = BGM22;
-        curSongRed = BGM21;
-        curPhaseRed = BGM23;
+        curSongRed = BGM20;
+        curPhaseRed = BGM22;
+        curSongBlu = BGM21;
+        curPhaseBlu = BGM23;
         CreateTimer(0.1, UpdateMusicBlu);
         CreateTimer(0.1, UpdateMusicRed);
-        CustomSoundEmitter(BGM20, BGMSNDLVL, true, 0, 1.0, 100, 2); //RED: Immediate Threat XB3
-        CustomSoundEmitter(BGM22, BGMSNDLVL, true, 0, 0.05, 100, 2); //RED: Immediate Threat Pre End XB3
+        CustomSoundEmitter(BGM20, BGMSNDLVL, true, 1, 1.0, 100, 2); //RED: Immediate Threat XB3
+        CustomSoundEmitter(BGM22, BGMSNDLVL, true, 1, 0.05, 100, 2); //RED: Immediate Threat Pre End XB3
         CustomSoundEmitter(BGM21, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: You Will Know Our Names Finale XBC3
         CustomSoundEmitter(BGM23, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: You Will Know Our Names Finale Pre End XBC3
       }
       //Cap Started
       else if(reason == 1){
-        curSongBlu = BGM22;
-        curPhaseBlu = BGM20;
-        curSongRed = BGM23;
-        curPhaseRed = BGM21;
+        curSongRed = BGM22;
+        curPhaseRed = BGM20;
+        curSongBlu = BGM23;
+        curPhaseBlu = BGM21;
         CreateTimer(0.1, UpdateMusicBlu);
         CreateTimer(0.1, UpdateMusicRed);
-        CustomSoundEmitter(BGM20, BGMSNDLVL, true, 0, 0.05, 100, 2); //RED: Immediate Threat XB3
-        CustomSoundEmitter(BGM22, BGMSNDLVL, true, 0, 1.0, 100, 2); //RED: Immediate Threat Pre End XB3
+        CustomSoundEmitter(BGM20, BGMSNDLVL, true, 1, 0.05, 100, 2); //RED: Immediate Threat XB3
+        CustomSoundEmitter(BGM22, BGMSNDLVL, true, 1, 1.0, 100, 2); //RED: Immediate Threat Pre End XB3
         CustomSoundEmitter(BGM21, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: You Will Know Our Names Finale XBC3
         CustomSoundEmitter(BGM23, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: You Will Know Our Names Finale Pre End XBC3
       }
