@@ -2,6 +2,7 @@
 #include <sdktools>
 #include <sourcemod>
 #pragma newdecls required
+static char PLG_VER[8] = "1.2.2";
 
 bool bgmPlaying = false;
 bool isTankAlive = false;
@@ -33,7 +34,7 @@ static char BGM2Title[64] = "fartsy/music/brawler/fe_3h/thelongroad_rain.wav";
 static char BGM3Title[64] = "fartsy/music/brawler/fe_3h/thelongroad_thunder.wav";
 static char CANNONECHO[48] = "fartsy/misc/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-static char PLG_VER[8] = "1.2.0";
+//WARNING: Kill unused Teleports and Dests once swapped. PL1.RegenField to be enabled/disabled at the same time as PL1.CaptureArea. CRITICAL: Fire on pl.filterspawn<XX> team <x> when spawns change!
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
@@ -300,6 +301,8 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL3.CrateSpawner", "ForceSpawn", "", 12.0);
     FireEntityInput("PL1.CaptureArea", "Enable", "", 15.0);
     FireEntityInput("PL3.PayloadSpawner", "ForceSpawn", "", 15.0);
+    FireEntityInput("PL.Teleport01", "Disable", "", 0.0);
+    FireEntityInput("PL.Teleport02", "Enable", "", 0.1);
   }
   //PL3 Spawned
   case 8: {
@@ -431,11 +434,11 @@ public Action Command_Operator(int args) {
   }
   //PL5 deployed
   case 16:{
+    ChkPt = 6;
     PotatoLogger(LOG_DBG, "PL5 Captured. To Do: Play sound and blow up gate instead of *ding* you captured lulululululu~");
     FireEntityInput("PL5.CP", "SetOwner", "3", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
     FireEntityInput("PL1.CaptureArea", "Kill", "", 1.0);
-    FireEntityInput("CP1.CP", "SetLocked", "0", 0.0);
     FireEntityInput("PL5.Payload", "SetAnimation", "taunt_yetipunch", 0.0);
     FireEntityInput("PL5.Payload", "SetDefaultAnimation", "taunt_yetipunch", 0.1);
     FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.9", 1.2);
@@ -444,33 +447,55 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL5.Explo", "Explode", "", 4.5);
     FireEntityInput("PL5.Shake", "StartShake", "", 4.5);
     FireEntityInput("PL5.Door", "Kill", "", 4.5);
+    FireEntityInput("PL.KeepDoor", "Kill", "", 4.5);
+    FireEntityInput("PL.KeepDoorTrigger", "Kill", "", 4.5);
+    FireEntityInput("PL5.DoorFX", "Break", "", 4.5);
     FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track64", 4.9);
     FireEntityInput("PL1.TrackTrain", "Kill", "", 5.0);
     FireEntityInput("PL5.Payload", "Kill", "", 5.0);
+    FireEntityInput("CP1.CP", "SetLocked", "0", 5.0);
   }
   //CP1 Start Capture
   case 17:{
-    FireEntityInput("PL5.Payload", "SetAnimation", "taunt_yetipunch", 0.0);
-    FireEntityInput("PL5.Payload", "SetDefaultAnimation", "taunt_yetipunch", 1.0);
-    FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.9", 1.2);
-
+    FireEntityInput("CP1.SirenMDL", "AddOutput", "Skin 2", 0.0);
+    FireEntityInput("CP1.SirenMDL", "SetAnimation", "spin", 0.0);
   }
   //CP1 Capture Break
   case 18:{
+    FireEntityInput("CP1.SirenMDL", "AddOutput", "Skin 1", 0.0);
+    FireEntityInput("CP1.SirenMDL", "SetAnimation", "idle", 0.0);
 
   }
   //CP1 Captured
   case 19:{
-    //Unlock CTF1 after 60 seconds
+    ChkPt = 7;
+    FireEntityInput("PL.Tele01", "Kill", "", 0.0);
+    FireEntityInput("PL.Tele02", "Kill", "", 0.0);
+    FireEntityInput("CP1.SirenMDL", "AddOutput", "Skin 3", 0.0);
+    FireEntityInput("CP1.SirenMDL", "SetAnimation", "spin", 0.0);
+    FireEntityInput("PL.CPDoor", "Open", "", 0.0);
+    FireEntityInput("PL.Teleport02", "Disable", "", 0.0);
+    FireEntityInput("PL.Teleport03", "Enable", "", 0.1);
+    FireEntityInput("PL.CPDoorBarrier", "Disable", "", 60.0);
+    FireEntityInput("CTF1.CTF", "Enable", "", 60.0);
   }
   //CTF1 Captured
   case 20:{
-    FireEntityInput("PL.Spawn01", "Disable", "", 0.0);
-    FireEntityInput("PL.Spawn02", "Enable", "", 0.0);
+    //Swap spawn points, this isn't done yet
+    ChkPt = 8;
+    FireEntityInput("PL.Teleport00", "Disable", "", 0.0);
+    FireEntityInput("PL.Teleport04", "Enable", "", 0.1);
+    FireEntityInput("PL.FilterSpawn02", "setteam", "2", 0.1);
+    FireEntityInput("CTF1.CTF", "Kill", "", 0.1);
+    FireEntityInput("PL.Spawn00_FlagDetZone", "Kill", "", 0.1);
+    FireEntityInput("PL.Spawn03_FlagDetZone", "Enable", "", 1.0);
+    FireEntityInput("CTF2.CTF", "Enable", "", 5.0);
   }
   //CTF2 Captured
   case 21:{
-    ChkPt = 6;
+    ChkPt = 9;
+    FireEntityInput("CTF2.CTF", "Kill", "", 0.1);
+    FireEntityInput("PL.Spawn03_FlagDetZone", "Kill", "", 0.1);
     FireEntityInput("CP2.CP", "SetLocked", "0", 0.0);
   }
   //CP2 began capture
@@ -765,6 +790,7 @@ void PhaseChange(int type){
 }*/
 
 void PhaseChange(int reason){
+  //ChkPt is where we are in the map. Valid range is 1-9.
   switch(ChkPt){
     case 0:{
       PotatoLogger(LOG_ERR, "PhaseChange at chkpt 0 received, check code?");
@@ -792,6 +818,15 @@ void PhaseChange(int reason){
       }
     }
     case 6:{
+
+    }
+    case 7:{
+
+    }
+    case 8:{
+
+    }
+    case 9:{
 
     }
   }
