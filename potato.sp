@@ -2,7 +2,7 @@
 #include <sdktools>
 #include <sourcemod>
 #pragma newdecls required
-static char PLG_VER[8] = "1.2.7";
+static char PLG_VER[8] = "1.2.9";
 
 bool bgmPlaying = false;
 bool isTankAlive = false;
@@ -48,39 +48,38 @@ static char BGM20[64] = "fartsy/music/brawler/xbc3/immediatethreat.wav";
 static char BGM21[64] = "fartsy/music/brawler/xbc3/youwillknowournames_finale.wav";
 static char BGM22[64] = "fartsy/music/brawler/xbc3/immediatethreatpre.wav";
 static char BGM23[64] = "fartsy/music/brawler/xbc3/youwillknowournames_pre.wav";
-static char BGM0Title[64] = "fartsy/music/brawler/hw_aoc/aquietmoment.mp3";
-static char BGM1Title[64] = "fartsy/music/brawler/fe_w/chaossilence.wav";
-static char BGM2Title[64] = "fartsy/music/brawler/fe_3h/thelongroad_rain.wav";
-static char BGM3Title[64] = "fartsy/music/brawler/fe_3h/thelongroad_thunder.wav";
-static char BGM4Title[64] = "fartsy/music/brawler/fe_w/chaoshellishblaze.wav";
-static char BGM5Title[64] = "fartsy/music/brawler/fe_w/resoluteheartsilence.wav";
-static char BGM6Title[64] = "fartsy/music/brawler/demetori/nuclearfusion.wav";
-static char BGM7Title[64] = "fartsy/music/brawler/fe_w/resoluteheart.wav";
-static char BGM8Title[64] = "fartsy/music/brawler/demetori/riverstyx.wav";
-static char BGM9Title[64] = "fartsy/music/brawler/fe_3h/apex1_calm.wav";
-static char BGM10Title[64] = "fartsy/music/brawler/fe_3h/apex1_inferno.wav";
-static char BGM11Title[64] = "fartsy/music/brawler/ffxiv/battleatthebigbridgexiv.wav";
-static char BGM12Title[64] = "fartsy/music/brawler/fe_3h/apex2_calm.wav";
-static char BGM13Title[64] = "fartsy/music/brawler/fe_3h/apex2_inferno.wav";
-static char BGM14Title[64] = "";
-static char BGM15Title[64] = "";
-static char BGM16Title[64] = "";
-static char BGM17Title[64] = "";
-static char BGM18Title[64] = "";
-static char BGM19Title[64] = "";
-static char BGM20Title[64] = "";
-static char BGM21Title[64] = "";
-static char BGM22Title[64] = "";
-static char BGM23Title[64] = "";
-static char BGM24Title[64] = "";
-static char CANNONECHO[48] = "fartsy/misc/brawler/cannon_echo.mp3"; //MAKE ME EXIST PLS AND ADD ME (AS WELL AS THE KISSONE TANK MATERIALS) TO PAKINCLUDE FOR POTATO
+static char BGM0Title[64] = "Hyrule Warriors AOC - A Quiet Moment";
+static char BGM1Title[64] = "Fire Emblem W - Chaos (Silence)";
+static char BGM2Title[64] = "Fire Emblem 3H - The Long Road (Rain)";
+static char BGM3Title[64] = "Fire Emblem 3H - The Long Road (Thunder)";
+static char BGM4Title[64] = "Fire Emblem W - Chaos (Hellish Blaze)";
+static char BGM5Title[64] = "Fire Emblem W - Resolute Heart (Silence)";
+static char BGM6Title[64] = "Demetori - Nuclear Fusion";
+static char BGM7Title[64] = "Fire Emblem W - Resolute Heart";
+static char BGM8Title[64] = "Demetori - View of the River Styx";
+static char BGM9Title[64] = "Fire Emblem W - Apex of the World P1 (Embers)";
+static char BGM10Title[64] = "Fire Emblem W - Apex of the World P1 (Inferno)";
+static char BGM11Title[64] = "Final Fantasy XIV - Battle At The Big Bridge";
+static char BGM12Title[64] = "Fire Emblem W - Apex of the World P2 (Embers)";
+static char BGM13Title[64] = "Fire Emblem W - Apex of the World P2 (Inferno)";
+static char BGM14Title[64] = "Kirby Forgotten Land - Two Planets Approach the Roche Limit P1";
+static char BGM15Title[64] = "Super Smash Bros. Brawl - Boss Battle 1";
+static char BGM16Title[64] = "Kirby Forgotten Land - Two Planets Approach the Roche Limit P2";
+static char BGM17Title[64] = "Xenoblade Chronicles 1R - You Will Know Our Names";
+static char BGM18Title[64] = "Xenoblade Chronicles 1R - Visions of the Future";
+static char BGM19Title[64] = "Xenoblade Chronicles 2 - You Will Recall Our Names";
+static char BGM20Title[64] = "Xenoblade Chronicles 3 - Immediate Threat";
+static char BGM21Title[64] = "Xenoblade Chronicles 3 - You Will Know Our Names (Finale)";
+static char BGM22Title[64] = "Xenoblade Chronicles 3 - Immediate Threat (Pre End)";
+static char BGM23Title[64] = "Xenoblade Chronicles 3 - You Will Know Our Names (Pre End)";
+static char CANNONECHO[48] = "fartsy/misc/brawler/cannon_echo.mp3";
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-//WARNING: Kill unused Teleports and Dests once swapped. PL1.RegenField to be enabled/disabled at the same time as PL1.CaptureArea. CRITICAL: Fire on pl.filterspawn<XX> team <x> when spawns change!
+//WARNING: Kill unused Teleports and Dests once swapped. PL1.RegenField to be enabled/disabled at the same time as PL1.CaptureArea. CRITICAL: Fire on pl.filterspawn<XX> team <x> when spawns change! Also, PL<x>.DeathPit to be enabled when Pl deployed.
+static int BGMSNDLVL = 95;
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
 static int LOG_ERR = 3;
-static int BGMSNDLVL = 95;
 static int SNDCHAN = 6;
 static char TSPWN[32] = "fartsy/misc/brawler/pl_tank.mp3";
 static char TBGM0[16] = "test/bgm0.mp3";
@@ -592,6 +591,7 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.TrackTrain", "AddOutput", "height 10", 0.0);
     FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track41", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
+    FireEntityInput("PL.SpawnDoor00_1Trigger", "Enable", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL3.CP", 1.0);
     FireEntityInput("PL.TankBoomSND", "PlaySound", "", 8.0);
     FireEntityInput("PL.TankExplo", "Explode", "", 8.0);
@@ -985,7 +985,7 @@ public Action TankPingTimer(Handle timer) {
     int tankHP = GetEntProp(tank, Prop_Data, "m_iHealth");
     int tankMaxHP = GetEntProp(tank, Prop_Data, "m_iMaxHealth");
     if (tankHP > 500000) {
-      PrintToChatAll("BLUE TANK IS DEPLOYING ITS BOMB.");
+      PotatoLogger(LOG_DBG, "BLUE TANK IS DEPLOYING ITS BOMB.");
       return Plugin_Stop;
     } else {
       float p = float(tankHP) / float(tankMaxHP);
