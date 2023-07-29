@@ -5,6 +5,8 @@
 static char PLG_VER[8] = "1.2.9";
 
 bool bgmPlaying = false;
+bool canTornado = false;
+bool tickWeather = false;
 bool isTankAlive = false;
 bool musicInitializedBlu, musicInitializedRed = false;
 bool shouldMusicRestart = false;
@@ -74,7 +76,11 @@ static char BGM22Title[64] = "Xenoblade Chronicles 3 - Immediate Threat (Pre End
 static char BGM23Title[64] = "Xenoblade Chronicles 3 - You Will Know Our Names (Pre End)";
 static char CANNONECHO[48] = "fartsy/misc/brawler/cannon_echo.mp3";
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
-//WARNING: Kill unused Teleports and Dests once swapped. PL1.RegenField to be enabled/disabled at the same time as PL1.CaptureArea. CRITICAL: Fire on pl.filterspawn<XX> team <x> when spawns change! Also, PL<x>.DeathPit to be enabled when Pl deployed.
+/*WARNING: Kill unused Teleports and Dests once swapped. PL1.RegenField to be enabled/disabled at the same time as PL1.CaptureArea. CRITICAL: Fire on pl.filterspawn<XX> team <x> when spawns change! Also, PL<x>.DeathPit to be enabled when Pl deployed.
+ NOTE: tornadowarn00 and tornadowarn01 are generic warnings
+ tornadowarn02 is for blu team only
+ tornadowarn03 is for red team only
+*/
 static int BGMSNDLVL = 95;
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
@@ -94,6 +100,7 @@ int BGMINDEX = 0;
 int ChkPt = 1;
 int refireTicksBlu, refireTicksRed = 0;
 int stopForTeam = 0;
+int stormIntensity = 0;
 int ticksMusicBlu, ticksMusicRed = 0;
 
 public Plugin myinfo = {
@@ -838,6 +845,23 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL5.Payload", "SetDefaultAnimation", "stand_ITEM1", 0.2);
     FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.5", 1.1);
   }
+  //Tornado should start
+  case 26:{
+    if(canTornado){
+      FireEntityInput("F1_Debris", "Start", "", 1.0);
+      FireEntityInput("F1_Core", "Start", "", 2.5);
+    }
+  }
+  //Tornado should end
+  case 27:{
+    if(canTornado){
+      FireEntityInput("F1_Debris", "Stop", "", 1.0);
+      FireEntityInput("F1_Core", "Stop", "", 2.5);
+    }
+    else{
+      FireEntityInput("F1_Meso", "Stop", "", 0.0);
+    }
+  }
   //Cart on Bridge
   case 94:{
     PhaseChange(3);
@@ -870,6 +894,7 @@ public Action Command_Operator(int args) {
   //Setup begin
   case 99:{
     QueueMusicSystem();
+    QueueWeatherSystem();
   }
   //Setup finished
   case 100:{
@@ -927,6 +952,7 @@ public Action Command_Operator(int args) {
   }
   return Plugin_Handled;
 }
+
 //Timed operator, handle specific requests
 public Action TimedOperator(Handle timer, int opCode) {
   switch (opCode) {
@@ -973,6 +999,61 @@ void QueueMusicSystem() {
   tickMusic = true;
 }
 
+//Prepare the weather system
+void QueueWeatherSystem() {
+  PotatoLogger(LOG_INFO, "{aqua}[TENGINE] {white}Weather {limegreen}v4{white} is good to go!");
+  CreateTimer(10.0, RunWeatherSystem);
+  stormintensity = 0;
+  tickWeather = true;
+}
+
+//Run the weather system
+public Action RunWeatherSystem(Handle timer){
+  if(tickWeather){
+    PotatoLogger(LOG_ERR, "CRITICAL: RunWeatherSystem IS NOT FINISHED. WEATHER WILL NOT WORK.");
+    int i = GetRandomInt(1, 16);
+    switch(i){
+      case 1:{
+
+      }
+      case 2:{
+
+      }
+      case 3:{
+
+      }
+      case 4:{
+
+      }
+      case 5:{
+        
+      }
+      case 6:{
+
+      }
+      case 7:{
+
+      }
+      case 8:{
+
+      }
+      case 9:{
+
+      }
+      case 10:{
+
+      }
+    }
+    CreateTimer(1.0, RunWeatherSystem);
+  }
+  if(stormIntensity >= 16){
+    canTornado = true;
+  }
+  else{
+    canTornado = false;
+  }
+  return Plugin_Stop;
+}
 //Tank Checker
 public Action TankPingTimer(Handle timer) {
   int tank = FindEntityByClassname(-1, "tank_boss"); //check if tank is alive
@@ -1005,7 +1086,7 @@ public Action TankHealthTimer(Handle timer) {
   return Plugin_Stop;
 }
 
-//Create temp entity, fire input
+//Control map entities
 public Action FireEntityInput(char[] strTargetname, char[] strInput, char[] strParameter, float flDelay) {
   char strBuffer[255];
   Format(strBuffer, sizeof(strBuffer), "OnUser1 %s:%s:%s:%f:1", strTargetname, strInput, strParameter, flDelay);
@@ -1023,7 +1104,7 @@ public Action FireEntityInput(char[] strTargetname, char[] strInput, char[] strP
   return Plugin_Handled;
 }
 
-//Remove edict allocated by temp entity
+//Cleanup
 public Action DeleteEdict(Handle timer, any entity) {
   if (IsValidEdict(entity)) RemoveEdict(entity);
   return Plugin_Stop;
@@ -1100,21 +1181,8 @@ void CustomSoundEmitter(char[] sndName, int SNDLVL, bool isBGM, int flags, float
   }
 }
 
-/*
-//Phase Reaction Chamber
-void PhaseChange(int type){
-  PL1 changes to thunder and base once cart goes underground for BLU ONLY.
-  PL1 red team ONLY HEARS one song. They are not affected by any changes to blue.
-  PL2 NO CHANGES (if pl2, return;)
-  PL3 NO CHANGES (if pl3, return;)
-  PL4 River sticks red, blue gets calm version when not pushing, intense when pushing
-  PL5 red gets battle at big bridge no changes, blue gets apex pt 2 calm, upon reaching bridge blue gets intense apex pt 2
-  CP1 no changes, once capped and 60 second timer will have a music segment
-  CTF1 Kirby phase 2 red, you will know our names remastered blue
-  CTF2 no changes
-  CP2 both teams on capping, song changes for BOTH teams. Red: Immediate Threat/Alt Immediate Threat, Blue: You will know our names/Alt You will know our names
-}*/
 
+//Phase Reaction Chamber
 void PhaseChange(int reason){
   //ChkPt is where we are in the map. Valid range is 1-9.
   switch(ChkPt){
@@ -1229,21 +1297,4 @@ void PhaseChange(int reason){
 
 void RestartMusic(){
   shouldMusicRestart = true;
-  /*
-  switch(stopForTeam){
-    case 0:{
-      ticksMusicBlu = -1;
-      refireTicksBlu = 0;
-      ticksMusicRed = -1;
-      refireTicksRed = 0;
-    }
-    case 2:{
-      ticksMusicRed = -1;
-      refireTicksRed = 0;
-    }
-    case 3:{
-      ticksMusicBlu = -1;
-      refireTicksBlu = 0;
-    }
-  }*/
 }
