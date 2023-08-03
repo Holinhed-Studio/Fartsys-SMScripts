@@ -6,6 +6,7 @@ static char PLG_VER[8] = "1.2.9";
 
 bool bgmPlaying = false;
 bool canTornado = false;
+bool tickTornado = false;
 bool tickWeather = false;
 bool isTankAlive = false;
 bool musicInitializedBlu, musicInitializedRed = false;
@@ -17,13 +18,10 @@ bool spawnPl4 = true;
 char charHP[16];
 char curPhaseBlu[256];
 char curPhaseRed[256];
-char curSongBlu[256];
-char curSongRed[256];
-char prevPhaseBlu[256];
-char prevPhaseRed[256];
-char prevSongBlu[256];
-char prevSongRed[256];
-char songNameRed[256], songNameBlu[256] = "null";
+char curSongBlu[256], curSongRed[256];
+char prevPhaseBlu[256], prevPhaseRed[256];
+char prevSongBlu[256], prevSongRed[256];
+char songNameBlu[256], songNameRed[256];
 char tankStatus[128];
 
 static char BGM0[64] = "fartsy/music/brawler/hw_aoc/aquietmoment.mp3";
@@ -77,9 +75,13 @@ static char BGM23Title[64] = "Xenoblade Chronicles 3 - You Will Know Our Names (
 static char CANNONECHO[48] = "fartsy/misc/brawler/cannon_echo.mp3";
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
 /*WARNING: Kill unused Teleports and Dests once swapped. PL1.RegenField to be enabled/disabled at the same time as PL1.CaptureArea. CRITICAL: Fire on pl.filterspawn<XX> team <x> when spawns change! Also, PL<x>.DeathPit to be enabled when Pl deployed.
- NOTE: tornadowarn00 and tornadowarn01 are generic warnings
+ NOTE: tornadowarn00, tornadowarn01, and tornadowarn04 are generic warnings
  tornadowarn02 is for blu team only
  tornadowarn03 is for red team only
+ NOTE: tank00 and tank03 are generic tank warnings
+ tank01 is red only
+ tank02 is red only
+ tank04 is red only
 */
 static int BGMSNDLVL = 95;
 static int LOG_CORE = 0;
@@ -147,62 +149,117 @@ public void OnPluginStart() {
   RegServerCmd("fb_operator", Command_Operator, "Server-side only. Does nothing when excecuted as client.");
 }
 
-///Music system
-public void OnGameFrame(){
-  if (tickMusic){
-  //Stop music if requested.
-  //&& (ticksMusicRed == refireTicksRed - 1)
-  if (shouldMusicRestart) {
-    for (int i = 1; i <= MaxClients; i++) {
-      PotatoLogger(LOG_DBG, "Stopping Music");
-      switch(stopForTeam){
-        case 0:{
-          StopSound(i, SNDCHAN, prevPhaseBlu);
-          StopSound(i, SNDCHAN, prevPhaseRed);
-          StopSound(i, SNDCHAN, prevSongBlu);
-          StopSound(i, SNDCHAN, prevSongRed);
-          musicInitializedBlu = false;
-          musicInitializedRed = false;
-          ticksMusicBlu = -5;
-          refireTicksBlu = 0;
-          ticksMusicRed = -5;
-          refireTicksRed = 0;
-        }
-        case 2:{
-          PotatoLogger(LOG_DBG, "Stopping for Team RED prevPhaseRed %s prevSongRed %s");
-          StopSound(i, SNDCHAN, prevPhaseRed);
-          StopSound(i, SNDCHAN, prevSongRed);
-          musicInitializedRed = false;
-          ticksMusicRed = -5;
-          refireTicksRed = 0;
-        }
-        case 3:{
-          StopSound(i, SNDCHAN, prevPhaseBlu);
-          StopSound(i, SNDCHAN, prevSongBlu);
-          musicInitializedBlu = false;
-          ticksMusicBlu = -5;
-          refireTicksBlu = 0;
-        }
-      }
-      stopForTeam = 0;
-      shouldMusicRestart = false;
+//Find an entity by its targetname
+stock int FindEntityByTargetname(int startEnt, const char[] TargetName, bool caseSensitive, bool Contains)    // Same as FindEntityByClassname with sensitivity and contain features
+{
+  int entCount = GetEntityCount();
+  //PrintToServer("EntCount was %i", entCount);
+  char EntTargetName[300];
+  for (int i = startEnt + 1; i < entCount; i++){
+    if (!IsValidEntity(i))
+      continue;
+    else if (!IsValidEdict(i))
+      continue;
+    GetEntPropString(i, Prop_Data, "m_iName", EntTargetName, sizeof(EntTargetName));
+    if ((StrEqual(EntTargetName, TargetName, caseSensitive) && !Contains) || (StrContains(EntTargetName, TargetName, caseSensitive) != -1 && Contains)){
+      char D[256];
+      Format (D, sizeof(D), "Ent %i, targetname %s", i, EntTargetName);
+      PotatoLogger(LOG_DBG, D);
+      return i;
     }
   }
-  //Start something if bgm is not playing
-  if (!bgmPlaying) {
-    refireTicksRed = 5900;
-    ticksMusicRed = 0;
-    refireTicksBlu = 5900;
-    ticksMusicBlu = 0;
-    bgmPlaying = true;
-    curSongBlu = BGM0;
-    curSongRed = BGM0;
-    CreateTimer(0.5, UpdateMusicBlu);
-    CreateTimer(0.5, UpdateMusicRed);
-    CustomSoundEmitter(BGM0, BGMSNDLVL, true, 0, 1.0, 100, 0);
+  return -1;
+}
+
+public void OnGameFrame(){
+  //tick music
+  if (tickMusic){
+    //Stop music if requested.
+    if (shouldMusicRestart) {
+      for (int i = 1; i <= MaxClients; i++) {
+        if (!prevSongBlu || !prevSongRed){
+          break;
+        }
+        if (IsClientInGame(i)){
+          char StopLog[128];
+          Format(StopLog, sizeof(StopLog), "Stopping music for client %N", i);
+          PotatoLogger(LOG_DBG, StopLog);
+          switch(stopForTeam){
+            case 0:{
+              StopSound(i, SNDCHAN, prevPhaseBlu);
+              StopSound(i, SNDCHAN, prevPhaseRed);
+              StopSound(i, SNDCHAN, prevSongBlu);
+              StopSound(i, SNDCHAN, prevSongRed);
+              musicInitializedBlu = false;
+              musicInitializedRed = false;
+              ticksMusicBlu = -5;
+              refireTicksBlu = 0;
+              ticksMusicRed = -5;
+              refireTicksRed = 0;
+            }
+            case 2:{
+              PotatoLogger(LOG_DBG, "Stopping for Team RED prevPhaseRed %s prevSongRed %s");
+              StopSound(i, SNDCHAN, prevPhaseRed);
+              StopSound(i, SNDCHAN, prevSongRed);
+              musicInitializedRed = false;
+              ticksMusicRed = -5;
+              refireTicksRed = 0;
+            }
+            case 3:{
+              StopSound(i, SNDCHAN, prevPhaseBlu);
+              StopSound(i, SNDCHAN, prevSongBlu);
+              musicInitializedBlu = false;
+              ticksMusicBlu = -5;
+              refireTicksBlu = 0;
+            }
+          }
+          stopForTeam = 0;
+          shouldMusicRestart = false;
+        }
+      }
+    }
+    //Start something if bgm is not playing
+    if (!bgmPlaying) {
+      refireTicksRed = 5900;
+      ticksMusicRed = 0;
+      refireTicksBlu = 5900;
+      ticksMusicBlu = 0;
+      bgmPlaying = true;
+      curSongBlu = BGM0;
+      curSongRed = BGM0;
+      CreateTimer(0.5, UpdateMusicBlu);
+      CreateTimer(0.5, UpdateMusicRed);
+      CustomSoundEmitter(BGM0, BGMSNDLVL, true, 0, 1.0, 100, 0);
+    }
+    tickMusicRed();
+    tickMusicBlu();
   }
-  tickMusicRed();
-  tickMusicBlu();
+  //tick tornado
+  if (tickTornado){
+    int Ent = FindEntityByTargetname(-1, "track2", true, true);
+    if (Ent == -1) {
+      //PrintToChatAll("Ent not found");
+      return;
+    } else {
+      char t[300];
+      GetEntPropString(Ent, Prop_Data, "m_iName", t, sizeof(t));
+      PrintToChatAll("Entity %s with index %i found!", t, Ent)
+      float destination[3];
+      destination[0] = 0.0;
+      destination[1] = 0.0;
+      destination[2] = 0.0;
+      float position[3];
+      char targetname[128];
+      GetEntPropString(Ent, Prop_Data, "m_iName", targetname, sizeof(targetname));
+      if (StrEqual(targetname, "track2")) {
+        GetEntPropVector(Ent, Prop_Send, "m_vecOrigin", position);
+        destination[0] = position[0] + 100.0;
+        destination[1] = position[1] + 100.0;
+        destination[2] = position[2];
+        TeleportEntity(Ent, destination, NULL_VECTOR, NULL_VECTOR);
+        PrintToConsoleAll("Teleporting track2 to %d %d %d", destination[0], destination[1], destination[2]);
+      }
+    }
   }
 }
 
@@ -545,6 +602,7 @@ public Action Command_Operator(int args) {
     isTankAlive = true;
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "69", 0.0);
     FireEntityInput("PL.WatcherA", "SetSpeedForwardModifier", "0.5", 0.0);
+    FireEntityInput("TornadoPathing", "ForceSpawn", "", 0.0);
     CreateTimer(7.0, TankPingTimer);
   }
   //PL2 (Tank) Killed
@@ -902,6 +960,18 @@ public Action Command_Operator(int args) {
     RestartMusic();
     FireEntityInput("PL.SpawnDoorTrigger00", "Enable", "", 0.0);
   }
+  //debug
+  case 9000:{
+    FireEntityInput("TankBossA", "AddOutput", "target PL1.Track17", 0.0);
+  }
+  //debug
+  case 9001:{
+    FireEntityInput("f1_core", "Start", "", 1.0);
+    tickTornado = true;
+  }
+  case 9002:{
+    FireEntityInput("TornadoPathing", "ForceSpawn", "", 1.0);
+  }
   case 9010: {
     CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
     CustomSoundEmitter(TBGM4, BGMSNDLVL - 10, true, 1, 0.05, 100, 0);
@@ -985,6 +1055,9 @@ public Action TimedOperator(Handle timer, int opCode) {
   case 5:{
     spawnPl4 = true;
   }
+  case 6:{
+    FireEntityInput("T0x*", "Kill", "", 0.0);
+  }
   }
 }
 
@@ -1001,47 +1074,51 @@ void QueueMusicSystem() {
 
 //Prepare the weather system
 void QueueWeatherSystem() {
-  PotatoLogger(LOG_INFO, "{aqua}[TENGINE] {white}Weather {limegreen}v4{white} is good to go!");
+  //PotatoLogger(LOG_INFO, "{aqua}[TENGINE] {white}Weather {limegreen}v4{white} is good to go!");
+  PotatoLogger(LOG_ERR, "CRITICAL: RunWeatherSystem IS NOT FINISHED. WEATHER WILL NOT WORK.");
   CreateTimer(10.0, RunWeatherSystem);
-  stormintensity = 0;
+  CreateTimer(3.0, TimedOperator, 6);
+  stormIntensity = 0;
   tickWeather = true;
 }
 
 //Run the weather system
 public Action RunWeatherSystem(Handle timer){
   if(tickWeather){
-    PotatoLogger(LOG_ERR, "CRITICAL: RunWeatherSystem IS NOT FINISHED. WEATHER WILL NOT WORK.");
+    if (stormIntensity < 1){
+      stormIntensity = 1;
+    }
     int i = GetRandomInt(1, 16);
     switch(i){
       case 1:{
-
+        stormIntensity++;
       }
       case 2:{
-
+        stormIntensity--;
       }
       case 3:{
-
+        stormIntensity++;
       }
       case 4:{
-
+        stormIntensity--;
       }
       case 5:{
-        
+        stormIntensity++;
       }
       case 6:{
-
+        stormIntensity++;
       }
       case 7:{
-
+        stormIntensity--;
       }
       case 8:{
-
+        stormIntensity++;
       }
       case 9:{
-
+        stormIntensity--;
       }
       case 10:{
-
+        stormIntensity++;
       }
     }
     CreateTimer(1.0, RunWeatherSystem);
