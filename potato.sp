@@ -2,7 +2,7 @@
 #include <sdktools>
 #include <sourcemod>
 #pragma newdecls required
-static char PLG_VER[8] = "1.2.9";
+static char PLG_VER[8] = "1.3.0";
 
 bool bgmPlaying = false;
 bool canTornado = false;
@@ -14,7 +14,7 @@ bool shouldMusicRestart = false;
 bool tankDeploy = false;
 bool tickMusic = false;
 bool spawnPl4 = true;
-
+int tmov = 1;
 char charHP[16];
 char curPhaseBlu[256];
 char curPhaseRed[256];
@@ -148,7 +148,159 @@ public void OnPluginStart() {
   PrecacheSound(CANNONECHO, true);
   RegServerCmd("fb_operator", Command_Operator, "Server-side only. Does nothing when excecuted as client.");
 }
+//Queue music for client.
+public void OnClientPostAdminCheck(int client){
+  int i = GetClientCount(true);
+  PrintToServer("Client %N spawned with %i players total", client, i);
+  if (i <= 1){
+    return;
+  } else {
+    CreateTimer(1.0, QueueMusicForClient, client);
+  }
+}
+//Restart music when empty
+public void OnClientDisconnect(int client){
+  CreateTimer(1.0, CheckIfEmpty);
+}
 
+public Action CheckIfEmpty(Handle timer){
+  int i = GetClientCount(true);
+  if (i <= 0){
+    PrintToServer("Server is empty. Stopping the music queue.");
+    tickMusic = false;
+    musicInitializedBlu = false;
+    musicInitializedRed = false;
+    bgmPlaying = false;
+    BGMINDEX = 0;
+    shouldMusicRestart = false;
+    stopForTeam = 0;
+    curSongBlu = "";
+    curSongRed = "";
+    prevSongBlu = "";
+    prevSongRed = "";
+    refireTicksBlu = 0;
+    refireTicksRed = 0;
+    ticksMusicBlu = 0;
+    ticksMusicRed = 0;
+  }
+}
+
+public Action QueueMusicForClient(Handle timer, int client){
+  PrintToServer("Attempting to play music for client %N", client);
+  if(IsClientInGame(client) && !IsFakeClient(client)){
+    if(GetClientTeam(client) == 0){
+      CreateTimer(1.0, QueueMusicForClient, client);
+    }
+    else if (GetClientTeam(client) == 2){
+      switch (BGMINDEX){
+        //Setup Music, 90s clip
+        case 0:{
+          CSEClient(client, BGM0, BGMSNDLVL, true, 1, 1.0, 100);
+        }
+        //PL 1, RED Chaos Silence
+        case 1:{
+          CSEClient(client, BGM1, BGMSNDLVL, true, 1, 1.0, 100); //RED: Chaos Silence
+          CSEClient(client, BGM4, BGMSNDLVL, true, 1, 0.05, 100); //RED: Chaos Hellish Blaze
+        }
+        //PL 2, RED Chaos Hellish Blaze
+        case 2:{
+          CSEClient(client, BGM1, BGMSNDLVL, true, 1, 0.05, 100); //RED: Chaos Silence
+          CSEClient(client, BGM4, BGMSNDLVL, true, 1, 1.0, 100); //RED: Chaos Hellish Blaze
+        }
+        //PL 3, RED Demetori Nuclear Fusion
+        case 3:{
+          CSEClient(client, BGM6, BGMSNDLVL, true, 0, 1.0, 100); //RED: Nuclear Fusion
+        }
+        //PL 4, RED View of the River Styx
+        case 4:{
+          CSEClient(client, BGM8, BGMSNDLVL, true, 0, 1.0, 100); //RED: View of the River Styx
+        }
+        //PL 5, Battle at the Big Bridge XIV
+        case 5:{
+          CSEClient(client, BGM11, BGMSNDLVL, true, 0, 1.0, 100); //RED: Battle at the Big Bridge XIV
+        }
+        //CP1, Two Planets Approach the Roche Limit P1
+        case 6:{
+          CSEClient(client, BGM14, BGMSNDLVL, true, 0, 1.0, 100); //RED: Two Planets Approach the Roche Limit Phase 1
+        }
+        //Int 1 Two Planets Approach the Roche Limit P2
+        case 7:{
+          CSEClient(client, BGM16, BGMSNDLVL, true, 0, 1.0, 100); //RED: Two Planets Approach the Roche Limit Phase 2
+        }
+        //Int 2 Visions of the Future XBR
+        case 8:{
+          CSEClient(client, BGM18, BGMSNDLVL, true, 0, 1.0, 100); //RED: Visions of the Future XBR
+        }
+        //CP 2 Immediate Threat, pre end while being capped.
+        case 9:{
+          CSEClient(client, BGM20, BGMSNDLVL, true, 1, 1.0, 100); //RED: Immediate Threat XB3
+          CSEClient(client, BGM22, BGMSNDLVL, true, 1, 0.05, 100); //RED: Immediate Threat Pre End XB3
+        }
+      }
+    }
+    else if (GetClientTeam(client) == 3){
+      switch (BGMINDEX){
+        //Setup Music, 90s clip
+        case 0:{
+          CSEClient(client, BGM0, BGMSNDLVL, true, 1, 1.0, 100);
+        }
+        //PL 1, BLU Long Road
+        case 1:{
+            CSEClient(client, BGM2, BGMSNDLVL, true, 1, 1.0, 100); //BLU: Long Road Rain
+            CSEClient(client, BGM3, BGMSNDLVL, true, 1, 0.05, 100); //BLU: Long Road Thunder (Play at 0.5 when phase change happens.)
+        }
+        //PL2 BLU Resolute Heart Siilence
+        case 2:{
+          CSEClient(client, BGM5, BGMSNDLVL, true, 1, 1.0, 100); //BLU: Resolute Heart Silence
+          CSEClient(client, BGM7, BGMSNDLVL, true, 1, 0.05, 100); //BLU: Resolute Heart
+        }
+        //PL3 BLU Resolute Heart
+        case 3:{
+          CSEClient(client, BGM5, BGMSNDLVL, true, 1, 0.05, 100); //BLU: Resolute Heart Silence
+          CSEClient(client, BGM7, BGMSNDLVL, true, 1, 1.0, 100); //BLU: Resolute Heart 
+        }
+        //PL4 BLU Apex of the World P1, changes phase when cart pushing.
+        case 4:{
+            CSEClient(client, BGM9, BGMSNDLVL, true, 1, 1.0, 100); //BLU: Apex pt1 Calm
+            CSEClient(client, BGM10, BGMSNDLVL, true, 1, 0.05, 100); //BLU: Apex pt1 Inferno 
+        }
+        //PL5 BLU Apex of the World P2, changes when cart on bridge.
+        case 5:{
+          CSEClient(client, BGM12, BGMSNDLVL, true, 1, 1.0, 100); //BLU: Apex pt2 Calm
+          CSEClient(client, BGM13, BGMSNDLVL, true, 1, 0.05, 100); //BLU: Apex pt2 Inferno 
+        }
+        //CP1 BLU SSBB Boss Battle 1
+        case 6:{
+          CSEClient(client, BGM15, BGMSNDLVL, true, 1, 1.0, 100); //BLU: Smash Brawl Boss Battle 1
+        }
+        //Int 1 BLU You Will Know Our Names XBR
+        case 7:{
+          CSEClient(client, BGM17, BGMSNDLVL, true, 1, 1.0, 100); //BLU: You Will Know Our Names Remaster
+        }
+        //Int 2 BLU You Will Recall Our Names XBC2
+        case 8:{
+          CSEClient(client, BGM19, BGMSNDLVL, true, 1, 1.0, 100); //BLU: You Will Recall Our Names XBC2
+        }
+        //CP 2 Blu You Will Know Our Names Finale XBC3, Pre End while capping
+        case 9:{
+          CSEClient(client, BGM21, BGMSNDLVL, true, 1, 1.0, 100); //BLU: You Will Know Our Names Finale XBC3
+          CSEClient(client, BGM23, BGMSNDLVL, true, 1, 0.05, 100); //BLU: You Will Know Our Names Finale Pre End XBC3
+        }
+      }
+    }
+  }
+}
+
+//Play sound to client
+void CSEClient(int client, char[] sndName, int SNDLVL, bool isBGM, int flags, float vol, int pitch){
+  if(isBGM && true){//see below
+    PotatoLogger(LOG_DBG, "Client got BGM!");
+    EmitSoundToClient(client, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
+  } else if (!isBGM && true){
+    PotatoLogger(LOG_DBG, "Client got SFX!");
+    EmitSoundToClient(client, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
+  }
+}
 //Find an entity by its targetname
 stock int FindEntityByTargetname(int startEnt, const char[] TargetName, bool caseSensitive, bool Contains)    // Same as FindEntityByClassname with sensitivity and contain features
 {
@@ -162,9 +314,9 @@ stock int FindEntityByTargetname(int startEnt, const char[] TargetName, bool cas
       continue;
     GetEntPropString(i, Prop_Data, "m_iName", EntTargetName, sizeof(EntTargetName));
     if ((StrEqual(EntTargetName, TargetName, caseSensitive) && !Contains) || (StrContains(EntTargetName, TargetName, caseSensitive) != -1 && Contains)){
-      char D[256];
-      Format (D, sizeof(D), "Ent %i, targetname %s", i, EntTargetName);
-      PotatoLogger(LOG_DBG, D);
+      //char D[256];
+      //Format (D, sizeof(D), "Ent %i, targetname %s", i, EntTargetName);
+      //PotatoLogger(LOG_DBG, D);
       return i;
     }
   }
@@ -172,7 +324,7 @@ stock int FindEntityByTargetname(int startEnt, const char[] TargetName, bool cas
 }
 
 public void OnGameFrame(){
-  //tick music
+  //Music system
   if (tickMusic){
     //Stop music if requested.
     if (shouldMusicRestart) {
@@ -243,7 +395,7 @@ public void OnGameFrame(){
     } else {
       char t[300];
       GetEntPropString(Ent, Prop_Data, "m_iName", t, sizeof(t));
-      PrintToChatAll("Entity %s with index %i found!", t, Ent)
+      //PrintToChatAll("Entity %s with index %i found!", t, Ent)
       float destination[3];
       destination[0] = 0.0;
       destination[1] = 0.0;
@@ -253,16 +405,67 @@ public void OnGameFrame(){
       GetEntPropString(Ent, Prop_Data, "m_iName", targetname, sizeof(targetname));
       if (StrEqual(targetname, "track2")) {
         GetEntPropVector(Ent, Prop_Send, "m_vecOrigin", position);
-        destination[0] = position[0] + 100.0;
-        destination[1] = position[1] + 100.0;
+        if(position[0] >= 6400.0 || position[1] >= 5400.0){
+          PrintToChatAll("uh oh");
+          destination[0] = position[0] - 1.75;
+          destination[1] = position[1] - 1.75;
+        }
+        else if(position[0] <= -4800 || position[1] <= -3200){
+          destination[0] = position[0] + 1.75;
+          destination[1] = position[1] + 1.75;
+        }
+        else{
+          switch(tmov){
+            case 1:{
+              destination[0] = position[0] + 1.75;
+              destination[1] = position[1] + 1.75;    
+            }
+            case 2:{
+              destination[0] = position[0] - 1.75;
+              destination[1] = position[1] - 1.75;
+            }
+            case 3:{
+              destination[0] = position[0] + 1.75;
+              destination[1] = position[1] - 1.75;
+            }
+            case 4:{
+              destination[0] = position[0] - 1.75;
+              destination[1] = position[1] + 1.75;
+            }
+          }
+        }
         destination[2] = position[2];
         TeleportEntity(Ent, destination, NULL_VECTOR, NULL_VECTOR);
-        PrintToConsoleAll("Teleporting track2 to %d %d %d", destination[0], destination[1], destination[2]);
+        //PrintToConsoleAll("Teleporting track2 from %f %f %f to %f %f %f", position[0], position[1], position[2], destination[0], destination[1], destination[2]);
       }
     }
   }
 }
 
+public Action TornadoTimer(Handle timer){
+  if (!tickTornado){
+    return Plugin_Stop;
+  }
+  else{
+    int x = GetRandomInt(1, 4);
+    switch(x){
+      case 1:{
+        tmov = 1;
+      }
+      case 2:{
+        tmov = 2;
+      }
+      case 3:{
+        tmov = 3;
+      }
+      case 4:{
+        tmov = 4;
+      }
+    }
+    float f = GetRandomFloat(5.0, 20.0);
+    CreateTimer(f, TornadoTimer);
+  }
+}
 //Tick Music for Blu Team
 void tickMusicBlu(){
   ticksMusicBlu++;
@@ -920,6 +1123,9 @@ public Action Command_Operator(int args) {
       FireEntityInput("F1_Meso", "Stop", "", 0.0);
     }
   }
+  //Strike lightning
+  case 30:{
+  }
   //Cart on Bridge
   case 94:{
     PhaseChange(3);
@@ -951,6 +1157,8 @@ public Action Command_Operator(int args) {
   }
   //Setup begin
   case 99:{
+    ServerCommand("mp_waitingforplayers_cancel 1");
+    FireEntityInput("PL.RoundTimer", "Enable", "", 1.0);
     QueueMusicSystem();
     QueueWeatherSystem();
   }
@@ -962,10 +1170,10 @@ public Action Command_Operator(int args) {
   }
   //debug
   case 9000:{
-    FireEntityInput("TankBossA", "AddOutput", "target PL1.Track17", 0.0);
   }
   //debug
   case 9001:{
+    CreateTimer(5.0, TornadoTimer);
     FireEntityInput("f1_core", "Start", "", 1.0);
     tickTornado = true;
   }
@@ -1074,8 +1282,7 @@ void QueueMusicSystem() {
 
 //Prepare the weather system
 void QueueWeatherSystem() {
-  //PotatoLogger(LOG_INFO, "{aqua}[TENGINE] {white}Weather {limegreen}v4{white} is good to go!");
-  PotatoLogger(LOG_ERR, "CRITICAL: RunWeatherSystem IS NOT FINISHED. WEATHER WILL NOT WORK.");
+  PotatoLogger(LOG_INFO, "{aqua}[TENGINE] {white}Weather {limegreen}v4{white} is good to go!");
   CreateTimer(10.0, RunWeatherSystem);
   CreateTimer(3.0, TimedOperator, 6);
   stormIntensity = 0;
