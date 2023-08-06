@@ -2,10 +2,12 @@
 #include <sdktools>
 #include <sourcemod>
 #pragma newdecls required
-static char PLG_VER[8] = "1.3.0";
+static char PLG_VER[8] = "1.3.2";
 
 bool bgmPlaying = false;
+bool automatedTornado = false;
 bool canTornado = false;
+bool commandSuccess = false;
 bool tickTornado = false;
 bool tickWeather = false;
 bool isTankAlive = false;
@@ -103,6 +105,8 @@ int ChkPt = 1;
 int refireTicksBlu, refireTicksRed = 0;
 int stopForTeam = 0;
 int stormIntensity = 0;
+int stormIntensityMin = 1;
+int stormIntensityMax = 8;
 int ticksMusicBlu, ticksMusicRed = 0;
 
 public Plugin myinfo = {
@@ -388,55 +392,57 @@ public void OnGameFrame(){
   }
   //tick tornado
   if (tickTornado){
-    int Ent = FindEntityByTargetname(-1, "track2", true, true);
-    if (Ent == -1) {
-      //PrintToChatAll("Ent not found");
-      return;
-    } else {
-      char t[300];
-      GetEntPropString(Ent, Prop_Data, "m_iName", t, sizeof(t));
-      //PrintToChatAll("Entity %s with index %i found!", t, Ent)
-      float destination[3];
-      destination[0] = 0.0;
-      destination[1] = 0.0;
-      destination[2] = 0.0;
-      float position[3];
-      char targetname[128];
-      GetEntPropString(Ent, Prop_Data, "m_iName", targetname, sizeof(targetname));
-      if (StrEqual(targetname, "track2")) {
-        GetEntPropVector(Ent, Prop_Send, "m_vecOrigin", position);
-        if(position[0] >= 6400.0 || position[1] >= 5400.0){
-          PrintToChatAll("uh oh");
-          destination[0] = position[0] - 1.75;
-          destination[1] = position[1] - 1.75;
-        }
-        else if(position[0] <= -4800 || position[1] <= -3200){
-          destination[0] = position[0] + 1.75;
-          destination[1] = position[1] + 1.75;
-        }
-        else{
-          switch(tmov){
-            case 1:{
-              destination[0] = position[0] + 1.75;
-              destination[1] = position[1] + 1.75;    
-            }
-            case 2:{
-              destination[0] = position[0] - 1.75;
-              destination[1] = position[1] - 1.75;
-            }
-            case 3:{
-              destination[0] = position[0] + 1.75;
-              destination[1] = position[1] - 1.75;
-            }
-            case 4:{
-              destination[0] = position[0] - 1.75;
-              destination[1] = position[1] + 1.75;
+    if(automatedTornado){
+      int Ent = FindEntityByTargetname(-1, "track2", true, true);
+      if (Ent == -1) {
+        //PrintToChatAll("Ent not found");
+        return;
+      } else {
+        char t[300];
+        GetEntPropString(Ent, Prop_Data, "m_iName", t, sizeof(t));
+        //PrintToChatAll("Entity %s with index %i found!", t, Ent)
+        float destination[3];
+        destination[0] = 0.0;
+        destination[1] = 0.0;
+        destination[2] = 0.0;
+        float position[3];
+        char targetname[128];
+        GetEntPropString(Ent, Prop_Data, "m_iName", targetname, sizeof(targetname));
+        if (StrEqual(targetname, "track2")) {
+          GetEntPropVector(Ent, Prop_Send, "m_vecOrigin", position);
+          if(position[0] >= 6400.0 || position[1] >= 5400.0){
+            PrintToChatAll("uh oh");
+            destination[0] = position[0] - 1.75;
+            destination[1] = position[1] - 1.75;
+          }
+          else if(position[0] <= -4800 || position[1] <= -3200){
+            destination[0] = position[0] + 1.75;
+            destination[1] = position[1] + 1.75;
+          }
+          else{
+            switch(tmov){
+              case 1:{
+                destination[0] = position[0] + 1.75;
+                destination[1] = position[1] + 1.75;    
+              }
+              case 2:{
+                destination[0] = position[0] - 1.75;
+                destination[1] = position[1] - 1.75;
+              }
+              case 3:{
+                destination[0] = position[0] + 1.75;
+                destination[1] = position[1] - 1.75;
+              }
+              case 4:{
+                destination[0] = position[0] - 1.75;
+                destination[1] = position[1] + 1.75;
+              }
             }
           }
+          destination[2] = position[2];
+          TeleportEntity(Ent, destination, NULL_VECTOR, NULL_VECTOR);
+          //PrintToConsoleAll("Teleporting track2 from %f %f %f to %f %f %f", position[0], position[1], position[2], destination[0], destination[1], destination[2]);
         }
-        destination[2] = position[2];
-        TeleportEntity(Ent, destination, NULL_VECTOR, NULL_VECTOR);
-        //PrintToConsoleAll("Teleporting track2 from %f %f %f to %f %f %f", position[0], position[1], position[2], destination[0], destination[1], destination[2]);
       }
     }
   }
@@ -848,7 +854,8 @@ public Action Command_Operator(int args) {
    // FireEntityInput("PL.Spawn02", "SetTeam", "3", 0.0);
     //FireEntityInput("PL.Spawn02", "Enable", "", 0.1);
     ChkPt = 2;
-    PotatoLogger(LOG_DBG, "TankDeployed!");
+    stormIntensityMax = 18;
+    //PotatoLogger(LOG_DBG, "TankDeployed!");
     PhaseChange(4);
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
@@ -1119,9 +1126,6 @@ public Action Command_Operator(int args) {
       FireEntityInput("F1_Debris", "Stop", "", 1.0);
       FireEntityInput("F1_Core", "Stop", "", 2.5);
     }
-    else{
-      FireEntityInput("F1_Meso", "Stop", "", 0.0);
-    }
   }
   //Strike lightning
   case 30:{
@@ -1160,16 +1164,27 @@ public Action Command_Operator(int args) {
     ServerCommand("mp_waitingforplayers_cancel 1");
     FireEntityInput("PL.RoundTimer", "Enable", "", 1.0);
     QueueMusicSystem();
-    QueueWeatherSystem();
   }
   //Setup finished
   case 100:{
     BGMINDEX = 1;
     RestartMusic();
+    QueueWeatherSystem();
     FireEntityInput("PL.SpawnDoorTrigger00", "Enable", "", 0.0);
+  }
+  //Command succeeded
+  case 200:{
+    commandSuccess = true;
   }
   //debug
   case 9000:{
+    stormIntensityMax = 18;
+    stormIntensity = 16;
+    tickWeather = true;
+    canTornado = true;
+    FireEntityInput("F1_Meso", "Start", "", 0.0);
+    FireEntityInput("track2", "SetSpeedReal", "0.25", 0.0);
+    FireEntityInput("track2", "StartForward", "", 1.0);
   }
   //debug
   case 9001:{
@@ -1291,9 +1306,14 @@ void QueueWeatherSystem() {
 
 //Run the weather system
 public Action RunWeatherSystem(Handle timer){
-  if(tickWeather){
-    if (stormIntensity < 1){
-      stormIntensity = 1;
+  PrintToServer("Running weather system, stormInt %i", stormIntensity);
+  if(tickTornado){
+    CreateTimer(5.0, RunWeatherSystem);
+    return Plugin_Stop;
+  }
+  if(tickWeather && stormIntensity < stormIntensityMax){
+    if (stormIntensity < stormIntensityMin){
+      stormIntensity = stormIntensityMin;
     }
     int i = GetRandomInt(1, 16);
     switch(i){
@@ -1328,13 +1348,60 @@ public Action RunWeatherSystem(Handle timer){
         stormIntensity++;
       }
     }
-    CreateTimer(1.0, RunWeatherSystem);
+    switch(stormIntensity){
+      case 0, 1:{
+        FireEntityInput("weather.sky", "Skin", "0", 0.0);
+      }
+      case 3:{
+        FireEntityInput("weather.sky", "Skin", "1", 0.0);
+      }
+      case 5:{
+        FireEntityInput("weather.sky", "Skin", "2", 0.0);
+        FireEntityInput("weather.sunlight", "TurnOn", "", 0.0);
+      }
+      case 8:{
+        stormIntensityMin = 7;
+        FireEntityInput("weather.sky", "Skin", "3", 0.0);
+        FireEntityInput("weather.sunlight", "TurnOff", "", 0.0);
+      }
+      case 12,13:{
+        FireEntityInput("f1_meso", "Stop", "", 0.0);
+      }
+      case 14,15:{
+        FireEntityInput("f1_meso", "Start", "", 0.0);
+        if(automatedTornado){
+          tickTornado = true;
+          //Once this is enabled, we should check stormIntensity from tickTornado function side. This keeps us from having a tornado during intensity level 14/15, but does allow the wall cloud to move!
+        }
+        else{
+          FireEntityInput("track2", "TeleportToPathTrack", "T0x0", 0.0);
+          FireEntityInput("track2", "StartForward", "", 1.0);
+          FireEntityInput("track2", "SetSpeedReal", "40", 0.5);
+          tickTornado = false;
+        }
+        canTornado = false;
+      }
+      case 16,17:{
+        canTornado = true;
+        if(automatedTornado){
+          tickTornado = true;
+        }
+        else{
+          FireEntityInput("track2", "StartForward", "", 1.0);
+          FireEntityInput("track2", "SetSpeedReal", "120", 0.5);
+          tickTornado = false;
+        }
+      }
+    }
+    float f = GetRandomFloat(5.0, 12.0);
+    CreateTimer(f, RunWeatherSystem);
+    return Plugin_Stop;
   }
-  if(stormIntensity >= 16){
-    canTornado = true;
-  }
-  else{
-    canTornado = false;
+  else if(stormIntensity >= stormIntensityMax){
+    stormIntensity--;
+    float f = GetRandomFloat(5.0, 12.0);
+    CreateTimer(f, RunWeatherSystem);
+    return Plugin_Stop;
   }
   return Plugin_Stop;
 }
