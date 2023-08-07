@@ -1,8 +1,10 @@
+#include <clientprefs>
 #include <morecolors>
 #include <sdktools>
 #include <sourcemod>
+#include <tf2_stocks>
 #pragma newdecls required
-static char PLG_VER[8] = "1.3.2";
+static char PLG_VER[8] = "1.3.3";
 
 bool bgmPlaying = false;
 bool automatedTornado = false;
@@ -15,6 +17,7 @@ bool musicInitializedBlu, musicInitializedRed = false;
 bool shouldMusicRestart = false;
 bool tankDeploy = false;
 bool tickMusic = false;
+bool tickingClientHealth = false;
 bool spawnPl4 = true;
 int tmov = 1;
 char charHP[16];
@@ -25,7 +28,7 @@ char prevPhaseBlu[256], prevPhaseRed[256];
 char prevSongBlu[256], prevSongRed[256];
 char songNameBlu[256], songNameRed[256];
 char tankStatus[128];
-
+Database FB_Database;
 static char BGM0[64] = "fartsy/music/brawler/hw_aoc/aquietmoment.mp3";
 static char BGM1[64] = "fartsy/music/brawler/fe_w/chaossilence.wav";
 static char BGM2[64] = "fartsy/music/brawler/fe_3h/thelongroad_rain.wav";
@@ -76,6 +79,21 @@ static char BGM22Title[64] = "Xenoblade Chronicles 3 - Immediate Threat (Pre End
 static char BGM23Title[64] = "Xenoblade Chronicles 3 - You Will Know Our Names (Pre End)";
 static char CANNONECHO[48] = "fartsy/misc/brawler/cannon_echo.mp3";
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
+static char VO0[64] = "fartsy/vo/brawler/jeffy/tornadowarn00.mp3";
+static char VO1[64] = "fartsy/vo/brawler/jeffy/tornadowarn01.mp3";
+static char VO2[64] = "fartsy/vo/brawler/jeffy/tornadowarn02.mp3";
+static char VO3[64] = "fartsy/vo/brawler/jeffy/tornadowarn03.mp3";
+static char VO4[64] = "fartsy/vo/brawler/jeffy/tornadowarn04.mp3";
+static char VO5[64] = "fartsy/vo/brawler/jeffy/tank01.mp3";
+static char VO6[64] = "fartsy/vo/brawler/jeffy/tank02.mp3";
+static char VO7[64] = "fartsy/vo/brawler/jeffy/tank03.mp3";
+static char VO8[64] = "fartsy/vo/brawler/jeffy/tank04.mp3";
+static char VO9[64] = "fartsy/vo/brawler/jeffy/tank05.mp3";
+static char VOA[64] = "fartsy/vo/brawler/jeffy/begins_60s.mp3";
+static char VOB[64] = "fartsy/vo/brawler/jeffy/begins_30s.mp3";
+static char VOC[64] = "fartsy/vo/brawler/jeffy/begins_10s.mp3";
+static char VOD[64] = "fartsy/vo/jeffy/countdown.mp3";
+Handle cvarSNDDefault = INVALID_HANDLE;
 /*WARNING: Kill unused Teleports and Dests once swapped. PL1.RegenField to be enabled/disabled at the same time as PL1.CaptureArea. CRITICAL: Fire on pl.filterspawn<XX> team <x> when spawns change! Also, PL<x>.DeathPit to be enabled when Pl deployed.
  NOTE: tornadowarn00, tornadowarn01, and tornadowarn04 are generic warnings
  tornadowarn02 is for blu team only
@@ -83,8 +101,12 @@ static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
  NOTE: tank00 and tank03 are generic tank warnings
  tank01 is red only
  tank02 is red only
+ tank03 is red only
  tank04 is red only
+ tank05 is for all
+ operator 999 998 997 for mission begins 60, 30, and 10 seconds. can probably use a 5 second timer for 5 4 3 2 1 countdown.
 */
+
 static int BGMSNDLVL = 95;
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
@@ -103,6 +125,7 @@ int failCount = 0;
 int BGMINDEX = 0;
 int ChkPt = 1;
 int refireTicksBlu, refireTicksRed = 0;
+int soundPreference[MAXPLAYERS + 1];
 int stopForTeam = 0;
 int stormIntensity = 0;
 int stormIntensityMin = 1;
@@ -110,13 +133,16 @@ int stormIntensityMax = 8;
 int ticksMusicBlu, ticksMusicRed = 0;
 
 public Plugin myinfo = {
+  name = "Potato - Framework",
   author = "Fartsy",
-  description = "Don't worry about it...",
+  description = "The core plugin for pl_potato",
   version = PLG_VER,
   url = "https://forums.firehostredux.com"
 };
 
 public void OnPluginStart() {
+  cvarSNDDefault = CreateConVar("sm_potato_sound", "3", "Default sound for new users, 3 = Everything, 2 = Sounds Only, 1 = Music Only, 0 = Nothing");
+  PotatoLogger(LOG_DBG, "Plugin started.");
   PrecacheSound(BGM0, true);
   PrecacheSound(BGM1, true);
   PrecacheSound(BGM2, true);
@@ -148,10 +174,290 @@ public void OnPluginStart() {
   PrecacheSound(TBGM4, true);
   PrecacheSound(TBGM5, true);
   PrecacheSound(TBGM6, true);
+  PrecacheSound(VO0, true);
+  PrecacheSound(VO1, true);
+  PrecacheSound(VO2, true);
+  PrecacheSound(VO3, true);
+  PrecacheSound(VO4, true);
+  PrecacheSound(VO5, true);
+  PrecacheSound(VO6, true);
+  PrecacheSound(VO7, true);
+  PrecacheSound(VO8, true);
+  PrecacheSound(VO9, true);
+  PrecacheSound(VOA, true);
+  PrecacheSound(VOB, true);
+  PrecacheSound(VOC, true);
+  PrecacheSound(VOD, true);
   PrecacheSound(COUNTDOWN, true);
   PrecacheSound(CANNONECHO, true);
   RegServerCmd("fb_operator", Command_Operator, "Server-side only. Does nothing when excecuted as client.");
+  int defPref = GetConVarInt(cvarSNDDefault);
+  SetCookieMenuItem(FartsysSNDSelected, defPref, "Fartsys Ass Sound Preferences");
 }
+
+//Clientprefs built in menu
+public void FartsysSNDSelected(int client, CookieMenuAction action, any info, char[] buffer, int maxlen) {
+  if (action == CookieMenuAction_SelectOption) {
+    ShowFartsyMenu(client);
+  }
+}
+
+// When a new client joins
+public void OnClientPutInServer(int client) {
+  if (!IsFakeClient(client)) {
+    if (!FB_Database) { //Use defaults if no database
+      PrintToServer("No database detected, setting soundPreference for %N to default.", client);
+      soundPreference[client] = GetConVarInt(cvarSNDDefault);
+      return;
+    }
+    int steamID = GetSteamAccountID(client);
+    if (!steamID || steamID <= 10000) {
+      return;
+    } else {
+      if (!tickingClientHealth) {
+        PrintToServer("Creating timer for tickclienthealth");
+        CreateTimer(1.0, TickClientHealth);
+        tickingClientHealth = true;
+      }
+      char query[1024];
+      Format(query, sizeof(query), "INSERT INTO potato_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
+      FB_Database.Query(Database_FastQuery, query);
+      DataPack pk = new DataPack();
+      pk.WriteCell(client ? GetClientUserId(client) : 0);
+      pk.WriteString("steamid");
+      char queryID[256];
+      Format(queryID, sizeof(queryID), "SELECT soundprefs from potato_activity WHERE steamid = '%d';", steamID);
+      FB_Database.Query(SQL_SNDPrefs, queryID, pk);
+    }
+  } else {
+    soundPreference[client] = 0;
+  }
+}
+
+//Get client sound prefs
+public void SQL_SNDPrefs(Database db, DBResultSet results,
+  const char[] error, any data) {
+  DataPack pk = view_as < DataPack > (data);
+  pk.Reset();
+  int userId = pk.ReadCell();
+  char steamId[64];
+  pk.ReadString(steamId, sizeof(steamId));
+  delete pk;
+  int client = userId ? GetClientOfUserId(userId) : 0;
+  bool validClient = !userId || client;
+  if (!results) {
+    LogError("Failed to query database: %s", error);
+    return;
+  }
+  if (!validClient) {
+    return;
+  }
+  if (results.FetchRow()) {
+    soundPreference[client] = results.FetchInt(0); //Set it
+    //PrintToServer("Client %N soundPreference was set to %i", client, soundPreference[client]);
+  }
+}
+
+//Send client sound menu
+public void ShowFartsyMenu(int client) {
+  Menu menu = new Menu(MenuHandlerFartsy, MENU_ACTIONS_DEFAULT);
+  char buffer[100];
+  menu.SetTitle("POTATO Sound Menu");
+  menu.AddItem(buffer, "Disable ALL");
+  menu.AddItem(buffer, "Music Only");
+  menu.AddItem(buffer, "Sound Effects Only");
+  menu.AddItem(buffer, "Enable ALL");
+  menu.Display(client, 20);
+  menu.ExitButton = true;
+}
+
+//Create menu
+public Action Command_Sounds(int client, int args) {
+  int steamID = GetSteamAccountID(client);
+  if (!steamID || steamID <= 10000) {
+    return Plugin_Handled;
+  } else {
+    DataPack pk = new DataPack();
+    pk.WriteCell(client ? GetClientUserId(client) : 0);
+    pk.WriteString("steamid");
+    char queryID[256];
+    Format(queryID, sizeof(queryID), "SELECT soundprefs from potato_activity WHERE steamid = '%d';", steamID);
+    FB_Database.Query(SQL_SNDPrefs, queryID, pk);
+    ShowFartsyMenu(client);
+    switch (soundPreference[client]) {
+    case 0: {
+      PrintToChat(client, "Sounds are currently DISABLED.");
+    }
+    case 1: {
+      PrintToChat(client, "Sounds are currently MUSIC ONLY.");
+    }
+    case 2: {
+      PrintToChat(client, "Sounds are currently SOUND EFFECTS ONLY.");
+    }
+    case 3: {
+      PrintToChat(client, "Sounds are currently ALL ON.");
+    }
+    case 4: {
+      PrintToChat(client, "Somehow your sound preference was stored as non-existent 5... Please configure your sounds.");
+    }
+    }
+    return Plugin_Handled;
+  }
+}
+
+//  This selects or disables the sounds
+public int MenuHandlerFartsy(Menu menu, MenuAction action, int param1, int param2) {
+  if (action == MenuAction_Select) {
+    char query[256];
+    int steamID = GetSteamAccountID(param1);
+    if (!FB_Database || !steamID) {
+      return;
+    } else {
+      Format(query, sizeof(query), "UPDATE potato_activity SET soundprefs = '%i' WHERE steamid = '%d';", param2, steamID);
+      FB_Database.Query(Database_FastQuery, query);
+      soundPreference[param1] = param2;
+      Command_Sounds(param1, 0);
+    }
+  } else if (action == MenuAction_End) {
+    CloseHandle(menu);
+  }
+}
+public Action Command_MyStats(int client, int args) {
+  if (!FB_Database) {
+    return;
+  }
+  int steamID = GetSteamAccountID(client);
+  if (!steamID || steamID <= 10000) {
+    return;
+  }
+  DataPack pk = new DataPack();
+  pk.WriteCell(client ? GetClientUserId(client) : 0);
+  pk.WriteString("steamid");
+  char queryID[256];
+  Format(queryID, sizeof(queryID), "SELECT * from potato_activity WHERE steamid = %d;", steamID);
+  FB_Database.Query(MyStats, queryID, pk);
+}
+
+public void MyStats(Database db, DBResultSet results,
+  const char[] error, any data) {
+  DataPack pk = view_as < DataPack > (data);
+  pk.Reset();
+
+  int userId = pk.ReadCell();
+  char steamId[64];
+  pk.ReadString(steamId, sizeof(steamId));
+  delete pk;
+
+  int client = userId ? GetClientOfUserId(userId) : 0;
+  bool validClient = !userId || client;
+
+  if (!results) {
+    if (validClient) {
+      PrintToChat(client, "[SM] Command Database Query Error");
+    }
+    LogError("Failed to query database: %s", error);
+    return;
+  }
+  if (!validClient) {
+    return;
+  }
+  char name[64];
+  char class [64];
+  int health, healthMax, steamID, damagedealt, damagedealtsession, kills, killssession, deaths, deathssession, bombsreset, bombsresetsession, sacrifices, sacrificessession;
+  char lastkilledname[128];
+  char lastusedweapon[128];
+  char killedbyname[128];
+  char killedbyweapon[128];
+  if (results.FetchRow()) {
+    results.FetchString(0, name, 64); //name
+    steamID = results.FetchInt(1); //steamid
+    results.FetchString(4, class, 64); //class
+    health = results.FetchInt(5); //health
+    healthMax = results.FetchInt(6); //health
+    damagedealt = results.FetchInt(7); //damage dealt
+    damagedealtsession = results.FetchInt(8); //damage dealt session
+    kills = results.FetchInt(9); //kills
+    killssession = results.FetchInt(10); //kills session
+    deaths = results.FetchInt(11); //deaths
+    deathssession = results.FetchInt(12); //deaths session
+    bombsreset = results.FetchInt(13); //bombs reset
+    bombsresetsession = results.FetchInt(14); //bombs reset session
+    sacrifices = results.FetchInt(15); //sacrifices
+    sacrificessession = results.FetchInt(16); //sacrifices session
+    results.FetchString(17, lastkilledname, sizeof(lastkilledname)); //last client killed
+    results.FetchString(18, lastusedweapon, sizeof(lastusedweapon)); //using weapon
+    results.FetchString(19, killedbyname, sizeof(killedbyname)); //last client that killed
+    results.FetchString(20, killedbyweapon, sizeof(killedbyweapon)); //using weapon
+  }
+  CPrintToChat(client, "\x07AAAAAA[CORE] Showing stats of %s   [%s, %i/%i hp] || SteamID: %i ", name, class, health, healthMax, steamID);
+  CPrintToChat(client, "{white}Damage Dealt: %i (Session: %i) || Kills: %i (Session: %i) || Deaths: %i (Session: %i) || Bombs Reset: %i (Session: %i)", damagedealt, damagedealtsession, kills, killssession, deaths, deathssession, bombsreset, bombsresetsession);
+  CPrintToChat(client, "Sacrifices: %i(Session:%i) || Killed %s (using %s) || Last killed by: %s (using %s)", sacrifices, sacrificessession, lastkilledname, lastusedweapon, killedbyname, killedbyweapon);
+}
+
+public void OnConfigsExecuted() {
+  if (!FB_Database) {
+    Database.Connect(Database_OnConnect, "potato");
+  }
+}
+
+//DB setup
+public void Database_OnConnect(Database db,
+  const char[] error, any data) {
+  if (!db) {
+    LogError("Could not connect to the database: %s", error);
+    return;
+  }
+  char buffer[64];
+  db.Driver.GetIdentifier(buffer, sizeof(buffer));
+  if (!StrEqual(buffer, "mysql", false)) {
+    delete db;
+    LogError("Could not connect to the database: expected mysql database.");
+    return;
+  }
+  FB_Database = db;
+  FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS potato_activity(name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', health TEXT DEFAULT '-1', maxHealth INT UNSIGNED DEFAULT '0', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '3', PRIMARY KEY (steamid));");
+}
+
+//Database Fastquery Manager
+public void Database_FastQuery(Database db, DBResultSet results,
+  const char[] error, any data) {
+  if (!results) {
+    LogError("Failed to query database: %s", error);
+  }
+}
+public void Database_MergeDataError(Database db, any data, int numQueries,
+  const char[] error, int failIndex, any[] queryData) {
+  LogError("Failed to query database (transaction): %s", error);
+}
+
+//When a client leaves
+public void OnClientDisconnect(int client) {
+  CreateTimer(1.0, CheckIfEmpty);
+  if (!FB_Database) {
+    return;
+  }
+  int steamID = GetSteamAccountID(client);
+  if (!steamID || steamID <= 10000) {
+    return;
+  }
+  char query[256];
+  char clientName[128];
+  GetClientInfo(client, "name", clientName, 128);
+  Format(query, sizeof(query), "INSERT INTO potato_activity (name, steamid, date, seconds) VALUES ('%s', %d, CURRENT_DATE, %d) ON DUPLICATE KEY UPDATE name = '%s', seconds = seconds + VALUES(seconds);", clientName, steamID, GetClientMapTime(client), clientName);
+  PrintToServer("%s", query);
+  FB_Database.Query(Database_FastQuery, query);
+}
+
+//Calculate time spent on server in seconds
+int GetClientMapTime(int client) {
+  float clientTime = GetClientTime(client), gameTime = GetGameTime();
+  if (clientTime > gameTime) {
+    return RoundToZero(gameTime);
+  }
+
+  return RoundToZero(clientTime);
+}
+
 //Queue music for client.
 public void OnClientPostAdminCheck(int client){
   int i = GetClientCount(true);
@@ -162,11 +468,8 @@ public void OnClientPostAdminCheck(int client){
     CreateTimer(1.0, QueueMusicForClient, client);
   }
 }
-//Restart music when empty
-public void OnClientDisconnect(int client){
-  CreateTimer(1.0, CheckIfEmpty);
-}
 
+//Restart music when empty
 public Action CheckIfEmpty(Handle timer){
   int i = GetClientCount(true);
   if (i <= 0){
@@ -297,10 +600,10 @@ public Action QueueMusicForClient(Handle timer, int client){
 
 //Play sound to client
 void CSEClient(int client, char[] sndName, int SNDLVL, bool isBGM, int flags, float vol, int pitch){
-  if(isBGM && true){//see below
+  if(isBGM && (soundPreference[client] == 1 || soundPreference[client] == 3) ){
     PotatoLogger(LOG_DBG, "Client got BGM!");
     EmitSoundToClient(client, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
-  } else if (!isBGM && true){
+  } else if (!isBGM && soundPreference[client] >= 2){
     PotatoLogger(LOG_DBG, "Client got SFX!");
     EmitSoundToClient(client, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
   }
@@ -471,6 +774,7 @@ public Action TornadoTimer(Handle timer){
     float f = GetRandomFloat(5.0, 20.0);
     CreateTimer(f, TornadoTimer);
   }
+  return Plugin_Stop;
 }
 //Tick Music for Blu Team
 void tickMusicBlu(){
@@ -803,6 +1107,7 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.1);
     FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL2.CP", 1.0);
     FireEntityInput("PL1.TankMaker", "ForceSpawn", "", 5.0);
+    CreateTimer(1.0, TimedOperator, 7);
     CreateTimer(1.0, TimedOperator, 0);
   }
   //PL2 (Tank) started push
@@ -1281,6 +1586,27 @@ public Action TimedOperator(Handle timer, int opCode) {
   case 6:{
     FireEntityInput("T0x*", "Kill", "", 0.0);
   }
+  case 7:{
+    if(commandSuccess){
+      commandSuccess = false;
+    }
+    else{
+      PotatoLogger(LOG_ERR, "Something went wrong with PL1. Attempting refire of PL1 logic.");
+      FireEntityInput("PL1.Const", "Break", "", 0.0);
+      FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
+      FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
+      FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
+      FireEntityInput("PL1.CP", "SetOwner", "3", 0.0);
+      FireEntityInput("PL1.Track0*", "Kill", "", 0.0);
+      FireEntityInput("PL1.Track10", "Kill", "", 0.0);
+      FireEntityInput("PL1.Track11", "Kill", "", 0.0);
+      FireEntityInput("PL1.Track12", "Kill", "", 0.0);
+      FireEntityInput("PL1.Track13", "Kill", "", 0.0);
+      FireEntityInput("PL1.Track14", "Kill", "", 0.0);
+      FireEntityInput("PL1.Track15", "Kill", "", 0.0);
+      FireEntityInput("PL1.Track16", "Kill", "", 0.0);
+    }
+  }
   }
 }
 
@@ -1405,6 +1731,7 @@ public Action RunWeatherSystem(Handle timer){
   }
   return Plugin_Stop;
 }
+
 //Tank Checker
 public Action TankPingTimer(Handle timer) {
   int tank = FindEntityByClassname(-1, "tank_boss"); //check if tank is alive
@@ -1497,33 +1824,34 @@ void PotatoLogger(int logLvl, char[] dbgMsg){
 
 void CustomSoundEmitter(char[] sndName, int SNDLVL, bool isBGM, int flags, float vol, int pitch, int team){
   char dbgWarn[255];
-  Format(dbgWarn, sizeof(dbgWarn), "{orange}WARNING: soundpreference is bypassed. Sound %s will play regardless of preference.", sndName);
-  PotatoLogger(LOG_DBG, dbgWarn);
+  //Format(dbgWarn, sizeof(dbgWarn), "{orange}WARNING: soundpreference is bypassed. Sound %s will play regardless of preference.", sndName);
   for (int i = 1; i <= MaxClients; i++){
     if(IsClientInGame(i) && !IsFakeClient(i)){
+      Format(dbgWarn, sizeof(dbgWarn), "{lime}Sound Preference of %N was %i", i, soundPreference[i]);
+      PotatoLogger(LOG_INFO, dbgWarn);
       if(team == 0){
-        if(isBGM && true){//see below
+        if(isBGM && (soundPreference[i] == 1 || soundPreference[i] == 3)){//see below
           PotatoLogger(LOG_DBG, "Client on ALL teams got BGM!");
           EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
-        } else if (!isBGM && true){
+        } else if (!isBGM && soundPreference[i] >= 2){
           PotatoLogger(LOG_DBG, "Client on ALL teams got SFX!");
           EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
         }
       }
       else if(GetClientTeam(i) == 2 && team == 2){
-        if(isBGM && true){ //instead of using true, use soundPreference(i)
+        if(isBGM && (soundPreference[i] == 1 || soundPreference[i] == 3)){ //instead of using true, use soundPreference(i)
           PotatoLogger(LOG_DBG, "Client on Red team got BGM!");
           EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
-        } else if(!isBGM && true) {
+        } else if(!isBGM && soundPreference[i] >= 2) {
           PotatoLogger(LOG_DBG, "Client on Red team got SFX!");
           EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
         }
       }
       else if(GetClientTeam(i) == 3 && team == 3){
-        if(isBGM && true){//see above
+        if(isBGM && (soundPreference[i] == 1 || soundPreference[i] == 3)){//see above
           PotatoLogger(LOG_DBG, "Client on Blu team got BGM!");
           EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
-        } else if (!isBGM && true){
+        } else if (!isBGM && soundPreference[i] >= 2){
           PotatoLogger(LOG_DBG, "Client on Blu team got SFX!");
           EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
         }
@@ -1531,7 +1859,6 @@ void CustomSoundEmitter(char[] sndName, int SNDLVL, bool isBGM, int flags, float
     }
   }
 }
-
 
 //Phase Reaction Chamber
 void PhaseChange(int reason){
@@ -1648,4 +1975,27 @@ void PhaseChange(int reason){
 
 void RestartMusic(){
   shouldMusicRestart = true;
+}
+
+public Action TickClientHealth(Handle timer) {
+  for (int i = 1; i <= MaxClients; i++) {
+    if (IsClientInGame(i) && !IsFakeClient(i) && (GetClientTeam(i) == 2)) {
+      int health = GetClientHealth(i);
+      int healthMax = TF2_GetPlayerMaxHealth(i);
+      //PrintToServer("Client %N joined RED TEAM and is being tracked with %i/%i health! UwU", i, health, healthMax);
+      if (!FB_Database) {
+        return;
+      } else {
+        char query[256];
+        int steamID = GetSteamAccountID(i);
+        Format(query, sizeof(query), "UPDATE potato_activity SET health = %i, maxHealth = %i WHERE steamid = %i;", health, healthMax, steamID);
+        FB_Database.Query(Database_FastQuery, query);
+      }
+    }
+  }
+  CreateTimer(1.0, TickClientHealth);
+}
+
+stock int TF2_GetPlayerMaxHealth(int client) {
+  return GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client);
 }
