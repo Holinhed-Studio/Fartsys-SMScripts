@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <tf2_stocks>
 #pragma newdecls required
-static char PLG_VER[8] = "1.3.3";
+static char PLG_VER[8] = "1.3.4";
 
 bool bgmPlaying = false;
 bool automatedTornado = false;
@@ -93,6 +93,7 @@ static char VOA[64] = "fartsy/vo/brawler/jeffy/begins_60s.mp3";
 static char VOB[64] = "fartsy/vo/brawler/jeffy/begins_30s.mp3";
 static char VOC[64] = "fartsy/vo/brawler/jeffy/begins_10s.mp3";
 static char VOD[64] = "fartsy/vo/jeffy/countdown.mp3";
+static char VOE[64] = "fartsy/vo/brawler/jeffy/tornadowarn00.wav";
 Handle cvarSNDDefault = INVALID_HANDLE;
 /*WARNING: Kill unused Teleports and Dests once swapped. PL1.RegenField to be enabled/disabled at the same time as PL1.CaptureArea. CRITICAL: Fire on pl.filterspawn<XX> team <x> when spawns change! Also, PL<x>.DeathPit to be enabled when Pl deployed.
  NOTE: tornadowarn00, tornadowarn01, and tornadowarn04 are generic warnings
@@ -188,8 +189,10 @@ public void OnPluginStart() {
   PrecacheSound(VOB, true);
   PrecacheSound(VOC, true);
   PrecacheSound(VOD, true);
+  PrecacheSound(VOE, true);
   PrecacheSound(COUNTDOWN, true);
   PrecacheSound(CANNONECHO, true);
+  RegConsoleCmd("sm_sounds", Command_Sounds, "Toggle sounds on or off via menu");
   RegServerCmd("fb_operator", Command_Operator, "Server-side only. Does nothing when excecuted as client.");
   int defPref = GetConVarInt(cvarSNDDefault);
   SetCookieMenuItem(FartsysSNDSelected, defPref, "Fartsys Ass Sound Preferences");
@@ -220,7 +223,7 @@ public void OnClientPutInServer(int client) {
         tickingClientHealth = true;
       }
       char query[1024];
-      Format(query, sizeof(query), "INSERT INTO potato_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
+      Format(query, sizeof(query), "INSERT INTO potato_activity (name, steamid, date, damagedealtsession, killssession, deathssession, capturessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
       FB_Database.Query(Database_FastQuery, query);
       DataPack pk = new DataPack();
       pk.WriteCell(client ? GetClientUserId(client) : 0);
@@ -230,7 +233,7 @@ public void OnClientPutInServer(int client) {
       FB_Database.Query(SQL_SNDPrefs, queryID, pk);
     }
   } else {
-    soundPreference[client] = 0;
+    soundPreference[client] = GetConVarInt(cvarSNDDefault);
   }
 }
 
@@ -415,7 +418,7 @@ public void Database_OnConnect(Database db,
     return;
   }
   FB_Database = db;
-  FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS potato_activity(name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', health TEXT DEFAULT '-1', maxHealth INT UNSIGNED DEFAULT '0', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '3', PRIMARY KEY (steamid));");
+  FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS potato_activity(name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', health TEXT DEFAULT '-1', maxHealth INT UNSIGNED DEFAULT '0', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', captures INT UNSIGNED DEFAULT '0', capturessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '3', PRIMARY KEY (steamid));");
 }
 
 //Database Fastquery Manager
@@ -1089,6 +1092,7 @@ public Action Command_Operator(int args) {
   case 3: {
     PhaseChange(4);
     CustomSoundEmitter(TSPWN, BGMSNDLVL, false, 0, 1.0, 100, 0);
+    FireEntityInput("train2_hurt", "Disable", "", 0.0); //Do this on all deploys. Re enable it when spawns complete.
     FireEntityInput("PL1.Const", "Break", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
     FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
@@ -1103,7 +1107,7 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.Track15", "Kill", "", 0.0);
     FireEntityInput("PL1.Track16", "Kill", "", 0.0);
     FireEntityInput("PL.WatcherA", "SetTrainCanRecede", "0", 0.0);
-    FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track17", 0.1);
+    FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track17", 1.5);
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.1);
     FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL2.CP", 1.0);
     FireEntityInput("PL1.TankMaker", "ForceSpawn", "", 5.0);
@@ -1116,7 +1120,7 @@ public Action Command_Operator(int args) {
     isTankAlive = true;
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "69", 0.0);
     FireEntityInput("PL.WatcherA", "SetSpeedForwardModifier", "0.5", 0.0);
-    FireEntityInput("TornadoPathing", "ForceSpawn", "", 0.0);
+    FireEntityInput("TornadoPathing", "ForceSpawn", "", 10.0);
     CreateTimer(7.0, TankPingTimer);
   }
   //PL2 (Tank) Killed
@@ -1160,7 +1164,6 @@ public Action Command_Operator(int args) {
     //FireEntityInput("PL.Spawn02", "Enable", "", 0.1);
     ChkPt = 2;
     stormIntensityMax = 18;
-    //PotatoLogger(LOG_DBG, "TankDeployed!");
     PhaseChange(4);
     FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
@@ -1183,6 +1186,7 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL3.PayloadSpawner", "ForceSpawn", "", 15.0);
     FireEntityInput("PL.Teleport01", "Disable", "", 0.0);
     FireEntityInput("PL.Teleport02", "Enable", "", 0.1);
+    CreateTimer(1.0, TimedOperator, 8);
   }
   //PL3 Spawned
   case 8: {
@@ -1265,16 +1269,18 @@ public Action Command_Operator(int args) {
       BGMINDEX = 4;
       stopForTeam = 0;
       RestartMusic();
-      PotatoLogger(LOG_DBG, "PL3 Captured! Spawning PL4!");
+      //PotatoLogger(LOG_DBG, "PL3 Captured! Spawning PL4!");
       FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track50", 0.0);
       FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
       FireEntityInput("PL3.CP", "SetOwner", "3", 0.0);
+      FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
       FireEntityInput("PL1.TrackTrain", "AddOutput", "height 16", 0.0);
       FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track51", 0.20);
       FireEntityInput("PL4.PayloadSpawner", "ForceSpawn", "", 1.0);
       FireEntityInput("PL1.CaptureArea", "Enable", "", 1.0);
       FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL4.CP", 1.0);
       spawnPl4 = false;
+      CreateTimer(1.0, TimedOperator, 9);
       CreateTimer(5.0, TimedOperator, 5);
     }
   }
@@ -1303,6 +1309,7 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL5.CP", 2.0);
     FireEntityInput("PL1.CaptureArea", "Enable", "", 2.0);
     FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track64", 3.0);
+    CreateTimer(1.0, TimedOperator, 10);
   }
   // Pipe up!
   case 14:{
@@ -1328,6 +1335,7 @@ public Action Command_Operator(int args) {
     RestartMusic();
     PotatoLogger(LOG_DBG, "PL5 Captured. To Do: Play sound and blow up gate instead of *ding* you captured lulululululu~");
     FireEntityInput("PL5.CP", "SetOwner", "3", 0.0);
+    FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
     FireEntityInput("PL1.CaptureArea", "Kill", "", 1.0);
     FireEntityInput("PL5.Payload", "SetAnimation", "taunt_yetipunch", 0.0);
@@ -1345,6 +1353,7 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.TrackTrain", "Kill", "", 5.0);
     FireEntityInput("PL5.Payload", "Kill", "", 5.0);
     FireEntityInput("CP1.CP", "SetLocked", "0", 5.0);
+    CreateTimer(1.0, TimedOperator, 11);
   }
   //CP1 Start Capture
   case 17:{
@@ -1363,6 +1372,7 @@ public Action Command_Operator(int args) {
     ChkPt = 7;
     stopForTeam = 0;
     RestartMusic();
+    FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
     FireEntityInput("PL.Tele01", "Kill", "", 0.0);
     FireEntityInput("PL.Tele02", "Kill", "", 0.0);
     FireEntityInput("CP1.SirenMDL", "AddOutput", "Skin 3", 0.0);
@@ -1588,7 +1598,7 @@ public Action TimedOperator(Handle timer, int opCode) {
   }
   case 7:{
     if(commandSuccess){
-      commandSuccess = false;
+      CreateTimer(1.0, TimedOperator, 20);
     }
     else{
       PotatoLogger(LOG_ERR, "Something went wrong with PL1. Attempting refire of PL1 logic.");
@@ -1606,6 +1616,93 @@ public Action TimedOperator(Handle timer, int opCode) {
       FireEntityInput("PL1.Track15", "Kill", "", 0.0);
       FireEntityInput("PL1.Track16", "Kill", "", 0.0);
     }
+    FireEntityInput("Objectives", "SetTextureIndex", "1", 0.0);
+  }
+  case 8:{
+    if(commandSuccess){
+      CreateTimer(1.0, TimedOperator, 20);
+    }
+    else{
+      PotatoLogger(LOG_ERR, "Something went wrong with PL2. Attempting refire of PL2 logic.");
+      FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
+      FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
+      FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
+      FireEntityInput("PL2.CP", "SetOwner", "3", 0.0);
+      FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
+      FireEntityInput("PL.SpawnDoor00_1Trigger", "Enable", "", 0.0);
+      FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL3.CP", 1.0);
+      FireEntityInput("TankBossA", "Kill", "", 8.0);
+      FireEntityInput("PL1.CaptureArea", "Enable", "", 15.0);
+      FireEntityInput("PL.Teleport01", "Disable", "", 0.0);
+      FireEntityInput("PL.Teleport02", "Enable", "", 0.1);
+    }
+    FireEntityInput("Objectives", "SetTextureIndex", "2", 0.0);
+  }
+  case 9:{
+    if(commandSuccess){
+      CreateTimer(1.0, TimedOperator, 20);
+    }
+    else{
+      PotatoLogger(LOG_ERR, "Something went wrong with PL3. Attempting refire of PL3 logic.");
+      FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track50", 0.0);
+      FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
+      FireEntityInput("PL3.CP", "SetOwner", "3", 0.0);
+      FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
+      FireEntityInput("PL1.TrackTrain", "AddOutput", "height 16", 0.0);
+      FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track51", 0.20);
+      FireEntityInput("PL1.CaptureArea", "Enable", "", 1.0);
+      FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL4.CP", 1.0);
+    }
+    FireEntityInput("Objectives", "SetTextureIndex", "3", 0.0);
+  }
+  case 10:{
+    if(commandSuccess){
+      CreateTimer(1.0, TimedOperator, 20);
+    }
+    else{
+      PotatoLogger(LOG_ERR, "Something went wrong with PL4. Attempting refire of PL4 logic.");
+      FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track63", 0.0);
+      FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
+      FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
+      FireEntityInput("PL4.CP", "SetOwner", "3", 0.0);
+      FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
+      FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
+      FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
+      FireEntityInput("PL4.Payload", "Kill", "", 2.0);
+      FireEntityInput("PL4.PayloadBomb", "Kill", "", 2.0);
+      FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL5.CP", 2.0);
+      FireEntityInput("PL1.CaptureArea", "Enable", "", 2.0);
+      FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track64", 3.0);
+    }
+    FireEntityInput("Objectives", "SetTextureIndex", "4", 0.0);
+  }
+  case 11:{
+    if(commandSuccess){
+      CreateTimer(1.0, TimedOperator, 20);
+    }
+    else{
+      PotatoLogger(LOG_ERR, "Something went wrong with PL5. Attempting refire of PL5 logic.");
+      FireEntityInput("PL5.CP", "SetOwner", "3", 0.0);
+      FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
+      FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
+      FireEntityInput("PL1.CaptureArea", "Kill", "", 1.0);
+      FireEntityInput("PL5.Payload", "SetAnimation", "taunt_yetipunch", 0.0);
+      FireEntityInput("PL5.Payload", "SetDefaultAnimation", "taunt_yetipunch", 0.1);
+      FireEntityInput("PL5.PayloadController", "SetPoseValue", "0.9", 1.2);
+      FireEntityInput("PL5.Payload", "ClearParent", "", 4.0);
+      FireEntityInput("PL5.Door", "Kill", "", 4.5);
+      FireEntityInput("PL.KeepDoor", "Kill", "", 4.5);
+      FireEntityInput("PL.KeepDoorTrigger", "Kill", "", 4.5);
+      FireEntityInput("PL5.DoorFX", "Break", "", 4.5);
+      FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track64", 4.9);
+      FireEntityInput("PL1.TrackTrain", "Kill", "", 5.0);
+      FireEntityInput("PL5.Payload", "Kill", "", 5.0);
+      FireEntityInput("CP1.CP", "SetLocked", "0", 5.0);
+    }
+    FireEntityInput("Objectives", "SetTextureIndex", "5", 0.0);
+  }
+  case 20:{
+    commandSuccess = false;
   }
   }
 }
