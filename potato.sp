@@ -4,12 +4,14 @@
 #include <sourcemod>
 #include <tf2_stocks>
 #pragma newdecls required
-static char PLG_VER[8] = "1.3.5";
+static char PLG_VER[8] = "1.3.6";
 
 bool bgmPlaying = false;
 bool automatedTornado = false;
+bool payloadMoving = false;
 bool canTornado = false;
 bool commandSuccess = false;
+bool doRoundAdverts = false;
 bool tickTornado = false;
 bool tickWeather = false;
 bool isTankAlive = false;
@@ -18,6 +20,7 @@ bool shouldMusicRestart = false;
 bool tankDeploy = false;
 bool tickMusic = false;
 bool tickingClientHealth = false;
+bool TornadoWarningIssued = false;
 bool spawnPl4 = true;
 int tmov = 1;
 char charHP[16];
@@ -1261,7 +1264,6 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL.CannonPitch", "SetPosition", "0.0", 20.0);
     FireEntityInput("PL.CannonYaw", "SetPosition", "0.0", 20.0);
     FireEntityInput("PL.CannonDoor", "Close", "", 20.0);
-    //ALSO REMEMBER TO UH.... TRY REMOVING THE IF SPAWNPL4 METHOD TOMORROW. THANKS. ALSO NOTICE: Try the current compile, removed the bobomb in case maybe it's just conflicting...
   }
   //PL3 deployed
   case 11:{
@@ -1383,6 +1385,8 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL.CPDoor", "Open", "", 0.0);
     FireEntityInput("PL.Teleport02", "Disable", "", 0.0);
     FireEntityInput("PL.Teleport03", "Enable", "", 0.1);
+    FireEntityInput("CP1.Teleport", "Enable", "", 0.0);
+    FireEntityInput("CP1.Teleport", "Disable", "", 3.0);
     FireEntityInput("PL.CPDoorBarrier", "Disable", "", 60.0);
     FireEntityInput("CTF1.CTF", "Enable", "", 60.0);
   }
@@ -1458,6 +1462,7 @@ public Action Command_Operator(int args) {
   }
   //Cart Forward
   case 96:{
+    payloadMoving = true;
     PhaseChange(1);
     FireEntityInput("PL5.Payload", "SetAnimation", "run_ITEM1", 0.0);
     FireEntityInput("PL5.Payload", "SetDefaultAnimation", "run_ITEM1", 0.0);
@@ -1465,6 +1470,7 @@ public Action Command_Operator(int args) {
   }
   //Cart Stopped
   case 97:{
+    payloadMoving = false;
     PhaseChange(0);
     FireEntityInput("PL5.Payload", "SetAnimation", "stand_ITEM1", 0.0);
     FireEntityInput("PL5.Payload", "SetDefaultAnimation", "stand_ITEM1", 0.0);
@@ -1479,6 +1485,7 @@ public Action Command_Operator(int args) {
   }
   //Setup begin
   case 99:{
+    doRoundAdverts = false;
     ServerCommand("mp_waitingforplayers_cancel 1");
     FireEntityInput("PL.RoundTimer", "Enable", "", 1.0);
     QueueMusicSystem();
@@ -1486,8 +1493,10 @@ public Action Command_Operator(int args) {
   //Setup finished
   case 100:{
     BGMINDEX = 1;
+    doRoundAdverts = true;
     RestartMusic();
     QueueWeatherSystem();
+    CreateTimer(2.5, PerformRoundAdverts);
     FireEntityInput("PL.SpawnDoorTrigger00", "Enable", "", 0.0);
   }
   //Command succeeded
@@ -1989,12 +1998,13 @@ void PhaseChange(int reason){
   //ChkPt is where we are in the map. Valid range is 1-9.
   switch(ChkPt){
     case 0:{
-      PotatoLogger(LOG_ERR, "PhaseChange at chkpt 0 received, check code?");
+      PotatoLogger(LOG_ERR, "PhaseChange at ChkPt 0 received, check code?");
     }
     case 1:{
       //Payload enterred the cave
       if(reason == 2){
         curPhaseBlu = BGM3;
+        songNameBlu = BGM3Title;
         CreateTimer(0.1, UpdateMusicBlu);
         CustomSoundEmitter(BGM3, BGMSNDLVL, true, 1, 1.0, 100, 3);
       }
@@ -2031,6 +2041,7 @@ void PhaseChange(int reason){
       if(reason == 0){
         curSongBlu = BGM9;
         curPhaseBlu = BGM10;
+        songNameBlu = BGM9Title;
         CreateTimer(0.1, UpdateMusicBlu);
         CustomSoundEmitter(BGM9, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Apex pt1 Calm
         CustomSoundEmitter(BGM10, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Apex pt1 Inferno 
@@ -2039,6 +2050,7 @@ void PhaseChange(int reason){
       else if(reason == 1){
         curSongBlu = BGM10;
         curPhaseBlu = BGM9;
+        songNameBlu = BGM10Title;
         CreateTimer(0.1, UpdateMusicBlu);
         CustomSoundEmitter(BGM9, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Apex pt1 Calm
         CustomSoundEmitter(BGM10, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Apex pt1 Inferno 
@@ -2048,6 +2060,7 @@ void PhaseChange(int reason){
       if(reason == 3){//Inferno plays to blue when cart is on the bridge
         curSongBlu = BGM13;
         curPhaseBlu = BGM12;
+        songNameBlu = BGM13Title;
         CreateTimer(0.1, UpdateMusicBlu);
         CustomSoundEmitter(BGM12, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Apex pt2 Calm
         CustomSoundEmitter(BGM13, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Apex pt2 Inferno 
@@ -2073,6 +2086,8 @@ void PhaseChange(int reason){
         curPhaseRed = BGM22;
         curSongBlu = BGM21;
         curPhaseBlu = BGM23;
+        songNameRed = BGM20Title;
+        songNameBlu = BGM21Title;
         CreateTimer(0.1, UpdateMusicBlu);
         CreateTimer(0.1, UpdateMusicRed);
         CustomSoundEmitter(BGM20, BGMSNDLVL, true, 1, 1.0, 100, 2); //RED: Immediate Threat XB3
@@ -2086,6 +2101,8 @@ void PhaseChange(int reason){
         curPhaseRed = BGM20;
         curSongBlu = BGM23;
         curPhaseBlu = BGM21;
+        songNameRed = BGM22Title;
+        songNameBlu = BGM23Title;
         CreateTimer(0.1, UpdateMusicBlu);
         CreateTimer(0.1, UpdateMusicRed);
         CustomSoundEmitter(BGM20, BGMSNDLVL, true, 1, 0.05, 100, 2); //RED: Immediate Threat XB3
@@ -2122,4 +2139,67 @@ public Action TickClientHealth(Handle timer) {
 
 stock int TF2_GetPlayerMaxHealth(int client) {
   return GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client);
+}
+
+//Mini hud for gamemode info
+public Action PerformRoundAdverts(Handle timer) {
+  if(!doRoundAdverts){
+    return Plugin_Stop;
+  }
+  else{
+    char hintBufBlu[256];
+    char hintBufRed[256];
+    char timeBlu[16];
+    char timeRed[16];
+    char timeBluTotal[16];
+    char timeRedTotal[16];
+    int sPosB = RoundToFloor(ticksMusicBlu/66.6666666666);
+    int sPosR = RoundToFloor(ticksMusicRed/66.6666666666);
+    int tPosB = RoundToFloor(refireTicksBlu/66.6666666666);
+    int tPosR = RoundToFloor(refireTicksRed/66.6666666666);
+    Format(timeBlu, 16, "%02d:%02d", sPosB / 60, sPosB % 60);
+    Format(timeBluTotal, 16, "%02d:%02d", tPosB / 60, tPosB % 60);
+    Format(timeRed, 16, "%02d:%02d", sPosR / 60, sPosR % 60);
+    Format(timeRedTotal, 16, "%02d:%02d", tPosR / 60, tPosR % 60);
+    CreateTimer(2.5, PerformRoundAdverts);
+    for (int i = 1; i <= MaxClients; i++) {
+      if (payloadMoving && ChkPt < 6) {
+        if(TornadoWarningIssued){
+          Format(hintBufBlu, sizeof(hintBufBlu), "Payload: MOVING | Checkpoint: %i/%i \n Music: %s (%s/%s) \n\n[TORNADO WARNING]", ChkPt, 5, songNameBlu, timeBlu, timeBluTotal);
+          Format(hintBufRed, sizeof(hintBufRed), "Payload: MOVING | Checkpoint: %i/%i \n Music: %s (%s/%s) \n\n[TORNADO WARNING]", ChkPt, 5, songNameRed, timeRed, timeRedTotal);
+        }
+        else{
+          Format(hintBufBlu, sizeof(hintBufBlu), "Payload: MOVING | Checkpoint: %i/%i \n Music: %s (%s/%s)", ChkPt, 5, songNameBlu, timeBlu, timeBluTotal);
+          Format(hintBufRed, sizeof(hintBufRed), "Payload: MOVING | Checkpoint: %i/%i \n Music: %s (%s/%s)", ChkPt, 5, songNameRed, timeRed, timeRedTotal);
+        } 
+      }
+      else if (!payloadMoving && ChkPt < 6) {
+        if(TornadoWarningIssued){
+          Format(hintBufBlu, sizeof(hintBufBlu), "Payload: IDLE | Checkpoint: %i/%i \n Music: %s (%s/%s) \n\n[TORNADO WARNING]", ChkPt, 5, songNameBlu, timeBlu, timeBluTotal);
+          Format(hintBufRed, sizeof(hintBufRed), "Payload: IDLE | Checkpoint: %i/%i \n Music: %s (%s/%s) \n\n[TORNADO WARNING]", ChkPt, 5, songNameRed, timeRed, timeRedTotal);
+        }
+        else{
+          Format(hintBufBlu, sizeof(hintBufBlu), "Payload: IDLE | Checkpoint: %i/%i \n Music: %s (%s/%s)", ChkPt, 5, songNameBlu, timeBlu, timeBluTotal);
+          Format(hintBufRed, sizeof(hintBufRed), "Payload: IDLE | Checkpoint: %i/%i \n Music: %s (%s/%s)", ChkPt, 5, songNameRed, timeRed, timeRedTotal);
+        }
+      }
+      UpdateHintTextBlu(i, hintBufBlu);
+      UpdateHintTextRed(i, hintBufRed);
+    }
+  }
+  return Plugin_Stop;
+}
+
+void UpdateHintTextBlu(int client, char[] text){
+  if(IsClientInGame(client) && GetClientTeam(client) == 3){
+    PrintHintText(client, text);
+    StopSound(client, SNDCHAN_STATIC, "UI/hint.wav");
+  }
+}
+
+void UpdateHintTextRed(int client, char[] text){
+  if(IsClientInGame(client) && GetClientTeam(client) == 2){
+    PrintHintText(client, text);
+    StopSound(client, SNDCHAN_STATIC, "UI/hint.wav");
+  }
 }
