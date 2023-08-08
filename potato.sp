@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <tf2_stocks>
 #pragma newdecls required
-static char PLG_VER[8] = "1.3.7";
+static char PLG_VER[8] = "1.3.8";
 
 bool bgmPlaying = false;
 bool automatedTornado = false;
@@ -126,6 +126,8 @@ static int LOG_DBG = 2;
 static int LOG_ERR = 3;
 static int SFXSNDLVL = 75;
 static int SNDCHAN = 6;
+static char RETURNSND[32] = "fartsy/ffxiv/return.mp3";
+static char RETURNSUCCESS[32] = "fartsy/ffxiv/returnsuccess.mp3";
 static char TSPWN[32] = "fartsy/misc/brawler/pl_tank.mp3";
 static char TBGM0[16] = "test/bgm0.mp3";
 static char TBGM1[16] = "test/bgm1.mp3";
@@ -144,7 +146,16 @@ int stormIntensity = 0;
 int stormIntensityMin = 1;
 int stormIntensityMax = 8;
 int ticksMusicBlu, ticksMusicRed = 0;
-
+static float SpawnBlu[3] = {
+  4328.65,
+  -2811.0,
+  -760.0
+};
+static float SpawnRed[3] = {
+  4280.65,
+  -2935.0,
+  -988.0
+};
 public Plugin myinfo = {
   name = "Potato - Framework",
   author = "Fartsy",
@@ -188,6 +199,8 @@ public void OnPluginStart() {
   PrecacheSound(GLOBALTHUNDER06, true);
   PrecacheSound(GLOBALTHUNDER07, true);
   PrecacheSound(GLOBALTHUNDER08, true);
+  PrecacheSound(RETURNSND, true);
+  PrecacheSound(RETURNSUCCESS, true);
   PrecacheSound(TSPWN, true);
   PrecacheSound(TBGM0, true);
   PrecacheSound(TBGM1, true);
@@ -213,6 +226,7 @@ public void OnPluginStart() {
   PrecacheSound(COUNTDOWN, true);
   PrecacheSound(CANNONECHO, true);
   RegConsoleCmd("sm_help", Command_Help, "General help / play guide");
+  RegConsoleCmd("sm_return", Command_Return, "Return to your home point");
   RegConsoleCmd("sm_sounds", Command_Sounds, "Toggle sounds on or off via menu");
   RegServerCmd("fb_operator", Command_Operator, "Server-side only. Does nothing when excecuted as client.");
   int defPref = GetConVarInt(cvarSNDDefault);
@@ -230,6 +244,34 @@ public Action Command_Help(int client, int args){
     }
   }
 }
+//Return the client to spawn
+public Action Command_Return(int client, int args) {
+  if (!IsPlayerAlive(client)) {
+    ReplyToCommand(client, "{red}[Core] You must be alive to use this command...");
+    return Plugin_Handled;
+  } else {
+    char name[128];
+    GetClientName(client, name, sizeof(name));
+    CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%s {white}began casting {darkviolet}/return{white}.", name);
+    CustomSoundEmitter(RETURNSND, SFXSNDLVL, false, 0, 1.0, 100, 0);
+    CreateTimer(5.0, ReturnClient, client);
+  }
+  return Plugin_Handled;
+}
+//Return the client to spawn
+public Action ReturnClient(Handle timer, int clientID) {
+  if(GetClientTeam(clientID) == 3){
+    TeleportEntity(clientID, SpawnBlu, NULL_VECTOR, NULL_VECTOR);
+  }
+  else if(GetClientTeam(clientID) == 2){
+    TeleportEntity(clientID, SpawnRed, NULL_VECTOR, NULL_VECTOR);
+  }
+  if (soundPreference[clientID] >= 2) {
+    EmitSoundToClient(clientID, RETURNSUCCESS);
+  }
+  return Plugin_Handled;
+}
+
 //Clientprefs built in menu
 public void FartsysSNDSelected(int client, CookieMenuAction action, any info, char[] buffer, int maxlen) {
   if (action == CookieMenuAction_SelectOption) {
