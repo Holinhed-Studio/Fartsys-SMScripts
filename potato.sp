@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <tf2_stocks>
 #pragma newdecls required
-static char PLG_VER[8] = "1.3.65";
+static char PLG_VER[8] = "1.3.7";
 
 bool bgmPlaying = false;
 bool automatedTornado = false;
@@ -12,6 +12,7 @@ bool payloadMoving = false;
 bool canTornado = false;
 bool commandSuccess = false;
 bool doRoundAdverts = false;
+bool doStorm = false;
 bool tickTornado = false;
 bool tickWeather = false;
 bool isTankAlive = false;
@@ -82,6 +83,14 @@ static char BGM22Title[64] = "Xenoblade Chronicles 3 - Immediate Threat (Pre End
 static char BGM23Title[64] = "Xenoblade Chronicles 3 - You Will Know Our Names (Pre End)";
 static char CANNONECHO[48] = "fartsy/misc/brawler/cannon_echo.mp3";
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
+static char GLOBALTHUNDER01[32] = "fartsy/weather/thunder1.wav";
+static char GLOBALTHUNDER02[32] = "fartsy/weather/thunder2.wav";
+static char GLOBALTHUNDER03[32] = "fartsy/weather/thunder3.wav";
+static char GLOBALTHUNDER04[32] = "fartsy/weather/thunder4.wav";
+static char GLOBALTHUNDER05[32] = "fartsy/weather/thunder5.wav";
+static char GLOBALTHUNDER06[32] = "fartsy/weather/thunder6.wav";
+static char GLOBALTHUNDER07[32] = "fartsy/weather/thunder7.wav";
+static char GLOBALTHUNDER08[32] = "fartsy/weather/thunder8.wav";
 static char VO0[64] = "fartsy/vo/brawler/jeffy/tornadowarn00.mp3";
 static char VO1[64] = "fartsy/vo/brawler/jeffy/tornadowarn01.mp3";
 static char VO2[64] = "fartsy/vo/brawler/jeffy/tornadowarn02.mp3";
@@ -115,6 +124,7 @@ static int LOG_CORE = 0;
 static int LOG_INFO = 1;
 static int LOG_DBG = 2;
 static int LOG_ERR = 3;
+static int SFXSNDLVL = 75;
 static int SNDCHAN = 6;
 static char TSPWN[32] = "fartsy/misc/brawler/pl_tank.mp3";
 static char TBGM0[16] = "test/bgm0.mp3";
@@ -170,6 +180,14 @@ public void OnPluginStart() {
   PrecacheSound(BGM21, true);
   PrecacheSound(BGM22, true);
   PrecacheSound(BGM23, true);
+  PrecacheSound(GLOBALTHUNDER01, true);
+  PrecacheSound(GLOBALTHUNDER02, true);
+  PrecacheSound(GLOBALTHUNDER03, true);
+  PrecacheSound(GLOBALTHUNDER04, true);
+  PrecacheSound(GLOBALTHUNDER05, true);
+  PrecacheSound(GLOBALTHUNDER06, true);
+  PrecacheSound(GLOBALTHUNDER07, true);
+  PrecacheSound(GLOBALTHUNDER08, true);
   PrecacheSound(TSPWN, true);
   PrecacheSound(TBGM0, true);
   PrecacheSound(TBGM1, true);
@@ -194,12 +212,24 @@ public void OnPluginStart() {
   PrecacheSound(VOE, true);
   PrecacheSound(COUNTDOWN, true);
   PrecacheSound(CANNONECHO, true);
+  RegConsoleCmd("sm_help", Command_Help, "General help / play guide");
   RegConsoleCmd("sm_sounds", Command_Sounds, "Toggle sounds on or off via menu");
   RegServerCmd("fb_operator", Command_Operator, "Server-side only. Does nothing when excecuted as client.");
   int defPref = GetConVarInt(cvarSNDDefault);
   SetCookieMenuItem(FartsysSNDSelected, defPref, "Fartsys Ass Sound Preferences");
 }
 
+public Action Command_Help(int client, int args){
+  CPrintToChat(client, "{lime}Welcome to PL_Potato! If you are stuck, please use !return to escape.");
+  switch(ChkPt){
+    case 1,2,3,4,5:{
+      CPrintToChat(client, "{lime} The current objective is payloads. You should be attacking or defending the payload.");
+    }
+    case 6:{
+      CPrintToChat(client, "{lime} It looks like the CP has been unlocked in the keep. Capture it!");
+    }
+  }
+}
 //Clientprefs built in menu
 public void FartsysSNDSelected(int client, CookieMenuAction action, any info, char[] buffer, int maxlen) {
   if (action == CookieMenuAction_SelectOption) {
@@ -1451,6 +1481,19 @@ public Action Command_Operator(int args) {
   }
   //Strike lightning
   case 30:{
+    FireEntityInput("weather.lightning", "TurnOn", "", 0.0);
+    FireEntityInput("weather.sky", "Skin", "4", 0.0);
+    FireEntityInput("weather.sunlight", "TurnOff", "", 0.0);
+    FireEntityInput("LightningLaser", "TurnOn", "", 0.0);
+    FireEntityInput("weather.lightning", "TurnOff", "", 0.1);
+    FireEntityInput("weather.sky", "Skin", "3", 0.1);
+    FireEntityInput("LightningLaser", "TurnOff", "", 0.1);
+    FireEntityInput("weather.lightning", "TurnOn", "", 0.17);
+    FireEntityInput("weather", "Skin", "4", 0.17);
+    FireEntityInput("LightningLaser", "TurnOn", "", 0.17);
+    FireEntityInput("weather.lightning", "TurnOff", "", 0.25);
+    FireEntityInput("weather.sky", "Skin", "3", 0.25);
+    FireEntityInput("LightningLaser", "TurnOff", "", 0.25);
   }
   //Cart on Bridge
   case 94:{
@@ -1815,11 +1858,14 @@ public Action RunWeatherSystem(Handle timer){
         FireEntityInput("weather.sky", "Skin", "1", 0.0);
       }
       case 5:{
+        doStorm = false;
         FireEntityInput("weather.sky", "Skin", "2", 0.0);
         FireEntityInput("weather.sunlight", "TurnOn", "", 0.0);
       }
-      case 8:{
-        stormIntensityMin = 7;
+      case 7:{
+        stormIntensityMin = 8;
+        doStorm = true;
+        CreateTimer(5.0, RefireStorm);
         FireEntityInput("weather.sky", "Skin", "3", 0.0);
         FireEntityInput("weather.sunlight", "TurnOff", "", 0.0);
       }
@@ -1827,6 +1873,8 @@ public Action RunWeatherSystem(Handle timer){
         FireEntityInput("f1_meso", "Stop", "", 0.0);
       }
       case 14,15:{
+        
+        stormIntensityMin = 12;
         FireEntityInput("f1_meso", "Start", "", 0.0);
         if(automatedTornado){
           tickTornado = true;
@@ -2202,4 +2250,100 @@ void UpdateHintTextRed(int client, char[] text){
     PrintHintText(client, text);
     StopSound(client, SNDCHAN_STATIC, "UI/hint.wav");
   }
+}
+
+//Storm
+public Action RefireStorm(Handle timer) {
+  if (doStorm) {
+    float f = GetRandomFloat(7.0, 17.0);
+    CreateTimer(f, RefireStorm);
+    ServerCommand("fb_operator 30");
+    int Thunder = GetRandomInt(1, 16);
+    switch (Thunder) {
+    case 1: {
+      CustomSoundEmitter(GLOBALTHUNDER01, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt00", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt00", "Disable", "", 0.07);
+    }
+    case 2: {
+      CustomSoundEmitter(GLOBALTHUNDER02, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt01", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt01", "Disable", "", 0.07);
+    }
+    case 3: {
+      CustomSoundEmitter(GLOBALTHUNDER03, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt02", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt02", "Disable", "", 0.07);
+    }
+    case 4: {
+      CustomSoundEmitter(GLOBALTHUNDER04, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt03", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt03", "Disable", "", 0.07);
+    }
+    case 5: {
+      CustomSoundEmitter(GLOBALTHUNDER05, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt04", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt04", "Disable", "", 0.07);
+    }
+    case 6: {
+      CustomSoundEmitter(GLOBALTHUNDER06, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt05", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt05", "Disable", "", 0.07);
+    }
+    case 7: {
+      CustomSoundEmitter(GLOBALTHUNDER07, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt06", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt06", "Disable", "", 0.07);
+    }
+    case 8: {
+      CustomSoundEmitter(GLOBALTHUNDER08, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt07", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt07", "Disable", "", 0.07);
+    }
+    case 9: {
+      CustomSoundEmitter(GLOBALTHUNDER01, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt08", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt08", "Disable", "", 0.07);
+    }
+    case 10: {
+      CustomSoundEmitter(GLOBALTHUNDER02, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt09", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt09", "Disable", "", 0.07);
+    }
+    case 11: {
+      CustomSoundEmitter(GLOBALTHUNDER03, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt0A", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt0A", "Disable", "", 0.07);
+    }
+    case 12: {
+      CustomSoundEmitter(GLOBALTHUNDER04, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt0B", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt0B", "Disable", "", 0.07);
+    }
+    case 13: {
+      CustomSoundEmitter(GLOBALTHUNDER05, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt0C", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt0C", "Disable", "", 0.07);
+    }
+    case 14: {
+      CustomSoundEmitter(GLOBALTHUNDER06, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt0D", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt0D", "Disable", "", 0.07);
+    }
+    case 15: {
+      CustomSoundEmitter(GLOBALTHUNDER07, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt0E", "Enable", "", 0.0),
+        FireEntityInput("LightningHurt0E", "Disable", "", 0.07);
+    }
+    case 16: {
+      CustomSoundEmitter(GLOBALTHUNDER08, SFXSNDLVL, false, 0, 1.0, 100, 0);
+      FireEntityInput("LightningHurt0F", "Enable", "", 0.0),
+      FireEntityInput("LightningHurt0F", "Disable", "", 0.07);
+    }
+    }
+  }
+  else{
+    return Plugin_Stop;
+  }
+  return Plugin_Stop;
 }
