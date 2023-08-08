@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <tf2_stocks>
 #pragma newdecls required
-static char PLG_VER[8] = "1.3.4";
+static char PLG_VER[8] = "1.3.5";
 
 bool bgmPlaying = false;
 bool automatedTornado = false;
@@ -95,7 +95,7 @@ static char VOC[64] = "fartsy/vo/brawler/jeffy/begins_10s.mp3";
 static char VOD[64] = "fartsy/vo/jeffy/countdown.mp3";
 static char VOE[64] = "fartsy/vo/brawler/jeffy/tornadowarn00.wav";
 Handle cvarSNDDefault = INVALID_HANDLE;
-/*WARNING: Kill unused Teleports and Dests once swapped. PL1.RegenField to be enabled/disabled at the same time as PL1.CaptureArea. CRITICAL: Fire on pl.filterspawn<XX> team <x> when spawns change! Also, PL<x>.DeathPit to be enabled when Pl deployed.
+/*WARNING: Kill unused Teleports and Dests once swapped. PL1.RegenField to be enabled/disabled at the same time as PL1.CaptureArea. CRITICAL: Fire on pl.filterspawn<XX> team <x> when spawns change!
  NOTE: tornadowarn00, tornadowarn01, and tornadowarn04 are generic warnings
  tornadowarn02 is for blu team only
  tornadowarn03 is for red team only
@@ -107,7 +107,6 @@ Handle cvarSNDDefault = INVALID_HANDLE;
  tank05 is for all
  operator 999 998 997 for mission begins 60, 30, and 10 seconds. can probably use a 5 second timer for 5 4 3 2 1 countdown.
 */
-
 static int BGMSNDLVL = 95;
 static int LOG_CORE = 0;
 static int LOG_INFO = 1;
@@ -612,7 +611,7 @@ void CSEClient(int client, char[] sndName, int SNDLVL, bool isBGM, int flags, fl
   }
 }
 //Find an entity by its targetname
-stock int FindEntityByTargetname(int startEnt, const char[] TargetName, bool caseSensitive, bool Contains)    // Same as FindEntityByClassname with sensitivity and contain features
+stock int FindEntityByTargetname(int startEnt, const char[] TargetName, bool caseSensitive, bool Contains)
 {
   int entCount = GetEntityCount();
   //PrintToServer("EntCount was %i", entCount);
@@ -1097,6 +1096,7 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.CaptureArea", "Disable", "", 0.0);
     FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
     FireEntityInput("PL1.CaptureArea", "CaptureCurrentCP", "", 0.0);
+    FireEntityInput("PL1.DeathPit", "Enable", "", 0.0);
     FireEntityInput("PL1.CP", "SetOwner", "3", 0.0);
     FireEntityInput("PL1.Track0*", "Kill", "", 0.0);
     FireEntityInput("PL1.Track10", "Kill", "", 0.0);
@@ -1113,6 +1113,7 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.TankMaker", "ForceSpawn", "", 5.0);
     CreateTimer(1.0, TimedOperator, 7);
     CreateTimer(1.0, TimedOperator, 0);
+    CreateTimer(5.0, TimedOperator, 21);
   }
   //PL2 (Tank) started push
   case 4: {
@@ -1175,6 +1176,7 @@ public Action Command_Operator(int args) {
     FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track41", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
     FireEntityInput("PL.SpawnDoor00_1Trigger", "Enable", "", 0.0);
+    FireEntityInput("PL2.DeathPit", "Enable", "", 0.0);
     FireEntityInput("PL1.CaptureArea", "SetControlPoint", "PL3.CP", 1.0);
     FireEntityInput("PL.TankBoomSND", "PlaySound", "", 8.0);
     FireEntityInput("PL.TankExplo", "Explode", "", 8.0);
@@ -1275,6 +1277,7 @@ public Action Command_Operator(int args) {
       FireEntityInput("PL3.CP", "SetOwner", "3", 0.0);
       FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
       FireEntityInput("PL1.TrackTrain", "AddOutput", "height 16", 0.0);
+      FireEntityInput("PL3.DeathPit", "Enable", "", 0.0);
       FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track51", 0.20);
       FireEntityInput("PL4.PayloadSpawner", "ForceSpawn", "", 1.0);
       FireEntityInput("PL1.CaptureArea", "Enable", "", 1.0);
@@ -1703,6 +1706,30 @@ public Action TimedOperator(Handle timer, int opCode) {
   }
   case 20:{
     commandSuccess = false;
+  }
+  case 21:{
+    int i = GetRandomInt(1, 5);
+    switch(i){
+      case 1:{
+        CustomSoundEmitter(VO5, BGMSNDLVL, false, 0, 1.0, 100, 2);
+        CustomSoundEmitter(VO9, BGMSNDLVL, false, 0, 1.0, 100, 3);
+      }
+      case 2:{
+        CustomSoundEmitter(VO9, BGMSNDLVL, false, 0, 1.0, 100, 0);
+      }
+      case 3:{
+        CustomSoundEmitter(VO6, BGMSNDLVL, false, 0, 1.0, 100, 2);
+        CustomSoundEmitter(VO9, BGMSNDLVL, false, 0, 1.0, 100, 3);
+      }
+      case 4:{
+        CustomSoundEmitter(VO7, BGMSNDLVL, false, 0, 1.0, 100, 2);
+        CustomSoundEmitter(VO9, BGMSNDLVL, false, 0, 1.0, 100, 3);
+      }
+      case 5:{
+        CustomSoundEmitter(VO8, BGMSNDLVL, false, 0, 1.0, 100, 2);
+        CustomSoundEmitter(VO9, BGMSNDLVL, false, 0, 1.0, 100, 3);
+      }
+    }
   }
   }
 }
