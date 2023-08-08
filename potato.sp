@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <tf2_stocks>
 #pragma newdecls required
-static char PLG_VER[8] = "1.3.6";
+static char PLG_VER[8] = "1.3.65";
 
 bool bgmPlaying = false;
 bool automatedTornado = false;
@@ -87,11 +87,11 @@ static char VO1[64] = "fartsy/vo/brawler/jeffy/tornadowarn01.mp3";
 static char VO2[64] = "fartsy/vo/brawler/jeffy/tornadowarn02.mp3";
 static char VO3[64] = "fartsy/vo/brawler/jeffy/tornadowarn03.mp3";
 static char VO4[64] = "fartsy/vo/brawler/jeffy/tornadowarn04.mp3";
-static char VO5[64] = "fartsy/vo/brawler/jeffy/tank01.mp3";
-static char VO6[64] = "fartsy/vo/brawler/jeffy/tank02.mp3";
-static char VO7[64] = "fartsy/vo/brawler/jeffy/tank03.mp3";
-static char VO8[64] = "fartsy/vo/brawler/jeffy/tank04.mp3";
-static char VO9[64] = "fartsy/vo/brawler/jeffy/tank05.mp3";
+static char VO5[64] = "fartsy/vo/brawler/jeffy/tank00.mp3";
+static char VO6[64] = "fartsy/vo/brawler/jeffy/tank01.mp3";
+static char VO7[64] = "fartsy/vo/brawler/jeffy/tank02.mp3";
+static char VO8[64] = "fartsy/vo/brawler/jeffy/tank03.mp3";
+static char VO9[64] = "fartsy/vo/brawler/jeffy/tank04.mp3";
 static char VOA[64] = "fartsy/vo/brawler/jeffy/begins_60s.mp3";
 static char VOB[64] = "fartsy/vo/brawler/jeffy/begins_30s.mp3";
 static char VOC[64] = "fartsy/vo/brawler/jeffy/begins_10s.mp3";
