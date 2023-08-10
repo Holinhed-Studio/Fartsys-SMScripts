@@ -4,13 +4,14 @@
 #include <sourcemod>
 #include <tf2_stocks>
 #pragma newdecls required
-static char PLG_VER[8] = "1.3.8";
+static char PLG_VER[8] = "1.4.2";
 
 bool bgmPlaying = false;
 bool automatedTornado = false;
 bool payloadMoving = false;
-bool canTornado = false;
+bool stormTornadic = false;
 bool commandSuccess = false;
+bool CP1DoorOpen = false;
 bool doRoundAdverts = false;
 bool doStorm = false;
 bool tickTornado = false;
@@ -23,6 +24,7 @@ bool tickMusic = false;
 bool tickingClientHealth = false;
 bool TornadoWarningIssued = false;
 bool spawnPl4 = true;
+int  CP1Door = 60;
 int tmov = 1;
 char charHP[16];
 char curPhaseBlu[256];
@@ -83,6 +85,9 @@ static char BGM22Title[64] = "Xenoblade Chronicles 3 - Immediate Threat (Pre End
 static char BGM23Title[64] = "Xenoblade Chronicles 3 - You Will Know Our Names (Pre End)";
 static char CANNONECHO[48] = "fartsy/misc/brawler/cannon_echo.mp3";
 static char COUNTDOWN[32] = "fartsy/misc/countdown.wav";
+static char END01[64] = "fartsy/music/brawler/xbc3/immediatethreat_end.mp3";
+static char END02[64] = "fartsy/music/brawler/xbc3/immediatethreat_end_loss.mp3";
+static char END03[64] = "fartsy/music/brawler/xbc3/youwillknowournames_end.mp3";
 static char GLOBALTHUNDER01[32] = "fartsy/weather/thunder1.wav";
 static char GLOBALTHUNDER02[32] = "fartsy/weather/thunder2.wav";
 static char GLOBALTHUNDER03[32] = "fartsy/weather/thunder3.wav";
@@ -144,7 +149,7 @@ int soundPreference[MAXPLAYERS + 1];
 int stopForTeam = 0;
 int stormIntensity = 0;
 int stormIntensityMin = 1;
-int stormIntensityMax = 8;
+int stormIntensityMax = 5;
 int ticksMusicBlu, ticksMusicRed = 0;
 static float SpawnBlu[3] = {
   4328.65,
@@ -166,7 +171,7 @@ public Plugin myinfo = {
 
 public void OnPluginStart() {
   cvarSNDDefault = CreateConVar("sm_potato_sound", "3", "Default sound for new users, 3 = Everything, 2 = Sounds Only, 1 = Music Only, 0 = Nothing");
-  PotatoLogger(LOG_DBG, "Plugin started.");
+  PotatoLogger(LOG_CORE, "Plugin started.");
   PrecacheSound(BGM0, true);
   PrecacheSound(BGM1, true);
   PrecacheSound(BGM2, true);
@@ -297,7 +302,7 @@ public void OnClientPutInServer(int client) {
         tickingClientHealth = true;
       }
       char query[1024];
-      Format(query, sizeof(query), "INSERT INTO potato_activity (name, steamid, date, damagedealtsession, killssession, deathssession, capturessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
+      Format(query, sizeof(query), "INSERT INTO potato_activity (name, steamid, date, damagedealtsession, killssession, deathssession, capturessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, captures = 0, capturessession = 0;", client, steamID, client);
       FB_Database.Query(Database_FastQuery, query);
       DataPack pk = new DataPack();
       pk.WriteCell(client ? GetClientUserId(client) : 0);
@@ -331,7 +336,7 @@ public void SQL_SNDPrefs(Database db, DBResultSet results,
   }
   if (results.FetchRow()) {
     soundPreference[client] = results.FetchInt(0); //Set it
-    //PrintToServer("Client %N soundPreference was set to %i", client, soundPreference[client]);
+    PrintToServer("Client %N soundPreference was set to %i", client, soundPreference[client]);
   }
 }
 
@@ -635,7 +640,7 @@ public Action QueueMusicForClient(Handle timer, int client){
         }
         //PL2 BLU Resolute Heart Siilence
         case 2:{
-          CSEClient(client, BGM5, BGMSNDLVL, true, 1, 1.0, 100); //BLU: Resolute Heart Silence
+          CSEClient(client, BGM5, BGMSNDLVL+10, true, 1, 1.0, 100); //BLU: Resolute Heart Silence
           CSEClient(client, BGM7, BGMSNDLVL, true, 1, 0.05, 100); //BLU: Resolute Heart
         }
         //PL3 BLU Resolute Heart
@@ -678,10 +683,10 @@ public Action QueueMusicForClient(Handle timer, int client){
 //Play sound to client
 void CSEClient(int client, char[] sndName, int SNDLVL, bool isBGM, int flags, float vol, int pitch){
   if(isBGM && (soundPreference[client] == 1 || soundPreference[client] == 3) ){
-    PotatoLogger(LOG_DBG, "Client got BGM!");
+    //PotatoLogger(LOG_DBG, "Client got BGM!");
     EmitSoundToClient(client, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
   } else if (!isBGM && soundPreference[client] >= 2){
-    PotatoLogger(LOG_DBG, "Client got SFX!");
+    //PotatoLogger(LOG_DBG, "Client got SFX!");
     EmitSoundToClient(client, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
   }
 }
@@ -1142,12 +1147,13 @@ public Action Command_Operator(int args) {
   //Red Win
   case 0: {
     stopForTeam = 0;
-    BGMINDEX = 0;
+    BGMINDEX = 10;
     bgmPlaying = false;
     RestartMusic();
     tickMusic = false;
     PrintToChatAll("RED WON.");
     FireEntityInput("WinRed", "RoundWin", "", 0.0);
+    CreateTimer(0.2, TimedOperator, 26);
   }
   //Blu Win
   case 1: {
@@ -1194,6 +1200,24 @@ public Action Command_Operator(int args) {
   case 4: {
     ChkPt = 2;
     isTankAlive = true;
+    int i = GetClientCount(true);
+    switch(i){
+      case 1,2,3:{
+        FireEntityInput("TankBossA", "SetHealth", "8000", 1.0);
+      }
+      case 4,5:{
+        FireEntityInput("TankBossA", "SetHealth", "10000", 1.0);
+      }
+      case 6,7:{
+        FireEntityInput("TankBossA", "SetHealth", "16000", 1.0);
+      }
+      case 8,9:{
+        FireEntityInput("TankBossA", "SetHealth", "24000", 1.0);
+      }
+      case 10,11,12,13,14,15,16,17,18,19,20,21,22,23,24:{
+        FireEntityInput("TankBossA", "SetHealth", "50000", 1.0);
+      }
+    }
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "69", 0.0);
     FireEntityInput("PL.WatcherA", "SetSpeedForwardModifier", "0.5", 0.0);
     FireEntityInput("TornadoPathing", "ForceSpawn", "", 10.0);
@@ -1216,7 +1240,7 @@ public Action Command_Operator(int args) {
   //PL2 (Tank) Requested to Deploy
   case 6: {
     if (isTankAlive) {
-      PotatoLogger(LOG_DBG, "TANK ALIVE. DEPLOY TRUE.");
+      //PotatoLogger(LOG_DBG, "TANK ALIVE. DEPLOY TRUE.");
       tankDeploy = true;
       FireEntityInput("TankBossA", "SetHealth", "900000", 0.0);
       FireEntityInput("PL1.TrackTrain", "Stop", "", 0.1);
@@ -1225,7 +1249,7 @@ public Action Command_Operator(int args) {
       CreateTimer(0.2, TimedOperator, 2);
     } else {
       tankDeploy = false;
-      PotatoLogger(LOG_DBG, "TANK NOT ALIVE. DEPLOY FALSE.");
+      //PotatoLogger(LOG_DBG, "TANK NOT ALIVE. DEPLOY FALSE.");
       FireEntityInput("PL1.TrackTrain", "Stop", "", 0.0);
       FireEntityInput("PL1.TrackTrain", "TeleportToPathTrack", "PL1.Track17", 0.0);
       FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
@@ -1410,7 +1434,7 @@ public Action Command_Operator(int args) {
     ChkPt = 6;
     stopForTeam = 0;
     RestartMusic();
-    PotatoLogger(LOG_DBG, "PL5 Captured. To Do: Play sound and blow up gate instead of *ding* you captured lulululululu~");
+    //PotatoLogger(LOG_DBG, "PL5 Captured. To Do: Play sound and blow up gate instead of *ding* you captured lulululululu~");
     FireEntityInput("PL5.CP", "SetOwner", "3", 0.0);
     FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
     FireEntityInput("PL.WatcherA", "SetNumTrainCappers", "0", 0.0);
@@ -1449,6 +1473,11 @@ public Action Command_Operator(int args) {
     ChkPt = 7;
     stopForTeam = 0;
     RestartMusic();
+    CreateTimer(0.1, TempHintTextAll);
+    CreateTimer(60.0, TimedOperator, 12);
+    FireEntityInput("Objectives", "SetTextureIndex", "6", 0.0);
+    FireEntityInput("PL.Objectives2", "Enable", "", 0.0);
+    FireEntityInput("PL.Spawn02", "SetTeam", "3", 0.0);
     FireEntityInput("PL.RoundTimer", "AddTeamTime", "3 300", 0.0);
     FireEntityInput("PL.Tele01", "Kill", "", 0.0);
     FireEntityInput("PL.Tele02", "Kill", "", 0.0);
@@ -1467,13 +1496,21 @@ public Action Command_Operator(int args) {
     BGMINDEX = 8;
     ChkPt = 8;
     stopForTeam = 0;
+    FireEntityInput("Objectives", "SetTextureIndex", "7", 0.0);
+    FireEntityInput("PL.Spawn03", "SetTeam", "3", 0.0);
     RestartMusic();
     FireEntityInput("PL.Teleport00", "Disable", "", 0.0);
+    FireEntityInput("PL.Teleport01", "Disable", "", 0.0);
+    FireEntityInput("PL.Teleport02", "Disable", "", 0.0);
+    FireEntityInput("PL.Teleport03", "Disable", "", 0.0);
     FireEntityInput("PL.Teleport04", "Enable", "", 0.1);
+    FireEntityInput("PL.Teleport05", "Enable", "", 0.1);
     FireEntityInput("PL.FilterSpawn02", "setteam", "2", 0.1);
     FireEntityInput("CTF1.CTF", "Kill", "", 0.1);
     FireEntityInput("PL.Spawn00_FlagDetZone", "Kill", "", 0.1);
     FireEntityInput("PL.Spawn03_FlagDetZone", "Enable", "", 1.0);
+    FireEntityInput("CP1.Teleport", "Enable", "", 0.5);
+    FireEntityInput("CP1.Teleport", "Disable", "", 3.0);
     FireEntityInput("CTF2.CTF", "Enable", "", 5.0);
   }
   //CTF2 Captured
@@ -1482,6 +1519,7 @@ public Action Command_Operator(int args) {
     ChkPt = 9;
     stopForTeam = 0;
     RestartMusic();
+    FireEntityInput("Objectives", "SetTextureIndex", "8", 0.0);
     FireEntityInput("CTF2.CTF", "Kill", "", 0.1);
     FireEntityInput("PL.Spawn03_FlagDetZone", "Kill", "", 0.1);
     FireEntityInput("CP2.CP", "SetLocked", "0", 0.0);
@@ -1496,7 +1534,12 @@ public Action Command_Operator(int args) {
   }
   //CP2 captured
   case 24:{
-
+    FireEntityInput("Objectives", "SetTextureIndex", "9", 0.0);
+    FireEntityInput("Objectives", "SetTextureIndex", "0", 7.0);
+    stopForTeam = 0;
+    BGMINDEX = 10;
+    RestartMusic();
+    CreateTimer(0.2, TimedOperator, 25);
   }
   //Gilgamesh Spawned
   case 25:{
@@ -1509,16 +1552,22 @@ public Action Command_Operator(int args) {
   }
   //Tornado should start
   case 26:{
-    if(canTornado){
+    if(stormTornadic){
       FireEntityInput("F1_Debris", "Start", "", 1.0);
       FireEntityInput("F1_Core", "Start", "", 2.5);
+      FireEntityInput("TornadoF1Wind", "Enable", "", 2.5);
+      FireEntityInput("TornadoF1ShakeTrigger", "Enable", "", 2.5);
+      FireEntityInput("TornadoF1Sound", "PlaySound", "", 2.5);
     }
   }
   //Tornado should end
   case 27:{
-    if(canTornado){
+    if(stormTornadic){
       FireEntityInput("F1_Debris", "Stop", "", 1.0);
       FireEntityInput("F1_Core", "Stop", "", 2.5);
+      FireEntityInput("TornadoF1Wind", "Disable", "", 2.5);
+      FireEntityInput("TornadoF1ShakeTrigger", "Disable", "", 2.5);
+      FireEntityInput("TornadoF1Sound", "StopSound", "", 2.5);
     }
   }
   //Strike lightning
@@ -1570,7 +1619,9 @@ public Action Command_Operator(int args) {
   }
   //Setup begin
   case 99:{
+    CP1Door = 60;
     doRoundAdverts = false;
+    tickWeather = false;
     ServerCommand("mp_waitingforplayers_cancel 1");
     FireEntityInput("PL.RoundTimer", "Enable", "", 1.0);
     QueueMusicSystem();
@@ -1588,12 +1639,24 @@ public Action Command_Operator(int args) {
   case 200:{
     commandSuccess = true;
   }
+  //Begins 60s
+  case 999:{
+    EmitSoundToAll(VOA);
+  }
+  //Begins 30s
+  case 998:{
+    EmitSoundToAll(VOB);
+  }
+  //Begins 10s
+  case 997:{
+    EmitSoundToAll(VOC);
+  }
   //debug
   case 9000:{
     stormIntensityMax = 18;
     stormIntensity = 16;
     tickWeather = true;
-    canTornado = true;
+    stormTornadic = true;
     FireEntityInput("F1_Meso", "Start", "", 0.0);
     FireEntityInput("track2", "SetSpeedReal", "0.25", 0.0);
     FireEntityInput("track2", "StartForward", "", 1.0);
@@ -1605,7 +1668,7 @@ public Action Command_Operator(int args) {
     tickTornado = true;
   }
   case 9002:{
-    FireEntityInput("TornadoPathing", "ForceSpawn", "", 1.0);
+    //FireEntityInput("TornadoPathing", "ForceSpawn", "", 1.0);
   }
   case 9010: {
     CustomSoundEmitter(TBGM6, BGMSNDLVL - 10, true, 1, 1.0, 100, 0);
@@ -1798,6 +1861,9 @@ public Action TimedOperator(Handle timer, int opCode) {
     }
     FireEntityInput("Objectives", "SetTextureIndex", "5", 0.0);
   }
+  case 12:{
+    CP1DoorOpen = true;
+  }
   case 20:{
     commandSuccess = false;
   }
@@ -1825,6 +1891,14 @@ public Action TimedOperator(Handle timer, int opCode) {
       }
     }
   }
+  case 25:{
+    CustomSoundEmitter(END03, BGMSNDLVL, true, 0, 1.0, 100, 3);
+    CustomSoundEmitter(END02, BGMSNDLVL, true, 0, 1.0, 100, 2);
+  }
+  case 26:{
+    CustomSoundEmitter(END02, BGMSNDLVL, true, 0, 1.0, 100, 3);
+    CustomSoundEmitter(END03, BGMSNDLVL, true, 0, 1.0, 100, 2);
+  }
   }
 }
 
@@ -1845,6 +1919,8 @@ void QueueWeatherSystem() {
   CreateTimer(10.0, RunWeatherSystem);
   CreateTimer(3.0, TimedOperator, 6);
   stormIntensity = 0;
+  stormIntensityMin = 0;
+  stormIntensityMax = 5;
   tickWeather = true;
 }
 
@@ -1905,7 +1981,7 @@ public Action RunWeatherSystem(Handle timer){
         FireEntityInput("weather.sunlight", "TurnOn", "", 0.0);
       }
       case 7:{
-        stormIntensityMin = 8;
+        stormIntensityMin = 9;
         doStorm = true;
         CreateTimer(5.0, RefireStorm);
         FireEntityInput("weather.sky", "Skin", "3", 0.0);
@@ -1928,10 +2004,10 @@ public Action RunWeatherSystem(Handle timer){
           FireEntityInput("track2", "SetSpeedReal", "40", 0.5);
           tickTornado = false;
         }
-        canTornado = false;
+        stormTornadic = false;
       }
       case 16,17:{
-        canTornado = true;
+        stormTornadic = true;
         if(automatedTornado){
           tickTornado = true;
         }
@@ -1967,7 +2043,7 @@ public Action TankPingTimer(Handle timer) {
     int tankHP = GetEntProp(tank, Prop_Data, "m_iHealth");
     int tankMaxHP = GetEntProp(tank, Prop_Data, "m_iMaxHealth");
     if (tankHP > 500000) {
-      PotatoLogger(LOG_DBG, "BLUE TANK IS DEPLOYING ITS BOMB.");
+      //PotatoLogger(LOG_DBG, "BLUE TANK IS DEPLOYING ITS BOMB.");
       return Plugin_Stop;
     } else {
       float p = float(tankHP) / float(tankMaxHP);
@@ -2050,32 +2126,32 @@ void CustomSoundEmitter(char[] sndName, int SNDLVL, bool isBGM, int flags, float
   //Format(dbgWarn, sizeof(dbgWarn), "{orange}WARNING: soundpreference is bypassed. Sound %s will play regardless of preference.", sndName);
   for (int i = 1; i <= MaxClients; i++){
     if(IsClientInGame(i) && !IsFakeClient(i)){
-      Format(dbgWarn, sizeof(dbgWarn), "{lime}Sound Preference of %N was %i", i, soundPreference[i]);
-      PotatoLogger(LOG_INFO, dbgWarn);
+      //Format(dbgWarn, sizeof(dbgWarn), "{lime}Sound Preference of %N was %i", i, soundPreference[i]);
+      //PotatoLogger(LOG_INFO, dbgWarn);
       if(team == 0){
         if(isBGM && (soundPreference[i] == 1 || soundPreference[i] == 3)){//see below
-          PotatoLogger(LOG_DBG, "Client on ALL teams got BGM!");
+          //PotatoLogger(LOG_DBG, "Client on ALL teams got BGM!");
           EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
         } else if (!isBGM && soundPreference[i] >= 2){
-          PotatoLogger(LOG_DBG, "Client on ALL teams got SFX!");
+          //PotatoLogger(LOG_DBG, "Client on ALL teams got SFX!");
           EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
         }
       }
       else if(GetClientTeam(i) == 2 && team == 2){
         if(isBGM && (soundPreference[i] == 1 || soundPreference[i] == 3)){ //instead of using true, use soundPreference(i)
-          PotatoLogger(LOG_DBG, "Client on Red team got BGM!");
+          //PotatoLogger(LOG_DBG, "Client on Red team got BGM!");
           EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
         } else if(!isBGM && soundPreference[i] >= 2) {
-          PotatoLogger(LOG_DBG, "Client on Red team got SFX!");
+          //PotatoLogger(LOG_DBG, "Client on Red team got SFX!");
           EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
         }
       }
       else if(GetClientTeam(i) == 3 && team == 3){
         if(isBGM && (soundPreference[i] == 1 || soundPreference[i] == 3)){//see above
-          PotatoLogger(LOG_DBG, "Client on Blu team got BGM!");
+          //PotatoLogger(LOG_DBG, "Client on Blu team got BGM!");
           EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
         } else if (!isBGM && soundPreference[i] >= 2){
-          PotatoLogger(LOG_DBG, "Client on Blu team got SFX!");
+          //PotatoLogger(LOG_DBG, "Client on Blu team got SFX!");
           EmitSoundToClient(i, sndName, _, SNDCHAN, SNDLVL, flags, vol, pitch, _, _, _, _, _);
         }
       }
@@ -2096,7 +2172,7 @@ void PhaseChange(int reason){
         curPhaseBlu = BGM3;
         songNameBlu = BGM3Title;
         CreateTimer(0.1, UpdateMusicBlu);
-        CustomSoundEmitter(BGM3, BGMSNDLVL, true, 1, 1.0, 100, 3);
+        CustomSoundEmitter(BGM3, BGMSNDLVL, true, 1, 0.5, 100, 3);
       }
       //Payload deployed
       else if(reason == 4){
@@ -2120,7 +2196,7 @@ void PhaseChange(int reason){
         curPhaseBlu = BGM5;
         CreateTimer(0.1, UpdateMusicBlu);
         CustomSoundEmitter(BGM5, BGMSNDLVL, true, 1, 0.05, 100, 3); //BLU: Resolute Heart Silence
-        CustomSoundEmitter(BGM7, BGMSNDLVL, true, 1, 1.0, 100, 3); //BLU: Resolute Heart 
+        CustomSoundEmitter(BGM7, BGMSNDLVL+10, true, 1, 1.0, 100, 3); //BLU: Resolute Heart 
       }
     }
     case 3:{
@@ -2294,6 +2370,39 @@ void UpdateHintTextRed(int client, char[] text){
   }
 }
 
+public Action TempHintTextAll(Handle timer){
+  if (!CP1DoorOpen){
+    char hintBufBlu[256];
+    char hintBufRed[256];
+    char timeBlu[16];
+    char timeRed[16];
+    char timeBluTotal[16];
+    char timeRedTotal[16];
+    int sPosB = RoundToFloor(ticksMusicBlu/66.6666666666);
+    int sPosR = RoundToFloor(ticksMusicRed/66.6666666666);
+    int tPosB = RoundToFloor(refireTicksBlu/66.6666666666);
+    int tPosR = RoundToFloor(refireTicksRed/66.6666666666);
+    Format(timeBlu, 16, "%02d:%02d", sPosB / 60, sPosB % 60);
+    Format(timeBluTotal, 16, "%02d:%02d", tPosB / 60, tPosB % 60);
+    Format(timeRed, 16, "%02d:%02d", sPosR / 60, sPosR % 60);
+    Format(timeRedTotal, 16, "%02d:%02d", tPosR / 60, tPosR % 60);
+    CP1Door--;
+    for (int i = 1; i <= MaxClients; i++) {
+      if(TornadoWarningIssued){
+        Format(hintBufBlu, sizeof(hintBufBlu), "CP1 Door: MOVING | ETA: %is \n Music: %s (%s/%s) \n\n[TORNADO WARNING]", CP1Door, songNameBlu, timeBlu, timeBluTotal);
+        Format(hintBufRed, sizeof(hintBufRed), "CP1 Door: MOVING | ETA: %is \n Music: %s (%s/%s) \n\n[TORNADO WARNING]", CP1Door, songNameRed, timeRed, timeRedTotal);
+      }
+      else{
+        Format(hintBufBlu, sizeof(hintBufBlu), "CP1 Door: MOVING | ETA: %is \n Music: %s (%s/%s)", CP1Door, songNameBlu, timeBlu, timeBluTotal);
+        Format(hintBufRed, sizeof(hintBufRed), "CP1 Door: MOVING | ETA: %is \n Music: %s (%s/%s)", CP1Door, songNameRed, timeRed, timeRedTotal);
+      }
+    }
+    CreateTimer(1.0, TempHintTextAll);
+  } else {
+    return Plugin_Stop;
+  }
+  return Plugin_Stop;
+}
 //Storm
 public Action RefireStorm(Handle timer) {
   if (doStorm) {
