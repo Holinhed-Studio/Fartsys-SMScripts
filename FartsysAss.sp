@@ -21,7 +21,7 @@
 #include <ass_variables>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "6.3.0";
+static char PLUGIN_VERSION[8] = "6.3.1";
 Database FB_Database;
 Handle cvarSNDDefault = INVALID_HANDLE;
 
@@ -73,7 +73,7 @@ public void OnGameFrame() {
     if (shouldStopMusic && (ticksMusic == refireTime - 1)) {
       //PrintToConsoleAll("Stopped: %s because shouldStop was %b or shouldStop was %b", prevSong, shouldStopMusic);
       for (int i = 1; i <= MaxClients; i++) {
-        PrintToChatAll("Stopped music for %N", i);
+        //PrintToChatAll("Stopped music for %N", i);
         StopSound(i, SNDCHAN, prevSong);
         shouldStopMusic = false;
         isADPCM = false;
@@ -4085,6 +4085,6 @@ public Action TickClientHealth(Handle timer) {
 
 public Action UpdateMusic(Handle timer) {
   prevSong = curSong;
-  PrintToChatAll("Song to stop is %s", prevSong);
+  //PrintToChatAll("Song to stop is %s", prevSong);
   return Plugin_Stop;
 }
