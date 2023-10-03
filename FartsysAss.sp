@@ -5,7 +5,7 @@
  *   THREE..... THIS MOD IS INTENDED FOR USE ON THE FIREHOSTREDUX SERVERS ONLY. SUPPORT IS LIMITED.
  *   FOUR..... THIS WAS A NIGHTMARE TO FIGURE OUT AND BUG FIX. I HOPE IT WAS WORTH IT.
  *   FIVE..... PLEASE HAVE FUN AND ENJOY YOURSELF!
- *   SIX..... THE DURATION OF MUSIC TIMERS SHOULD BE SET DEPENDING WHAT SONG IS USED. SET THIS USING THE FLOATS BGM<X>Dur BELOW.
+ *   SIX..... THE DURATION OF MUSIC TIMERS SHOULD BE SET DEPENDING WHAT SONG IS USED. SET THIS USING THE INTS IN THE VARIABLES INCLUDE. SONG DUR IN SECONDS / 0.0151515151515 = REFIRE TIME.
  *   SEVEN..... TIPS AND TRICKS MAY BE ADDED TO THE TIMER, SEE PerformAdverts(Handle timer);
  *
  *                                       GL HF!!!
@@ -3982,7 +3982,7 @@ public void SetupMusic(int BGM) {
     BGMINDEX = BGM;
   }
   shouldStopMusic = true;
-  curSong = MusicArray[BGM-1]; //Check this if I may have accidentally'd something.
+  curSong = MusicArray[BGM-1]; //SetupMusic when called by wave start, causes this -1 to be broken. Might be worth looking into...
   PrintToChatAll("curSong set to %s", curSong);
   if (!StrEqual(prevSong, curSong)){
     shouldStopMusic = true;
@@ -4047,15 +4047,11 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int p1, int p2) 
     VIPBGM = p2;
     if (!StrEqual(prevSong, curSong)){
       shouldStopMusic = true;
-      //PrintToChatAll("shouldStop because prev %s and cur %s", prevSong, curSong);
-    }
-    else{
+    } else {
       shouldStopMusic = false;
-      //PrintToChatAll("shouldStop cancel because prev %s and cur %s", prevSong, curSong);
     }
     BGMINDEX = p2;
-  }
-  else if (action == MenuAction_End) {
+  } else if (action == MenuAction_End) {
     CloseHandle(menu);
   }
 }
@@ -4069,7 +4065,6 @@ public Action TickClientHealth(Handle timer) {
     if (IsClientInGame(i) && !IsFakeClient(i) && (GetClientTeam(i) == 2)) {
       int health = GetClientHealth(i);
       int healthMax = TF2_GetPlayerMaxHealth(i);
-      //PrintToServer("Client %N joined RED TEAM and is being tracked with %i/%i health! UwU", i, health, healthMax);
       if (!FB_Database) {
         return;
       } else {
