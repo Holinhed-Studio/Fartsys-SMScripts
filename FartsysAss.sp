@@ -21,7 +21,7 @@
 #include <ass_variables>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "6.3.2";
+static char PLUGIN_VERSION[8] = "6.3.3";
 Database FB_Database;
 Handle cvarSNDDefault = INVALID_HANDLE;
 
@@ -61,11 +61,11 @@ public void OnPluginStart() {
 }
 
 public void OnGameFrame() {
-  if (gameState[1]) {
+  if (tickMusic) {
     ticksMusic++;
     //PrintToConsoleAll("ticks %i", ticksMusic);
     //Start something if bgm is not playing
-    if (!gameState[0]) {
+    if (!bgmPlaying) {
       refireTime = 0;
       ticksMusic = 0;
     }
@@ -101,7 +101,7 @@ public void OnGameFrame() {
     //Track and play music
     if (ticksMusic >= refireTime) {
       CreateTimer(1.0, UpdateMusic);
-      gameState[0] = true;
+      bgmPlaying = true;
       switch (BGMINDEX) {
       case 0: {
         isADPCM = false;
@@ -732,34 +732,7 @@ public void OnMapStart() {
 public Action PerformAdverts(Handle timer) {
   if (!isWave) {
     CreateTimer(180.0, PerformAdverts);
-    int i = GetRandomInt(1, 7);
-    switch (i) {
-    case 1: {
-      CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}We have a Discord server: {forestgreen}https://discord.com/invite/SkHaeMH");
-    }
-    case 2: {
-      CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}Remember to buy your upgrades using {forestgreen}!buy");
-    }
-    case 3: {
-      //CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}If this is your first time here, please run console command {forestgreen}snd_restart {white}for safety. Otherwise, you might {red}crash{white}!");
-      CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}You may invoke {forestgreen}!sounds {white}to configure what sounds you hear from the plugin, or {forestgreen}!stats{white} to see your stats.");
-    }
-    case 4: {
-      CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}Advanced users may quick buy upgrades using {forestgreen}!qbuy");
-    }
-    case 5: {
-      CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}Don't forget to buy {forestgreen}protection upgrades {white}and {forestgreen}ammo regen{white}(if applicable)!");
-    }
-    case 6: {
-      CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}TIP: As a {red}DEFENDER{white}, pushing your team's {forestgreen}payload {white}is crucial to wrecking havoc on the robots!");
-    }
-    case 7: {
-      CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}Remember, if someone is being abusive, you may always invoke {forestgreen}!calladmin{white}.");
-    }
-    case 8: {
-      CPrintToChatAll("{darkviolet}[{aqua}CORE{darkviolet}] {white}You may always invoke {forestgreen}!return{white} to be returned to spawn.");
-    }
-    }
+    CPrintToChatAll(AdvMessage[GetRandomInt(0, 7)]);
   }
   return Plugin_Stop;
 }
@@ -973,33 +946,7 @@ public Action SharkTimer(Handle timer) {
     FireEntityInput("SentSharkTorpedo", "ForceSpawn", "", 0.0);
     float f = GetRandomFloat(2.0, 5.0);
     CreateTimer(f, SharkTimer);
-    int i = GetRandomInt(1, 8);
-    switch (i) {
-    case 1: {
-      CustomSoundEmitter(SFXArray[43], SNDLVL[2], false, 0, 1.0, 100);
-    }
-    case 2: {
-      CustomSoundEmitter(SFXArray[44], SNDLVL[2], false, 0, 1.0, 100);
-    }
-    case 3: {
-      CustomSoundEmitter(SFXArray[45], SNDLVL[2], false, 0, 1.0, 100);
-    }
-    case 4: {
-      CustomSoundEmitter(SFXArray[46], SNDLVL[2], false, 0, 1.0, 100);
-    }
-    case 5: {
-      CustomSoundEmitter(SFXArray[47], SNDLVL[2], false, 0, 1.0, 100);
-    }
-    case 6: {
-      CustomSoundEmitter(SFXArray[48], SNDLVL[2], false, 0, 1.0, 100);
-    }
-    case 7: {
-      CustomSoundEmitter(SFXArray[49], SNDLVL[2], false, 0, 1.0, 100);
-    }
-    case 8: {
-      CustomSoundEmitter(SFXArray[50], SNDLVL[2], false, 0, 1.0, 100);
-    }
-    }
+    CustomSoundEmitter(SFXArray[GetRandomInt(43, 50), SNDLVL[2], flase, 0, 1.0, 100]);
     return Plugin_Handled;
   }
   return Plugin_Stop;
@@ -3411,7 +3358,7 @@ public Action Command_Operator(int args) {
     CreateTimer(10.0, SephHPTimer);
   }
   case 9001:{
-    PrintToServer("BGM State is %b", gameState[0]);
+    PrintToServer("BGM State is %b", bgmPlaying);
   }
   case 9010: {
     CustomSoundEmitter(TBGM6, SNDLVL[0] - 10, true, 1, 1.0, 100);
@@ -3925,7 +3872,7 @@ public void ExitEmergencyMode() {
 public void SetupMusic(int BGM) {
   ticksMusic = -2;
   refireTime = 2;
-  gameState[1] = true;
+  tickMusic = true;
   if (VIPBGM >= 0) {
     PrintToConsoleAll("Music has been customized by VIP %N. They chose %i.", VIPIndex, VIPBGM);
     BGMINDEX = VIPBGM;
@@ -4014,7 +3961,7 @@ stock int TF2_GetPlayerMaxHealth(int client) {
 public Action TickClientHealth(Handle timer) {
   for (int i = 1; i <= MaxClients; i++) {
     if (IsClientInGame(i) && !IsFakeClient(i) && (GetClientTeam(i) == 2)) {
-      gameState[1] = true;
+      tickMusic = true;
       int health = GetClientHealth(i);
       int healthMax = TF2_GetPlayerMaxHealth(i);
       if (!FB_Database) {
@@ -4028,8 +3975,8 @@ public Action TickClientHealth(Handle timer) {
     }
     else if (GetClientCount(true) <= 0){
       PrintToServer("Server is empty. Stopping the music queue.");
-      gameState[0] = false;
-      gameState[1] = false;
+      bgmPlaying = false;
+      tickMusic = false;
       BGMINDEX = 0;
       shouldStopMusic = false;
       curSong = "null";
