@@ -946,7 +946,7 @@ public Action SharkTimer(Handle timer) {
     FireEntityInput("SentSharkTorpedo", "ForceSpawn", "", 0.0);
     float f = GetRandomFloat(2.0, 5.0);
     CreateTimer(f, SharkTimer);
-    CustomSoundEmitter(SFXArray[GetRandomInt(43, 50), SNDLVL[2], flase, 0, 1.0, 100]);
+    CustomSoundEmitter(SFXArray[GetRandomInt(43, 50)], SNDLVL[2], false, 0, 1.0, 100);
     return Plugin_Handled;
   }
   return Plugin_Stop;
