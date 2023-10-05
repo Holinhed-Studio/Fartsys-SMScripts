@@ -21,7 +21,7 @@
 #include <ass_variables>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "6.3.1";
+static char PLUGIN_VERSION[8] = "6.3.2";
 Database FB_Database;
 Handle cvarSNDDefault = INVALID_HANDLE;
 
@@ -61,11 +61,11 @@ public void OnPluginStart() {
 }
 
 public void OnGameFrame() {
-  if (tickMusic) {
+  if (gameState[1]) {
     ticksMusic++;
     //PrintToConsoleAll("ticks %i", ticksMusic);
     //Start something if bgm is not playing
-    if (!bgmPlaying) {
+    if (!gameState[0]) {
       refireTime = 0;
       ticksMusic = 0;
     }
@@ -101,7 +101,7 @@ public void OnGameFrame() {
     //Track and play music
     if (ticksMusic >= refireTime) {
       CreateTimer(1.0, UpdateMusic);
-      bgmPlaying = true;
+      gameState[0] = true;
       switch (BGMINDEX) {
       case 0: {
         isADPCM = false;
@@ -725,7 +725,6 @@ public void OnMapStart() {
   FireEntityInput("rain", "Alpha", "0", 0.0);
   ServerCommand("fb_operator 1002");
   CreateTimer(1.0, SelectAdminTimer);
-  tickMusic = true;
 }
 
 //Repeating Timers
@@ -1646,66 +1645,15 @@ public Action EventDeath(Event Spawn_Event,
       case 32: { //FALL
         if (tornado) {
           switch (GetClientTeam(client)) {
-          case 2: {
-            CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}YEETED OUT INTO ORBIT{white}!", client);
-            weapon = "Yeeted into Orbit by a Tornado";
-          }
-          case 3: {
-            CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}YEETED OUT INTO ORBIT{white}! ({limegreen}+1 pt{white})", client);
-            sacPoints++;
-            int i = GetRandomInt(1, 16);
-            switch (i) {
-            case 1: {
-              CustomSoundEmitter(SFXArray[11], SNDLVL[2], false, 0, 1.0, 100);
-            }
             case 2: {
-              CustomSoundEmitter(SFXArray[12], SNDLVL[2], false, 0, 1.0, 100);
+              CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}%s{white}!", client, DeathMessage[GetRandomInt(0, 4)]);
+              weapon = "Yeeted into Orbit via Tornado";
             }
             case 3: {
-              CustomSoundEmitter(SFXArray[13], SNDLVL[2], false, 0, 1.0, 100);
+              CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}%s{white}! ({limegreen}+1 pt{white})", client, DeathMessage[GetRandomInt(0, 4)]);
+              sacPoints++;
+              CustomSoundEmitter(SFXArray[GetRandomInt(11, 26)], SNDLVL[2], false, 0, 1.0, 100);
             }
-            case 4: {
-              CustomSoundEmitter(SFXArray[14], SNDLVL[2], false, 0, 1.0, 100);
-            }
-            case 5: {
-              CustomSoundEmitter(SFXArray[15], SNDLVL[2], false, 0, 1.0, 100);
-            }
-            case 6: {
-              CustomSoundEmitter(SFXArray[16], SNDLVL[2], false, 0, 1.0, 100);
-            }
-            case 7: {
-              CustomSoundEmitter(SFXArray[17], SNDLVL[2], false, 0, 1.0, 100);
-            }
-            case 8: {
-              CustomSoundEmitter(SFXArray[18], SNDLVL[2], false, 0, 1.0, 100);
-            }
-            case 9: {
-              CustomSoundEmitter(SFXArray[19], SNDLVL[2], false, 0, 1.0, 100);
-            }
-            case 10: {
-              CustomSoundEmitter(SFXArray[20], SNDLVL[2], false, 0, 1.0, 100);
-            }
-            case 11: {
-              CustomSoundEmitter(SFXArray[21], SNDLVL[2], false, 0, 1.0, 100),
-                FireEntityInput("FB.BlueKirbTemplate", "ForceSpawn", "", 0.0);
-            }
-            case 12: {
-              CustomSoundEmitter(SFXArray[22], SNDLVL[2], false, 0, 1.0, 100);
-            }
-            case 13: {
-              CustomSoundEmitter(SFXArray[23], SNDLVL[2], false, 0, 1.0, 100);
-            }
-            case 14: {
-              CustomSoundEmitter(SFXArray[24], SNDLVL[2], false, 0, 1.0, 100);
-            }
-            case 15: {
-              CustomSoundEmitter(SFXArray[25], SNDLVL[2], false, 0, 1.0, 100);
-            }
-            case 16: {
-              CustomSoundEmitter(SFXArray[26], SNDLVL[2], false, 0, 1.0, 100);
-            }
-            }
-          }
           }
         } else {
           CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N fell to a {red}CLUMSY PAINFUL DEATH{white}!", client);
@@ -3462,6 +3410,9 @@ public Action Command_Operator(int args) {
   case 9000: {
     CreateTimer(10.0, SephHPTimer);
   }
+  case 9001:{
+    PrintToServer("BGM State is %b", gameState[0]);
+  }
   case 9010: {
     CustomSoundEmitter(TBGM6, SNDLVL[0] - 10, true, 1, 1.0, 100);
     CustomSoundEmitter(TBGM4, SNDLVL[0] - 10, true, 1, 0.05, 100);
@@ -3974,7 +3925,7 @@ public void ExitEmergencyMode() {
 public void SetupMusic(int BGM) {
   ticksMusic = -2;
   refireTime = 2;
-  tickMusic = true;
+  gameState[1] = true;
   if (VIPBGM >= 0) {
     PrintToConsoleAll("Music has been customized by VIP %N. They chose %i.", VIPIndex, VIPBGM);
     BGMINDEX = VIPBGM;
@@ -4063,6 +4014,7 @@ stock int TF2_GetPlayerMaxHealth(int client) {
 public Action TickClientHealth(Handle timer) {
   for (int i = 1; i <= MaxClients; i++) {
     if (IsClientInGame(i) && !IsFakeClient(i) && (GetClientTeam(i) == 2)) {
+      gameState[1] = true;
       int health = GetClientHealth(i);
       int healthMax = TF2_GetPlayerMaxHealth(i);
       if (!FB_Database) {
@@ -4073,6 +4025,17 @@ public Action TickClientHealth(Handle timer) {
         Format(query, sizeof(query), "UPDATE ass_activity SET health = %i, maxHealth = %i WHERE steamid = %i;", health, healthMax, steamID);
         FB_Database.Query(Database_FastQuery, query);
       }
+    }
+    else if (GetClientCount(true) <= 0){
+      PrintToServer("Server is empty. Stopping the music queue.");
+      gameState[0] = false;
+      gameState[1] = false;
+      BGMINDEX = 0;
+      shouldStopMusic = false;
+      curSong = "null";
+      refireTime = 0;
+      ticksMusic = 0;
+      return;
     }
   }
   CreateTimer(1.0, TickClientHealth);

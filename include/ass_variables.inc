@@ -134,21 +134,53 @@ char SFXArray[][64] = {
   ""
 };
 
+bool gameState[] = {
+  false, //0
+  false, //1
+  false, //2
+  false, //3
+  false, //4
+  false, //5
+  false, //6
+  false, //7
+  false, //8
+  false, //9
+  false, //10
+  false, //11
+  false, //12
+  true,
+  false,
+  false,
+  true,
+  false,
+  false,
+  false,
+  false,
+  false,
+  false
+};
 bool bgmPlaying = false;
+bool tickMusic = false;
+
 bool bombProgression = false;
 bool bombReset = false;
+
 bool brawler_emergency = false;
 bool canCrusaderNuke = false;
 bool canHindenburg = false;
+
 bool canHWBoss = false;
 bool canSENTMeteors = false;
 bool canSENTNukes = false;
+
 bool canSENTShark = false;
 bool canSENTStars = false;
 bool canSephNuke = false;
+
 bool canTornado = false;
 bool crusader = false;
 bool isWave = false;
+
 bool monitorOn = false;
 bool monitorColor = true;
 bool sacrificedByClient = false;
@@ -157,7 +189,6 @@ bool shouldStopMusic = true;
 bool tornado = false;
 bool tacobell = false;
 bool tickingClientHealth = false;
-bool tickMusic = false;
 bool isADPCM = false;
 bool TornadoWarningIssued = false;
 
@@ -182,9 +213,7 @@ int VIPBGM = -1;
 int VIPIndex = 0;
 int waveFlags = 0;
 
-char curSong[64], prevSong[64] = "null";
-char s[128] = "null";
-char songName[64] = "null";
+char curSong[64], prevSong[64], s[128], songName[64] = "null";
 char TBGM0[16] = "test/bgm0.mp3";
 char TBGM1[16] = "test/bgm1.mp3";
 char TBGM2[16] = "test/bgm2.mp3";
@@ -226,3 +255,12 @@ void RegisterAllCommands(){
   RegConsoleCmd("sm_discord", Command_Discord, "Join our Discord server!");
   RegConsoleCmd("sm_sounds", Command_Sounds, "Toggle sounds on or off via menu");
 }
+
+char DeathMessage[][64] = {
+  "YEETED OUT INTO ORBIT",
+  "SENT TO SPACE VIA TORNADO",
+  "LAUNCHED ACROSS THE SKY",
+  "SWALLOWED BY A STORM THAT WAS APPROACHING",
+  "REDUCED TO DEBRIS",
+  ""
+};
