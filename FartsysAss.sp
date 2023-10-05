@@ -21,7 +21,7 @@
 #include <ass_variables>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "6.3.3";
+static char PLUGIN_VERSION[8] = "6.3.4";
 Database FB_Database;
 Handle cvarSNDDefault = INVALID_HANDLE;
 
@@ -1090,24 +1090,7 @@ public Action SpecTimer(Handle timer) {
 public Action SENTMeteorTimer(Handle timer) {
   if (canSENTMeteors) {
     CreateTimer(5.0, SENTMeteorTimer);
-    int i = GetRandomInt(1, 8);
-    switch (i) {
-    case 1: {
-      FireEntityInput("FB.SentMeteor01", "ForceSpawn", "", 0.0);
-    }
-    case 2: {
-      FireEntityInput("FB.SentMeteor02", "ForceSpawn", "", 0.0);
-    }
-    case 3: {
-      FireEntityInput("FB.SentMeteor03", "ForceSpawn", "", 0.0);
-    }
-    case 4: {
-      FireEntityInput("FB.SentMeteor04", "ForceSpawn", "", 0.0);
-    }
-    case 5: {
-      FireEntityInput("FB.SentMeteor05", "ForceSpawn", "", 0.0);
-    }
-    }
+    FireEntityInput(FB_SENT[GetRandomInt(0, 4)], "ForceSpawn", "", 0.0);
   }
   return Plugin_Stop;
 }
@@ -1116,24 +1099,7 @@ public Action SENTMeteorTimer(Handle timer) {
 public Action SENTNukeTimer(Handle timer) {
   if (canSENTNukes) {
     CustomSoundEmitter(SFXArray[8], SNDLVL[2] - 10, false, 0, 1.0, 100);
-    int i = GetRandomInt(1, 8);
-    switch (i) {
-    case 1: {
-      FireEntityInput("FB.SentNuke01", "ForceSpawn", "", 0.0);
-    }
-    case 2: {
-      FireEntityInput("FB.SentNuke02", "ForceSpawn", "", 0.0);
-    }
-    case 3: {
-      FireEntityInput("FB.SentNuke03", "ForceSpawn", "", 0.0);
-    }
-    case 4: {
-      FireEntityInput("FB.SentNuke04", "ForceSpawn", "", 0.0);
-    }
-    case 5: {
-      FireEntityInput("FB.SentNuke05", "ForceSpawn", "", 0.0);
-    }
-    }
+    FireEntityInput(FB_SENT[GetRandomInt(5, 9)], "ForceSpawn", "", 0.0);
     float f = GetRandomFloat(1.5, 3.0);
     CreateTimer(f, SENTNukeTimer);
   }
@@ -1165,24 +1131,7 @@ public Action SephNukeTimer(Handle timer) {
 //SENTStars (Scripted Entity Stars)
 public Action SENTStarTimer(Handle timer) {
   if (canSENTStars) {
-    int i = GetRandomInt(1, 5);
-    switch (i) {
-    case 1: {
-      FireEntityInput("FB.SentStar01", "ForceSpawn", "", 0.0);
-    }
-    case 2: {
-      FireEntityInput("FB.SentStar02", "ForceSpawn", "", 0.0);
-    }
-    case 3: {
-      FireEntityInput("FB.SentStar03", "ForceSpawn", "", 0.0);
-    }
-    case 4: {
-      FireEntityInput("FB.SentStar04", "ForceSpawn", "", 0.0);
-    }
-    case 5: {
-      FireEntityInput("FB.SentStar05", "ForceSpawn", "", 0.0);
-    }
-    }
+    FireEntityInput(FB_SENT[GetRandomInt(10, 14)], "ForceSpawn", "", 0.0);
     float f = GetRandomFloat(0.75, 1.5);
     CreateTimer(f, SENTStarTimer);
   }
@@ -1208,8 +1157,8 @@ public Action HWBosses(Handle timer) {
     int i = GetRandomInt(1, 10);
     switch (i) {
     case 1: {
-      FireEntityInput("hhh_maker", "ForceSpawn", "", 0.0),
-        FireEntityInput("hhh_maker2", "ForceSpawn", "", 0.0);
+      FireEntityInput("hhh_maker", "ForceSpawn", "", 0.0);
+      FireEntityInput("hhh_maker2", "ForceSpawn", "", 0.0);
     }
     case 2: {
       FireEntityInput("hhh_maker2", "ForceSpawn", "", 0.0);

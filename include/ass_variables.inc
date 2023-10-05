@@ -144,6 +144,25 @@ char AdvMessage[][256] = {
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}Remember, if someone is being abusive, you may always invoke {forestgreen}!calladmin{white}.",
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}You may always invoke {forestgreen}!return{white} to be returned to spawn."
 };
+
+char FB_SENT[][64] = {
+  "FB.SentMeteor01",
+  "FB.SentMeteor02",
+  "FB.SentMeteor03",
+  "FB.SentMeteor04",
+  "FB.SentMeteor05",
+  "FB.SentNuke01",
+  "FB.SentNuke02",
+  "FB.SentNuke03",
+  "FB.SentNuke04",
+  "FB.SentNuke05",
+  "FB.SentStar01",
+  "FB.SentStar02",
+  "FB.SentStar03",
+  "FB.SentStar04",
+  "FB.SentStar05"
+};
+
 bool bgmPlaying = false;
 bool tickMusic = false;
 
