@@ -168,7 +168,7 @@ public void OnGameFrame() {
         shouldStopMusic = true;
         isADPCM = false;
         ticksMusic = 0;
-        CustomSoundEmitter(MusicArray[6], SNDLVL[0] - 50, true, 1, 0.8, 100);
+        CustomSoundEmitter(MusicArray[6], SNDLVL[0] - 30, true, 1, 0.8, 100);
         curSong = MusicArray[6];
         songName = TitleArray[6];
         refireTime = RefireArray[6];
