@@ -21,7 +21,7 @@
 #include <ass_variables>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "6.3.5";
+static char PLUGIN_VERSION[8] = "6.3.6";
 Database FB_Database;
 Handle cvarSNDDefault = INVALID_HANDLE;
 
