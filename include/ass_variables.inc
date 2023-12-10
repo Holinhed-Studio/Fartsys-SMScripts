@@ -24,8 +24,7 @@ char MusicArray[][64] = {
   "fartsy/music/brawler/xbc/youwillknowournames.mp3", // 14
   "fartsy/music/ffxiv/TornColossusPhase1.mp3", // 15
   "fartsy/music/ffxiv/TornColossusPhase2.mp3", // 16
-  "fartsy/music/demetori/unowen.mp3", // 17
-  ""
+  "fartsy/music/demetori/unowen.mp3" // 17
 };
 
 char TitleArray[][64] = {
@@ -130,8 +129,7 @@ char SFXArray[][64] = {
   "fartsy/misc/triggerscore.wav", // 56 TRIGGERSCORE
   "fartsy/ffxivvictoryedit.mp3", // 57 VICTORY
   "fartsy/vo/sephiroth/memory.mp3", // 58 VO_SEPHMEMORY
-  "fartsy/misc/wtfboom.mp3", // 59 WTFBOOM
-  ""
+  "fartsy/misc/wtfboom.mp3" // 59 WTFBOOM
 };
 
 char AdvMessage[][256] = {
@@ -142,7 +140,31 @@ char AdvMessage[][256] = {
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}Don't forget to buy {forestgreen}protection upgrades {white}and {forestgreen}ammo regen{white}(if applicable)!",
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}TIP: As a {red}DEFENDER{white}, pushing your team's {forestgreen}payload {white}is crucial to wrecking havoc on the robots!",
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}Remember, if someone is being abusive, you may always invoke {forestgreen}!calladmin{white}.",
-  "{darkviolet}[{aqua}CORE{darkviolet}] {white}You may always invoke {forestgreen}!return{white} to be returned to spawn."
+  "{darkviolet}[{aqua}CORE{darkviolet}] {white}You may always invoke {forestgreen}!return{white} to be returned to spawn.",
+  ""
+};
+
+char ClassDefinitions[][32] = {
+  "scout",
+  "sniper",
+  "soldier",
+  "demoman",
+  "medic",
+  "heavy",
+  "pyro",
+  "spy",
+  "engineer",
+  ""
+};
+
+char DeathMessage[][64] = {
+  "YEETED OUT INTO ORBIT",
+  "SENT TO SPACE VIA TORNADO",
+  "LAUNCHED ACROSS THE SKY",
+  "SWALLOWED BY A STORM THAT WAS APPROACHING",
+  "REDUCED TO DEBRIS",
+  "FARTED INTO THE SKY",
+  ""
 };
 
 char FB_SENT[][64] = {
@@ -160,31 +182,26 @@ char FB_SENT[][64] = {
   "FB.SentStar02",
   "FB.SentStar03",
   "FB.SentStar04",
-  "FB.SentStar05"
+  "FB.SentStar05",
+  ""
 };
 
 bool bgmPlaying = false;
-bool tickMusic = false;
-
 bool bombProgression = false;
 bool bombReset = false;
-
 bool brawler_emergency = false;
 bool canCrusaderNuke = false;
 bool canHindenburg = false;
-
 bool canHWBoss = false;
 bool canSENTMeteors = false;
 bool canSENTNukes = false;
-
 bool canSENTShark = false;
 bool canSENTStars = false;
 bool canSephNuke = false;
-
 bool canTornado = false;
 bool crusader = false;
+bool isADPCM = false;
 bool isWave = false;
-
 bool monitorOn = false;
 bool monitorColor = true;
 bool sacrificedByClient = false;
@@ -193,9 +210,8 @@ bool shouldStopMusic = true;
 bool tornado = false;
 bool tacobell = false;
 bool tickingClientHealth = false;
-bool isADPCM = false;
+bool tickMusic = false;
 bool TornadoWarningIssued = false;
-
 int BGMINDEX = 0;
 int FailedCount = 0;
 int INCOMINGDISPLAYED = 0;
@@ -216,7 +232,6 @@ int ticksMusic = 0;
 int VIPBGM = -1;
 int VIPIndex = 0;
 int waveFlags = 0;
-
 char curSong[64], prevSong[64], s[128], songName[64] = "null";
 char TBGM0[16] = "test/bgm0.mp3";
 char TBGM1[16] = "test/bgm1.mp3";
@@ -238,11 +253,11 @@ stock bool IsValidClient(int client) {
 }
 
 void PrecacheAllFiles(){
-  for (int i = 0; i < (sizeof(MusicArray) - 1); i++){
+  for (int i = 0; i < sizeof(MusicArray); i++){
     PrintToServer("[CORE] Precaching music: %s in position %i", MusicArray[i], i);
     PrecacheSound(MusicArray[i], true);
   }
-  for (int i = 0; i < (sizeof(SFXArray) - 1); i++){
+  for (int i = 0; i < sizeof(SFXArray); i++){
     PrintToServer("[CORE] Precaching SFX: %s in position %i", SFXArray[i], i);
     PrecacheSound(SFXArray[i], true);
   }
@@ -259,12 +274,3 @@ void RegisterAllCommands(){
   RegConsoleCmd("sm_discord", Command_Discord, "Join our Discord server!");
   RegConsoleCmd("sm_sounds", Command_Sounds, "Toggle sounds on or off via menu");
 }
-
-char DeathMessage[][64] = {
-  "YEETED OUT INTO ORBIT",
-  "SENT TO SPACE VIA TORNADO",
-  "LAUNCHED ACROSS THE SKY",
-  "SWALLOWED BY A STORM THAT WAS APPROACHING",
-  "REDUCED TO DEBRIS",
-  ""
-};

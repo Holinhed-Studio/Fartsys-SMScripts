@@ -21,7 +21,7 @@
 #include <ass_variables>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "6.3.4";
+static char PLUGIN_VERSION[8] = "6.3.5";
 Database FB_Database;
 Handle cvarSNDDefault = INVALID_HANDLE;
 
@@ -1296,7 +1296,7 @@ public Action BombStatusUpdater(Handle timer) {
           FireEntityInput("Bombs.FallingStar", "Enable", "", 0.0),
           FireEntityInput("Delivery", "Unlock", "", 0.0),
           CustomSoundEmitter(SFXArray[56], SNDLVL[2], false, 0, 1.0, 100),
-          CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's \x07FFFF00FALLING STAR{forestgreen} is now available for deployment!");
+          CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {gold}FALLING STAR{forestgreen} is now available for deployment!");
       }
       case 40: {
         bombStatusMax = 40;
@@ -1455,9 +1455,9 @@ public Action Command_FBBombStatus(int client, int args) {
   }
   case 64: {
     if (bombProgression) {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is delivering \x07FFFF00HYDROGEN {forestgreen}!");
+      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is delivering {gold}HYDROGEN {forestgreen}!");
     } else {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {red} FAT MAN {forestgreen}. Your team's \x07FFFF00HYDROGEN {forestgreen}is available for deployment!");
+      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {red} FAT MAN {forestgreen}. Your team's {gold}HYDROGEN {forestgreen}is available for deployment!");
     }
   }
   case 65, 66, 67, 68, 69, 70, 71: {
@@ -1542,11 +1542,11 @@ public Action EventDeath(Event Spawn_Event,
         if (tornado) {
           switch (GetClientTeam(client)) {
             case 2: {
-              CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}%s{white}!", client, DeathMessage[GetRandomInt(0, 4)]);
+              CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}%s{white}!", client, DeathMessage[GetRandomInt(0, 5)]);
               weapon = "Yeeted into Orbit via Tornado";
             }
             case 3: {
-              CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}%s{white}! ({limegreen}+1 pt{white})", client, DeathMessage[GetRandomInt(0, 4)]);
+              CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}%s{white}! ({limegreen}+1 pt{white})", client, DeathMessage[GetRandomInt(0, 5)]);
               sacPoints++;
               CustomSoundEmitter(SFXArray[GetRandomInt(11, 26)], SNDLVL[2], false, 0, 1.0, 100);
             }
@@ -1715,35 +1715,7 @@ public Action EventSpawn(Event Spawn_Event,
     if (!FB_Database || !steamID || !class) {
       return Plugin_Handled;
     }
-    switch (class) {
-    case 1: {
-      strClass = "scout";
-    }
-    case 2: {
-      strClass = "sniper";
-    }
-    case 3: {
-      strClass = "soldier";
-    }
-    case 4: {
-      strClass = "demoman";
-    }
-    case 5: {
-      strClass = "medic";
-    }
-    case 6: {
-      strClass = "heavy";
-    }
-    case 7: {
-      strClass = "pyro";
-    }
-    case 8: {
-      strClass = "spy";
-    }
-    case 9: {
-      strClass = "engineer";
-    }
-    }
+    strClass = ClassDefinitions[class-1];
     Format(query, sizeof(query), "UPDATE ass_activity SET class = '%s' WHERE steamid = %i;", strClass, steamID);
     FB_Database.Query(Database_FastQuery, query);
   }
@@ -1760,39 +1732,12 @@ public Action Event_Cvar(Event event,
 //When we win
 public Action EventWaveComplete(Event Spawn_Event,
   const char[] Spawn_Name, bool Spawn_Broadcast) {
-  shouldStopMusic = true;
-  BGMINDEX = 0;
-  ticksMusic = -2;
-  refireTime = 2;
-  BGMINDEX = 0;
-  canCrusaderNuke = false;
-  canHindenburg = false;
-  canHWBoss = false;
-  canSephNuke = false;
-  canTornado = false;
-  isWave = false;
-  bombStatusMax = 7;
-  bombStatus = 5;
-  explodeType = 0;
-  sephiroth = false;
-  waveFlags = 0;
+  ServerCommand("fb_operator 300");
   ServerCommand("fb_operator 1000");
-  CreateTimer(1.0, PerformAdverts);
-  CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}You've defeated the wave!");
-  FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0),
-    FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
-  FireEntityInput("Barricade_Rebuild_Relay", "Trigger", "", 0.0);
-  FireEntityInput("FB.KP*", "Lock", "", 0.0);
-  FireEntityInput("OldSpawn", "Disable", "", 0.0);
-  FireEntityInput("NewSpawn", "Enable", "", 0.0);
-  FireEntityInput("CommonSpells", "Disable", "", 0.0);
-  FireEntityInput("RareSpells", "Disable", "", 0.0);
-  FireEntityInput("dovahsassprefer", "Disable", "", 0.0);
-  FireEntityInput("bombpath_left_arrows", "Disable", "", 0.0);
-  FireEntityInput("bombpath_right_arrows", "Disable", "", 0.0);
-  FireEntityInput("rain", "Alpha", "0", 0.0);
   ServerCommand("fb_operator 1007");
   ServerCommand("fb_operator 1002");
+  CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}You've defeated the wave!");
+  CreateTimer(1.0, PerformAdverts);
   CreateTimer(40.0, SelectAdminTimer);
   return Plugin_Handled;
 }
@@ -1807,43 +1752,14 @@ public Action EventWarning(Event Spawn_Event,
 //When the wave fails
 public Action EventWaveFailed(Event Spawn_Event,
   const char[] Spawn_Name, bool Spawn_Broadcast) {
-  shouldStopMusic = true;
-  ticksMusic = -2;
-  refireTime = 2;
-  BGMINDEX = 0;
-  canCrusaderNuke = false;
-  canHindenburg = false;
-  canHWBoss = false;
-  canSephNuke = false;
-  canTornado = false;
-  isWave = false;
-  bombStatusMax = 7;
-  bombStatus = 5;
-  explodeType = 0;
-  sephiroth = false;
-  waveFlags = 0;
   if (FailedCount == 0) { //Works around valve's way of firing EventWaveFailed four times when mission changes. Without this, BGM would play 4 times and any functions enclosed would also happen four times.......
     FailedCount++;
     ServerCommand("fb_operator 1000");
     CreateTimer(1.0, PerformAdverts);
     CreateTimer(40.0, SelectAdminTimer);
   }
-  FireEntityInput("rain", "Alpha", "0", 0.0);
   CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave {red}failed {white}successfully!");
-  FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0);
-  FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
-  FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0);
-  FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
-  FireEntityInput("Barricade_Rebuild_Relay", "Trigger", "", 0.0);
-  FireEntityInput("FB.KP*", "Lock", "", 0.0);
-  FireEntityInput("OldSpawn", "Disable", "", 0.0);
-  FireEntityInput("NewSpawn", "Enable", "", 0.0);
-  FireEntityInput("CommonSpells", "Disable", "", 0.0);
-  FireEntityInput("RareSpells", "Disable", "", 0.0);
-  FireEntityInput("dovahsassprefer", "Disable", "", 0.0);
-  FireEntityInput("bombpath_left_arrows", "Disable", "", 0.0);
-  FireEntityInput("bombpath_right_arrows", "Disable", "", 0.0);
-  FireEntityInput("rain", "Alpha", "0", 0.0);
+  ServerCommand("fb_operator 300");
   ServerCommand("fb_operator 1007");
   ServerCommand("fb_operator 1002");
   return Plugin_Handled;
@@ -1966,12 +1882,11 @@ public Action Command_Operator(int args) {
   char arg1[16];
   GetCmdArg(1, arg1, sizeof(arg1));
   int x = StringToInt(arg1);
-  //PrintToConsoleAll("Calling on fb_operator because arg1 was %i, and was stored in memory position %i", x, arg1);
   switch (x) {
   case 420:{
     EmitSoundToAll(MusicArray[0]);
   }
-    //When the map is complete
+  //When the map is complete
   case 0: {
     if (tacobell) {
       CPrintToChatAll("WOWIE YOU DID IT! The server will restart in 30 seconds, prepare to do it again! LULW");
@@ -1989,33 +1904,6 @@ public Action Command_Operator(int args) {
     CPrintToChatAll("{darkviolet}[{yellow}INFO{darkviolet}] {red}PROFESSOR'S ASS {white}v0x1E. Prepare yourself for the unpredictable... [{limegreen}by TTV/ProfessorFartsalot{white}]");
     GetCurrentMap(mapName, sizeof(mapName));
     FireEntityInput("rain", "Alpha", "0", 0.0);
-    /*Prepare for the end times....
-    if (StrContains(mapName, "R1A", true) || StrContains(mapName, "R1B", true) || StrContains(mapName, "R1C", true) || StrContains(mapName, "R1D", true) || StrContains(mapName, "R1E", true) || StrContains(mapName, "R1F", true)) {
-      int i = GetRandomInt(1, 7);
-      switch (i) {
-      case 1: {
-        CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}Fartsy... what have you done???");
-      }
-      case 2: {
-        CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}The end is NEAR...");
-      }
-      case 3: {
-        CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}The ass grows ever stronger...");
-      }
-      case 4: {
-        CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}Muahahahahahahahaha, so MUCH POWER!");
-      }
-      case 5: {
-        CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}Just a little further.... JUST.. a LITTLE... FURTHER!");
-      }
-      case 6: {
-        CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}Investigate if you dare...");
-      }
-      case 7: {
-        CPrintToChatAll("{darkviolet}[{yellow}????{darkviolet}] {darkviolet}Come... JOIN US. Throw wide the gates!");
-      }
-      }
-    }*/
   }
   //Wave init
   case 2: {
@@ -2807,6 +2695,40 @@ public Action Command_Operator(int args) {
     tacobell = true;
     ServerCommand("fb_startmoney 200000");
     CPrintToChatAll("{darkviolet}[{orange}INFO{darkviolet}] {white}You have chosen {red}DOVAH'S ASS - TACO BELL EDITION{white}. Why... Why would you DO THIS?! Do you not realize what you've just done?????");
+  }
+  //Reset Map
+  case 300:{
+    shouldStopMusic = true;
+    BGMINDEX = 0;
+    ticksMusic = -2;
+    refireTime = 2;
+    BGMINDEX = 0;
+    canCrusaderNuke = false;
+    canHindenburg = false;
+    canHWBoss = false;
+    canSephNuke = false;
+    canTornado = false;
+    isWave = false;
+    bombStatusMax = 7;
+    bombStatus = 5;
+    explodeType = 0;
+    sephiroth = false;
+    waveFlags = 0;
+    FireEntityInput("rain", "Alpha", "0", 0.0);
+    FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0);
+    FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
+    FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0);
+    FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
+    FireEntityInput("Barricade_Rebuild_Relay", "Trigger", "", 0.0);
+    FireEntityInput("FB.KP*", "Lock", "", 0.0);
+    FireEntityInput("OldSpawn", "Disable", "", 0.0);
+    FireEntityInput("NewSpawn", "Enable", "", 0.0);
+    FireEntityInput("CommonSpells", "Disable", "", 0.0);
+    FireEntityInput("RareSpells", "Disable", "", 0.0);
+    FireEntityInput("dovahsassprefer", "Disable", "", 0.0);
+    FireEntityInput("bombpath_left_arrows", "Disable", "", 0.0);
+    FireEntityInput("bombpath_right_arrows", "Disable", "", 0.0);
+    FireEntityInput("rain", "Alpha", "0", 0.0);
   }
   //TEMP FUNCTIONS
   case 301: {
