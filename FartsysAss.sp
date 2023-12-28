@@ -21,7 +21,7 @@
 #include <ass_variables>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "6.3.6";
+static char PLUGIN_VERSION[8] = "6.4.0";
 Database FB_Database;
 Handle cvarSNDDefault = INVALID_HANDLE;
 
@@ -740,41 +740,25 @@ public Action PerformAdverts(Handle timer) {
 //Adverts for wave information
 public Action PerformWaveAdverts(Handle timer) {
   if (isWave) {
-  char buffer[16];
-  char tbuffer[16];
-  int sPos = RoundToFloor(ticksMusic/66.6666666666);
-  int tPos = RoundToFloor(refireTime/66.6666666666);
-  Format(buffer, 16, "%02d:%02d", sPos / 60, sPos % 60);
-  Format(tbuffer, 16, "%02d:%02d", tPos / 60, tPos % 60);
-  CreateTimer(2.5, PerformWaveAdverts);
-  for (int i = 1; i <= MaxClients; i++) {
-    switch (bombStatus) {
-      case 8, 16, 24, 32, 40, 48, 56, 64: {
-        if (TornadoWarningIssued && IsClientInGame(i)) {
-          if (bombProgression) {
-            PrintHintText(i, "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s) \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
-            StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
-          } else {
-            PrintHintText(i, "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s) \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
-            StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
-          }
-        } else if (bombProgression && IsClientInGame(i)) {
-          PrintHintText(i, "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
-          StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
-        } else if (IsClientInGame(i)) {
-          PrintHintText(i, "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
+    char buffer[16];
+    char tbuffer[16];
+    char plState[64];
+    int sPos = RoundToFloor(ticksMusic/66.6666666666);
+    int tPos = RoundToFloor(refireTime/66.6666666666);
+    Format(buffer, 16, "%02d:%02d", sPos / 60, sPos % 60);
+    Format(tbuffer, 16, "%02d:%02d", tPos / 60, tPos % 60);
+    if(bombProgression) Format (plState, sizeof(plState), "MOVING (%i/%i)", bombStatus, bombStatusMax); else if(bombReady) Format(plState, sizeof(plState), "READY (%i/%i)", bombStatus, bombStatusMax); else Format(plState, sizeof(plState), "PREPARING (%i/%i)", bombStatus, bombStatusMax);
+    CreateTimer(2.5, PerformWaveAdverts);
+    for (int i = 1; i <= MaxClients; i++) {
+      if(IsClientInGame(i)){
+        if (TornadoWarningIssued) {
+          PrintHintText(i, "Payload: %s | !sacpoints: %i/%i \n Music: %s (%s/%s) \n\n[TORNADO WARNING]", plState, sacPoints, sacPointsMax, songName, buffer, tbuffer);
           StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
         }
-      }
-      case 0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45, 46, 47, 49, 50, 51, 52, 53, 54, 55, 57, 58, 59, 60, 61, 62, 63: {
-        if (TornadoWarningIssued && IsClientInGame(i)) {
-          PrintHintText(i, "Payload: %i/%i | !sacpoints: %i/%i \n Music: %s (%s/%s) \n\n[TORNADO WARNING]", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
-          StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
-        } else if (IsClientInGame(i)) {
-          PrintHintText(i, "Payload: %i/%i | !sacpoints: %i/%i \n Music: %s (%s/%s)", bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
+        else{
+          PrintHintText(i, "Payload: %s | !sacpoints: %i/%i \n Music: %s (%s/%s)", plState, sacPoints, sacPointsMax, songName, buffer, tbuffer);
           StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
         }
-      }
       }
     }
   }
@@ -1258,6 +1242,7 @@ public Action BombStatusUpdater(Handle timer) {
         bombStatusMax = 8;
         explodeType = 1;
         canSENTShark = false;
+        bombReady = true;
         FireEntityInput("Bombs*", "Disable", "", 0.0),
           FireEntityInput("BombExplo*", "Disable", "", 0.0),
           FireEntityInput("Delivery", "Unlock", "", 0.0),
@@ -1269,6 +1254,7 @@ public Action BombStatusUpdater(Handle timer) {
         bombStatusMax = 16;
         explodeType = 2;
         canSENTShark = false;
+        bombReady = true;
         FireEntityInput("Bombs*", "Disable", "", 0.0),
           FireEntityInput("BombExplo*", "Disable", "", 0.0),
           FireEntityInput("Bombs.ElonBust", "Enable", "", 0.0),
@@ -1280,6 +1266,7 @@ public Action BombStatusUpdater(Handle timer) {
         bombStatusMax = 24;
         explodeType = 3;
         canSENTShark = false;
+        bombReady = true;
         FireEntityInput("Bombs*", "Disable", "", 0.0),
           FireEntityInput("BombExplo*", "Disable", "", 0.0),
           FireEntityInput("Bombs.BathSalts", "Enable", "", 0.0),
@@ -1291,6 +1278,7 @@ public Action BombStatusUpdater(Handle timer) {
         bombStatusMax = 32;
         explodeType = 4;
         canSENTShark = false;
+        bombReady = true;
         FireEntityInput("Bombs*", "Disable", "", 0.0),
           FireEntityInput("BombExplo*", "Disable", "", 0.0),
           FireEntityInput("Bombs.FallingStar", "Enable", "", 0.0),
@@ -1302,6 +1290,7 @@ public Action BombStatusUpdater(Handle timer) {
         bombStatusMax = 40;
         explodeType = 5;
         canSENTShark = false;
+        bombReady = true;
         FireEntityInput("Bombs*", "Disable", "", 0.0),
           FireEntityInput("BombExplo*", "Disable", "", 0.0),
           FireEntityInput("Bombs.MajorKong", "Enable", "", 0.0),
@@ -1313,6 +1302,7 @@ public Action BombStatusUpdater(Handle timer) {
         bombStatusMax = 48;
         explodeType = 6;
         canSENTShark = true;
+        bombReady = true;
         FireEntityInput("Bombs*", "Disable", "", 0.0),
           FireEntityInput("BombExplo*", "Disable", "", 0.0),
           FireEntityInput("Bombs.SharkTorpedo", "Enable", "", 0.0),
@@ -1325,6 +1315,7 @@ public Action BombStatusUpdater(Handle timer) {
         bombStatusMax = 56;
         explodeType = 7;
         canSENTShark = false;
+        bombReady = true;
         FireEntityInput("Bombs*", "Disable", "", 0.0),
           FireEntityInput("BombExplo*", "Disable", "", 0.0),
           FireEntityInput("Bombs.FatMan", "Enable", "", 0.0),
@@ -1336,6 +1327,7 @@ public Action BombStatusUpdater(Handle timer) {
         bombStatusMax = 64;
         explodeType = 8;
         canSENTShark = false;
+        bombReady = true;
         FireEntityInput("Bombs*", "Disable", "", 0.0),
           FireEntityInput("BombExplo*", "Disable", "", 0.0),
           FireEntityInput("Bombs.Hydrogen", "Enable", "", 0.0),
@@ -1378,95 +1370,17 @@ public Action Command_GetCurrentSong(int client, int args) {
 
 //Determine which bomb has been recently pushed and tell the client if a bomb is ready or not.
 public Action Command_FBBombStatus(int client, int args) {
+  char bomb[128];
+  char bombIdleMsg[128];
+  Format (bomb, sizeof(bomb), "%s", bombNames[RoundToFloor(bombStatus / 8.0)]);
+  Format (bombIdleMsg, sizeof(bombIdleMsg), "%s", bombIdle[RoundToFloor(bombStatus / 8.0)]);
   CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}The bomb status is currently %i, with a max of %i", bombStatus, bombStatusMax);
-  switch (bombStatus) {
-  case 0, 1, 2, 3, 4, 5, 6, 7: {
-    CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Bombs are {red}NOT READY{white}!");
-  }
-  case 8: {
-    if (bombProgression) {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing a {red}FREEDOM BOMB {forestgreen}!");
-    } else {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team has not deployed any bombs, however: Your team's {red}FREEDOM BOMB {forestgreen}is available for deployment!");
-    }
-  }
-  case 9, 10, 11, 12, 13, 14, 15: {
-    CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}FREEDOM BOMB {forestgreen}. Please wait for the next bomb.");
-  }
-  case 16: {
-    if (bombProgression) {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing an {red}ELON BUST {forestgreen}!");
-    } else {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}FREEDOM BOMB {forestgreen}. Your team's {red}ELON BUST {forestgreen}is available for deployment!");
-    }
-  }
-  case 17, 18, 19, 20, 21, 22, 23: {
-    CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed {white}ELON BUST {forestgreen}. Please wait for the next bomb.");
-  }
-  case 24: {
-    if (bombProgression) {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing {red}BATH SALTS {forestgreen}!");
-    } else {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}ELON BUST {forestgreen}. Your team's {red}BATH SALTS {forestgreen}are available for deployment!");
-    }
-  }
-  case 25, 26, 27, 28, 29, 30, 31: {
-    CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed {white}BATH SALTS {forestgreen}. Please wait for the next bomb.");
-  }
-  case 32: {
-    if (bombProgression) {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing a {red}FALLING STAR {forestgreen}!");
-    } else {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed {white}BATH SALTS {forestgreen}. Your team's {red}FALLING STAR {forestgreen}is available for deployment!");
-    }
-  }
-  case 33, 34, 35, 36, 37, 38, 39: {
-    CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}FALLING STAR {forestgreen}. Please wait for the next bomb.");
-  }
-  case 40: {
-    if (bombProgression) {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing a {red}MAJOR KONG {forestgreen}!");
-    } else {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed {white}FALLING STAR {forestgreen}. Your team's {red}MAJOR KONG {forestgreen}is available for deployment!");
-    }
-  }
-  case 41, 42, 43, 44, 45, 46, 47: {
-    CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}MAJOR KONG {forestgreen}. Please wait for the next bomb.");
-  }
-  case 48: {
-    if (bombProgression) {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing a {red}SHARK {forestgreen}!");
-    } else {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed {white}MAJOR KONG {forestgreen}. Your team's {red}SHARK {forestgreen}is available for deployment!");
-    }
-  }
-  case 49, 50, 51, 52, 53, 54, 55: {
-    CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}SHARK {forestgreen}. Please wait for the next bomb.");
-  }
-  case 56: {
-    if (bombProgression) {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is currently pushing a {red}FAT MAN {forestgreen}!");
-    } else {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}SHARK {forestgreen}. Your team's {red}FAT MAN {forestgreen}is available for deployment!");
-    }
-  }
-  case 57, 58, 59, 60, 61, 62, 63: {
-    CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}FAT MAN {forestgreen}. Please wait for the next bomb.");
-  }
-  case 64: {
-    if (bombProgression) {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team is delivering {gold}HYDROGEN {forestgreen}!");
-    } else {
-      CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {red} FAT MAN {forestgreen}. Your team's {gold}HYDROGEN {forestgreen}is available for deployment!");
-    }
-  }
-  case 65, 66, 67, 68, 69, 70, 71: {
-    CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team recently deployed a {white}HYDROGEN{forestgreen}. Bombs are automatically reset to preserve the replayable aspect of this game mode.");
-  }
-  case 72: {
-    CPrintToChatAll("{red}Something exceeded a maximum value!!! Apparently the bomb status is %i, with a maximum status of %i.", bombStatus, bombStatusMax);
-  }
-  }
+  if (bombProgression)
+    CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Your team is currently pushing a %s!", bomb);
+  else if (bombReady)
+    CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Your team's %s is ready!", bomb);
+  else
+    CPrintToChat(client, "{darkviolet}[{forestgreen}CORE{darkviolet}] {white} %s Please wait for the next bomb.", bombIdleMsg);
   return Plugin_Handled;
 }
 
@@ -1806,6 +1720,24 @@ public Action FireEntityInput(char[] strTargetname, char[] strInput, char[] strP
     return Plugin_Continue;
   }
   return Plugin_Handled;
+}
+
+public Action DispatchAOE(char[] aoeType, float posX, float posY, float posZ){
+  int x = CreateEntityByName("info_particle_system");
+  float dest[3];
+  dest[0] = posX;
+  dest[1] = posY;
+  dest[2] = posZ;
+  float destAng[3];
+  float destVel[3];
+  if (IsValidEdict(x)) {
+    DispatchKeyValue(x, "effect_name", aoeType);
+    TeleportEntity(x, dest, destAng, destVel);
+    DispatchSpawn(x);
+    ActivateEntity(x);
+    AcceptEntityInput(x, "Start");
+    CreateTimer(5.0, DeleteEdict, x);
+  }
 }
 
 //Custom sound processor, this should make handling sounds easier.
@@ -2689,6 +2621,24 @@ public Action Command_Operator(int args) {
   }
   case 109: {
     CodeEntry += 9;
+  }
+  case 200:{
+    DispatchAOE("ff_circle_aoe", 1613.101929, -1490.457520, -532.186646);
+  }
+  case 201:{
+    int ent = FindEntityByTargetname("CircleTemplate", "point_template");
+    if (ent != -1) {
+      float dest[3];
+      dest[0] = 1448.101929;
+      dest[1] = -1650.457520;
+      dest[2] = -576.000;
+      float destAng[3];
+      float destVel[3];
+      TeleportEntity(ent, dest, destAng, destVel);
+      FireEntityInput("CircleTemplate", "ForceSpawn", "", 0.0);
+    }
+    else
+    PrintToServer("Nope");
   }
   //Taco Bell Edition
   case 210: {
@@ -3847,6 +3797,7 @@ public Action TickClientHealth(Handle timer) {
     else if (GetClientCount(true) <= 0){
       PrintToServer("Server is empty. Stopping the music queue.");
       bgmPlaying = false;
+      tickingClientHealth = false;
       tickMusic = false;
       BGMINDEX = 0;
       shouldStopMusic = false;
@@ -3863,4 +3814,17 @@ public Action UpdateMusic(Handle timer) {
   prevSong = curSong;
   //PrintToChatAll("Song to stop is %s", prevSong);
   return Plugin_Stop;
+}
+
+int FindEntityByTargetname(char[] targetname, char[] classname)
+{
+  char namebuf[32];
+  int index = -1;
+  namebuf[0] = '\0';
+ 
+  while(strcmp(namebuf, targetname) != 0 && (index = FindEntityByClassname(index, classname)) != -1){
+    GetEntPropString(index, Prop_Data, "m_iName", namebuf, sizeof(namebuf));
+    PrintToServer("Found %s, index %i", namebuf, index);
+  }
+  return(index);
 }

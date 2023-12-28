@@ -1,3 +1,26 @@
+bool bombReady = false;
+char bombNames[][128] = {
+  "What the fuck. This should not be 0.", // 0 (This should NEVER be possible under any circumstance)
+  "{red}FREEDOM BOMB{white}", // 1
+  "{red}ELON BUST{white}", // 2
+  "{red}BATH SALTS{white}",
+  "{red}FALLING STAR{white}",
+  "{red}MAJOR KONG{white}",
+  "{red}SHARK{white}",
+  "{red}FAT MAN{white}",
+  "{red}HYDROGEN{white}"
+};
+
+char bombIdle[][128] = {
+  "{white}Bombs are {red}NOT READY{white}!", // 0 (default)
+  "{white}Your team recently deployed a {red}FREEDOM BOMB{white}!", // 1
+  "{white}Your team recently deployed a {red}ELON BUST{white}!",
+  "{white}Your team recently deployed a {red}BATH SALTS{white}!",
+  "{white}Your team recently deployed a {red}FALLING STAR{white}!",
+  "{white}Your team recently deployed a {red}MAJOR KONG{white}!",
+  "{white}Your team recently deployed a {red}SHARK{white}!",
+  "{white}Your team recently deployed a {red}FAT MAN{white}!"
+};
 
 int SNDLVL[] = {
   95, // 0 - BGMSNDLVL
