@@ -23,73 +23,90 @@ char bombIdle[][128] = {
 };
 
 int SNDLVL[] = {
-  95, // 0 - BGMSNDLVL
-  50, // 1 - DEFBGMSNDLVL
-  75, // 2 - SFXSNDLVL
-  0
+  75, // 0
+  75, // 1
+  75, // 2
+  75, // 3
+  75, // 4
+  75, // 5
+  75, // 6
+  75, // 7
+  75, // 8
+  75, // 9
+  75, // 10
+  75, // 11
+  75, // 12
+  75, // 13
+  75, // 14
+  75, // 15
+  75, // 16
+  75, // 17
+  75 // 18
 };
-
 char MusicArray[][64] = {
-  "fartsy/music/ffxiv/TheSilentRegardOfStars.mp3", // 0
-  "fartsy/music/ffxiv/KnowledgeNeverSleeps.mp3", // 1
-  "fartsy/music/ffxiv/frommud.mp3", // 2
-  "fartsy/music/ffxiv/locus.wav", // 3
-  "fartsy/music/ffxiv/metal.wav", // 4
-  "fartsy/music/ffxiv/exponentialentropy.wav", // 5
-  "fartsy/music/ffxiv/tornfromtheheavens.mp3", // 6
-  "fartsy/music/ffxiv/metalbrutejusticemode.wav", // 7
-  "fartsy/music/ffxiv/penitus.wav", // 8
-  "fartsy/music/ffxiv/revengetwofold.wav", // 9
-  "fartsy/music/ffxiv/landslide.wav", // 10
-  "fartsy/music/brawler/xbc2/battle.wav", // 11
-  "fartsy/music/brawler/onewingedintro.mp3", // 12
-  "fartsy/music/brawler/onewingedangel.mp3", // 13
-  "fartsy/music/brawler/xbc/youwillknowournames.mp3", // 14
-  "fartsy/music/ffxiv/TornColossusPhase1.mp3", // 15
-  "fartsy/music/ffxiv/TornColossusPhase2.mp3", // 16
-  "fartsy/music/demetori/unowen.mp3" // 17
+  "fartsy/music/ffxiv/TheSilentRegardOfStars.wav", // 0
+  "fartsy/music/ffxiv/KnowledgeNeverSleeps.wav", // 1
+  "fartsy/music/ffxiv/FromMud.wav", // 2
+  "fartsy/music/ffxiv/AndLoveYouShallFind.wav", // 3
+  "fartsy/music/ffxiv/locus.wav", // 4
+  "fartsy/music/ffxiv/metal.wav", // 5
+  "fartsy/music/ffxiv/exponentialentropy.wav", // 6
+  "fartsy/music/ffxiv/fromtheheavens_loop1.wav", // 7
+  "fartsy/music/ffxiv/fromtheheavens_loop2.wav", // 8
+  "fartsy/music/ffxiv/fromtheheavens_loop3.wav", // 9
+  "fartsy/music/ffxiv/fromtheheavens_loop4.wav", // 10
+  "fartsy/music/ffxiv/metalbrutejusticemode.wav", // 11
+  "fartsy/music/ffxiv/penitus.wav", // 12
+  "fartsy/music/ffxiv/revengetwofold.wav", // 13
+  "fartsy/music/ffxiv/landslide.wav", // 14
+  "fartsy/music/brawler/onewingedangel.wav", // 15
+  "fartsy/music/brawler/xbc2/battle.wav", // 16
+  "fartsy/music/brawler/xbc/youwillknowournames.mp3", // 17
+  "fartsy/music/demetori/unowen.mp3" // 18
 };
 
 char TitleArray[][64] = {
   "FFXIV - The Silent Regard of Stars", // 0
   "FFXIV - Knowledge Never Sleeps", // 1
   "FFXIV - From Mud", // 2
-  "FFXIV - Locus", // 3
-  "FFXIV - Metal", // 4
-  "FFXIV - Exponential Entropy", // 5
-  "FFXIV - Torn From the Heavens", // 6
-  "FFXIV - Metal: Brute Justice Mode", // 7
-  "FFXIV - Penitus", // 8
-  "FFXIV - Revenge Twofold", // 9
-  "FFXIV - Landslide", // 10
-  "Xenoblade Chronicles 2 - Battle!!", // 11
-  "FF Advent Children - One Winged Angel", // 12
-  "Xenoblade Chronicles - You Will Know Our Names", // 13
-  "FFXIV - Torn From The Heavens Dark Colossus (Phase 1)", // 14
-  "FFXIV - Torn From The Heavens Dark Colossus (Phase 2)", // 15
-  "Demetori - U.N. Owen Was Her?", // 16
-  ""
+  "FFXIV - And Love You Shall Find", // 3
+  "FFXIV - Locus", // 4
+  "FFXIV - Metal", // 5
+  "FFXIV - Exponential Entropy", // 6
+  "FFXIV - From the Heavens (P1)", // 7
+  "FFXIV - From the Heavens (P2)", // 8
+  "FFXIV - From the Heavens (P3)", // 9
+  "FFXIV - From the Heavens (P4)", // 10
+  "FFXIV - Metal: Brute Justice Mode", // 11
+  "FFXIV - Penitus", // 12
+  "FFXIV - Revenge Twofold", // 13
+  "FFXIV - Landslide", // 14
+  "FF Advent Children - One Winged Angel", // 15
+  "Xenoblade Chronicles 2 - Battle!!", // 16
+  "Xenoblade Chronicles - You Will Know Our Names", // 17
+  "Demetori - U.N. Owen Was Her?", // 18
 };
 
 int RefireArray[] = {
-  9170, // 0
-  15686, // 1
-  9180, // 2
-  15270, // 3
-  10250, // 4
-  11110, // 5
-  8137, // 6
-  8770, // 7
-  28476, // 8
-  8870, // 9
-  14333, // 10
-  8120, // 11
-  8587, // 12
-  20720, // 13
-  9986, // 14
-  5286, // 15
-  17873, // 16
-  0
+  9190, // 0
+  15690, // 1
+  9190, // 2
+  10490, // 3
+  15270, // 4
+  10250, // 5
+  11110, // 6
+  4250, // 7
+  5492, // 8
+  3947, // 9
+  2508, // 10
+  8702, // 11
+  28476, // 12
+  8805, // 13
+  14160, // 14
+  20592, // 15
+  8120, // 16
+  8475, // 17
+  19206 // 18
 };
 
 char SFXArray[][64] = {
@@ -223,7 +240,6 @@ bool canSENTStars = false;
 bool canSephNuke = false;
 bool canTornado = false;
 bool crusader = false;
-bool isADPCM = false;
 bool isWave = false;
 bool monitorOn = false;
 bool monitorColor = true;
@@ -243,9 +259,7 @@ int CodeEntry = 0;
 int bombStatus = 0;
 int bombStatusMax = 0;
 int curWave = 0;
-int explodeType = 0;
 int lastAdmin = 0;
-int loopingFlags = 0;
 int refireTime = 0;
 int sacPoints = 0;
 int sacPointsMax = 60;
