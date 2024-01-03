@@ -1,6 +1,34 @@
+//Silence cvar changes to minimize chat spam.
+public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast) {
+  event.BroadcastDisabled = true;
+  return Plugin_Handled;
+}
 bool bombReady = false;
+char dbgStr[256];
+bool defaultCanHWBoss[] = {
+  false,
+  false,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true //wave 8
+};
+bool defaultCanTornado[] = {
+  false,
+  false,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true
+};
 char bombNames[][128] = {
-  "What the fuck. This should not be 0.", // 0 (This should NEVER be possible under any circumstance)
+  "", // 0 (This should NEVER be possible under any circumstance)
   "{red}FREEDOM BOMB{white}", // 1
   "{red}ELON BUST{white}", // 2
   "{red}BATH SALTS{white}",
@@ -9,17 +37,6 @@ char bombNames[][128] = {
   "{red}SHARK{white}",
   "{red}FAT MAN{white}",
   "{red}HYDROGEN{white}"
-};
-
-char bombIdle[][128] = {
-  "{white}Bombs are {red}NOT READY{white}!", // 0 (default)
-  "{white}Your team recently deployed a {red}FREEDOM BOMB{white}!", // 1
-  "{white}Your team recently deployed a {red}ELON BUST{white}!",
-  "{white}Your team recently deployed a {red}BATH SALTS{white}!",
-  "{white}Your team recently deployed a {red}FALLING STAR{white}!",
-  "{white}Your team recently deployed a {red}MAJOR KONG{white}!",
-  "{white}Your team recently deployed a {red}SHARK{white}!",
-  "{white}Your team recently deployed a {red}FAT MAN{white}!"
 };
 
 int SNDLVL[] = {
@@ -169,7 +186,13 @@ char SFXArray[][64] = {
   "fartsy/misc/triggerscore.wav", // 56 TRIGGERSCORE
   "fartsy/ffxivvictoryedit.mp3", // 57 VICTORY
   "fartsy/vo/sephiroth/memory.mp3", // 58 VO_SEPHMEMORY
-  "fartsy/misc/wtfboom.mp3" // 59 WTFBOOM
+  "fartsy/misc/wtfboom.mp3", // 59 WTFBOOM
+  "mvm/ambient_mp3/mvm_siren.mp3", // 60
+  "fartsy/memes/priceisright_fail.wav", // 61
+  "fartsy/eee/the_horn.wav", // 62
+  "fartsy/misc/fartsyscrusader_bgm_locus.mp3", // 63
+  "ambient/sawblade_impact1.wav", // 64
+  "vo/sandwicheat09.mp3" // 65
 };
 
 char AdvMessage[][256] = {
@@ -177,13 +200,25 @@ char AdvMessage[][256] = {
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}Remember to buy your upgrades using {forestgreen}!buy",
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}You may invoke {forestgreen}!sounds {white}to configure what sounds you hear from the plugin, or {forestgreen}!stats{white} to see your stats.",
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}Advanced users may quick buy upgrades using {forestgreen}!qbuy",
-  "{darkviolet}[{aqua}CORE{darkviolet}] {white}Don't forget to buy {forestgreen}protection upgrades {white}and {forestgreen}ammo regen{white}(if applicable)!",
+  "{darkviolet}[{aqua}CORE{darkviolet}] {white}You may invoke {forestgreen}!sacpoints {white}to spend {forestgreen}sacrifice points{white} for many special abilities, including disabling the tornado!",
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}TIP: As a {red}DEFENDER{white}, pushing your team's {forestgreen}payload {white}is crucial to wrecking havoc on the robots!",
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}Remember, if someone is being abusive, you may always invoke {forestgreen}!calladmin{white}.",
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}You may always invoke {forestgreen}!return{white} to be returned to spawn.",
   ""
 };
 
+char ASS[][64] = {
+  "[10] Kissone Bath Salts", //0 (10)
+  "[20] Summon Goobbue or Kirby", //1 (20)
+  "[30] 35,000 UbUp Cash", //2 (30) 
+  "[40] Explosives Paradise", //3 (40)
+  "[50] Banish Tornadoes", //4 (50)
+  "[60] Ass Gas", //5 (60) 
+  "[70] Instant Fat Man", //6 (70)
+  "[80] Meteorites", //7 (80)
+  "[90) 300,000 UbUp Cash",//8 (90)
+  "[100] Professor Fartsalot" //9 (100)
+};
 char ClassDefinitions[][32] = {
   "scout",
   "sniper",
@@ -226,6 +261,102 @@ char FB_SENT[][64] = {
   ""
 };
 
+char sndPrefs[][128] = {
+  "Sounds are currently DISABLED.",
+  "Sounds are currently MUSIC ONLY.",
+  "Sounds are currently SOUND EFFECTS ONLY.",
+  "Sounds are currently ALL ON.",
+  "Somehow your sound preference was stored as non-existent 5... Please configure your sounds."
+};
+
+int defaultBGMIndex[] = {
+  0,
+  4,
+  5,
+  6,
+  7,
+  11,
+  12,
+  13,
+  14
+};
+int defaultBombStatus[] = {
+  0, // 0 - should not be possible
+  0,
+  4,
+  7,
+  12,
+  14,
+  20,
+  28,
+  30 //wave 8
+};
+int defaultBombStatusMax[] = {
+  0, // 0 - should not be possible
+  10,
+  18,
+  26,
+  34,
+  42,
+  50,
+  58,
+  66 //wave 8
+};
+int defaultSacPointsMax[] = {
+  0,
+  50,
+  60,
+  70,
+  80,
+  90,
+  100,
+  100,
+  100 //wave 8
+};
+int tacoBellBGMIndex[] = {
+  0,
+  16,
+  5,
+  6,
+  7,
+  11,
+  12,
+  13,
+  14
+};
+char SelectedCamera[][32] = {
+  "CAM.Front",
+  "CAM.Mid",
+  "CAM.MidTwo",
+  "CAM.Rear",
+  "CAM.Kissone"
+};
+char SpecEnt[][24] = {
+  "Spec.Goobbue",
+  "Spec.Waffle",
+  "Spec.Burrito",
+  "Spec.Shroom",
+  "Spec.BlueBall",
+  "Spec*"
+};
+char StrikeAt[][32] = {
+  "LightningHurt00",
+  "LightningHurt01",
+  "LightningHurt02",
+  "LightningHurt03",
+  "LightningHurt04",
+  "LightningHurt05",
+  "LightningHurt06",
+  "LightningHurt07",
+  "LightningHurt08",
+  "LightningHurt09",
+  "LightningHurt0A",
+  "LightningHurt0B",
+  "LightningHurt0C",
+  "LightningHurt0D",
+  "LightningHurt0E",
+  "LightningHurt0F"
+};
 bool bgmPlaying = false;
 bool bombProgression = false;
 bool bombReset = false;
@@ -234,7 +365,6 @@ bool canCrusaderNuke = false;
 bool canHindenburg = false;
 bool canHWBoss = false;
 bool canSENTMeteors = false;
-bool canSENTNukes = false;
 bool canSENTShark = false;
 bool canSENTStars = false;
 bool canSephNuke = false;
@@ -251,6 +381,7 @@ bool tacobell = false;
 bool tickingClientHealth = false;
 bool tickMusic = false;
 bool TornadoWarningIssued = false;
+Database FB_Database;
 int BGMINDEX = 0;
 int FailedCount = 0;
 int INCOMINGDISPLAYED = 0;
@@ -269,7 +400,7 @@ int ticksMusic = 0;
 int VIPBGM = -1;
 int VIPIndex = 0;
 int waveFlags = 0;
-char curSong[64], prevSong[64], s[128], songName[64] = "null";
+char curSong[64], prevSong[64], songName[64] = "null";
 char TBGM0[16] = "test/bgm0.mp3";
 char TBGM1[16] = "test/bgm1.mp3";
 char TBGM2[16] = "test/bgm2.mp3";
@@ -310,4 +441,72 @@ void RegisterAllCommands(){
   RegConsoleCmd("sm_sacpoints", Command_SacrificePointShop, "Fartsy's Annihilation Supply Shop");
   RegConsoleCmd("sm_discord", Command_Discord, "Join our Discord server!");
   RegConsoleCmd("sm_sounds", Command_Sounds, "Toggle sounds on or off via menu");
+}
+public void OnConfigsExecuted() {
+  if (!FB_Database) {
+    Database.Connect(Database_OnConnect, "ass");
+  }
+}
+//DB setup
+public void Database_OnConnect(Database db,
+  const char[] error, any data) {
+  if (!db) {
+    LogError("Could not connect to the database: %s", error);
+    return;
+  }
+  char buffer[64];
+  db.Driver.GetIdentifier(buffer, sizeof(buffer));
+  if (!StrEqual(buffer, "mysql", false)) {
+    delete db;
+    LogError("Could not connect to the database: expected mysql database.");
+    return;
+  }
+  FB_Database = db;
+  FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS ass_activity(name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', health TEXT DEFAULT '-1', maxHealth INT UNSIGNED DEFAULT '0', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '3', PRIMARY KEY (steamid));");
+}
+
+//Database Fastquery Manager
+public void Database_FastQuery(Database db, DBResultSet results,
+  const char[] error, any data) {
+  if (!results) {
+    LogError("Failed to query database: %s", error);
+  }
+}
+public void Database_MergeDataError(Database db, any data, int numQueries,
+  const char[] error, int failIndex, any[] queryData) {
+  LogError("Failed to query database (transaction): %s", error);
+}
+
+//Calculate time spent on server in seconds
+int GetClientMapTime(int client) {
+  float clientTime = GetClientTime(client), gameTime = GetGameTime();
+  if (clientTime > gameTime) {
+    return RoundToZero(gameTime);
+  }
+  return RoundToZero(clientTime);
+}
+
+//Find an entity by its target name
+int FindEntityByTargetname(char[] targetname, char[] classname)
+{
+  char namebuf[32];
+  int index = -1;
+  namebuf[0] = '\0';
+ 
+  while(strcmp(namebuf, targetname) != 0 && (index = FindEntityByClassname(index, classname)) != -1){
+    GetEntPropString(index, Prop_Data, "m_iName", namebuf, sizeof(namebuf));
+    PrintToServer("Found %s, index %i", namebuf, index);
+  }
+  return(index);
+}
+
+//Used to keep StopSound from stopping the music we're trying to play
+public Action SyncMusic(Handle timer) {
+  prevSong = curSong;
+  return Plugin_Stop;
+}
+
+//Get a client's health
+stock int TF2_GetPlayerMaxHealth(int client) {
+  return GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client);
 }
