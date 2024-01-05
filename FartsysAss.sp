@@ -21,7 +21,7 @@
 #include <ass_helper>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "6.5.5";
+static char PLUGIN_VERSION[8] = "6.5.5-1";
 Handle cvarSNDDefault = INVALID_HANDLE;
 
 public Plugin myinfo = {
@@ -295,8 +295,8 @@ public int MenuHandlerFartsysAss(Menu menu, MenuAction action, int param1, int p
         else sudo(31); // goobbue
       }
       case 2: {
-        if (sacPoints <= 29) return;
-        else sudo(32); // 35k cash
+        if (sacPoints <= 29 || doFailsafe) return;
+        else sudo(32); // failsafe
       }
       case 3: {
         if (sacPoints <= 39) return;
@@ -565,7 +565,7 @@ public Action SephNukeTimer(Handle timer) {
 //SENTStars (Scripted Entity Stars)
 public Action SENTStarTimer(Handle timer) {
   if (canSENTStars) {
-    FireEntityInput(FB_SENT[GetRandomInt(10, 14)], "ForceSpawn", "", 0.0); // replace me with teleportEntity eventually then forcespawn...
+    FireEntityInput(FB_SENT[10], "ForceSpawn", "", 0.0); // replace me with teleportEntity eventually then forcespawn...
     CreateTimer(GetRandomFloat(0.75, 1.5), SENTStarTimer);
   }
   return Plugin_Stop;
@@ -1055,7 +1055,15 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
 
 //Announce when we are in danger.
 public Action EventWarning(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast) {
-  CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {darkred}PROFESSOR'S ASS IS ABOUT TO BE DEPLOYED!!!");
+  if (doFailsafe){
+    failsafeCount++;
+    CPrintToChatAll( "%s Counter: %i", failsafe[GetRandomInt(0, 14)], failsafeCount);
+    EmitSoundToAll(SFXArray[55]);
+    ServerCommand("sm_freeze @blue; wait 180; sm_smash @blue;sm_evilrocket @blue");
+    doFailsafe = false;
+  }
+  else
+    CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {darkred}PROFESSOR'S ASS IS ABOUT TO BE DEPLOYED!!!");
   return Plugin_Handled;
 }
 
@@ -1687,9 +1695,12 @@ void sudo(int task){
     }
     //35K ubup cash spend
     case 32: {
-      CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}35,000 UbUp cash granted to red! ({red}-30 pts{white})");
-      sacPoints -= 30;
-      ServerCommand("sm_addcash @red 35000");
+      if(!doFailsafe){
+        doFailsafe = true;
+        CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave fail-safe activated! ({red}-30 pts{white})");
+        sacPoints -= 30;
+      }
+      else return;
     }
     //Explosive paradise spend
     case 33: {

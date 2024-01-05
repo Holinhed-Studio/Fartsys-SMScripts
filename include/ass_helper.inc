@@ -20,6 +20,23 @@ int ticksOffset[] = {
   0,
   0
 };
+char failsafe[][256] = {
+  "{orange}Phoenix♥ {white}: FAILSAFE HAS BEEN TRIGGERED. ROBOT EXTERMINATION IN PROGRESS. [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Nice try. You think this is funny? How about THIS instead? [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: (╯°□°）╯︵ ¡¡¡pƎ⅄O˥ԀƎp Ǝq O┴ ┴∩Oq∀ SI SS∀ S,ɹOSSƎℲOɹԀ [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Flips a coin and... HEADS! [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Pwofessow's b-butt is a-about to be depwoyed!!! JUST KIDDING - GET FUCKED. [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: We aren't so different, you and I. Oh wait, yes we are. You're a pile of scrap and I'm actually useful! :> [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: *BZZT* Sorry, time's up! [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: It's only me and you, who is gonna save you now? [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Nope. [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Sometimes I even amaze myself. [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Some disassembly required. [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Oops, I did it again! [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Not on my watch! [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Sometimes you scare me! [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: You know, I never really thought about it. [Failsafe Activated]"
+};
 //Silence cvar changes to minimize chat spam.
 public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast) {
   event.BroadcastDisabled = true;
@@ -233,7 +250,7 @@ char AdvMessage[][256] = {
 char ASS[][64] = {
   "[10] Kissone Bath Salts", //0 (10)
   "[20] Summon Goobbue or Kirby", //1 (20)
-  "[30] 35,000 UbUp Cash", //2 (30) 
+  "[30] Robot Trap (Wave Fail-safe)", //2 (30) 
   "[40] Explosives Paradise", //3 (40)
   "[50] Banish Tornadoes", //4 (50)
   "[60] Ass Gas", //5 (60) 
@@ -393,6 +410,7 @@ bool canSENTStars = false;
 bool canSephNuke = false;
 bool canTornado = false;
 bool crusader = false;
+bool doFailsafe = false;
 bool isWave = false;
 bool monitorOn = false;
 bool monitorColor = true;
@@ -413,6 +431,7 @@ int CodeEntry = 0;
 int bombStatus = 0;
 int bombStatusMax = 0;
 int curWave = 0;
+int failsafeCount = -1;
 int lastAdmin = 0;
 int refireTime = 0;
 int sacPoints = 0;
