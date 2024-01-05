@@ -1,3 +1,25 @@
+bool tickOffset = false;
+int ticksOffset[] = {
+  0, // 0
+  0, // 1
+  0, // 2
+  0, // 3
+  429, // 4
+  226, // 5
+  11, // 6
+  1078, // 7
+  0, // 8
+  0, // 9
+  0, // 10
+  0, // 11
+  0, // 12
+  0, // 13
+  0, //14
+  2753, // 15
+  749, // 16
+  0,
+  0
+};
 //Silence cvar changes to minimize chat spam.
 public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast) {
   event.BroadcastDisabled = true;
@@ -83,25 +105,26 @@ char MusicArray[][64] = {
 };
 
 char TitleArray[][64] = {
-  "FFXIV - The Silent Regard of Stars", // 0
-  "FFXIV - Knowledge Never Sleeps", // 1
-  "FFXIV - From Mud", // 2
-  "FFXIV - And Love You Shall Find", // 3
-  "FFXIV - Locus", // 4
-  "FFXIV - Metal", // 5
-  "FFXIV - Exponential Entropy", // 6
-  "FFXIV - From the Heavens (P1)", // 7
-  "FFXIV - From the Heavens (P2)", // 8
-  "FFXIV - From the Heavens (P3)", // 9
-  "FFXIV - From the Heavens (P4)", // 10
-  "FFXIV - Metal: Brute Justice Mode", // 11
-  "FFXIV - Penitus", // 12
-  "FFXIV - Revenge Twofold", // 13
-  "FFXIV - Landslide", // 14
-  "FF Advent Children - One Winged Angel", // 15
-  "Xenoblade Chronicles 2 - Battle!!", // 16
-  "Xenoblade Chronicles - You Will Know Our Names", // 17
-  "Demetori - U.N. Owen Was Her?", // 18
+  "Restore Defaults", // 0
+  "FFXIV - The Silent Regard of Stars", // 1
+  "FFXIV - Knowledge Never Sleeps", // 2
+  "FFXIV - From Mud", // 3
+  "FFXIV - And Love You Shall Find", // 4
+  "FFXIV - Locus", // 5
+  "FFXIV - Metal", // 6
+  "FFXIV - Exponential Entropy", // 7
+  "FFXIV - From the Heavens (P1)", // 8
+  "FFXIV - From the Heavens (P2)", // 9
+  "FFXIV - From the Heavens (P3)", // 10
+  "FFXIV - From the Heavens (P4)", // 11
+  "FFXIV - Metal: Brute Justice Mode", // 12
+  "FFXIV - Penitus", // 13
+  "FFXIV - Revenge Twofold", // 14
+  "FFXIV - Landslide", // 15
+  "FF Advent Children - One Winged Angel", // 16
+  "Xenoblade Chronicles 2 - Battle!!", // 17
+  "Xenoblade Chronicles - You Will Know Our Names", // 18
+  "Demetori - U.N. Owen Was Her?" // 19
 };
 
 int RefireArray[] = {
@@ -123,7 +146,7 @@ int RefireArray[] = {
   20592, // 15
   8120, // 16
   8475, // 17
-  19206 // 18
+  19240 // 18
 };
 
 char SFXArray[][64] = {
@@ -417,7 +440,7 @@ float Return[3] = {
 };
 
 stock bool IsValidClient(int client) {
-  return (0 < client <= MaxClients && IsClientInGame(client));
+  return (0 < client <= MaxClients && IsClientInGame(client) && !IsFakeClient(client));
 }
 
 void PrecacheAllFiles(){
@@ -500,9 +523,10 @@ int FindEntityByTargetname(char[] targetname, char[] classname)
   return(index);
 }
 
-//Used to keep StopSound from stopping the music we're trying to play
+//Used to keep StopSound from stopping the music we're trying to play - now with support for loop offsets!
 public Action SyncMusic(Handle timer) {
   prevSong = curSong;
+  tickOffset = (BGMINDEX == 4 ? true : BGMINDEX == 5 ? true : BGMINDEX == 6 ? true : BGMINDEX == 7 ? true : BGMINDEX == 15 ? true : BGMINDEX == 16 ? true : false);
   return Plugin_Stop;
 }
 

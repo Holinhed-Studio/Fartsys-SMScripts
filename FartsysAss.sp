@@ -21,7 +21,7 @@
 #include <ass_helper>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "6.5.2";
+static char PLUGIN_VERSION[8] = "6.5.5";
 Handle cvarSNDDefault = INVALID_HANDLE;
 
 public Plugin myinfo = {
@@ -65,9 +65,9 @@ public void OnGameFrame() {
         }
       }
       curSong = MusicArray[BGMINDEX];
-      songName = TitleArray[BGMINDEX];
+      songName = TitleArray[BGMINDEX+1];
       refireTime = RefireArray[BGMINDEX];
-      ticksMusic = 0;
+      ticksMusic = (tickOffset ? ticksOffset[BGMINDEX] : 0);
       CustomSoundEmitter(MusicArray[BGMINDEX], SNDLVL[BGMINDEX], true, 1, 1.0, 100);
       CreateTimer(1.0, SyncMusic);
     }
@@ -76,7 +76,7 @@ public void OnGameFrame() {
 
 //Restart music for the new client
 public Action RefireMusicForClient(Handle timer, int client){
-  if(IsClientInGame(client) && !IsFakeClient(client)){
+  if(IsValidClient(client)){
     PrintToServer("Attempting to play music for client %N", client);
     if(GetClientTeam(client) == 0)
       CreateTimer(1.0, RefireMusicForClient, client);
@@ -169,7 +169,7 @@ public void FartsysSNDSelected(int client, CookieMenuAction action, any info, ch
 }
 //Queue music for new clients, also track their health.
 public void OnClientPostAdminCheck(int client){
-  if(!IsFakeClient(client))
+  if(!IsFakeClient(client) && bgmPlaying)
     CreateTimer(1.0, RefireMusicForClient, client);
   int steamID = GetSteamAccountID(client);
   if (!steamID || steamID <= 10000) return;
@@ -182,6 +182,8 @@ public void OnClientPostAdminCheck(int client){
         CreateTimer(1.0, TickClientHealth);
         tickingClientHealth = true;
       }
+      if (!bgmPlaying)
+        SetupMusic(0);
       char query[1024];
       Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
       FB_Database.Query(Database_FastQuery, query);
@@ -360,7 +362,7 @@ public Action PerformWaveAdverts(Handle timer) {
     Format (HintText, sizeof(HintText), (bombProgression ? "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : bombReady ? "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : "Payload: PREPARING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)"), bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
     CreateTimer(2.5, PerformWaveAdverts);
     for (int i = 1; i <= MaxClients; i++) {
-      if(IsClientInGame(i)){
+      if(IsValidClient(i)){
         PrintHintText(i, (TornadoWarningIssued ? "%s \n\n[TORNADO WARNING]" : "%s"), HintText, HintText);
         StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
       }
@@ -1232,7 +1234,7 @@ void sudo(int task){
     case 1: {
       tacobell = false;
       ServerCommand("fb_startmoney 50000");
-      CPrintToChatAll("{darkviolet}[{yellow}INFO{darkviolet}] {red}PROFESSOR'S ASS {white}v0x20. Prepare yourself for the unpredictable... [{limegreen}by TTV/ProfessorFartsalot{white}]");
+      CPrintToChatAll("{darkviolet}[{yellow}INFO{darkviolet}] {red}PROFESSOR'S ASS {white}v0x20 (Core-v%s). Prepare yourself for the unpredictable... [{limegreen}by TTV/ProfessorFartsalot{white}]", PLUGIN_VERSION);
       FireEntityInput("rain", "Alpha", "0", 0.0);
     }
     //Wave init
@@ -1348,7 +1350,7 @@ void sudo(int task){
           FireEntityInput("FB.BruteJusticeDMGRelay", "Kill", "", 0.0);
           int players = 0;
           for (int i = 1; i <= MaxClients; i++) {
-            if (IsClientInGame(i) && !IsFakeClient(i))
+            if (IsValidClient(i))
               players++;
           }
           PrintToServer("We have %i player(s), setting boss attributes accordingly!", players);
@@ -1379,7 +1381,7 @@ void sudo(int task){
                 FireEntityInput("FB.SephDMGRelay", "SetHealth", "655360000", 1.0);
             }
           }
-        CreateTimer(30.0, BossHPTimer);
+          CreateTimer(30.0, BossHPTimer);
         }
       }
     }
@@ -2336,7 +2338,7 @@ public Action TimedOperator(Handle timer, int job) {
   case 3: {
     BGMINDEX = 15;
     curSong = MusicArray[15];
-    songName = TitleArray[15];
+    songName = TitleArray[16];
     CustomSoundEmitter(MusicArray[15], SNDLVL[0] + 10, true, 0, 1.0, 100);
     FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 0.0);
     FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 3.0);
@@ -2702,12 +2704,13 @@ public void ExitEmergencyMode() {
 
 //Setup music, this allows us to change it with VIP access...
 public void SetupMusic(int BGM) {
-  bgmPlaying = false;
+  bgmPlaying = true;
   ticksMusic = -2;
   refireTime = 2;
   tickMusic = true;
+  tickOffset = false;
   BGMINDEX = (VIPBGM >= 0 ? VIPBGM : BGM);
-  curSong = (VIPBGM >= 0 ? MusicArray[BGM-1] : MusicArray[BGM]); //SetupMusic when called by wave start, causes this -1 to be broken. Might be fixed now.
+  curSong = (VIPBGM >= 0 ? MusicArray[VIPBGM] : MusicArray[BGM]);
   shouldStopMusic = (!StrEqual(prevSong, curSong) ? true : false);
 }
 //VIP Music Menu
@@ -2729,19 +2732,15 @@ public void ShowFartsyMusicMenu(int client) {
   menu.ExitButton = true;
 }
 
-// VIP Music Menu
+// VIP Music Menu, bgm-1 fixes the fact that position 0 is Restore Defaults, and arrays cannot be -1. By adding Restore Defaults at position 0, we offset everything by +1.
 public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int client, int bgm) {
   if (action == MenuAction_Select) {
-    char resultMsg[128];
     curWave = GetCurWave();
-    Format(resultMsg, sizeof(resultMsg), (bgm == 15 ? "{darkgreen}[CORE] Confirmed. Next song set to {aqua}Default{darkgreen}." : "{limegreen}[CORE] Confirmed. Next song set to {aqua}%s{limegreen}.",  TitleArray[bgm]));
-    CPrintToChat(client, resultMsg);
-    BGMINDEX = (bgm == 15 ? (tacobell ? tacoBellBGMIndex[curWave] : sephiroth ? 17 : isWave ? defaultBGMIndex[curWave] : GetRandomInt(0, 3)) : bgm);
-    curSong = MusicArray[bgm];
-    shouldStopMusic = (!StrEqual(prevSong, curSong) ? true : false);
-    VIPBGM = (bgm == 15 ? -1 : bgm);
+    CPrintToChat(client, (bgm == 0 ? "{darkgreen}[CORE] Confirmed. Next song set to {aqua}Default{darkgreen}." : "{limegreen}[CORE] Confirmed. Next song set to {aqua}%s{limegreen}."),  TitleArray[bgm]);
+    BGMINDEX = (bgm == 0 ? (tacobell ? tacoBellBGMIndex[curWave] : sephiroth ? 15 : isWave ? defaultBGMIndex[curWave] : GetRandomInt(0, 3)) : bgm-1);
+    shouldStopMusic = (!StrEqual(prevSong, MusicArray[bgm-1]) ? true : false);
+    VIPBGM = (bgm == 0 ? -1 : bgm-1);
     VIPIndex = client;
-    CreateTimer(1.0, SyncMusic);
   }
   else if (action == MenuAction_End)
     CloseHandle(menu);
@@ -2749,7 +2748,7 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int client, int 
 
 public Action TickClientHealth(Handle timer) {
   for (int i = 1; i <= MaxClients; i++) {
-    if (IsClientInGame(i) && !IsFakeClient(i) && (GetClientTeam(i) == 2)) {
+    if (IsValidClient(i) && (GetClientTeam(i) == 2)) {
       int health = GetClientHealth(i);
       int healthMax = TF2_GetPlayerMaxHealth(i);
       if (!FB_Database) return;
