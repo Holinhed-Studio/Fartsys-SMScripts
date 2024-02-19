@@ -2747,9 +2747,9 @@ public void ShowFartsyMusicMenu(int client) {
 public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int client, int bgm) {
   if (action == MenuAction_Select) {
     curWave = GetCurWave();
-    CPrintToChat(client, (bgm == 0 ? "{darkgreen}[CORE] Confirmed. Next song set to {aqua}Default{darkgreen}." : "{limegreen}[CORE] Confirmed. Next song set to {aqua}%s{limegreen}."),  TitleArray[bgm]);
+    CPrintToChat(client, (bgm == 0 ? "{darkgreen}[CORE] Confirmed. Next song set to {aqua}Default{darkgreen}." : "{limegreen}[CORE] Confirmed. Next song set to {aqua}%i{limegreen}."),  bgm);
     BGMINDEX = (bgm == 0 ? (tacobell ? tacoBellBGMIndex[curWave] : sephiroth ? 15 : isWave ? defaultBGMIndex[curWave] : GetRandomInt(0, 3)) : bgm-1);
-    shouldStopMusic = (!StrEqual(prevSong, MusicArray[bgm-1]) ? true : false);
+    shouldStopMusic = (!StrEqual(prevSong, MusicArray[bgm]) ? true : false);
     VIPBGM = (bgm == 0 ? -1 : bgm-1);
     VIPIndex = client;
   }
