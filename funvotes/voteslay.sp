@@ -39,7 +39,8 @@ void DisplayVoteSlayMenu(int client, int target, char[] name)
 		return;
 	}
 	
-	g_voteClient[VOTE_CLIENTID] = target;
+	g_voteTarget = GetClientUserId(target);
+	
 	GetClientName(target, g_voteInfo[VOTE_NAME], sizeof(g_voteInfo[]));
 
 	LogAction(client, target, "\"%L\" initiated a slay vote against \"%L\"", client, target);
@@ -129,6 +130,8 @@ public int MenuHandler_Slay(Menu menu, MenuAction action, int param1, int param2
 			DisplayVoteSlayMenu(param1, target, name);
 		}
 	}
+
+	return 0;
 }
 
 public Action Command_VoteSlay(int client, int args)

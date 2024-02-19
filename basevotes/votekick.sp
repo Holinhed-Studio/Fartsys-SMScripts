@@ -33,15 +33,14 @@
 
 void DisplayVoteKickMenu(int client, int target)
 {
-	g_voteClient[VOTE_CLIENTID] = target;
-	g_voteClient[VOTE_USERID] = GetClientUserId(target);
+	g_voteTarget = GetClientUserId(target);
 
 	GetClientName(target, g_voteInfo[VOTE_NAME], sizeof(g_voteInfo[]));
 
 	LogAction(client, target, "\"%L\" initiated a kick vote against \"%L\"", client, target);
 	ShowActivity(client, "%t", "Initiated Vote Kick", g_voteInfo[VOTE_NAME]);
 	
-	g_voteType = kick;
+	g_voteType = VoteType_Kick;
 	
 	g_hVoteMenu = new Menu(Handler_VoteCallback, MENU_ACTIONS_ALL);
 	g_hVoteMenu.SetTitle("Votekick Player");
@@ -122,6 +121,8 @@ public int MenuHandler_Kick(Menu menu, MenuAction action, int param1, int param2
 			DisplayVoteKickMenu(param1, target);
 		}
 	}
+
+	return 0;
 }
 
 public Action Command_Votekick(int client, int args)
