@@ -1,25 +1,4 @@
 bool tickOffset = false;
-int ticksOffset[] = {
-  0, // 0
-  0, // 1
-  0, // 2
-  0, // 3
-  429, // 4
-  226, // 5
-  11, // 6
-  1078, // 7
-  0, // 8
-  0, // 9
-  0, // 10
-  0, // 11
-  0, // 12
-  0, // 13
-  0, //14
-  2753, // 15
-  749, // 16
-  0,
-  0
-};
 char failsafe[][256] = {
   "{orange}Phoenix♥ {white}: FAILSAFE HAS BEEN TRIGGERED. ROBOT EXTERMINATION IN PROGRESS. [Failsafe Activated]",
   "{orange}Phoenix♥ {white}: Nice try. You think this is funny? How about THIS instead? [Failsafe Activated]",
@@ -44,28 +23,7 @@ public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast) {
 }
 bool bombReady = false;
 char dbgStr[256];
-bool defaultCanHWBoss[] = {
-  false,
-  false,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true //wave 8
-};
-bool defaultCanTornado[] = {
-  false,
-  false,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true,
-  true
-};
+
 char bombNames[][128] = {
   "", // 0 (This should NEVER be possible under any circumstance)
   "{red}FREEDOM BOMB{white}", // 1
@@ -76,94 +34,6 @@ char bombNames[][128] = {
   "{red}SHARK{white}",
   "{red}FAT MAN{white}",
   "{red}HYDROGEN{white}"
-};
-
-int SNDLVL[] = {
-  75, // 0
-  75, // 1
-  75, // 2
-  75, // 3
-  75, // 4
-  75, // 5
-  75, // 6
-  75, // 7
-  75, // 8
-  75, // 9
-  75, // 10
-  75, // 11
-  75, // 12
-  75, // 13
-  75, // 14
-  75, // 15
-  75, // 16
-  75, // 17
-  75 // 18
-};
-char MusicArray[][64] = {
-  "fartsy/music/ffxiv/TheSilentRegardOfStars.wav", // 0
-  "fartsy/music/ffxiv/KnowledgeNeverSleeps.wav", // 1
-  "fartsy/music/ffxiv/FromMud.wav", // 2
-  "fartsy/music/ffxiv/AndLoveYouShallFind.wav", // 3
-  "fartsy/music/ffxiv/locus.wav", // 4
-  "fartsy/music/ffxiv/metal.wav", // 5
-  "fartsy/music/ffxiv/exponentialentropy.wav", // 6
-  "fartsy/music/ffxiv/fromtheheavens_loop1.wav", // 7
-  "fartsy/music/ffxiv/fromtheheavens_loop2.wav", // 8
-  "fartsy/music/ffxiv/fromtheheavens_loop3.wav", // 9
-  "fartsy/music/ffxiv/fromtheheavens_loop4.wav", // 10
-  "fartsy/music/ffxiv/metalbrutejusticemode.wav", // 11
-  "fartsy/music/ffxiv/penitus.wav", // 12
-  "fartsy/music/ffxiv/revengetwofold.wav", // 13
-  "fartsy/music/ffxiv/landslide.wav", // 14
-  "fartsy/music/brawler/onewingedangel.wav", // 15
-  "fartsy/music/brawler/xbc2/battle.wav", // 16
-  "fartsy/music/brawler/xbc/youwillknowournames.mp3", // 17
-  "fartsy/music/demetori/unowen.mp3" // 18
-};
-
-char TitleArray[][64] = {
-  "Restore Defaults", // 0
-  "FFXIV - The Silent Regard of Stars", // 1
-  "FFXIV - Knowledge Never Sleeps", // 2
-  "FFXIV - From Mud", // 3
-  "FFXIV - And Love You Shall Find", // 4
-  "FFXIV - Locus", // 5
-  "FFXIV - Metal", // 6
-  "FFXIV - Exponential Entropy", // 7
-  "FFXIV - From the Heavens (P1)", // 8
-  "FFXIV - From the Heavens (P2)", // 9
-  "FFXIV - From the Heavens (P3)", // 10
-  "FFXIV - From the Heavens (P4)", // 11
-  "FFXIV - Metal: Brute Justice Mode", // 12
-  "FFXIV - Penitus", // 13
-  "FFXIV - Revenge Twofold", // 14
-  "FFXIV - Landslide", // 15
-  "FF Advent Children - One Winged Angel", // 16
-  "Xenoblade Chronicles 2 - Battle!!", // 17
-  "Xenoblade Chronicles - You Will Know Our Names", // 18
-  "Demetori - U.N. Owen Was Her?" // 19
-};
-
-int RefireArray[] = {
-  9190, // 0
-  15690, // 1
-  9190, // 2
-  10490, // 3
-  15270, // 4
-  10250, // 5
-  11110, // 6
-  4250, // 7
-  5492, // 8
-  3947, // 9
-  2508, // 10
-  8702, // 11
-  28476, // 12
-  8805, // 13
-  14160, // 14
-  20592, // 15
-  8120, // 16
-  8475, // 17
-  19240 // 18
 };
 
 char SFXArray[][64] = {
@@ -309,60 +179,16 @@ char sndPrefs[][128] = {
   "Somehow your sound preference was stored as non-existent 5... Please configure your sounds."
 };
 
-int defaultBGMIndex[] = {
-  0,
-  4,
-  5,
-  6,
-  7,
-  11,
-  12,
-  13,
-  14
-};
-int defaultBombStatus[] = {
-  0, // 0 - should not be possible
-  0,
-  4,
-  7,
-  12,
-  14,
-  20,
-  28,
-  30 //wave 8
-};
-int defaultBombStatusMax[] = {
-  0, // 0 - should not be possible
-  10,
-  18,
-  26,
-  34,
-  42,
-  50,
-  58,
-  66 //wave 8
-};
-int defaultSacPointsMax[] = {
-  0,
-  50,
-  60,
-  70,
-  80,
-  90,
-  100,
-  100,
-  100 //wave 8
-};
 int tacoBellBGMIndex[] = {
-  0,
-  16,
-  5,
+  1,
+  17,
   6,
   7,
-  11,
+  8,
   12,
   13,
-  14
+  14,
+  15
 };
 char SelectedCamera[][32] = {
   "CAM.Front",
@@ -423,7 +249,7 @@ bool tickingClientHealth = false;
 bool tickMusic = false;
 bool TornadoWarningIssued = false;
 Database FB_Database;
-int BGMINDEX = 0;
+int BGMINDEX = 1;
 int FailedCount = 0;
 int INCOMINGDISPLAYED = 0;
 int camSel = 0;
@@ -442,7 +268,7 @@ int ticksMusic = 0;
 int VIPBGM = -1;
 int VIPIndex = 0;
 int waveFlags = 0;
-char curSong[64], prevSong[64], songName[64] = "null";
+char realPath[64], cachedPath[64], songName[64] = "null";
 char TBGM0[16] = "test/bgm0.mp3";
 char TBGM1[16] = "test/bgm1.mp3";
 char TBGM2[16] = "test/bgm2.mp3";
@@ -460,17 +286,6 @@ float Return[3] = {
 
 stock bool IsValidClient(int client) {
   return (0 < client <= MaxClients && IsClientInGame(client) && !IsFakeClient(client));
-}
-
-void PrecacheAllFiles(){
-  for (int i = 0; i < sizeof(MusicArray); i++){
-    PrintToServer("[CORE] Precaching music: %s in position %i", MusicArray[i], i);
-    PrecacheSound(MusicArray[i], true);
-  }
-  for (int i = 0; i < sizeof(SFXArray); i++){
-    PrintToServer("[CORE] Precaching SFX: %s in position %i", SFXArray[i], i);
-    PrecacheSound(SFXArray[i], true);
-  }
 }
 
 void RegisterAllCommands(){
@@ -542,14 +357,201 @@ int FindEntityByTargetname(char[] targetname, char[] classname)
   return(index);
 }
 
-//Used to keep StopSound from stopping the music we're trying to play - now with support for loop offsets!
-public Action SyncMusic(Handle timer) {
-  prevSong = curSong;
-  tickOffset = (BGMINDEX == 4 ? true : BGMINDEX == 5 ? true : BGMINDEX == 6 ? true : BGMINDEX == 7 ? true : BGMINDEX == 15 ? true : BGMINDEX == 16 ? true : false);
-  return Plugin_Stop;
-}
-
 //Get a client's health
 stock int TF2_GetPlayerMaxHealth(int client) {
   return GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client);
+}
+
+enum struct BGM {
+  char realPath[64];
+  char songName[64];
+  int refireTime;
+  int ticksOffset;
+  int SNDLVL;
+}
+BGM BGMArray[20];
+
+void RegisterAndPrecacheAllFiles(){
+  BGMArray[0].realPath = "ui/system_message_alert.wav";
+  BGMArray[1].realPath = "fartsy/music/ffxiv/TheSilentRegardOfStars.wav";
+  BGMArray[2].realPath = "fartsy/music/ffxiv/KnowledgeNeverSleeps.wav";
+  BGMArray[3].realPath = "fartsy/music/ffxiv/FromMud.wav";
+  BGMArray[4].realPath = "fartsy/music/ffxiv/AndLoveYouShallFind.wav";
+  BGMArray[5].realPath = "fartsy/music/ffxiv/locus.wav";
+  BGMArray[6].realPath = "fartsy/music/ffxiv/metal.wav";
+  BGMArray[7].realPath = "fartsy/music/ffxiv/exponentialentropy.wav";
+  BGMArray[8].realPath = "fartsy/music/ffxiv/fromtheheavens_loop1.wav";
+  BGMArray[9].realPath = "fartsy/music/ffxiv/fromtheheavens_loop2.wav";
+  BGMArray[10].realPath = "fartsy/music/ffxiv/fromtheheavens_loop3.wav";
+  BGMArray[11].realPath = "fartsy/music/ffxiv/fromtheheavens_loop4.wav";
+  BGMArray[12].realPath = "fartsy/music/ffxiv/metalbrutejusticemode.wav";
+  BGMArray[13].realPath = "fartsy/music/ffxiv/penitus.wav";
+  BGMArray[14].realPath = "fartsy/music/ffxiv/revengetwofold.wav";
+  BGMArray[15].realPath = "fartsy/music/ffxiv/landslide.wav";
+  BGMArray[16].realPath = "fartsy/music/brawler/onewingedangel.wav";
+  BGMArray[17].realPath = "fartsy/music/brawler/xbc2/battle.wav";
+  BGMArray[18].realPath = "fartsy/music/brawler/xbc/youwillknowournames.mp3";
+  BGMArray[19].realPath = "fartsy/music/demetori/unowen.mp3";
+  BGMArray[0].songName = "Restore Defaults";
+  BGMArray[1].songName = "FFXIV - The Silent Regard of Stars";
+  BGMArray[2].songName = "FFXIV - Knowledge Never Sleeps";
+  BGMArray[3].songName = "FFXIV - From Mud";
+  BGMArray[4].songName = "FFXIV - And Love You Shall Find";
+  BGMArray[5].songName = "FFXIV - Locus";
+  BGMArray[6].songName = "FFXIV - Metal";
+  BGMArray[7].songName = "FFXIV - Exponential Entropy";
+  BGMArray[8].songName = "FFXIV - From the Heavens (P1)";
+  BGMArray[9].songName = "FFXIV - From the Heavens (P2)";
+  BGMArray[10].songName = "FFXIV - From the Heavens (P3)";
+  BGMArray[11].songName = "FFXIV - From the Heavens (P4)";
+  BGMArray[12].songName = "FFXIV - Metal: Brute Justice Mode";
+  BGMArray[13].songName = "FFXIV - Penitus";
+  BGMArray[14].songName = "FFXIV - Revenge Twofold";
+  BGMArray[15].songName = "FFXIV - Landslide";
+  BGMArray[16].songName = "FF Advent Children - One Winged Angel";
+  BGMArray[17].songName = "Xenoblade Chronicles 2 - Battle!!";
+  BGMArray[18].songName = "Xenoblade Chronicles - You Will Know Our Names";
+  BGMArray[19].songName = "Demetori - U.N. Owen Was Her?";
+  BGMArray[0].SNDLVL = 0;
+  BGMArray[1].SNDLVL = 75;
+  BGMArray[2].SNDLVL = 75;
+  BGMArray[3].SNDLVL = 75;
+  BGMArray[4].SNDLVL = 75;
+  BGMArray[5].SNDLVL = 75;
+  BGMArray[6].SNDLVL = 75;
+  BGMArray[7].SNDLVL = 75;
+  BGMArray[8].SNDLVL = 75;
+  BGMArray[9].SNDLVL = 75;
+  BGMArray[10].SNDLVL = 75;
+  BGMArray[11].SNDLVL = 75;
+  BGMArray[12].SNDLVL = 75;
+  BGMArray[13].SNDLVL = 75;
+  BGMArray[14].SNDLVL = 75;
+  BGMArray[15].SNDLVL = 75;
+  BGMArray[16].SNDLVL = 75;
+  BGMArray[17].SNDLVL = 75;
+  BGMArray[18].SNDLVL = 75;
+  BGMArray[19].SNDLVL = 75;
+  BGMArray[0].refireTime = 0;
+  BGMArray[1].refireTime = 9190;
+  BGMArray[2].refireTime = 15690;
+  BGMArray[3].refireTime = 9190;
+  BGMArray[4].refireTime = 10490;
+  BGMArray[5].refireTime = 15270;
+  BGMArray[6].refireTime = 10250;
+  BGMArray[7].refireTime = 11110;
+  BGMArray[8].refireTime = 4250;
+  BGMArray[9].refireTime = 5492;
+  BGMArray[10].refireTime = 3947;
+  BGMArray[11].refireTime = 2508;
+  BGMArray[12].refireTime = 8702;
+  BGMArray[13].refireTime = 28476;
+  BGMArray[14].refireTime = 8805;
+  BGMArray[15].refireTime = 14160;
+  BGMArray[16].refireTime = 20592;
+  BGMArray[17].refireTime = 8120;
+  BGMArray[18].refireTime = 8475;
+  BGMArray[19].refireTime = 19240;
+  BGMArray[0].ticksOffset = 0;
+  BGMArray[1].ticksOffset = 0;
+  BGMArray[2].ticksOffset = 0;
+  BGMArray[3].ticksOffset = 0;
+  BGMArray[4].ticksOffset = 0;
+  BGMArray[5].ticksOffset = 429;
+  BGMArray[6].ticksOffset = 226;
+  BGMArray[7].ticksOffset = 11;
+  BGMArray[8].ticksOffset = 1078;
+  BGMArray[9].ticksOffset = 0;
+  BGMArray[10].ticksOffset = 0;
+  BGMArray[11].ticksOffset = 0;
+  BGMArray[12].ticksOffset = 0;
+  BGMArray[13].ticksOffset = 0;
+  BGMArray[14].ticksOffset = 0;
+  BGMArray[15].ticksOffset = 0;
+  BGMArray[16].ticksOffset = 2753;
+  BGMArray[17].ticksOffset = 749;
+  BGMArray[18].ticksOffset = 0;
+  BGMArray[19].ticksOffset = 0;
+  for (int i = 0; i < sizeof(BGMArray); i++){
+    PrintToServer("[CORE] Precaching %s (%s), Duration %i ticks, Start Loop Point %i ticks, Volume %i   @ %i", BGMArray[i].songName, BGMArray[i].realPath, BGMArray[i].refireTime, BGMArray[i].ticksOffset, BGMArray[i].SNDLVL, i);
+    PrecacheSound(BGMArray[i].realPath, true);
+  }
+  for (int i = 0; i < sizeof(SFXArray); i++){
+    PrintToServer("[CORE] Precaching SFX: %s in position %i", SFXArray[i], i);
+    PrecacheSound(SFXArray[i], true);
+  }
+}
+
+//Used to keep StopSound from stopping the music we're trying to play - now with support for loop offsets!
+public Action SyncMusic(Handle timer) {
+  prevPath = curSong;
+  tickOffset = (BGMArray[BGMINDEX].ticksOffset > 0 ? true : false);
+  return Plugin_Stop;
+}
+
+enum struct DEFAULTS {
+  bool defCanHWBoss;
+  bool defCanTornado;
+  int defBGMIndex;
+  int defBombStatus;
+  int defBombStatusMax;
+  int defSacPointsMax;
+}
+DEFAULTS DefaultsArray[9];
+
+void SetupDefaults(){
+  DefaultsArray[0].defCanHWBoss = false;
+  DefaultsArray[1].defCanHWBoss = false;
+  DefaultsArray[2].defCanHWBoss = false;
+  DefaultsArray[3].defCanHWBoss = true;
+  DefaultsArray[4].defCanHWBoss = true;
+  DefaultsArray[5].defCanHWBoss = true;
+  DefaultsArray[6].defCanHWBoss = true;
+  DefaultsArray[7].defCanHWBoss = true;
+  DefaultsArray[8].defCanHWBoss = true;
+  DefaultsArray[0].defCanTornado = false;
+  DefaultsArray[1].defCanTornado = false;
+  DefaultsArray[2].defCanTornado = false;
+  DefaultsArray[3].defCanTornado = true;
+  DefaultsArray[4].defCanTornado = true;
+  DefaultsArray[5].defCanTornado = true;
+  DefaultsArray[6].defCanTornado = true;
+  DefaultsArray[7].defCanTornado = true;
+  DefaultsArray[8].defCanTornado = true;
+  DefaultsArray[0].defBGMIndex = 1;
+  DefaultsArray[1].defBGMIndex = 5;
+  DefaultsArray[2].defBGMIndex = 6;
+  DefaultsArray[3].defBGMIndex = 7;
+  DefaultsArray[4].defBGMIndex = 8;
+  DefaultsArray[5].defBGMIndex = 12;
+  DefaultsArray[6].defBGMIndex = 13;
+  DefaultsArray[7].defBGMIndex = 14;
+  DefaultsArray[8].defBGMIndex = 15;
+  DefaultsArray[0].defBombStatus = 0;
+  DefaultsArray[1].defBombStatus = 4;
+  DefaultsArray[2].defBombStatus = 7;
+  DefaultsArray[3].defBombStatus = 8;
+  DefaultsArray[4].defBombStatus = 12;
+  DefaultsArray[5].defBombStatus = 14;
+  DefaultsArray[6].defBombStatus = 20;
+  DefaultsArray[7].defBombStatus = 28;
+  DefaultsArray[8].defBombStatus = 30;
+  DefaultsArray[0].defBombStatusMax = 0;
+  DefaultsArray[1].defBombStatusMax = 10;
+  DefaultsArray[2].defBombStatusMax = 18;
+  DefaultsArray[3].defBombStatusMax = 26;
+  DefaultsArray[4].defBombStatusMax = 34;
+  DefaultsArray[5].defBombStatusMax = 42;
+  DefaultsArray[6].defBombStatusMax = 50;
+  DefaultsArray[7].defBombStatusMax = 58;
+  DefaultsArray[8].defBombStatusMax = 66;
+  DefaultsArray[0].defSacPointsMax = 0;
+  DefaultsArray[1].defSacPointsMax = 50;
+  DefaultsArray[2].defSacPointsMax = 60;
+  DefaultsArray[3].defSacPointsMax = 70;
+  DefaultsArray[4].defSacPointsMax = 80;
+  DefaultsArray[5].defSacPointsMax = 90;
+  DefaultsArray[6].defSacPointsMax = 100;
+  DefaultsArray[7].defSacPointsMax = 100;
+  DefaultsArray[8].defSacPointsMax = 100;
 }
