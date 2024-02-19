@@ -21,7 +21,7 @@
 #include <ass_helper>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.0.0-pre1";
+static char PLUGIN_VERSION[8] = "7.0.0-pre2";
 Handle cvarSNDDefault = INVALID_HANDLE;
 
 
@@ -2756,7 +2756,7 @@ public void ShowFartsyMusicMenu(int client) {
 public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int client, int bgm) {
   if (action == MenuAction_Select) {
     curWave = GetCurWave();
-    CPrintToChat(client, (bgm == 0 ? "{darkgreen}[CORE] Confirmed. Next song set to {aqua}Default{darkgreen}." : "{limegreen}[CORE] Confirmed. Next song set to {aqua}%i{limegreen}."),  bgm);
+    CPrintToChat(client, (bgm == 0 ? "{darkgreen}[CORE] Confirmed. Next song set to {aqua}Default{darkgreen}." : "{limegreen}[CORE] Confirmed. Next song set to {aqua}%s{limegreen}."),  BGMArray[bgm].songName);
     BGMINDEX = (bgm == 0 ? (tacobell ? tacoBellBGMIndex[curWave] : sephiroth ? 16 : isWave ? DefaultsArray[curWave].defBGMIndex : GetRandomInt(1, 4)) : bgm);
     shouldStopMusic = (!StrEqual(cachedPath, BGMArray[bgm].realPath) ? true : false);
     VIPBGM = (bgm == 0 ? -1 : bgm);

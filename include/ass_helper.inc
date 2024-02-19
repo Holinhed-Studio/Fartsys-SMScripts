@@ -484,7 +484,7 @@ void RegisterAndPrecacheAllFiles(){
 
 //Used to keep StopSound from stopping the music we're trying to play - now with support for loop offsets!
 public Action SyncMusic(Handle timer) {
-  prevPath = curSong;
+  cachedPath = realPath;
   tickOffset = (BGMArray[BGMINDEX].ticksOffset > 0 ? true : false);
   return Plugin_Stop;
 }
