@@ -289,6 +289,7 @@ stock bool IsValidClient(int client) {
 }
 
 void RegisterAllCommands(){
+  AssLogger(0, "Registering commands...");
   RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client.");
   RegAdminCmd("sm_music", Command_Music, ADMFLAG_RESERVATION, "Set music to be played for the next wave");
   RegConsoleCmd("sm_bombstatus", Command_FBBombStatus, "Check bomb status");
@@ -308,7 +309,7 @@ public void OnConfigsExecuted() {
 public void Database_OnConnect(Database db,
   const char[] error, any data) {
   if (!db) {
-    LogError("Could not connect to the database: %s", error);
+    AssLogger(3, "Could not connect to database. %s", error);
     return;
   }
   char buffer[64];

@@ -34,6 +34,7 @@ public Plugin myinfo = {
 };
 
 public void OnPluginStart() {
+  AssLogger(1, "Starting plugin...");
   RegisterAndPrecacheAllFiles();
   RegisterAllCommands();
   SetupDefaults();
@@ -73,7 +74,6 @@ public void OnGameFrame() {
       ticksMusic = (tickOffset ? BGMArray[BGMINDEX].ticksOffset : 0);
       CustomSoundEmitter(BGMArray[BGMINDEX].realPath, BGMArray[BGMINDEX].SNDLVL, true, 1, 1.0, 100);
       CreateTimer(1.0, SyncMusic);
-      PrintToServer("Attempting to play %s, BGMINDEX %i", BGMArray[BGMINDEX].realPath, BGMINDEX);
     }
   }
 }
@@ -1213,15 +1213,19 @@ void AssLogger(int logLevel, char[] logData){
   switch(logLevel){
     case 0:{
       PrintToServer("[FartsysAss/DEBUG]: %s", logData);
+      LogMessage("[FartsysAss/DEBUG]: %s", logData);
     }
     case 1:{
       PrintToServer("[FartsysAss/INFO]: %s", logData);
+      LogMessage("[FartsysAss/INFO]: %s", logData);
     }
     case 2:{
       PrintToServer("[FartsysAss/WARN]: %s", logData);
+      LogMessage("[FartsysAss/WARN]: %s", logData);
     }
     case 3:{
       PrintToServer("[FartsysAss/ERROR]: %s", logData);
+      LogMessage("[FartsysAss/ERROR]: %s", logData);
     }
   }
 }
