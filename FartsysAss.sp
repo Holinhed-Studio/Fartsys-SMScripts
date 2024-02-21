@@ -21,7 +21,7 @@
 #include <ass_helper>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.0.0-pre2";
+static char PLUGIN_VERSION[8] = "7.0.0-pre3";
 Handle cvarSNDDefault = INVALID_HANDLE;
 
 
@@ -37,7 +37,7 @@ public void OnPluginStart() {
   AssLogger(1, "Starting plugin...");
   RegisterAndPrecacheAllFiles();
   RegisterAllCommands();
-  SetupDefaults();
+  SetupCoreData();
   PrecacheSound(TBGM0, true);
   PrecacheSound(TBGM2, true);
   PrecacheSound(TBGM3, true);
@@ -59,20 +59,20 @@ public void OnPluginStart() {
 
 //Music system rewrite for the 5th time. Can I ever make a change? Will my code begin to mend? Still everything's the same and it all just fades to math.
 public void OnGameFrame() {
-  if (tickMusic) {
-    ticksMusic++;
-    if (ticksMusic >= refireTime) {
-      if(shouldStopMusic){
+  if (core.tickMusic) {
+    core.ticksMusic++;
+    if (core.ticksMusic >= core.refireTime) {
+      if(core.shouldStopMusic){
         for (int i = 1; i <= MaxClients; i++) {
-          StopSound(i, SNDCHAN, cachedPath);
-          shouldStopMusic = false;
+          StopSound(i, core.SNDCHAN, core.cachedPath);
+          core.shouldStopMusic = false;
         }
       }
-      realPath = BGMArray[BGMINDEX].realPath;
-      songName = BGMArray[BGMINDEX].songName;
-      refireTime = BGMArray[BGMINDEX].refireTime;
-      ticksMusic = (tickOffset ? BGMArray[BGMINDEX].ticksOffset : 0);
-      CustomSoundEmitter(BGMArray[BGMINDEX].realPath, BGMArray[BGMINDEX].SNDLVL, true, 1, 1.0, 100);
+      core.realPath = BGMArray[core.BGMINDEX].realPath;
+      core.songName = BGMArray[core.BGMINDEX].songName;
+      core.refireTime = BGMArray[core.BGMINDEX].refireTime;
+      core.ticksMusic = (core.tickOffset ? BGMArray[core.BGMINDEX].ticksOffset : 0);
+      CustomSoundEmitter(BGMArray[core.BGMINDEX].realPath, BGMArray[core.BGMINDEX].SNDLVL, true, 1, 1.0, 100);
       CreateTimer(1.0, SyncMusic);
     }
   }
@@ -81,24 +81,24 @@ public void OnGameFrame() {
 //Restart music for the new client
 public Action RefireMusicForClient(Handle timer, int client){
   if(IsValidClient(client)){
-    PrintToServer("Attempting to play music for client %N", client);
     if(GetClientTeam(client) == 0)
       CreateTimer(1.0, RefireMusicForClient, client);
     else if (GetClientTeam(client) == 2)
-      CSEClient(client, BGMArray[BGMINDEX].realPath, BGMArray[BGMINDEX].SNDLVL, true, 1, 1.0, 100);
+      CSEClient(client, BGMArray[core.BGMINDEX].realPath, BGMArray[core.BGMINDEX].SNDLVL, true, 1, 1.0, 100);
   }
   return Plugin_Stop;
 }
 
 public Action Command_MyStats(int client, int args) {
   int steamID = GetSteamAccountID(client);
-  if (!FB_Database || !steamID || steamID <= 10000) return;
+  if (!FB_Database || !steamID || steamID <= 10000) return Plugin_Stop;
   DataPack pk = new DataPack();
   pk.WriteCell(client ? GetClientUserId(client) : 0);
   pk.WriteString("steamid");
   char queryID[256];
   Format(queryID, sizeof(queryID), "SELECT * from ass_activity WHERE steamid = %d;", steamID);
   FB_Database.Query(MyStats, queryID, pk);
+  return Plugin_Continue;
 }
 
 public void MyStats(Database db, DBResultSet results,
@@ -117,7 +117,7 @@ public void MyStats(Database db, DBResultSet results,
   if (!results) {
     if (!validClient) return;
     else {
-      PrintToChat(client, "[SM] Command Database Query Error");
+      PrintToChat(client, "[CORE] Command Database Query Error");
     }
     LogError("Failed to query database: %s", error);
     return;
@@ -153,6 +153,7 @@ public void MyStats(Database db, DBResultSet results,
   CPrintToChat(client, "\x07AAAAAA[CORE] Showing stats of %s   [%s, %i/%i hp] || SteamID: %i ", name, class, health, healthMax, steamID);
   CPrintToChat(client, "{white}Damage Dealt: %i (Session: %i) || Kills: %i (Session: %i) || Deaths: %i (Session: %i) || Bombs Reset: %i (Session: %i)", damagedealt, damagedealtsession, kills, killssession, deaths, deathssession, bombsreset, bombsresetsession);
   CPrintToChat(client, "Sacrifices: %i(Session:%i) || Killed %s (using %s) || Last killed by: %s (using %s)", sacrifices, sacrificessession, lastkilledname, lastusedweapon, killedbyname, killedbyweapon);
+  return;
 }
 
 //When a client leaves
@@ -173,7 +174,7 @@ public void FartsysSNDSelected(int client, CookieMenuAction action, any info, ch
 }
 //Queue music for new clients, also track their health.
 public void OnClientPostAdminCheck(int client){
-  if(!IsFakeClient(client) && bgmPlaying)
+  if(!IsFakeClient(client) && core.bgmPlaying)
     CreateTimer(1.0, RefireMusicForClient, client);
   int steamID = GetSteamAccountID(client);
   if (!steamID || steamID <= 10000) return;
@@ -182,11 +183,11 @@ public void OnClientPostAdminCheck(int client){
         PrintToServer("No database detected, setting soundPreference for %N to default.", client);
         soundPreference[client] = GetConVarInt(cvarSNDDefault);
       }
-      if (!tickingClientHealth) {
+      if (!core.tickingClientHealth) {
         CreateTimer(1.0, TickClientHealth);
-        tickingClientHealth = true;
+        core.tickingClientHealth = true;
       }
-      if (!bgmPlaying)
+      if (!core.bgmPlaying)
         SetupMusic(1);
       char query[1024];
       Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
@@ -253,7 +254,7 @@ public int MenuHandlerFartsy(Menu menu, MenuAction action, int param1, int param
   if (action == MenuAction_Select) {
     char query[256];
     int steamID = GetSteamAccountID(param1);
-    if (!FB_Database || !steamID) return;
+    if (!FB_Database || !steamID) return 0;
     else {
       Format(query, sizeof(query), "UPDATE ass_activity SET soundprefs = '%i' WHERE steamid = '%d';", param2, steamID);
       FB_Database.Query(Database_FastQuery, query);
@@ -262,6 +263,7 @@ public int MenuHandlerFartsy(Menu menu, MenuAction action, int param1, int param
     }
   }
   else if (action == MenuAction_End) CloseHandle(menu);
+  return 0;
 }
 
 //Fartsy's A.S.S
@@ -272,14 +274,14 @@ public Action Command_SacrificePointShop(int client, int args) {
 
 //Fartsy's A.S.S
 public void ShowFartsysAss(int client) {
-  CPrintToChat(client, (!isWave ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}The sacrificial points counter is currently at %i of %i maximum for this wave." :  sacPoints <= 9 ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {red}You do not have enough sacrifice points to use this shop. You have %i / 10 required." : ""), sacPoints, sacPointsMax);
-  if (!isWave) return;
+  CPrintToChat(client, (!core.isWave ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}The sacrificial points counter is currently at %i of %i maximum for this wave." :  core.sacPoints <= 9 ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {red}You do not have enough sacrifice points to use this shop. You have %i / 10 required." : ""), core.sacPoints, core.sacPointsMax);
+  if (!core.isWave) return;
   else {
     Menu menu = new Menu(MenuHandlerFartsysAss, MENU_ACTIONS_DEFAULT);
     char buffer[100];
     menu.SetTitle("Fartsy's Annihilation Supply Shop");
     menu.ExitButton = true;
-    for (int i = 0; i < RoundToFloor(sacPoints / 10.0); i++)
+    for (int i = 0; i < RoundToFloor(core.sacPoints / 10.0); i++)
       menu.AddItem(buffer, ASS[i]);
     menu.Display(client, 20);
   }
@@ -291,49 +293,52 @@ public int MenuHandlerFartsysAss(Menu menu, MenuAction action, int param1, int p
     //PrintToChatAll("Got %i", param2);
     switch (param2) {
       case 0: {
-        if (sacPoints <= 9) return;
+        if (core.sacPoints <= 9) return 0;
         else sudo(30); // bath salts
       }
       case 1: {
-        if (sacPoints <= 19) return;
+        if (core.sacPoints <= 19) return 0;
         else sudo(31); // goobbue
       }
       case 2: {
-        if (sacPoints <= 29 || doFailsafe) return;
+        if (core.sacPoints <= 29 || core.doFailsafe) return 0;
         else sudo(32); // failsafe
       }
       case 3: {
-        if (sacPoints <= 39) return;
+        if (core.sacPoints <= 39) return 0;
         else sudo(33); //explosive paradise
       }
       case 4: {
-        if (sacPoints <= 49) return;
+        if (core.sacPoints <= 49) return 0;
         else sudo(34); //Banish tornadoes
       }
       case 5: {
-        if (sacPoints <= 59) return;
+        if (core.sacPoints <= 59) return 0;
         else sudo(35); //Ass Gas
       }
       case 6: {
-        if (sacPoints <= 69) return;
+        if (core.sacPoints <= 69) return 0;
         else sudo (36); //Instant fat man
       }
       case 7: {
-        if (sacPoints <= 79) return;
+        if (core.sacPoints <= 79) return 0;
         else sudo(37);
       }
       case 8: {
-        if (sacPoints <= 74) return;
+        if (core.sacPoints <= 74) return 0;
         else sudo(38);
       }
       case 9: {
-        if (sacPoints <= 99) return;
+        if (core.sacPoints <= 99) return 0;
         else sudo(39);
       }
     }
+    Format (LoggerInfo, sizeof(LoggerInfo), "%s opted for %s via the A.S.S.", param1, ASS[param2]);
+    AssLogger(1, LoggerInfo);
   }
   else if (action == MenuAction_End)
     CloseHandle(menu);
+  return 0;
 }
 
 //Now that command definitions are done, lets make some things happen.
@@ -346,7 +351,7 @@ public void OnMapStart() {
 //Repeating Timers
 //Adverts for tips/tricks
 public Action PerformAdverts(Handle timer) {
-  if (!isWave) {
+  if (!core.isWave) {
     CreateTimer(180.0, PerformAdverts);
     CPrintToChatAll(AdvMessage[GetRandomInt(0, 7)]);
   }
@@ -355,19 +360,19 @@ public Action PerformAdverts(Handle timer) {
 
 //Adverts for wave information
 public Action PerformWaveAdverts(Handle timer) {
-  if (isWave) {
+  if (core.isWave) {
     char buffer[16];
     char tbuffer[16];
     char HintText[256];
-    int sPos = RoundToFloor(ticksMusic/66.6666666666);
-    int tPos = RoundToFloor(refireTime/66.6666666666);
+    int sPos = RoundToFloor(core.ticksMusic/66.6666666666);
+    int tPos = RoundToFloor(core.refireTime/66.6666666666);
     Format(buffer, 16, "%02d:%02d", sPos / 60, sPos % 60);
     Format(tbuffer, 16, "%02d:%02d", tPos / 60, tPos % 60);
-    Format (HintText, sizeof(HintText), (bombProgression ? "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : bombReady ? "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : "Payload: PREPARING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)"), bombStatus, bombStatusMax, sacPoints, sacPointsMax, songName, buffer, tbuffer);
+    Format (HintText, sizeof(HintText), (core.bombProgression ? "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : core.bombReady ? "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : "Payload: PREPARING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)"), core.bombStatus, core.bombStatusMax, core.sacPoints, core.sacPointsMax, core.songName, buffer, tbuffer);
     CreateTimer(2.5, PerformWaveAdverts);
     for (int i = 1; i <= MaxClients; i++) {
       if(IsValidClient(i)){
-        PrintHintText(i, (TornadoWarningIssued ? "%s \n\n[TORNADO WARNING]" : "%s"), HintText, HintText);
+        PrintHintText(i, (core.TornadoWarningIssued ? "%s \n\n[TORNADO WARNING]" : "%s"), HintText, HintText);
         StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
       }
     }
@@ -377,7 +382,7 @@ public Action PerformWaveAdverts(Handle timer) {
 
 //Feature admin timer
 public Action SelectAdminTimer(Handle timer) {
-  if (isWave) return Plugin_Stop;
+  if (core.isWave) return Plugin_Stop;
   else {
     sudo(1002);
     CreateTimer(GetRandomFloat(40.0, 120.0), SelectAdminTimer);
@@ -387,7 +392,7 @@ public Action SelectAdminTimer(Handle timer) {
 
 //Brute Justice Timer
 public Action OnslaughterATK(Handle timer) {
-  if (waveFlags != 1) return Plugin_Stop;
+  if (core.waveFlags != 1) return Plugin_Stop;
   else {
     CreateTimer(GetRandomFloat(5.0, 7.0), OnslaughterATK);
     FireEntityInput("BruteJusticeDefaultATK", "FireMultiple", "3", 5.0);
@@ -439,7 +444,7 @@ public Action OnslaughterATK(Handle timer) {
 
 //Sephiroth Timer
 public Action SephATK(Handle timer) {
-  if (waveFlags != 2) {
+  if (core.waveFlags != 2) {
     return Plugin_Stop;
   } else {
     float f = GetRandomFloat(5.0, 10.0);
@@ -450,7 +455,7 @@ public Action SephATK(Handle timer) {
       case 1, 6: {
         CreateTimer(1.0, SephNukeTimer);
         CreateTimer(7.0, TimedOperator, 11);
-        canSephNuke = true;
+        core.canSephNuke = true;
       }
       case 2, 8: {
         CPrintToChatAll("{blue}Sephiroth: Say goodbye!");
@@ -494,17 +499,17 @@ public Action SephATK(Handle timer) {
 
 //Boss Health Timer
 public Action BossHPTimer(Handle timer) {
-  int BossEnt = (waveFlags == 1 ? FindEntityByTargetname("OnslaughterTank", "tank_boss") : waveFlags == 2 ? FindEntityByTargetname("SephirothTank", "tank_boss") : -1);
-  int BossRelayEnt = (waveFlags == 1 ? FindEntityByTargetname("FB.BruteJusticeDMGRelay","func_physbox") : waveFlags == 2 ? FindEntityByTargetname("FB.SephirothDMGRelay", "func_physbox") : -1);
+  int BossEnt = (core.waveFlags == 1 ? FindEntityByTargetname("OnslaughterTank", "tank_boss") : core.waveFlags == 2 ? FindEntityByTargetname("SephirothTank", "tank_boss") : -1);
+  int BossRelayEnt = (core.waveFlags == 1 ? FindEntityByTargetname("FB.BruteJusticeDMGRelay","func_physbox") : core.waveFlags == 2 ? FindEntityByTargetname("FB.SephirothDMGRelay", "func_physbox") : -1);
   if (BossEnt == -1 || BossRelayEnt == -1) return Plugin_Stop;
-  CPrintToChatAll((waveFlags == 1 ? "{blue}Onslaughter's HP: %i (%i)" : waveFlags == 2 ? "{blue}Sephiroth's HP: %i (%i)" : "{blue}Error: Boss not found... waveFlags was neither 1 nor 2"), GetEntProp(BossEnt, Prop_Data, "m_iHealth"), GetEntProp(BossRelayEnt, Prop_Data, "m_iHealth"));
+  CPrintToChatAll((core.waveFlags == 1 ? "{blue}Onslaughter's HP: %i (%i)" : core.waveFlags == 2 ? "{blue}Sephiroth's HP: %i (%i)" : "{blue}Error: Boss not found... core.waveFlags was neither 1 nor 2"), GetEntProp(BossEnt, Prop_Data, "m_iHealth"), GetEntProp(BossRelayEnt, Prop_Data, "m_iHealth"));
   CreateTimer(10.0, BossHPTimer);
   return Plugin_Stop;
 }
 
 //Shark Timer
 public Action SharkTimer(Handle timer) {
-  if (canSENTShark) {
+  if (core.canSENTShark) {
     FireEntityInput("SentSharkTorpedo", "ForceSpawn", "", 0.0);
     CreateTimer(GetRandomFloat(2.0, 5.0), SharkTimer);
     CustomSoundEmitter(SFXArray[GetRandomInt(43, 50)], 65, false, 0, 1.0, 100);
@@ -514,7 +519,7 @@ public Action SharkTimer(Handle timer) {
 
 //Storm
 public Action RefireStorm(Handle timer) {
-  if (isWave) {
+  if (core.isWave) {
     CreateTimer(GetRandomFloat(7.0, 17.0), RefireStorm);
     sudo(1003);
     int StrikePos = GetRandomInt(0, 15);
@@ -528,7 +533,7 @@ public Action RefireStorm(Handle timer) {
 
 //SpecTimer
 public Action SpecTimer(Handle timer) {
-  if (isWave) {
+  if (core.isWave) {
     int i = GetRandomInt(0, 5);
     FireEntityInput("Spec*", "Disable", "", 0.0);
     FireEntityInput(SpecEnt[i], "Enable", "", 0.1);
@@ -539,7 +544,7 @@ public Action SpecTimer(Handle timer) {
 
 //SENTMeteor (Scripted Entity Meteors)
 public Action SENTMeteorTimer(Handle timer) {
-  if (canSENTMeteors) {
+  if (core.canSENTMeteors) {
     CreateTimer(5.0, SENTMeteorTimer);
     FireEntityInput(FB_SENT[GetRandomInt(0, 4)], "ForceSpawn", "", 0.0); // replace me with teleportEntity eventually then forcespawn...
   }
@@ -548,7 +553,7 @@ public Action SENTMeteorTimer(Handle timer) {
 
 //CrusaderSentNukes
 public Action CrusaderNukeTimer(Handle timer) {
-  if (canCrusaderNuke) {
+  if (core.canCrusaderNuke) {
     CustomSoundEmitter(SFXArray[8], 65, false, 0, 1.0, 100);
     FireEntityInput("FB.CrusaderNuke", "ForceSpawn", "", 0.0);
     CreateTimer(GetRandomFloat(1.5, 3.0), CrusaderNukeTimer);
@@ -558,7 +563,7 @@ public Action CrusaderNukeTimer(Handle timer) {
 
 //SephSentNukes
 public Action SephNukeTimer(Handle timer) {
-  if (canSephNuke) {
+  if (core.canSephNuke) {
     CustomSoundEmitter(SFXArray[8], 65, false, 0, 1.0, 100),
       FireEntityInput("SephNuke", "ForceSpawn", "", 0.0);
     CreateTimer(GetRandomFloat(1.5, 3.0), SephNukeTimer);
@@ -568,7 +573,7 @@ public Action SephNukeTimer(Handle timer) {
 
 //SENTStars (Scripted Entity Stars)
 public Action SENTStarTimer(Handle timer) {
-  if (canSENTStars) {
+  if (core.canSENTStars) {
     FireEntityInput(FB_SENT[10], "ForceSpawn", "", 0.0); // replace me with teleportEntity eventually then forcespawn...
     CreateTimer(GetRandomFloat(0.75, 1.5), SENTStarTimer);
   }
@@ -577,11 +582,11 @@ public Action SENTStarTimer(Handle timer) {
 
 //Crusader Incoming Timer for Crusader
 public Action CRUSADERINCOMING(Handle timer) {
-  if (!crusader || INCOMINGDISPLAYED > 17) {
-    INCOMINGDISPLAYED = 0;
+  if (!core.crusader || core.INCOMINGDISPLAYED > 17) {
+    core.INCOMINGDISPLAYED = 0;
     return Plugin_Stop;
   } else {
-    INCOMINGDISPLAYED++;
+    core.INCOMINGDISPLAYED++;
     FireEntityInput("FB.INCOMING", "Display", "", 0.0);
     CreateTimer(1.75, CRUSADERINCOMING);
   }
@@ -590,7 +595,7 @@ public Action CRUSADERINCOMING(Handle timer) {
 
 //Halloween Bosses
 public Action HWBosses(Handle timer) {
-  if (isWave && canHWBoss) {
+  if (core.isWave && core.canHWBoss) {
     int i = GetRandomInt(1, 10);
     switch (i) {
     case 1: {
@@ -638,7 +643,7 @@ public Action HWBosses(Handle timer) {
       FireEntityInput("monoculus_maker", "ForceSpawn", "", 0.0);
     }
     }
-    canHWBoss = false;
+    core.canHWBoss = false;
     CreateTimer(60.0, HWBossesRefire);
   }
   return Plugin_Stop;
@@ -646,14 +651,14 @@ public Action HWBosses(Handle timer) {
 
 //Repeat HWBosses Timer
 public Action HWBossesRefire(Handle timer) {
-  if (isWave) CreateTimer(GetRandomFloat(HWNMin, HWNMax), HWBosses);
+  if (core.isWave) CreateTimer(GetRandomFloat(core.HWNMin, core.HWNMax), HWBosses);
   return Plugin_Stop;
 }
 
 //SacPoints (Add points to Sacrifice Points occasionally)
 public Action SacrificePointsTimer(Handle timer) {
-  if (isWave && (sacPoints < sacPointsMax)) {
-    sacPoints++;
+  if (core.isWave && (core.sacPoints < core.sacPointsMax)) {
+    core.sacPoints++;
     CreateTimer(GetRandomFloat(5.0, 30.0), SacrificePointsTimer);
   }
   return Plugin_Stop;
@@ -661,10 +666,10 @@ public Action SacrificePointsTimer(Handle timer) {
 
 //Track SacPoints and update entities every 0.1 seconds
 public Action SacrificePointsUpdater(Handle timer) {
-  if (isWave) {
+  if (core.isWave) {
     CreateTimer(0.1, SacrificePointsUpdater);
-    if (sacPoints > sacPointsMax) {
-      sacPoints = sacPointsMax;
+    if (core.sacPoints > core.sacPointsMax) {
+      core.sacPoints = core.sacPointsMax;
     }
   }
   return Plugin_Stop;
@@ -672,24 +677,24 @@ public Action SacrificePointsUpdater(Handle timer) {
 
 //BombStatus (Add points to Bomb Status occasionally)
 public Action BombStatusAddTimer(Handle timer) {
-  if (isWave && (bombStatus < bombStatusMax)) {
-    bombReady = false;
-    bombStatus++;
+  if (core.isWave && (core.bombStatus < core.bombStatusMax)) {
+    core.bombReady = false;
+    core.bombStatus++;
     CreateTimer(GetRandomFloat(10.0, 45.0), BombStatusAddTimer);
   }
   return Plugin_Stop;
 }
 
-//Track bombStatus and update entities every 0.1 seconds
+//Track core.bombStatus and update entities every 0.1 seconds
 public Action BombStatusUpdater(Handle timer) {
-  if (isWave) {
+  if (core.isWave) {
     CreateTimer(0.1, BombStatusUpdater);
-    if (bombStatus < bombStatusMax) {
-      switch (bombStatus) {
+    if (core.bombStatus < core.bombStatusMax) {
+      switch (core.bombStatus) {
         case 8: {
-          bombStatusMax = 8;
-          canSENTShark = false;
-          bombReady = true;
+          core.bombStatusMax = 8;
+          core.canSENTShark = false;
+          core.bombReady = true;
           FireEntityInput("Bombs*", "Disable", "", 0.0),
             FireEntityInput("BombExplo*", "Disable", "", 0.0),
             FireEntityInput("Delivery", "Unlock", "", 0.0),
@@ -698,9 +703,9 @@ public Action BombStatusUpdater(Handle timer) {
             CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}FREEDOM BOMB {forestgreen}is now available for deployment!");
         }
         case 16: {
-          bombStatusMax = 16;
-          canSENTShark = false;
-          bombReady = true;
+          core.bombStatusMax = 16;
+          core.canSENTShark = false;
+          core.bombReady = true;
           FireEntityInput("Bombs*", "Disable", "", 0.0),
             FireEntityInput("BombExplo*", "Disable", "", 0.0),
             FireEntityInput("Bombs.ElonBust", "Enable", "", 0.0),
@@ -709,9 +714,9 @@ public Action BombStatusUpdater(Handle timer) {
             CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}ELON BUST {forestgreen}is now available for deployment!");
         }
         case 24: {
-          bombStatusMax = 24;
-          canSENTShark = false;
-          bombReady = true;
+          core.bombStatusMax = 24;
+          core.canSENTShark = false;
+          core.bombReady = true;
           FireEntityInput("Bombs*", "Disable", "", 0.0),
             FireEntityInput("BombExplo*", "Disable", "", 0.0),
             FireEntityInput("Bombs.BathSalts", "Enable", "", 0.0),
@@ -720,9 +725,9 @@ public Action BombStatusUpdater(Handle timer) {
             CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}BATH SALTS {forestgreen}are now available for deployment!");
         }
         case 32: {
-          bombStatusMax = 32;
-          canSENTShark = false;
-          bombReady = true;
+          core.bombStatusMax = 32;
+          core.canSENTShark = false;
+          core.bombReady = true;
           FireEntityInput("Bombs*", "Disable", "", 0.0),
             FireEntityInput("BombExplo*", "Disable", "", 0.0),
             FireEntityInput("Bombs.FallingStar", "Enable", "", 0.0),
@@ -731,9 +736,9 @@ public Action BombStatusUpdater(Handle timer) {
             CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {gold}FALLING STAR{forestgreen} is now available for deployment!");
         }
         case 40: {
-          bombStatusMax = 40;
-          canSENTShark = false;
-          bombReady = true;
+          core.bombStatusMax = 40;
+          core.canSENTShark = false;
+          core.bombReady = true;
           FireEntityInput("Bombs*", "Disable", "", 0.0),
             FireEntityInput("BombExplo*", "Disable", "", 0.0),
             FireEntityInput("Bombs.MajorKong", "Enable", "", 0.0),
@@ -742,9 +747,9 @@ public Action BombStatusUpdater(Handle timer) {
             CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}MAJOR KONG {forestgreen}is now available for deployment!");
         }
         case 48: {
-          bombStatusMax = 48;
-          canSENTShark = true;
-          bombReady = true;
+          core.bombStatusMax = 48;
+          core.canSENTShark = true;
+          core.bombReady = true;
           FireEntityInput("Bombs*", "Disable", "", 0.0),
             FireEntityInput("BombExplo*", "Disable", "", 0.0),
             FireEntityInput("Bombs.SharkTorpedo", "Enable", "", 0.0),
@@ -754,9 +759,9 @@ public Action BombStatusUpdater(Handle timer) {
             CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {aqua}SHARK {forestgreen}is now available for deployment!");
         }
         case 56: {
-          bombStatusMax = 56;
-          canSENTShark = false;
-          bombReady = true;
+          core.bombStatusMax = 56;
+          core.canSENTShark = false;
+          core.bombReady = true;
           FireEntityInput("Bombs*", "Disable", "", 0.0),
             FireEntityInput("BombExplo*", "Disable", "", 0.0),
             FireEntityInput("Bombs.FatMan", "Enable", "", 0.0),
@@ -765,9 +770,9 @@ public Action BombStatusUpdater(Handle timer) {
             CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {orange}FAT MAN {forestgreen}is now available for deployment!");
         }
         case 64: {
-          bombStatusMax = 64;
-          canSENTShark = false;
-          bombReady = true;
+          core.bombStatusMax = 64;
+          core.canSENTShark = false;
+          core.bombReady = true;
           FireEntityInput("Bombs*", "Disable", "", 0.0),
             FireEntityInput("BombExplo*", "Disable", "", 0.0),
             FireEntityInput("Bombs.Hydrogen", "Enable", "", 0.0),
@@ -776,8 +781,8 @@ public Action BombStatusUpdater(Handle timer) {
             CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}HYDROGEN {forestgreen}is now available for deployment!");
         }
       }
-    } else if (bombStatus > bombStatusMax) {
-      bombStatus = bombStatusMax - 4;
+    } else if (core.bombStatus > core.bombStatusMax) {
+      core.bombStatus = core.bombStatusMax - 4;
     }
     return Plugin_Continue;
   }
@@ -786,7 +791,7 @@ public Action BombStatusUpdater(Handle timer) {
 
 //RobotLaunchTimer (Randomly fling robots)
 public Action RobotLaunchTimer(Handle timer) {
-  if (isWave) {
+  if (core.isWave) {
     FireEntityInput("FB.RobotLauncher", "Enable", "", 0.0);
     FireEntityInput("FB.RobotLauncher", "Disable", "", 7.5);
     CreateTimer(GetRandomFloat(5.0, 30.0), RobotLaunchTimer);
@@ -799,18 +804,18 @@ public Action RobotLaunchTimer(Handle timer) {
 public Action Command_GetCurrentSong(int client, int args) {
   char buffer[16];
   char tbuffer[16];
-  int sPos = RoundToFloor(ticksMusic/66.6666666666);
-  int tPos = RoundToFloor(refireTime/66.6666666666);
+  int sPos = RoundToFloor(core.ticksMusic/66.6666666666);
+  int tPos = RoundToFloor(core.refireTime/66.6666666666);
   Format(buffer, 16, "%02d:%02d", sPos / 60, sPos % 60);
   Format(tbuffer, 16, "%02d:%02d", tPos / 60, tPos % 60);
-  PrintToChat(client, "The current song is: %s (%s / %s)", songName, buffer, tbuffer);
+  PrintToChat(client, "The current song is: %s (%s / %s)", core.songName, buffer, tbuffer);
   return Plugin_Handled;
 }
 
 //Determine which bomb has been recently pushed and tell the client if a bomb is ready or not.
 public Action Command_FBBombStatus(int client, int args) {
   char bombStatusMsg[256];
-  Format(bombStatusMsg, sizeof(bombStatusMsg), (bombProgression ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team is currently pushing a %s!" : bombReady ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team's %s is ready!" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team recently deployed a %s! Please wait for the next bomb."), bombStatus, bombStatusMax, bombNames[RoundToFloor(bombStatus / 8.0)]);
+  Format(bombStatusMsg, sizeof(bombStatusMsg), (core.bombProgression ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team is currently pushing a %s!" : core.bombReady ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team's %s is ready!" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team recently deployed a %s! Please wait for the next bomb."), core.bombStatus, core.bombStatusMax, bombNames[RoundToFloor(core.bombStatus / 8.0)]);
   CPrintToChat(client, bombStatusMsg);
   return Plugin_Handled;
 }
@@ -862,9 +867,9 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
     if (StrEqual(attackerName, ServerName)) {
       attackerName = "[INTENTIONAL GAME DESIGN]";
     }
-    if (attacker > 0 && sacrificedByClient) { //Was the client Sacrificed?
-      SacrificeClient(client, attacker, bombReset);
-      sacrificedByClient = false;
+    if (attacker > 0 && core.sacrificedByClient) { //Was the client Sacrificed?
+      SacrificeClient(client, attacker, core.bombReset);
+      core.sacrificedByClient = false;
     }
     if (!attacker) {
       switch (damagebits) {
@@ -881,7 +886,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
         weapon = "Attempted Train Robbery";
       }
       case 32: { //FALL
-        if (tornado) {
+        if (core.tornado) {
           switch (GetClientTeam(client)) {
             case 2: {
               CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}%s{white}!", client, DeathMessage[GetRandomInt(0, 5)]);
@@ -889,7 +894,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
             }
             case 3: {
               CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}%s{white}! ({limegreen}+1 pt{white})", client, DeathMessage[GetRandomInt(0, 5)]);
-              sacPoints++;
+              core.sacPoints++;
               CustomSoundEmitter(SFXArray[GetRandomInt(11, 26)], 65, false, 0, 1.0, 100);
             }
           }
@@ -903,7 +908,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
         weapon = "Gone Kaboom!";
       }
       case 128: { //CLUB
-        if (canHindenburg) {
+        if (core.canHindenburg) {
           CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N is {red}CRASHING THE HINDENBURG{white}!!!", client);
           weapon = "Crashing the Hindenburg";
         }
@@ -935,12 +940,12 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
             FireEntityInput("TrainTrain", "StartForward", "", 0.1);
         }
         case 6, 9: {
-          canTornado = true,
+          core.canTornado = true,
             CreateTimer(1.0, TimedOperator, 41);
         }
         case 7, 13: {
           CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {white}Uh oh, it appears to have started raining a {red}METEOR SHOWER{white}!!!");
-          canSENTMeteors = true,
+          core.canSENTMeteors = true,
             CreateTimer(1.0, SENTMeteorTimer),
             CreateTimer(30.0, TimedOperator, 12);
         }
@@ -958,8 +963,8 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
       }
       case 1024: { //ENERGYBEAM
         char EnergyDeath[32];
-        Format(EnergyDeath, sizeof (EnergyDeath), (crusader ? "THE CRUSADER" : waveFlags == 1 ? "THE ONSLAUGHTER" : "A HIGH ENERGY PHOTON BEAM"));
-        weapon = (crusader ? "Crusader" : waveFlags == 1 ? "Onslaughter" : "HE Photon Beam");
+        Format(EnergyDeath, sizeof (EnergyDeath), (core.crusader ? "THE CRUSADER" : core.waveFlags == 1 ? "THE ONSLAUGHTER" : "A HIGH ENERGY PHOTON BEAM"));
+        weapon = (core.crusader ? "Crusader" : core.waveFlags == 1 ? "Onslaughter" : "HE Photon Beam");
         CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been vaporized by {red}%s{white}!", client, EnergyDeath);
       }
       case 16384: { //DROWN
@@ -1059,12 +1064,12 @@ public Action EventWaveComplete(Event Spawn_Event, const char[] Spawn_Name, bool
 
 //Announce when we are in danger.
 public Action EventWarning(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast) {
-  if (doFailsafe){
-    failsafeCount++;
-    CPrintToChatAll( "%s Counter: %i", failsafe[GetRandomInt(0, 14)], failsafeCount);
+  if (core.doFailsafe){
+    core.failsafeCount++;
+    CPrintToChatAll( "%s Counter: %i", failsafe[GetRandomInt(0, 14)], core.failsafeCount);
     EmitSoundToAll(SFXArray[55]);
     ServerCommand("sm_freeze @blue; wait 180; sm_smash @blue;sm_evilrocket @blue");
-    doFailsafe = false;
+    core.doFailsafe = false;
   }
   else
     CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {darkred}PROFESSOR'S ASS IS ABOUT TO BE DEPLOYED!!!");
@@ -1073,8 +1078,8 @@ public Action EventWarning(Event Spawn_Event, const char[] Spawn_Name, bool Spaw
 
 //When the wave fails
 public Action EventWaveFailed(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast) {
-  if (FailedCount == 0) { //Works around valve's way of firing EventWaveFailed four times when mission changes. Without this, BGM would play 4 times and any functions enclosed would also happen four times.......
-    FailedCount++;
+  if (core.FailedCount == 0) { //Works around valve's way of firing EventWaveFailed four times when mission changes. Without this, BGM would play 4 times and any functions enclosed would also happen four times.......
+    core.FailedCount++;
     sudo(1000);
     CreateTimer(1.0, PerformAdverts);
     CreateTimer(40.0, SelectAdminTimer);
@@ -1137,6 +1142,7 @@ public Action DispatchCircleAOE(float posX, float posY, float posZ){
   }
   else
     PrintToServer("Nope");
+  return Plugin_Stop;
 }
 
 //Custom sound emitter, I don't know how many fucking times I've rewritten this! See potato.sp
@@ -1154,7 +1160,7 @@ void CustomSoundEmitter(char[] sndName, int TSNDLVL, bool isBGM, int flags, floa
   for (int i = 1; i <= MaxClients; i++){
     if(IsValidClient(i)){
       if (isBGM && (soundPreference[i] == 1 || soundPreference[i] == 3) || !isBGM && soundPreference[i] >= 2)
-        EmitSoundToClient(i, sndName, _, SNDCHAN, TSNDLVL, flags, vol, pitch, _, _, _, _, _);
+        EmitSoundToClient(i, sndName, _, core.SNDCHAN, TSNDLVL, flags, vol, pitch, _, _, _, _, _);
     }
   }
 }
@@ -1162,7 +1168,7 @@ void CustomSoundEmitter(char[] sndName, int TSNDLVL, bool isBGM, int flags, floa
 void CSEClient(int client, char[] sndName, int TSNDLVL, bool isBGM, int flags, float vol, int pitch){
   if(IsValidClient(client)){
     if(isBGM && (soundPreference[client] == 1 || soundPreference[client] == 3) || !isBGM && soundPreference[client] >= 2)
-      EmitSoundToClient(client, sndName, _, SNDCHAN, TSNDLVL, flags, vol, pitch, _, _, _, _, _);
+      EmitSoundToClient(client, sndName, _, core.SNDCHAN, TSNDLVL, flags, vol, pitch, _, _, _, _, _);
   }
 }
 
@@ -1186,10 +1192,10 @@ public Action DeleteEdict(Handle timer, any entity) {
 public Action SacrificeClient(int client, int attacker, bool wasBombReset) {
   if (attacker <= MaxClients && IsClientInGame(attacker) && wasBombReset == true) {
     CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%N {white}has reset the ass! ({limegreen}+5 pts{white})", attacker);
-    bombReset = false;
+    core.bombReset = false;
     char query[256];
     int steamID = GetSteamAccountID(attacker);
-    sacPoints += 5;
+    core.sacPoints += 5;
     if (!FB_Database || !steamID) {
       return Plugin_Handled;
     }
@@ -1197,11 +1203,11 @@ public Action SacrificeClient(int client, int attacker, bool wasBombReset) {
     FB_Database.Query(Database_FastQuery, query);
   } else if (attacker <= MaxClients && IsClientInGame(attacker) && wasBombReset == false) {
     int steamID = GetSteamAccountID(attacker);
-    if (!FB_Database || !steamID || !isWave) {
+    if (!FB_Database || !steamID || !core.isWave) {
       return Plugin_Handled;
     } else {
       char query[256];
-      sacPoints++;
+      core.sacPoints++;
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%N {white}has sacrificed {blue}%N {white}for the ass! ({limegreen}+1 pt{white})", attacker, client);
       Format(query, sizeof(query), "UPDATE ass_activity SET sacrifices = sacrifices + 1, sacrificessession = sacrificessession + 1 WHERE steamid = %i;", steamID); //Eventually we will want to replace this with sacrifices, sacrificessession.
       FB_Database.Query(Database_FastQuery, query);
@@ -1212,20 +1218,16 @@ public Action SacrificeClient(int client, int attacker, bool wasBombReset) {
 void AssLogger(int logLevel, char[] logData){
   switch(logLevel){
     case 0:{
-      PrintToServer("[FartsysAss/DEBUG]: %s", logData);
-      LogMessage("[FartsysAss/DEBUG]: %s", logData);
+      LogMessage("[DEBUG]: %s", logData);
     }
     case 1:{
-      PrintToServer("[FartsysAss/INFO]: %s", logData);
-      LogMessage("[FartsysAss/INFO]: %s", logData);
+      LogMessage("[INFO]: %s", logData);
     }
     case 2:{
-      PrintToServer("[FartsysAss/WARN]: %s", logData);
-      LogMessage("[FartsysAss/WARN]: %s", logData);
+      LogMessage("[WARN]: %s", logData);
     }
     case 3:{
-      PrintToServer("[FartsysAss/ERROR]: %s", logData);
-      LogMessage("[FartsysAss/ERROR]: %s", logData);
+      LogMessage("[ERROR]: %s", logData);
     }
   }
 }
@@ -1235,49 +1237,50 @@ public Action Command_Operator(int args) {
   GetCmdArg(1, arg1, sizeof(arg1));
   int x = StringToInt(arg1);
   sudo(x);
+  return Plugin_Continue;
 }
 
 void sudo(int task){
-  Format(dbgStr, sizeof(dbgStr), "Calling sudo with %i", task);
-  AssLogger(0, dbgStr);
+  Format(LoggerDbg, sizeof(LoggerDbg), "Calling sudo with %i", task);
+  AssLogger(0, LoggerDbg);
   switch (task) {
     case 20000:{
-      for (int i = 0; i < sizeof(BGMArray); i++){
-        PrintToServer("Real Path: %s Song Name: %s", BGMArray[i+1].realPath, BGMArray[i].songName);
+      for (int i = 1; i < sizeof(BGMArray); i++){
+        PrintToServer("Real Path: %s Song Name: %s", BGMArray[i].realPath, BGMArray[i].songName);
       }
     }
     //When the map is complete
     case 0: {
-      CPrintToChatAll(tacobell ? "WOWIE YOU DID IT! The server will restart in 30 seconds, prepare to do it again! LULW" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}YOU HAVE SUCCESSFULLY COMPLETED PROF'S ASS ! THE SERVER WILL RESTART IN 10 SECONDS.");
+      CPrintToChatAll(core.tacobell ? "WOWIE YOU DID IT! The server will restart in 30 seconds, prepare to do it again! LULW" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}YOU HAVE SUCCESSFULLY COMPLETED PROF'S ASS ! THE SERVER WILL RESTART IN 10 SECONDS.");
       CreateTimer(10.0, TimedOperator, 100);
     }
     //Prepare yourself!
     case 1: {
-      tacobell = false;
+      core.tacobell = false;
       ServerCommand("fb_startmoney 50000");
       CPrintToChatAll("{darkviolet}[{yellow}INFO{darkviolet}] {red}PROFESSOR'S ASS {white}v0x20 (Core-v%s). Prepare yourself for the unpredictable... [{limegreen}by TTV/ProfessorFartsalot{white}]", PLUGIN_VERSION);
       FireEntityInput("rain", "Alpha", "0", 0.0);
     }
     //Wave init
     case 2: {
-      curWave = GetCurWave();
+      core.curWave = GetCurWave();
       PerformWaveSetup();
-      switch (curWave) {
+      switch (core.curWave) {
         case 3, 10, 17: {
-          HWNMax = 360.0;
+          core.HWNMax = 360.0;
           FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
           FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
           float f = GetRandomFloat(60.0, 180.0);
           CreateTimer(f, TimedOperator, 70);
         }
         case 4, 11, 18: {
-          HWNMax = 360.0;
+          core.HWNMax = 360.0;
           FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
           FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
         }
         case 5, 12, 19: {
-          HWNMax = 260.0;
-          HWNMin = 140.0;
+          core.HWNMax = 260.0;
+          core.HWNMin = 140.0;
           FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
           FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
           FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
@@ -1285,41 +1288,41 @@ void sudo(int task){
           CreateTimer(f, TimedOperator, 70);
         }
         case 6, 13, 20: {
-          HWNMax = 260.0;
-          HWNMin = 140.0;
+          core.HWNMax = 260.0;
+          core.HWNMin = 140.0;
           FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
           FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
         }
         case 7, 14, 21: {
-          HWNMax = 240.0;
-          HWNMin = 120.0;
+          core.HWNMax = 240.0;
+          core.HWNMin = 120.0;
           FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
           FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
           FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
         }
         case 8, 15: {
-          HWNMax = 240.0;
-          HWNMin = 120.0;
+          core.HWNMax = 240.0;
+          core.HWNMin = 120.0;
           FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
           FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
         }
       }
-      bombStatus = DefaultsArray[curWave].defBombStatus;
-      bombStatusMax = DefaultsArray[curWave].defBombStatusMax;
-      canHWBoss = DefaultsArray[curWave].defCanHWBoss;
-      canTornado = DefaultsArray[curWave].defCanTornado;
-      sacPointsMax = DefaultsArray[curWave].defSacPointsMax;
-      float hwn = GetRandomFloat(HWNMin, HWNMax);
+      core.bombStatus = DefaultsArray[core.curWave].defBombStatus;
+      core.bombStatusMax = DefaultsArray[core.curWave].defBombStatusMax;
+      core.canHWBoss = DefaultsArray[core.curWave].defCanHWBoss;
+      core.canTornado = DefaultsArray[core.curWave].defCanTornado;
+      core.sacPointsMax = DefaultsArray[core.curWave].defSacPointsMax;
+      float hwn = GetRandomFloat(core.HWNMin, core.HWNMax);
       CreateTimer(hwn, HWBosses);
       FireEntityInput("rain", "Alpha", "200", 0.0);
       FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
       FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
-      SetupMusic(tacobell ? tacoBellBGMIndex[curWave] : DefaultsArray[curWave].defBGMIndex);
+      SetupMusic(core.tacobell ? tacoBellBGMIndex[core.curWave] : DefaultsArray[core.curWave].defBGMIndex);
       return;
     }
     //Force Tornado
     case 3: {
-      if (isWave && canTornado && !tornado) {
+      if (core.isWave && core.canTornado && !core.tornado) {
         CreateTimer(0.1, TimedOperator, 41);
         PrintCenterTextAll("OH NOES... PREPARE YOUR ANUS!");
       } else {
@@ -1329,14 +1332,14 @@ void sudo(int task){
     }
     //Signal that previous boss should spawn.
     case 4: {
-      waveFlags--;
+      core.waveFlags--;
     }
     //Signal that a boss should spawn
     case 5: {
-      if (waveFlags < 0) waveFlags = 0;
-      switch (waveFlags){
+      if (core.waveFlags < 0) core.waveFlags = 0;
+      switch (core.waveFlags){
         case 0:{
-          PrintToChatAll("Caught unhandled exception: waveFlags 0 but operator 5 was invoked.");
+          PrintToChatAll("Caught unhandled exception: core.waveFlags 0 but operator 5 was invoked.");
           return;
         }
         case 1: {
@@ -1408,12 +1411,12 @@ void sudo(int task){
     }
     //Signal that next boss should spawn
     case 6: {
-      waveFlags++;
+      core.waveFlags++;
     }
     //Signal to fastforward boss spawn.
     case 7: {
-      waveFlags = 2;
-      if (curWave == 8 && !tacobell) {
+      core.waveFlags = 2;
+      if (core.curWave == 8 && !core.tacobell) {
         sudo(1001);
         CreateTimer(0.0, TimedOperator, 8);
       }
@@ -1424,7 +1427,7 @@ void sudo(int task){
     }
     //Client was Sacrificed.
     case 10: {
-      sacrificedByClient = true;
+      core.sacrificedByClient = true;
     }
     //Damage relay took damage
     case 11: {
@@ -1441,10 +1444,10 @@ void sudo(int task){
     }
     //Tank Destroyed (+1), includes disabling onslaughter.
     case 13: {
-      switch (waveFlags) {
+      switch (core.waveFlags) {
       case 0: {
         CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A tank has been destroyed. ({limegreen}+1 pt{white})");
-        sacPoints++;
+        core.sacPoints++;
       }
       case 1: {
         CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}ONSLAUGHTER {white}has been destroyed. ({limegreen}+25 pts{white})");
@@ -1453,31 +1456,31 @@ void sudo(int task){
         FireEntityInput("FB.BruteJusticeParticles", "Stop", "", 0.0);
         FireEntityInput("FB.BruteJusticeDMGRelay", "Break", "", 0.0);
         FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.5);
-        waveFlags = 0;
-        sacPoints += 25;
+        core.waveFlags = 0;
+        core.sacPoints += 25;
       }
       case 2: {
         CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}SEPHIROTH {white}has been destroyed. ({limegreen}+100 pts{white})");
         FireEntityInput("FB.Sephiroth", "Disable", "", 0.0);
         FireEntityInput("SephTrain", "TeleportToPathTrack", "Seph01", 0.0);
         FireEntityInput("SephTrain", "Stop", "", 0.0);
-        canSephNuke = false;
-        sacPoints += 100;
-        waveFlags = 0;
-        canTornado = false;
+        core.canSephNuke = false;
+        core.sacPoints += 100;
+        core.waveFlags = 0;
+        core.canTornado = false;
       }
       }
       return;
     }
     //Bomb Reset (+5)
     case 14: {
-      bombReset = true;
-      sacPoints += 5;
+      core.bombReset = true;
+      core.sacPoints += 5;
     }
     //Bomb Deployed
     case 15: {
       FireEntityInput("FB.PayloadWarning", "Disable", "", 0.0);
-      switch (bombStatus) {
+      switch (core.bombStatus) {
         //Invalid
       case 0: {
         PrintToServer("Tried to detonate with a bomb size of zero!");
@@ -1489,14 +1492,14 @@ void sudo(int task){
           FireEntityInput("SmallExplosion", "Explode", "", 0.0),
           FireEntityInput("SmallExploShake", "StartShake", "", 0.0),
           CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Small Bomb successfully pushed! ({limegreen}+2 pts{white})");
-        sacPoints += 2,
-          bombStatusMax += 10,
+        core.sacPoints += 2,
+          core.bombStatusMax += 10,
           CreateTimer(3.0, BombStatusAddTimer);
         CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
-        if (bombStatus >= bombStatusMax) {
+        if (core.bombStatus >= core.bombStatusMax) {
           return;
         } else {
-          bombStatus += 2;
+          core.bombStatus += 2;
         }
       }
       //Medium Explosion
@@ -1506,14 +1509,14 @@ void sudo(int task){
           FireEntityInput("MediumExplosion", "Explode", "", 0.0),
           FireEntityInput("MedExploShake", "StartShake", "", 0.0),
           CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Medium Bomb successfully pushed! ({limegreen}+5 pts{white})");
-        sacPoints += 5,
-          bombStatusMax += 10,
+        core.sacPoints += 5,
+          core.bombStatusMax += 10,
           CreateTimer(3.0, BombStatusAddTimer);
         CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
-        if (bombStatus >= bombStatusMax) {
+        if (core.bombStatus >= core.bombStatusMax) {
           return;
         } else {
-          bombStatus += 2;
+          core.bombStatus += 2;
         }
       }
       //Medium Explosion (Bath salts)
@@ -1524,34 +1527,34 @@ void sudo(int task){
           FireEntityInput("MedExploShake", "StartShake", "", 0.0),
           ServerCommand("sm_freeze @blue 10");
         CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Medium Bomb successfully pushed! Bots froze for 10 seconds. ({limegreen}+5 pts{white})");
-        sacPoints += 5,
-          bombStatusMax += 10,
+        core.sacPoints += 5,
+          core.bombStatusMax += 10,
           CreateTimer(3.0, BombStatusAddTimer);
         CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
-        if (bombStatus >= bombStatusMax) {
+        if (core.bombStatus >= core.bombStatusMax) {
           return;
         } else {
-          bombStatus += 2;
+          core.bombStatus += 2;
         }
       }
       //Falling Star
       case 32: {
         FireEntityInput("RareSpells", "Enable", "", 0.0);
-        canSENTStars = true,
+        core.canSENTStars = true,
           EmitSoundToAll(SFXArray[2]),
           FireEntityInput("MediumExplosion", "Explode", "", 0.0),
           FireEntityInput("MedExploShake", "StartShake", "", 0.0),
           CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Large Bomb successfully pushed! ({limegreen}+10 pts{white})");
-        sacPoints += 10,
-          bombStatusMax += 10,
+        core.sacPoints += 10,
+          core.bombStatusMax += 10,
           CreateTimer(3.0, BombStatusAddTimer);
         CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100),
           CreateTimer(1.0, SENTStarTimer),
           CreateTimer(60.0, TimedOperator, 14);
-        if (bombStatus >= bombStatusMax) {
+        if (core.bombStatus >= core.bombStatusMax) {
           return;
         } else {
-          bombStatus += 2;
+          core.bombStatus += 2;
         }
       }
       //Major Kong
@@ -1565,14 +1568,14 @@ void sudo(int task){
           FireEntityInput("NukeAll", "Enable", "", 1.7),
           FireEntityInput("NukeAll", "Disable", "", 3.0),
           CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}NUCLEAR WARHEAD {white}successfully pushed! ({limegreen}+25 pts{white})");
-        sacPoints += 25,
-          bombStatusMax += 10,
+        core.sacPoints += 25,
+          core.bombStatusMax += 10,
           CreateTimer(3.0, BombStatusAddTimer);
         CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
-        if (bombStatus >= bombStatusMax) {
+        if (core.bombStatus >= core.bombStatusMax) {
           return;
         } else {
-          bombStatus += 4;
+          core.bombStatus += 4;
         }
       }
       //Large (shark)
@@ -1582,14 +1585,14 @@ void sudo(int task){
           FireEntityInput("LargeExplosion", "Explode", "", 0.0),
           FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
           CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Heavy Bomb successfully pushed! ({limegreen}+15 pts{white})");
-        sacPoints += 15,
-          bombStatusMax += 10,
+        core.sacPoints += 15,
+          core.bombStatusMax += 10,
           CreateTimer(3.0, BombStatusAddTimer);
         CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
-        if (bombStatus >= bombStatusMax) {
+        if (core.bombStatus >= core.bombStatusMax) {
           return;
         } else {
-          bombStatus += 4;
+          core.bombStatus += 4;
         }
       }
       //FatMan
@@ -1604,15 +1607,15 @@ void sudo(int task){
         FireEntityInput("FB.Fade", "Fade", "", 0.0);
         FireEntityInput("HurtAll", "Disable", "", 3.0);
         CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}NUCLEAR WARHEAD{white}successfully pushed! ({limegreen}+25 pts{white})");
-        sacPoints += 25,
-        bombStatusMax += 10,
+        core.sacPoints += 25,
+        core.bombStatusMax += 10,
         CreateTimer(3.0, BombStatusAddTimer);
         CreateTimer(15.0, SpecTimer);
         CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
-        if (bombStatus >= bombStatusMax) {
+        if (core.bombStatus >= core.bombStatusMax) {
           return;
         } else {
-          bombStatus += 4;
+          core.bombStatus += 4;
         }
       }
       //Hydrogen
@@ -1628,8 +1631,8 @@ void sudo(int task){
           CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}HINDENBURG {white}successfully fueled! ({limegreen}+30 pts{white})");
         CPrintToChatAll("The {red}HINDENBURG {forestgreen}is now ready for flight!");
         FireEntityInput("DeliveryBurg", "Unlock", "", 0.0);
-        bombStatus = 0;
-        canHindenburg = true;
+        core.bombStatus = 0;
+        core.canHindenburg = true;
         CreateTimer(3.0, BombStatusAddTimer);
         CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
       }
@@ -1639,7 +1642,7 @@ void sudo(int task){
           EmitSoundToAll(SFXArray[35]);
         FireEntityInput("FB.Fade", "Fade", "", 0.0),
           FireEntityInput("NukeAll", "Disable", "", 2.0),
-          bombStatusMax = 64;
+          core.bombStatusMax = 64;
         CreateTimer(5.0, TimedOperator, 99);
       }
       }
@@ -1651,15 +1654,15 @@ void sudo(int task){
     }
     //Shark Enable & notify bomb push began
     case 20: {
-      bombProgression = true;
+      core.bombProgression = true;
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Bomb push in progress.");
       FireEntityInput("FB.PayloadWarning", "Enable", "", 0.0);
       CreateTimer(3.0, SharkTimer);
     }
     //Shark Disable
     case 21: {
-      bombProgression = false;
-      canSENTShark = false;
+      core.bombProgression = false;
+      core.canSENTShark = false;
     }
     //HINDENBOOM ACTIVATION
     case 28: {
@@ -1685,14 +1688,14 @@ void sudo(int task){
       FireEntityInput("HindenTrain", "TeleportToPathTrack", "Hinden01", 7.0);
       FireEntityInput("HindenTrain", "Stop", "", 7.0);
       CreateTimer(8.0, TimedOperator, 99);
-      bombStatus = 4;
-      bombStatusMax = 8;
+      core.bombStatus = 4;
+      core.bombStatusMax = 8;
     }
     //Bath Salts spend
     case 30: {
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}INSTANT BATH SALT DETONATION! BOTS ARE FROZEN FOR 10 SECONDS! ({red}-10 pts{white})");
       ServerCommand("sm_freeze @blue 10");
-      sacPoints -= 10;
+      core.sacPoints -= 10;
       FireEntityInput("MedExploShake", "StartShake", "", 0.10),
       FireEntityInput("MedExplosionSND", "PlaySound", "", 0.10),
       FireEntityInput("MediumExplosion", "Explode", "", 0.10);
@@ -1704,14 +1707,14 @@ void sudo(int task){
       FireEntityInput(i == 1 ? "FB.GiantGoobTemplate" : "FB.BlueKirbTemplate", "ForceSpawn", "", 0.0);
       CPrintToChatAll(i == 1 ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}GOOBBUE COMING IN FROM ORBIT! ({red}-20 pts{white})" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}BLUE KIRBY FALLING OUT OF THE SKY! ({red}-20 pts{white})");
       CustomSoundEmitter(i == 1 ? SFXArray[51] : SFXArray[21], 65, false, 0, 1.0, 100);
-      sacPoints -= 20;
+      core.sacPoints -= 20;
     }
     //35K ubup cash spend
     case 32: {
-      if(!doFailsafe){
-        doFailsafe = true;
+      if(!core.doFailsafe){
+        core.doFailsafe = true;
         CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave fail-safe activated! ({red}-30 pts{white})");
-        sacPoints -= 30;
+        core.sacPoints -= 30;
       }
       else return;
     }
@@ -1726,19 +1729,19 @@ void sudo(int task){
       FireEntityInput("FB.Fade", "Fade", "", 11.50);
       FireEntityInput("FB.ShakeBOOM", "StartShake", "", 11.50);
       FireEntityInput("NukeAll", "Disable", "", 12.30);
-      sacPoints -= 40;
+      core.sacPoints -= 40;
     }
     //Banish Tornadoes
     case 34: {
-      if (canTornado || tornado) sacPoints -= 50;
-      CPrintToChatAll(canTornado || tornado ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A PINK KIRBY HAS BANISHED TORNADOES FOR THIS WAVE! ({red}-50 pts{white})" : "{red}TTV/professorfartsalot {white}:  Please do not, the tornado button. Thanks. ({red} -0 pts{white})");
-      canTornado = false;
+      if (core.canTornado || core.tornado) core.sacPoints -= 50;
+      CPrintToChatAll(core.canTornado || core.tornado ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}A PINK KIRBY HAS BANISHED TORNADOES FOR THIS WAVE! ({red}-50 pts{white})" : "{red}TTV/professorfartsalot {white}:  Please do not, the tornado button. Thanks. ({red} -0 pts{white})");
+      core.canTornado = false;
       sudo(1005);
     }
     //Ass Gas spend
     case 35: {
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}ANYTHING BUT THE ASS GAS!!!! ({red}-60 pts{white})");
-      sacPoints -= 60;
+      core.sacPoints -= 60;
       FireEntityInput("HurtAll", "AddOutput", "damagetype 524288", 0.0);
       FireEntityInput("FB.ShakeBOOM", "StartShake", "", 0.1);
       FireEntityInput("HurtAll", "AddOutput", "damage 400", 0.0);
@@ -1749,7 +1752,7 @@ void sudo(int task){
     //Nuclear fallout spend
     case 36: {
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}INSTANT FAT MAN DETONATION! ({red}-70 pts{white})");
-      sacPoints -= 70;
+      core.sacPoints -= 70;
       FireEntityInput("LargeExplosion", "Explode", "", 0.0);
       FireEntityInput("LargeExploShake", "StartShake", "", 0.0);
       FireEntityInput("HurtAll", "AddOutput", "damagetype 262144", 0.0);
@@ -1762,23 +1765,23 @@ void sudo(int task){
     //Meteor shower spend
     case 37: {
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}COSMIC DEVASTATION IMMINENT. ({red}-80 pts{white})");
-      sacPoints -= 80;
-      canSENTMeteors = true;
+      core.sacPoints -= 80;
+      core.canSENTMeteors = true;
       CreateTimer(1.0, SENTMeteorTimer);
       CreateTimer(30.0, TimedOperator, 12);
     }
     //300K UbUp Cash
     case 38: {
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}150K UbUp Cash Granted to {red}RED{white}! ({red}-90 pts{white})");
-      sacPoints -= 90;
+      core.sacPoints -= 90;
       ServerCommand("sm_addcash @red 300000");
     }
     //Fartsy of the Seventh Taco Bell
     case 39: {
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}NOW PRESENTING... PROFESSOR FARTSALOT OF THE SEVENTH TACO BELL! ({red}-100 points{white})");
-      sacPoints -= 100;
-      bombStatusMax = 69;
-      bombStatus = 69;
+      core.sacPoints -= 100;
+      core.bombStatusMax = 69;
+      core.bombStatus = 69;
       FireEntityInput("Delivery", "Unlock", "", 0.0),
       FireEntityInput("BombExplo*", "Disable", "", 0.0),
       FireEntityInput("Bombs*", "Disable", "", 0.0),
@@ -1883,45 +1886,45 @@ void sudo(int task){
     }
     //Code Entry from FC Keypad
     case 100: {
-      if (CodeEntry == 17) {
+      if (core.CodeEntry == 17) {
         FireEntityInput("FB.BOOM", "StartShake", "", 0.0),
           CustomSoundEmitter(SFXArray[3], 65, false, 0, 1.0, 100),
           FireEntityInput("FB.CodeCorrectKill", "Enable", "", 0.0),
           FireEntityInput("FB.KP*", "Lock", "", 0.0),
           FireEntityInput("FB.CodeCorrectKill", "Disable", "", 1.0);
       } else {
-        CodeEntry = 0;
+        core.CodeEntry = 0;
         FireEntityInput("FB.CodeFailedKill", "Enable", "", 0.0),
           FireEntityInput("FB.CodeFailedKill", "Disable", "", 1.0),
           CustomSoundEmitter("fartsy/memes/priceisright_fail.wav", 65, false, 0, 1.0, 100);
       }
     }
     case 101: {
-      CodeEntry++;
+      core.CodeEntry++;
     }
     case 102: {
-      CodeEntry += 2;
+      core.CodeEntry += 2;
     }
     case 103: {
-      CodeEntry += 3;
+      core.CodeEntry += 3;
     }
     case 104: {
-      CodeEntry += 4;
+      core.CodeEntry += 4;
     }
     case 105: {
-      CodeEntry += 5;
+      core.CodeEntry += 5;
     }
     case 106: {
-      CodeEntry += 6;
+      core.CodeEntry += 6;
     }
     case 107: {
-      CodeEntry += 7;
+      core.CodeEntry += 7;
     }
     case 108: {
-      CodeEntry += 8;
+      core.CodeEntry += 8;
     }
     case 109: {
-      CodeEntry += 9;
+      core.CodeEntry += 9;
     }
     //Debug, somethingsomething aoe blah blah blah
     case 200:{
@@ -1929,27 +1932,27 @@ void sudo(int task){
     }
     //Taco Bell Edition
     case 210: {
-      tacobell = true;
+      core.tacobell = true;
       ServerCommand("fb_startmoney 200000");
       CPrintToChatAll("{darkviolet}[{orange}INFO{darkviolet}] {white}You have chosen {red}DOVAH'S ASS - TACO BELL EDITION{white}. Warning: All upgrade progress will be lost if you fail the wave. DO NOT FAIL US.");
     }
     //Reset Map
     case 300:{
-      shouldStopMusic = true;
-      BGMINDEX = GetRandomInt(1, 4);
-      ticksMusic = -2;
-      refireTime = 2;
-      canCrusaderNuke = false;
-      canHindenburg = false;
-      canHWBoss = false;
-      canSephNuke = false;
-      canTornado = false;
-      isWave = false;
-      bombStatusMax = 7;
-      bombStatus = 5;
-      sephiroth = false;
-      waveFlags = 0;
-      bombReady = false;
+      core.shouldStopMusic = true;
+      core.BGMINDEX = GetRandomInt(1, 4);
+      core.ticksMusic = -2;
+      core.refireTime = 2;
+      core.canCrusaderNuke = false;
+      core.canHindenburg = false;
+      core.canHWBoss = false;
+      core.canSephNuke = false;
+      core.canTornado = false;
+      core.isWave = false;
+      core.bombStatusMax = 7;
+      core.bombStatus = 5;
+      core.sephiroth = false;
+      core.waveFlags = 0;
+      core.bombReady = false;
       FireEntityInput("rain", "Alpha", "0", 0.0);
       FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0);
       FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
@@ -1968,44 +1971,44 @@ void sudo(int task){
     }
     //TEMP FUNCTIONS
     case 301: {
-      EmitSoundToAll(BGMArray[5].realPath, _, SNDCHAN, BGMArray[5].SNDLVL, SND_CHANGEVOL, 0.05, _, _, _, _, _, _);
+      EmitSoundToAll(BGMArray[5].realPath, _, core.SNDCHAN, BGMArray[5].SNDLVL, SND_CHANGEVOL, 0.05, _, _, _, _, _, _);
     }
     //TEMP FUNCTIONS
     case 302: {
-      EmitSoundToAll(BGMArray[5].realPath, _, SNDCHAN, BGMArray[5].SNDLVL, SND_CHANGEVOL, 1.0, _, _, _, _, _, _);
+      EmitSoundToAll(BGMArray[5].realPath, _, core.SNDCHAN, BGMArray[5].SNDLVL, SND_CHANGEVOL, 1.0, _, _, _, _, _, _);
     }
     case 304: {
-      EmitSoundToAll(BGMArray[6].realPath, _, SNDCHAN, BGMArray[6].SNDLVL, SND_CHANGEVOL, 0.05, _, _, _, _, _, _);
+      EmitSoundToAll(BGMArray[6].realPath, _, core.SNDCHAN, BGMArray[6].SNDLVL, SND_CHANGEVOL, 0.05, _, _, _, _, _, _);
     }
     case 305: {
-      EmitSoundToAll(BGMArray[6].realPath, _, SNDCHAN, BGMArray[6].SNDLVL, SND_CHANGEVOL, 1.0, _, _, _, _, _, _);
+      EmitSoundToAll(BGMArray[6].realPath, _, core.SNDCHAN, BGMArray[6].SNDLVL, SND_CHANGEVOL, 1.0, _, _, _, _, _, _);
     }
     //LOOP SYSTEM
     case 500: {
       PrintToConsoleAll("[CORE] Phase Change started... phase 2!");
-      BGMINDEX = 9;
-      shouldStopMusic = true;
+      core.BGMINDEX = 9;
+      core.shouldStopMusic = true;
     }
     case 501: {
       PrintToConsoleAll("[CORE] Phase Change started... phase 3!");
-      BGMINDEX = 10;
-      shouldStopMusic = true;
+      core.BGMINDEX = 10;
+      core.shouldStopMusic = true;
     }
     case 502: {
       PrintToChatAll("Got 502 but not implemented in popfile, please report this to fartsy!");
       PrintToConsoleAll("[CORE] Phase Change started... phase 4!");
-      BGMINDEX = 11;
-      shouldStopMusic = true;
+      core.BGMINDEX = 11;
+      core.shouldStopMusic = true;
     }
     // FINAL Music system rewrite (again) AGAINNNNNNNNNNNN.... and again!
     case 1000: {
-      SetupMusic(BGMINDEX);
+      SetupMusic(core.BGMINDEX);
     }
     //Stop current song
     case 1001: {
-      if (StrEqual(realPath, "null")) return;
+      if (StrEqual(core.realPath, "null")) return;
       for (int i = 1; i <= MaxClients; i++) {
-        StopSound(i, SNDCHAN, realPath);
+        StopSound(i, core.SNDCHAN, core.realPath);
       }
       return;
     }
@@ -2015,11 +2018,11 @@ void sudo(int task){
       int i = GetRandomInt(1, 10);
       char TextureIndex[4];
       IntToString(i, TextureIndex, sizeof(TextureIndex));
-      if (i == lastAdmin)
+      if (i == core.lastAdmin)
         sudo(1002);
       else {
         FireEntityInput("AdminPicker", "SetTextureIndex", TextureIndex, 0.1);
-        lastAdmin = i;
+        core.lastAdmin = i;
       }
       return;
     }
@@ -2041,8 +2044,8 @@ void sudo(int task){
     }
     //Activate Tornado Timer
     case 1004: {
-      if (isWave && canTornado) {
-        if (curWave == 4) {
+      if (core.isWave && core.canTornado) {
+        if (core.curWave == 4) {
           float f = GetRandomFloat(30.0, 60.0);
           float t = f - 30.0;
           CreateTimer(t, TimedOperator, 40);
@@ -2065,15 +2068,15 @@ void sudo(int task){
       FireEntityInput("tornadobutton", "Unlock", "", 30.0);
       FireEntityInput("FB.FakeTankTank01", "Kill", "", 0.0);
       FireEntityInput("FB.FakeTankPhys01", "Kill", "", 0.0);
-      tornado = false;
+      core.tornado = false;
       return;
     }
     //Crusader
     case 1006: {
-      tickMusic=false;
+      core.tickMusic=false;
       sudo(1001);
       FireEntityInput("FB.MusicTimer", "Disable", "", 0.0);
-      crusader = true;
+      core.crusader = true;
       CreateTimer(25.20, TimedOperator, 78);
       CreateTimer(63.20, TimedOperator, 80);
       PrintToServer("Starting Crusader via plugin!");
@@ -2180,9 +2183,9 @@ void sudo(int task){
     }
     //Monitor power up/down!
     case 1008: {
-      if (!monitorOn) {
-        monitorOn = true;
-        if (!monitorColor)
+      if (!core.monitorOn) {
+        core.monitorOn = true;
+        if (!core.monitorColor)
           FireEntityInput("FB.MonitorSprite", "Color", "0 0 255", 0.0);
         else
           FireEntityInput("FB.MonitorSprite", "Color", "0 255 0", 0.0);
@@ -2190,7 +2193,7 @@ void sudo(int task){
         FireEntityInput("FB.MonitorBW", "Enable", "", 0.0);
       }
       else {
-        monitorOn = false;
+        core.monitorOn = false;
         FireEntityInput("FB.MonitorSprite", "Color", "255 0 0", 0.0);
         FireEntityInput("FB.Monitor", "Disable", "", 0.0);
         FireEntityInput("FB.MonitorBW", "Disable", "", 0.0);
@@ -2199,29 +2202,29 @@ void sudo(int task){
     }
     //Cycle monitor forward
     case 1009: {
-      camSel++;
-      if (camSel >= 5) camSel = 0;
-      FireEntityInput("FB.Monitor", "SetCamera", SelectedCamera[camSel], 0.0);
-      FireEntityInput("FB.MonitorBW", "SetCamera", SelectedCamera[camSel], 0.0);
+      core.camSel++;
+      if (core.camSel >= 5) core.camSel = 0;
+      FireEntityInput("FB.Monitor", "SetCamera", SelectedCamera[core.camSel], 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", SelectedCamera[core.camSel], 0.0);
     }
     //Cycle monitor back
     case 1010: {
-      camSel--;
-      if(camSel <= -1) camSel = 4;
-      FireEntityInput("FB.Monitor", "SetCamera", SelectedCamera[camSel], 0.0);
-      FireEntityInput("FB.MonitorBW", "SetCamera", SelectedCamera[camSel], 0.0);
+      core.camSel--;
+      if(core.camSel <= -1) core.camSel = 4;
+      FireEntityInput("FB.Monitor", "SetCamera", SelectedCamera[core.camSel], 0.0);
+      FireEntityInput("FB.MonitorBW", "SetCamera", SelectedCamera[core.camSel], 0.0);
     }
     //Enable black and white.
     case 1011: {
-      if (!monitorOn) return;
+      if (!core.monitorOn) return;
       else {
-        if (!monitorColor) {
-          monitorColor = true;
+        if (!core.monitorColor) {
+          core.monitorColor = true;
           FireEntityInput("FB.MonitorSprite", "Color", "0 255 0", 0.0);
           FireEntityInput("FB.Monitor", "Enable", "", 0.0);
           FireEntityInput("FB.MonitorBW", "Disable", "", 0.0);
         } else {
-          monitorColor = false;
+          core.monitorColor = false;
           FireEntityInput("FB.MonitorSprite", "Color", "0 0 255", 0.0);
           FireEntityInput("FB.Monitor", "Disable", "", 0.0);
           FireEntityInput("FB.MonitorBW", "Enable", "", 0.0);
@@ -2229,20 +2232,20 @@ void sudo(int task){
       }
     }
     case 6942: {
-      sacPoints = 2147483647;
+      core.sacPoints = 2147483647;
     }
     //Do not EVER EVER execute this unless it's an emergency...
     case 6969: {
-      if (!isWave) {
+      if (!core.isWave) {
         CPrintToChatAll("{darkred} [CORE] ERROR, attempted to invoke function without an active wave.");
         return;
       } else {
-        if (!brawler_emergency) {
-          brawler_emergency = true,
+        if (!core.brawler_emergency) {
+          core.brawler_emergency = true,
           EmitSoundToAll(SFXArray[55]);
           CreateTimer(1.0, TimedOperator, 6969);
           CPrintToChatAll("{darkred}EMERGENCY MODE ACTIVE.");
-          sacPoints = 0;
+          core.sacPoints = 0;
           ServerCommand("sm_addcash @red 2000000");
           ServerCommand("sm_god @red 1");
         } else {
@@ -2256,7 +2259,7 @@ void sudo(int task){
       CreateTimer(10.0, BossHPTimer);
     }
     case 9001:{
-      PrintToServer("BGM State is %b", bgmPlaying);
+      PrintToServer("BGM State is %b", core.bgmPlaying);
     }
     case 9010: {
       CustomSoundEmitter(TBGM6, 65, true, 1, 1.0, 100);
@@ -2321,8 +2324,8 @@ void sudo(int task){
 
 //Perform Wave Setup
 public Action PerformWaveSetup() {
-  isWave = true; //It's a wave!
-  FailedCount = 0; //Reset fail count to zero. (See EventWaveFailed, where we play the BGM.)
+  core.isWave = true; //It's a wave!
+  core.FailedCount = 0; //Reset fail count to zero. (See EventWaveFailed, where we play the BGM.)
   ServerCommand("fb_operator 1001"); //Stop any playing BGM
   CreateTimer(0.25, TimedOperator, 0); //Print wave information to global chat
   CreateTimer(2.5, PerformWaveAdverts); //Activate the mini hud
@@ -2350,7 +2353,7 @@ public Action PerformWaveSetup() {
 public Action TimedOperator(Handle timer, int job) {
   switch (job) {
   case 0: {
-    CPrintToChatAll(VIPBGM >= 0 ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave %i: {forestgreen}%s{white} (requested by VIP {forestgreen}%N{white})" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave %i: {forestgreen}%s", curWave, songName, VIPIndex);
+    CPrintToChatAll(core.VIPBGM >= 0 ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave %i: {forestgreen}%s{white} (requested by VIP {forestgreen}%N{white})" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Wave %i: {forestgreen}%s", core.curWave, core.songName, core.VIPIndex);
   }
   //Boss script
   case 2: {
@@ -2360,10 +2363,10 @@ public Action TimedOperator(Handle timer, int job) {
   }
   //Boss script pt 2
   case 3: {
-    BGMINDEX = 16;
-    realPath = BGMArray[BGMINDEX].realPath;
-    songName = BGMArray[BGMINDEX].songName;
-    CustomSoundEmitter(BGMArray[BGMINDEX].realPath, BGMArray[BGMINDEX].SNDLVL, true, 0, 1.0, 100);
+    core.BGMINDEX = 16;
+    core.realPath = BGMArray[core.BGMINDEX].realPath;
+    core.songName = BGMArray[core.BGMINDEX].songName;
+    CustomSoundEmitter(BGMArray[core.BGMINDEX].realPath, BGMArray[core.BGMINDEX].SNDLVL, true, 0, 1.0, 100);
     FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 0.0);
     FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 3.0);
     FireEntityInput("FB.FadeTotalBLCK", "Fade", "", 7.0);
@@ -2391,9 +2394,9 @@ public Action TimedOperator(Handle timer, int job) {
   }
   //DO THE THING ALREADY
   case 7: {
-    sephiroth = true;
-    ticksMusic = 0;
-    refireTime = BGMArray[16].refireTime;
+    core.sephiroth = true;
+    core.ticksMusic = 0;
+    core.refireTime = BGMArray[16].refireTime;
   }
   //Signal boss to actually spawn after delay.
   case 8: {
@@ -2404,27 +2407,27 @@ public Action TimedOperator(Handle timer, int job) {
   }
   //Crusader Nuke activation
   case 9: {
-    canCrusaderNuke = true;
+    core.canCrusaderNuke = true;
     CreateTimer(1.0, CrusaderNukeTimer);
   }
   //Crusader Nuke Deactivation
   case 10: {
-    canCrusaderNuke = false;
+    core.canCrusaderNuke = false;
     return Plugin_Stop;
   }
   //Seph Nuke Deactivation
   case 11: {
-    canSephNuke = false;
+    core.canSephNuke = false;
     return Plugin_Stop;
   }
   //SENTMeteor Timeout
   case 12: {
-    canSENTMeteors = false;
+    core.canSENTMeteors = false;
     return Plugin_Stop;
   }
   //SENTStars Timeout
   case 14: {
-    canSENTStars = false;
+    core.canSENTStars = false;
     return Plugin_Stop;
   }
   //Incoming
@@ -2437,21 +2440,21 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 40: {
-    if (isWave && canTornado) {
+    if (core.isWave && core.canTornado) {
       EmitSoundToAll("mvm/ambient_mp3/mvm_siren.mp3"),
-        TornadoWarningIssued = true;
+        core.TornadoWarningIssued = true;
     }
     return Plugin_Stop;
   }
   case 41: {
-    if (isWave && canTornado && !tornado) {
+    if (core.isWave && core.canTornado && !core.tornado) {
       FireEntityInput("TornadoKill", "Enable", "", 0.0),
         FireEntityInput("tornadobutton", "Lock", "", 0.0),
         FireEntityInput("tornadof1", "start", "", 20.0),
         FireEntityInput("shaketriggerf1", "Enable", "", 20.0),
         FireEntityInput("tornadowindf1", "PlaySound", "", 20.0),
         FireEntityInput("tornadof1wind", "Enable", "", 21.50);
-      tornado = true;
+      core.tornado = true;
       float f = GetRandomFloat(60.0, 120.0);
       CreateTimer(f, TimedOperator, 42);
     }
@@ -2459,7 +2462,7 @@ public Action TimedOperator(Handle timer, int job) {
   }
   case 42: {
     ServerCommand("fb_operator 1005");
-    TornadoWarningIssued = false;
+    core.TornadoWarningIssued = false;
     ServerCommand("fb_operator 1004");
   }
   case 60: {
@@ -2467,7 +2470,7 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 70: {
-    if (isWave) {
+    if (core.isWave) {
       FireEntityInput("FB.KP*", "Unlock", "", 0.0);
       CustomSoundEmitter(SFXArray[0], 65, false, 0, 1.0, 100);
     }
@@ -2482,9 +2485,9 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Handled;
   }
   case 79: {
-    crusader = false;
-    curWave = GetCurWave();
-    if (isWave && (curWave == 3 || curWave == 5)) {
+    core.crusader = false;
+    core.curWave = GetCurWave();
+    if (core.isWave && (core.curWave == 3 || core.curWave == 5)) {
       sudo(99);
     }
     return Plugin_Stop;
@@ -2494,7 +2497,7 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 99: {
-    if (isWave) {
+    if (core.isWave) {
       sudo(99);
     }
     return Plugin_Stop;
@@ -2506,7 +2509,7 @@ public Action TimedOperator(Handle timer, int job) {
     PrintToConsoleAll("This shouldn't be showing in your console. If it is, contact Fartsy#8998 .");
   }
   case 6969: {
-    if (isWave) {
+    if (core.isWave) {
       ServerCommand("sm_freeze @blue; sm_smash @blue; sm_evilrocket @blue");
       sudo(2);
       CreateTimer(4.0, TimedOperator, 6970);
@@ -2516,7 +2519,7 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6970: {
-    if (isWave) {
+    if (core.isWave) {
       EmitSoundToAll(SFXArray[6]);
       CreateTimer(7.0, TimedOperator, 6971);
     }
@@ -2525,7 +2528,7 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6971: {
-    if (isWave) {
+    if (core.isWave) {
       ServerCommand("fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40");
       CreateTimer(1.0, TimedOperator, 6972);
     } 
@@ -2534,7 +2537,7 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6972: {
-    if (isWave) {
+    if (core.isWave) {
       ServerCommand("fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42");
       sudo(1006);
       CreateTimer(1.0, TimedOperator, 6973);
@@ -2544,9 +2547,9 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6973: {
-    if (isWave) {
-      bombStatus = 8;
-      bombStatusMax = 10;
+    if (core.isWave) {
+      core.bombStatus = 8;
+      core.bombStatusMax = 10;
       sudo(15);
       CreateTimer(1.0, TimedOperator, 6974);
     } 
@@ -2555,9 +2558,9 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6974: {
-    if (isWave) {
-      bombStatus = 16,
-      bombStatusMax = 18,
+    if (core.isWave) {
+      core.bombStatus = 16,
+      core.bombStatusMax = 18,
       ServerCommand("fb_operator 15;fb_operator 15"),
       CreateTimer(1.0, TimedOperator, 6975);
     }
@@ -2566,9 +2569,9 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6975: {
-    if (isWave) {
-      bombStatus = 24,
-      bombStatusMax = 26,
+    if (core.isWave) {
+      core.bombStatus = 24,
+      core.bombStatusMax = 26,
       ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15");
       CreateTimer(1.0, TimedOperator, 6976);
     }
@@ -2577,9 +2580,9 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6976: {
-    if (isWave) {
-      bombStatus = 32,
-      bombStatusMax = 34,
+    if (core.isWave) {
+      core.bombStatus = 32,
+      core.bombStatusMax = 34,
         ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15"),
         CreateTimer(1.0, TimedOperator, 6977);
     }
@@ -2588,9 +2591,9 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6977: {
-    if (isWave) {
-      bombStatus = 40,
-      bombStatusMax = 42,
+    if (core.isWave) {
+      core.bombStatus = 40,
+      core.bombStatusMax = 42,
         ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15"),
         CreateTimer(1.0, TimedOperator, 6978);
     }
@@ -2599,9 +2602,9 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6978: {
-    if (isWave) {
-      bombStatus = 48,
-      bombStatusMax = 50,
+    if (core.isWave) {
+      core.bombStatus = 48,
+      core.bombStatusMax = 50,
         ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15"),
         ServerCommand("fb_operator 30"),
         CreateTimer(1.0, TimedOperator, 6979);
@@ -2611,8 +2614,8 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6979: {
-    if (isWave) {
-      bombStatus = 5,
+    if (core.isWave) {
+      core.bombStatus = 5,
       ServerCommand("fb_operator 31"),
         CreateTimer(1.0, TimedOperator, 6980);
     }
@@ -2621,7 +2624,7 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6980: {
-    if (isWave) {
+    if (core.isWave) {
       ServerCommand("fb_operator 32"),
         CreateTimer(1.0, TimedOperator, 6981);
     }
@@ -2630,7 +2633,7 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6981: {
-    if (isWave) {
+    if (core.isWave) {
       ServerCommand("fb_operator 33"),
         CreateTimer(1.0, TimedOperator, 6982);
     }
@@ -2639,7 +2642,7 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6982: {
-    if (isWave) {
+    if (core.isWave) {
       ServerCommand("fb_operator 34"),
         CreateTimer(1.0, TimedOperator, 6983);
     }
@@ -2648,7 +2651,7 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6983: {
-    if (isWave) {
+    if (core.isWave) {
       ServerCommand("fb_operator 35"),
         CreateTimer(1.0, TimedOperator, 6984);
     }
@@ -2657,7 +2660,7 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6984: {
-    if (isWave) {
+    if (core.isWave) {
       ServerCommand("fb_operator 36"),
         CreateTimer(1.0, TimedOperator, 6985);
     }
@@ -2666,7 +2669,7 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6985: {
-    if (isWave) {
+    if (core.isWave) {
       sudo(37);
       CreateTimer(1.0, TimedOperator, 6986);
     }
@@ -2675,7 +2678,7 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6986: {
-    if (isWave) {
+    if (core.isWave) {
       ServerCommand("sm_freeze @blue -1; sm_smash @blue"),
         CreateTimer(3.0, TimedOperator, 6987);
     }
@@ -2684,7 +2687,7 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6987: {
-    if (isWave) {
+    if (core.isWave) {
       ServerCommand("fb_operator 40; fb_operator 42; fb_operator 30; fb_operator 32; fb_operator 34; fb_operator 32; fb_operator 31; fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 31;fb_operator 32;fb_operator 32;fb_operator 31;fb_operator 32;fb_operator 32");
       CreateTimer(1.0, TimedOperator, 6988);
     }
@@ -2693,9 +2696,9 @@ public Action TimedOperator(Handle timer, int job) {
     return Plugin_Stop;
   }
   case 6988: {
-    if (isWave) {
-      bombStatus = 48;
-      bombStatusMax = 50;
+    if (core.isWave) {
+      core.bombStatus = 48;
+      core.bombStatusMax = 50;
       ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15");
       for (int i = 0; i < 12; i++){
         sudo(GetRandomInt(30,37));
@@ -2710,7 +2713,7 @@ public Action TimedOperator(Handle timer, int job) {
   }
   case 6989: {
     CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode."),
-    brawler_emergency = false;
+    core.brawler_emergency = false;
     ServerCommand("sm_god @red 0");
     return Plugin_Stop;
   }
@@ -2721,21 +2724,21 @@ public Action TimedOperator(Handle timer, int job) {
 //Exit emergency mode!
 public void ExitEmergencyMode() {
   CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended.");
-  brawler_emergency = false;
-  sacPoints = 0;
+  core.brawler_emergency = false;
+  core.sacPoints = 0;
   ServerCommand("sm_god @red 0");
 }
 
 //Setup music, this allows us to change it with VIP access...
-public void SetupMusic(int BGM) {
-  bgmPlaying = true;
-  ticksMusic = -2;
-  refireTime = 2;
-  tickMusic = true;
-  tickOffset = false;
-  BGMINDEX = (VIPBGM >= 0 ? VIPBGM : BGM);
-  realPath = (VIPBGM >= 0 ? BGMArray[VIPBGM].realPath : BGMArray[BGM].realPath);
-  shouldStopMusic = (!StrEqual(cachedPath, realPath) ? true : false);
+public void SetupMusic(int bgm) {
+  core.bgmPlaying = true;
+  core.ticksMusic = -2;
+  core.refireTime = 2;
+  core.tickMusic = true;
+  core.tickOffset = false;
+  core.BGMINDEX = (core.VIPBGM >= 0 ? core.VIPBGM : bgm);
+  core.realPath = (core.VIPBGM >= 0 ? BGMArray[core.VIPBGM].realPath : BGMArray[bgm].realPath);
+  core.shouldStopMusic = (!StrEqual(core.cachedPath, core.realPath) ? true : false);
 }
 //VIP Music Menu
 public Action Command_Music(int client, int args) {
@@ -2759,16 +2762,17 @@ public void ShowFartsyMusicMenu(int client) {
 // VIP Music Menu, bgm-1 fixes the fact that position 0 is Restore Defaults, and arrays cannot be -1. By adding Restore Defaults at position 0, we offset everything by +1.
 public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int client, int bgm) {
   if (action == MenuAction_Select) {
-    curWave = GetCurWave();
+    core.curWave = GetCurWave();
     CPrintToChat(client, (bgm == 0 ? "{darkgreen}[CORE] Confirmed. Next song set to {aqua}Default{darkgreen}." : "{limegreen}[CORE] Confirmed. Next song set to {aqua}%s{limegreen}."),  BGMArray[bgm].songName);
-    BGMINDEX = (bgm == 0 ? (tacobell ? tacoBellBGMIndex[curWave] : sephiroth ? 16 : isWave ? DefaultsArray[curWave].defBGMIndex : GetRandomInt(1, 4)) : bgm);
-    shouldStopMusic = (!StrEqual(cachedPath, BGMArray[bgm].realPath) ? true : false);
-    VIPBGM = (bgm == 0 ? -1 : bgm);
-    VIPIndex = client;
-    PrintToServer("Debug, music set to BGMINDEX %i and path %s", BGMINDEX, BGMArray[bgm].realPath);
+    core.BGMINDEX = (bgm == 0 ? (core.tacobell ? tacoBellBGMIndex[core.curWave] : core.sephiroth ? 16 : core.isWave ? DefaultsArray[core.curWave].defBGMIndex : GetRandomInt(1, 4)) : bgm);
+    core.shouldStopMusic = (!StrEqual(core.cachedPath, BGMArray[bgm].realPath) ? true : false);
+    core.VIPBGM = (bgm == 0 ? -1 : bgm);
+    core.VIPIndex = client;
+    PrintToServer("Debug, music set to core.BGMINDEX %i and path %s", core.BGMINDEX, BGMArray[bgm].realPath);
   }
   else if (action == MenuAction_End)
     CloseHandle(menu);
+  return 0;
 }
 
 public Action TickClientHealth(Handle timer) {
@@ -2776,7 +2780,7 @@ public Action TickClientHealth(Handle timer) {
     if (IsValidClient(i) && (GetClientTeam(i) == 2)) {
       int health = GetClientHealth(i);
       int healthMax = TF2_GetPlayerMaxHealth(i);
-      if (!FB_Database) return;
+      if (!FB_Database) return Plugin_Stop;
       else {
         char query[256];
         int steamID = GetSteamAccountID(i);
@@ -2786,18 +2790,19 @@ public Action TickClientHealth(Handle timer) {
     }
     else if (GetClientCount(true) <= 0){
       PrintToServer("Server is empty. Stopping the music queue.");
-      bgmPlaying = false;
-      tickingClientHealth = false;
-      tickMusic = false;
-      BGMINDEX = GetRandomInt(1, 4);
-      shouldStopMusic = false;
-      realPath = "null";
-      refireTime = 0;
-      ticksMusic = 0;
-      return;
+      core.bgmPlaying = false;
+      core.tickingClientHealth = false;
+      core.tickMusic = false;
+      core.BGMINDEX = GetRandomInt(1, 4);
+      core.shouldStopMusic = false;
+      core.realPath = "null";
+      core.refireTime = 0;
+      core.ticksMusic = 0;
+      return Plugin_Stop;
     }
   }
   CreateTimer(1.0, TickClientHealth);
+  return Plugin_Stop;
 }
 //Get current wave
 public int GetCurWave(){

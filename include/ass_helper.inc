@@ -1,4 +1,185 @@
-bool tickOffset = false;
+char LoggerDbg[256];
+char LoggerInfo[256];
+Database FB_Database;
+float Return[3] = {
+  -3730.0,
+  67.0,
+  -252.0
+};
+int soundPreference[MAXPLAYERS + 1];
+//Default values per wave
+enum struct DEFAULTS {
+  bool defCanHWBoss;
+  bool defCanTornado;
+  int defBGMIndex;
+  int defBombStatus;
+  int defBombStatusMax;
+  int defSacPointsMax;
+}
+DEFAULTS DefaultsArray[9];
+//Core values
+enum struct COREDATA {
+  bool bgmPlaying;
+  bool bombProgression;
+  bool bombReady;
+  bool bombReset;
+  bool brawler_emergency;
+  bool canCrusaderNuke;
+  bool canHindenburg;
+  bool canHWBoss;
+  bool canSENTMeteors;
+  bool canSENTShark;
+  bool canSENTStars;
+  bool canSephNuke;
+  bool canTornado;
+  bool crusader;
+  bool doFailsafe;
+  bool isWave;
+  bool monitorOn;
+  bool monitorColor;
+  bool sacrificedByClient;
+  bool sephiroth;
+  bool shouldStopMusic;
+  bool tornado;
+  bool tacobell;
+  bool tickingClientHealth;
+  bool tickMusic;
+  bool tickOffset;
+  bool TornadoWarningIssued;
+  char realPath[64];
+  char cachedPath[64];
+  char songName[64];
+  float HWNMin;
+  float HWNMax;
+  int BGMINDEX;
+  int FailedCount;
+  int INCOMINGDISPLAYED;
+  int camSel;
+  int CodeEntry;
+  int bombStatus;
+  int bombStatusMax;
+  int curWave;
+  int failsafeCount;
+  int lastAdmin;
+  int refireTime;
+  int sacPoints;
+  int sacPointsMax;
+  int SNDCHAN;
+  int ticksMusic;
+  int VIPBGM;
+  int VIPIndex;
+  int waveFlags;
+}
+COREDATA core;
+
+void SetupCoreData(){
+  AssLogger(1, "Setting up core data...");
+  DefaultsArray[0].defCanHWBoss = false;
+  DefaultsArray[1].defCanHWBoss = false;
+  DefaultsArray[2].defCanHWBoss = false;
+  DefaultsArray[3].defCanHWBoss = true;
+  DefaultsArray[4].defCanHWBoss = true;
+  DefaultsArray[5].defCanHWBoss = true;
+  DefaultsArray[6].defCanHWBoss = true;
+  DefaultsArray[7].defCanHWBoss = true;
+  DefaultsArray[8].defCanHWBoss = true;
+  DefaultsArray[0].defCanTornado = false;
+  DefaultsArray[1].defCanTornado = false;
+  DefaultsArray[2].defCanTornado = false;
+  DefaultsArray[3].defCanTornado = true;
+  DefaultsArray[4].defCanTornado = true;
+  DefaultsArray[5].defCanTornado = true;
+  DefaultsArray[6].defCanTornado = true;
+  DefaultsArray[7].defCanTornado = true;
+  DefaultsArray[8].defCanTornado = true;
+  DefaultsArray[0].defBGMIndex = 1;
+  DefaultsArray[1].defBGMIndex = 5;
+  DefaultsArray[2].defBGMIndex = 6;
+  DefaultsArray[3].defBGMIndex = 7;
+  DefaultsArray[4].defBGMIndex = 8;
+  DefaultsArray[5].defBGMIndex = 12;
+  DefaultsArray[6].defBGMIndex = 13;
+  DefaultsArray[7].defBGMIndex = 14;
+  DefaultsArray[8].defBGMIndex = 15;
+  DefaultsArray[0].defBombStatus = 0;
+  DefaultsArray[1].defBombStatus = 4;
+  DefaultsArray[2].defBombStatus = 7;
+  DefaultsArray[3].defBombStatus = 8;
+  DefaultsArray[4].defBombStatus = 12;
+  DefaultsArray[5].defBombStatus = 14;
+  DefaultsArray[6].defBombStatus = 20;
+  DefaultsArray[7].defBombStatus = 28;
+  DefaultsArray[8].defBombStatus = 30;
+  DefaultsArray[0].defBombStatusMax = 0;
+  DefaultsArray[1].defBombStatusMax = 10;
+  DefaultsArray[2].defBombStatusMax = 18;
+  DefaultsArray[3].defBombStatusMax = 26;
+  DefaultsArray[4].defBombStatusMax = 34;
+  DefaultsArray[5].defBombStatusMax = 42;
+  DefaultsArray[6].defBombStatusMax = 50;
+  DefaultsArray[7].defBombStatusMax = 58;
+  DefaultsArray[8].defBombStatusMax = 66;
+  DefaultsArray[0].defSacPointsMax = 0;
+  DefaultsArray[1].defSacPointsMax = 50;
+  DefaultsArray[2].defSacPointsMax = 60;
+  DefaultsArray[3].defSacPointsMax = 70;
+  DefaultsArray[4].defSacPointsMax = 80;
+  DefaultsArray[5].defSacPointsMax = 90;
+  DefaultsArray[6].defSacPointsMax = 100;
+  DefaultsArray[7].defSacPointsMax = 100;
+  DefaultsArray[8].defSacPointsMax = 100;
+  core.bgmPlaying = false;
+  core.bombProgression = false;
+  core.bombReady = false;
+  core.bombReset = false;
+  core.brawler_emergency = false;
+  core.canCrusaderNuke = false;
+  core.canHindenburg = false;
+  core.canHWBoss = false;
+  core.canSENTMeteors = false;
+  core.canSENTShark = false;
+  core.canSENTStars = false;
+  core.canSephNuke = false;
+  core.canTornado = false;
+  core.crusader = false;
+  core.doFailsafe = false;
+  core.isWave = false;
+  core.monitorOn = false;
+  core.monitorColor = true;
+  core.sacrificedByClient = false;
+  core.sephiroth = false;
+  core.shouldStopMusic = false;
+  core.tornado = false;
+  core.tacobell = false;
+  core.tickingClientHealth = false;
+  core.tickMusic = false;
+  core.tickOffset = false;
+  core.TornadoWarningIssued = false;
+  core.realPath = "null";
+  core.cachedPath = "null";
+  core.songName = "null";
+  core.BGMINDEX = 1;
+  core.FailedCount = 0;
+  core.INCOMINGDISPLAYED = 0;
+  core.camSel = 0;
+  core.CodeEntry = 0;
+  core.bombStatus = 0;
+  core.bombStatusMax = 0;
+  core.curWave = 0;
+  core.failsafeCount = -1;
+  core.lastAdmin = 0;
+  core.refireTime = 0;
+  core.sacPoints = 0;
+  core.sacPointsMax = 60;
+  core.SNDCHAN = 6;
+  core.ticksMusic = 0;
+  core.VIPBGM = -1;
+  core.VIPIndex = 0;
+  core.waveFlags = 0;
+  core.HWNMin = 210.0;
+  core.HWNMax = 380.0;
+}
+//Messages to be printed when the fail safe has been triggered.
 char failsafe[][256] = {
   "{orange}Phoenix♥ {white}: FAILSAFE HAS BEEN TRIGGERED. ROBOT EXTERMINATION IN PROGRESS. [Failsafe Activated]",
   "{orange}Phoenix♥ {white}: Nice try. You think this is funny? How about THIS instead? [Failsafe Activated]",
@@ -21,10 +202,8 @@ public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast) {
   event.BroadcastDisabled = true;
   return Plugin_Handled;
 }
-bool bombReady = false;
-char dbgStr[256];
-
-char bombNames[][128] = {
+//Names of our bombs
+char bombNames[][64] = {
   "", // 0 (This should NEVER be possible under any circumstance)
   "{red}FREEDOM BOMB{white}", // 1
   "{red}ELON BUST{white}", // 2
@@ -129,6 +308,7 @@ char ASS[][64] = {
   "[90) 300,000 UbUp Cash",//8 (90)
   "[100] Professor Fartsalot" //9 (100)
 };
+
 char ClassDefinitions[][32] = {
   "scout",
   "sniper",
@@ -223,52 +403,7 @@ char StrikeAt[][32] = {
   "LightningHurt0E",
   "LightningHurt0F"
 };
-bool bgmPlaying = false;
-bool bombProgression = false;
-bool bombReset = false;
-bool brawler_emergency = false;
-bool canCrusaderNuke = false;
-bool canHindenburg = false;
-bool canHWBoss = false;
-bool canSENTMeteors = false;
-bool canSENTShark = false;
-bool canSENTStars = false;
-bool canSephNuke = false;
-bool canTornado = false;
-bool crusader = false;
-bool doFailsafe = false;
-bool isWave = false;
-bool monitorOn = false;
-bool monitorColor = true;
-bool sacrificedByClient = false;
-bool sephiroth = false;
-bool shouldStopMusic = true;
-bool tornado = false;
-bool tacobell = false;
-bool tickingClientHealth = false;
-bool tickMusic = false;
-bool TornadoWarningIssued = false;
-Database FB_Database;
-int BGMINDEX = 1;
-int FailedCount = 0;
-int INCOMINGDISPLAYED = 0;
-int camSel = 0;
-int CodeEntry = 0;
-int bombStatus = 0;
-int bombStatusMax = 0;
-int curWave = 0;
-int failsafeCount = -1;
-int lastAdmin = 0;
-int refireTime = 0;
-int sacPoints = 0;
-int sacPointsMax = 60;
-int SNDCHAN = 6;
-int soundPreference[MAXPLAYERS + 1];
-int ticksMusic = 0;
-int VIPBGM = -1;
-int VIPIndex = 0;
-int waveFlags = 0;
-char realPath[64], cachedPath[64], songName[64] = "null";
+
 char TBGM0[16] = "test/bgm0.mp3";
 char TBGM1[16] = "test/bgm1.mp3";
 char TBGM2[16] = "test/bgm2.mp3";
@@ -276,18 +411,11 @@ char TBGM3[16] = "test/bgm3.mp3";
 char TBGM4[16] = "test/bgm4.mp3";
 char TBGM5[16] = "test/bgm5.mp3";
 char TBGM6[16] = "test/bgm6.mp3";
-float HWNMin = 210.0;
-float HWNMax = 380.0;
-float Return[3] = {
-  -3730.0,
-  67.0,
-  -252.0
-};
 
 stock bool IsValidClient(int client) {
   return (0 < client <= MaxClients && IsClientInGame(client) && !IsFakeClient(client));
 }
-
+//Register our commands.
 void RegisterAllCommands(){
   AssLogger(0, "Registering commands...");
   RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client.");
@@ -300,6 +428,7 @@ void RegisterAllCommands(){
   RegConsoleCmd("sm_discord", Command_Discord, "Join our Discord server!");
   RegConsoleCmd("sm_sounds", Command_Sounds, "Toggle sounds on or off via menu");
 }
+//Connect to database
 public void OnConfigsExecuted() {
   if (!FB_Database) {
     Database.Connect(Database_OnConnect, "ass");
@@ -307,9 +436,9 @@ public void OnConfigsExecuted() {
 }
 //DB setup
 public void Database_OnConnect(Database db,
-  const char[] error, any data) {
+  char[] error, any data) {
   if (!db) {
-    AssLogger(3, "Could not connect to database. %s", error);
+    AssLogger(3, error);
     return;
   }
   char buffer[64];
@@ -322,7 +451,6 @@ public void Database_OnConnect(Database db,
   FB_Database = db;
   FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS ass_activity(name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', health TEXT DEFAULT '-1', maxHealth INT UNSIGNED DEFAULT '0', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '3', PRIMARY KEY (steamid));");
 }
-
 //Database Fastquery Manager
 public void Database_FastQuery(Database db, DBResultSet results,
   const char[] error, any data) {
@@ -334,7 +462,6 @@ public void Database_MergeDataError(Database db, any data, int numQueries,
   const char[] error, int failIndex, any[] queryData) {
   LogError("Failed to query database (transaction): %s", error);
 }
-
 //Calculate time spent on server in seconds
 int GetClientMapTime(int client) {
   float clientTime = GetClientTime(client), gameTime = GetGameTime();
@@ -343,7 +470,6 @@ int GetClientMapTime(int client) {
   }
   return RoundToZero(clientTime);
 }
-
 //Find an entity by its target name
 int FindEntityByTargetname(char[] targetname, char[] classname)
 {
@@ -473,7 +599,7 @@ void RegisterAndPrecacheAllFiles(){
   BGMArray[17].ticksOffset = 749;
   BGMArray[18].ticksOffset = 0;
   BGMArray[19].ticksOffset = 0;
-  for (int i = 0; i < sizeof(BGMArray); i++){
+  for (int i = 1; i < sizeof(BGMArray); i++){ //We start at index 1 because index 0 is used for restoring default bgm in the VIP music menu...
     PrintToServer("[CORE] Precaching %s (%s), Duration %i ticks, Start Loop Point %i ticks, Volume %i   @ %i", BGMArray[i].songName, BGMArray[i].realPath, BGMArray[i].refireTime, BGMArray[i].ticksOffset, BGMArray[i].SNDLVL, i);
     PrecacheSound(BGMArray[i].realPath, true);
   }
@@ -485,74 +611,9 @@ void RegisterAndPrecacheAllFiles(){
 
 //Used to keep StopSound from stopping the music we're trying to play - now with support for loop offsets!
 public Action SyncMusic(Handle timer) {
-  cachedPath = realPath;
-  tickOffset = (BGMArray[BGMINDEX].ticksOffset > 0 ? true : false);
+  core.cachedPath = core.realPath;
+  core.tickOffset = (BGMArray[core.BGMINDEX].ticksOffset > 0 ? true : false);
+  Format(LoggerInfo, sizeof(LoggerInfo), "We are on wave %i, now playing: %s (from %s) for %i ticks. It will start looping at %i ticks.", core.curWave, core.songName, core.realPath, core.refireTime, BGMArray[core.BGMINDEX].ticksOffset);
+  AssLogger(1, LoggerInfo);
   return Plugin_Stop;
-}
-
-enum struct DEFAULTS {
-  bool defCanHWBoss;
-  bool defCanTornado;
-  int defBGMIndex;
-  int defBombStatus;
-  int defBombStatusMax;
-  int defSacPointsMax;
-}
-DEFAULTS DefaultsArray[9];
-
-void SetupDefaults(){
-  DefaultsArray[0].defCanHWBoss = false;
-  DefaultsArray[1].defCanHWBoss = false;
-  DefaultsArray[2].defCanHWBoss = false;
-  DefaultsArray[3].defCanHWBoss = true;
-  DefaultsArray[4].defCanHWBoss = true;
-  DefaultsArray[5].defCanHWBoss = true;
-  DefaultsArray[6].defCanHWBoss = true;
-  DefaultsArray[7].defCanHWBoss = true;
-  DefaultsArray[8].defCanHWBoss = true;
-  DefaultsArray[0].defCanTornado = false;
-  DefaultsArray[1].defCanTornado = false;
-  DefaultsArray[2].defCanTornado = false;
-  DefaultsArray[3].defCanTornado = true;
-  DefaultsArray[4].defCanTornado = true;
-  DefaultsArray[5].defCanTornado = true;
-  DefaultsArray[6].defCanTornado = true;
-  DefaultsArray[7].defCanTornado = true;
-  DefaultsArray[8].defCanTornado = true;
-  DefaultsArray[0].defBGMIndex = 1;
-  DefaultsArray[1].defBGMIndex = 5;
-  DefaultsArray[2].defBGMIndex = 6;
-  DefaultsArray[3].defBGMIndex = 7;
-  DefaultsArray[4].defBGMIndex = 8;
-  DefaultsArray[5].defBGMIndex = 12;
-  DefaultsArray[6].defBGMIndex = 13;
-  DefaultsArray[7].defBGMIndex = 14;
-  DefaultsArray[8].defBGMIndex = 15;
-  DefaultsArray[0].defBombStatus = 0;
-  DefaultsArray[1].defBombStatus = 4;
-  DefaultsArray[2].defBombStatus = 7;
-  DefaultsArray[3].defBombStatus = 8;
-  DefaultsArray[4].defBombStatus = 12;
-  DefaultsArray[5].defBombStatus = 14;
-  DefaultsArray[6].defBombStatus = 20;
-  DefaultsArray[7].defBombStatus = 28;
-  DefaultsArray[8].defBombStatus = 30;
-  DefaultsArray[0].defBombStatusMax = 0;
-  DefaultsArray[1].defBombStatusMax = 10;
-  DefaultsArray[2].defBombStatusMax = 18;
-  DefaultsArray[3].defBombStatusMax = 26;
-  DefaultsArray[4].defBombStatusMax = 34;
-  DefaultsArray[5].defBombStatusMax = 42;
-  DefaultsArray[6].defBombStatusMax = 50;
-  DefaultsArray[7].defBombStatusMax = 58;
-  DefaultsArray[8].defBombStatusMax = 66;
-  DefaultsArray[0].defSacPointsMax = 0;
-  DefaultsArray[1].defSacPointsMax = 50;
-  DefaultsArray[2].defSacPointsMax = 60;
-  DefaultsArray[3].defSacPointsMax = 70;
-  DefaultsArray[4].defSacPointsMax = 80;
-  DefaultsArray[5].defSacPointsMax = 90;
-  DefaultsArray[6].defSacPointsMax = 100;
-  DefaultsArray[7].defSacPointsMax = 100;
-  DefaultsArray[8].defSacPointsMax = 100;
 }
