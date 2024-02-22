@@ -21,7 +21,7 @@
 #include <ass_helper>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.0.0-pre3";
+static char PLUGIN_VERSION[8] = "7.0.0-pre5";
 Handle cvarSNDDefault = INVALID_HANDLE;
 
 
@@ -34,7 +34,7 @@ public Plugin myinfo = {
 };
 
 public void OnPluginStart() {
-  AssLogger(1, "Starting plugin...");
+  AssLogger(1, "####### STARTUP SEQUENCE INITIATED... PREPARE FOR THE END TIMES #######");
   RegisterAndPrecacheAllFiles();
   RegisterAllCommands();
   SetupCoreData();
@@ -54,6 +54,8 @@ public void OnPluginStart() {
   CPrintToChatAll("{darkred}Plugin Loaded.");
   cvarSNDDefault = CreateConVar("sm_fartsysass_sound", "3", "Default sound for new users, 3 = Everything, 2 = Sounds Only, 1 = Music Only, 0 = Nothing");
   SetCookieMenuItem(FartsysSNDSelected, 0, "Fartsys Ass Sound Preferences");
+  Format(LoggerInfo, sizeof(LoggerInfo), "####### STARTUP COMPLETE (v%s) #######", PLUGIN_VERSION);
+  AssLogger(1, LoggerInfo);
 }
 
 
@@ -92,33 +94,15 @@ public Action RefireMusicForClient(Handle timer, int client){
 public Action Command_MyStats(int client, int args) {
   int steamID = GetSteamAccountID(client);
   if (!FB_Database || !steamID || steamID <= 10000) return Plugin_Stop;
-  DataPack pk = new DataPack();
-  pk.WriteCell(client ? GetClientUserId(client) : 0);
-  pk.WriteString("steamid");
   char queryID[256];
   Format(queryID, sizeof(queryID), "SELECT * from ass_activity WHERE steamid = %d;", steamID);
-  FB_Database.Query(MyStats, queryID, pk);
+  PrintToServer(queryID);
+  FB_Database.Query(MyStats, queryID, client);
   return Plugin_Continue;
 }
 
-public void MyStats(Database db, DBResultSet results,
-  const char[] error, any data) {
-  DataPack pk = view_as < DataPack > (data);
-  pk.Reset();
-
-  int userId = pk.ReadCell();
-  char steamId[64];
-  pk.ReadString(steamId, sizeof(steamId));
-  delete pk;
-
-  int client = userId ? GetClientOfUserId(userId) : 0;
-  bool validClient = !userId || client;
-
+public void MyStats(Database db, DBResultSet results, const char[] error, int client) {
   if (!results) {
-    if (!validClient) return;
-    else {
-      PrintToChat(client, "[CORE] Command Database Query Error");
-    }
     LogError("Failed to query database: %s", error);
     return;
   }
@@ -129,7 +113,7 @@ public void MyStats(Database db, DBResultSet results,
   char lastusedweapon[128];
   char killedbyname[128];
   char killedbyweapon[128];
-  if (results.FetchRow()) {
+  if(results.FetchRow()){
     results.FetchString(0, name, 64); //name
     steamID = results.FetchInt(1); //steamid
     results.FetchString(4, class, 64); //class
@@ -149,14 +133,14 @@ public void MyStats(Database db, DBResultSet results,
     results.FetchString(18, lastusedweapon, sizeof(lastusedweapon)); //using weapon
     results.FetchString(19, killedbyname, sizeof(killedbyname)); //last client that killed
     results.FetchString(20, killedbyweapon, sizeof(killedbyweapon)); //using weapon
+    CPrintToChat(client, "\x07AAAAAA[CORE] Showing stats of %s   [%s, %i/%i hp] || SteamID: %i ", name, class, health, healthMax, steamID);
+    CPrintToChat(client, "{white}Damage Dealt: %i (Session: %i) || Kills: %i (Session: %i) || Deaths: %i (Session: %i) || Bombs Reset: %i (Session: %i)", damagedealt, damagedealtsession, kills, killssession, deaths, deathssession, bombsreset, bombsresetsession);
+    CPrintToChat(client, "Sacrifices: %i(Session:%i) || Killed %s (using %s) || Last killed by: %s (using %s)", sacrifices, sacrificessession, lastkilledname, lastusedweapon, killedbyname, killedbyweapon);
   }
-  CPrintToChat(client, "\x07AAAAAA[CORE] Showing stats of %s   [%s, %i/%i hp] || SteamID: %i ", name, class, health, healthMax, steamID);
-  CPrintToChat(client, "{white}Damage Dealt: %i (Session: %i) || Kills: %i (Session: %i) || Deaths: %i (Session: %i) || Bombs Reset: %i (Session: %i)", damagedealt, damagedealtsession, kills, killssession, deaths, deathssession, bombsreset, bombsresetsession);
-  CPrintToChat(client, "Sacrifices: %i(Session:%i) || Killed %s (using %s) || Last killed by: %s (using %s)", sacrifices, sacrificessession, lastkilledname, lastusedweapon, killedbyname, killedbyweapon);
   return;
 }
 
-//When a client leaves
+//Sync client stats when they leave
 public void OnClientDisconnect(int client) {
   int steamID = GetSteamAccountID(client);
   if (!FB_Database || !steamID || steamID <= 10000) return;
@@ -172,6 +156,7 @@ public void FartsysSNDSelected(int client, CookieMenuAction action, any info, ch
   if (action == CookieMenuAction_SelectOption)
     ShowFartsyMenu(client);
 }
+
 //Queue music for new clients, also track their health.
 public void OnClientPostAdminCheck(int client){
   if(!IsFakeClient(client) && core.bgmPlaying)
@@ -188,34 +173,23 @@ public void OnClientPostAdminCheck(int client){
         core.tickingClientHealth = true;
       }
       if (!core.bgmPlaying)
-        SetupMusic(1);
+        SetupMusic(GetRandomInt(1, 4));
       char query[1024];
       Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
       FB_Database.Query(Database_FastQuery, query);
-      DataPack pk = new DataPack();
-      pk.WriteCell(client ? GetClientUserId(client) : 0);
-      pk.WriteString("steamid");
       char queryID[256];
       Format(queryID, sizeof(queryID), "SELECT soundprefs from ass_activity WHERE steamid = '%d';", steamID);
-      FB_Database.Query(SQL_SNDPrefs, queryID, pk);
+      FB_Database.Query(SQL_SNDPrefs, queryID, client);
     }
 }
 
 //Get client sound prefs
-public void SQL_SNDPrefs(Database db, DBResultSet results, const char[] error, any data) {
+public void SQL_SNDPrefs(Database db, DBResultSet results, const char[] error, int client) {
   if (!results) {
     LogError("Failed to query database: %s", error);
     return;
   }
-  DataPack pk = view_as < DataPack > (data);
-  pk.Reset();
-  int userId = pk.ReadCell();
-  char steamId[64];
-  pk.ReadString(steamId, sizeof(steamId));
-  delete pk;
-  int client = userId ? GetClientOfUserId(userId) : 0;
-  bool validClient = !userId || client;
-  if (!validClient) return;
+  if (!IsValidClient(client)) return;
   if (results.FetchRow()) soundPreference[client] = results.FetchInt(0);
 }
 
@@ -237,12 +211,9 @@ public Action Command_Sounds(int client, int args) {
   int steamID = GetSteamAccountID(client);
   if (!steamID || steamID <= 10000) return Plugin_Handled;
   else {
-    DataPack pk = new DataPack();
-    pk.WriteCell(client ? GetClientUserId(client) : 0);
-    pk.WriteString("steamid");
     char queryID[256];
     Format(queryID, sizeof(queryID), "SELECT soundprefs from ass_activity WHERE steamid = '%d';", steamID);
-    FB_Database.Query(SQL_SNDPrefs, queryID, pk);
+    FB_Database.Query(SQL_SNDPrefs, queryID, client);
     ShowFartsyMenu(client);
     PrintToChat(client, sndPrefs[soundPreference[client]]);
     return Plugin_Handled;
@@ -333,7 +304,7 @@ public int MenuHandlerFartsysAss(Menu menu, MenuAction action, int param1, int p
         else sudo(39);
       }
     }
-    Format (LoggerInfo, sizeof(LoggerInfo), "%s opted for %s via the A.S.S.", param1, ASS[param2]);
+    Format (LoggerInfo, sizeof(LoggerInfo), "%N opted for %s via the A.S.S.", param1, ASS[param2]);
     AssLogger(1, LoggerInfo);
   }
   else if (action == MenuAction_End)

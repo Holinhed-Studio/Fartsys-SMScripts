@@ -71,9 +71,9 @@ enum struct COREDATA {
   int waveFlags;
 }
 COREDATA core;
-
+//Configure all variables
 void SetupCoreData(){
-  AssLogger(1, "Setting up core data...");
+  AssLogger(0, "Setting up core data...");
   DefaultsArray[0].defCanHWBoss = false;
   DefaultsArray[1].defCanHWBoss = false;
   DefaultsArray[2].defCanHWBoss = false;
@@ -178,6 +178,7 @@ void SetupCoreData(){
   core.waveFlags = 0;
   core.HWNMin = 210.0;
   core.HWNMax = 380.0;
+  AssLogger(0, "Core data setup complete!");
 }
 //Messages to be printed when the fail safe has been triggered.
 char failsafe[][256] = {
@@ -214,7 +215,7 @@ char bombNames[][64] = {
   "{red}FAT MAN{white}",
   "{red}HYDROGEN{white}"
 };
-
+//All sound effects
 char SFXArray[][64] = {
   "fartsy/misc/bell.wav", // 0
   "fartsy/misc/murica.mp3", // 1
@@ -283,7 +284,7 @@ char SFXArray[][64] = {
   "ambient/sawblade_impact1.wav", // 64
   "vo/sandwicheat09.mp3" // 65
 };
-
+//Idle advertisements in chat
 char AdvMessage[][256] = {
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}We have a Discord server: {forestgreen}https://discord.com/invite/SkHaeMH",
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}Remember to buy your upgrades using {forestgreen}!buy",
@@ -295,7 +296,7 @@ char AdvMessage[][256] = {
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}You may always invoke {forestgreen}!return{white} to be returned to spawn.",
   ""
 };
-
+//Annihilation supply shop entries
 char ASS[][64] = {
   "[10] Kissone Bath Salts", //0 (10)
   "[20] Summon Goobbue or Kirby", //1 (20)
@@ -308,7 +309,7 @@ char ASS[][64] = {
   "[90) 300,000 UbUp Cash",//8 (90)
   "[100] Professor Fartsalot" //9 (100)
 };
-
+//Registry of all playable classes, used for stats module
 char ClassDefinitions[][32] = {
   "scout",
   "sniper",
@@ -321,7 +322,7 @@ char ClassDefinitions[][32] = {
   "engineer",
   ""
 };
-
+//Random death messages
 char DeathMessage[][64] = {
   "YEETED OUT INTO ORBIT",
   "SENT TO SPACE VIA TORNADO",
@@ -331,7 +332,7 @@ char DeathMessage[][64] = {
   "FARTED INTO THE SKY",
   ""
 };
-
+//Scripted entities, used for spawning in extra entities mid wave.
 char FB_SENT[][64] = {
   "FB.SentMeteor01",
   "FB.SentMeteor02",
@@ -350,7 +351,7 @@ char FB_SENT[][64] = {
   "FB.SentStar05",
   ""
 };
-
+//Sound preference menu
 char sndPrefs[][128] = {
   "Sounds are currently DISABLED.",
   "Sounds are currently MUSIC ONLY.",
@@ -358,7 +359,7 @@ char sndPrefs[][128] = {
   "Sounds are currently ALL ON.",
   "Somehow your sound preference was stored as non-existent 5... Please configure your sounds."
 };
-
+//Taco bell's default BGM indexes
 int tacoBellBGMIndex[] = {
   1,
   17,
@@ -370,6 +371,7 @@ int tacoBellBGMIndex[] = {
   14,
   15
 };
+//RT camera system
 char SelectedCamera[][32] = {
   "CAM.Front",
   "CAM.Mid",
@@ -377,6 +379,7 @@ char SelectedCamera[][32] = {
   "CAM.Rear",
   "CAM.Kissone"
 };
+//Easter eggs
 char SpecEnt[][24] = {
   "Spec.Goobbue",
   "Spec.Waffle",
@@ -385,6 +388,7 @@ char SpecEnt[][24] = {
   "Spec.BlueBall",
   "Spec*"
 };
+//Strike targets for lightning
 char StrikeAt[][32] = {
   "LightningHurt00",
   "LightningHurt01",
@@ -403,7 +407,7 @@ char StrikeAt[][32] = {
   "LightningHurt0E",
   "LightningHurt0F"
 };
-
+//test code
 char TBGM0[16] = "test/bgm0.mp3";
 char TBGM1[16] = "test/bgm1.mp3";
 char TBGM2[16] = "test/bgm2.mp3";
@@ -411,7 +415,7 @@ char TBGM3[16] = "test/bgm3.mp3";
 char TBGM4[16] = "test/bgm4.mp3";
 char TBGM5[16] = "test/bgm5.mp3";
 char TBGM6[16] = "test/bgm6.mp3";
-
+//Check if the client is valid
 stock bool IsValidClient(int client) {
   return (0 < client <= MaxClients && IsClientInGame(client) && !IsFakeClient(client));
 }
@@ -434,7 +438,7 @@ public void OnConfigsExecuted() {
     Database.Connect(Database_OnConnect, "ass");
   }
 }
-//DB setup
+//Format database if needed
 public void Database_OnConnect(Database db,
   char[] error, any data) {
   if (!db) {
@@ -599,14 +603,19 @@ void RegisterAndPrecacheAllFiles(){
   BGMArray[17].ticksOffset = 749;
   BGMArray[18].ticksOffset = 0;
   BGMArray[19].ticksOffset = 0;
+  AssLogger(0, "Loading EVERYTHING to RAM...");
   for (int i = 1; i < sizeof(BGMArray); i++){ //We start at index 1 because index 0 is used for restoring default bgm in the VIP music menu...
-    PrintToServer("[CORE] Precaching %s (%s), Duration %i ticks, Start Loop Point %i ticks, Volume %i   @ %i", BGMArray[i].songName, BGMArray[i].realPath, BGMArray[i].refireTime, BGMArray[i].ticksOffset, BGMArray[i].SNDLVL, i);
+    Format(LoggerDbg, sizeof(LoggerDbg), "Precaching %s (%s), Duration %i ticks, Start Loop Point %i ticks, Volume %i   @ %i", BGMArray[i].songName, BGMArray[i].realPath, BGMArray[i].refireTime, BGMArray[i].ticksOffset, BGMArray[i].SNDLVL, i);
+    AssLogger(0, LoggerDbg);
     PrecacheSound(BGMArray[i].realPath, true);
   }
   for (int i = 0; i < sizeof(SFXArray); i++){
-    PrintToServer("[CORE] Precaching SFX: %s in position %i", SFXArray[i], i);
+    Format(LoggerDbg, sizeof(LoggerDbg), "Precaching SFX: %s in position %i", SFXArray[i], i);
+    AssLogger(0, LoggerDbg);
     PrecacheSound(SFXArray[i], true);
   }
+  Format(LoggerDbg, sizeof(LoggerDbg), "Done! BGM Count: %i, SFX Count: %i, Total: %i files loaded to RAM.", sizeof(BGMArray) - 1, sizeof(SFXArray), (sizeof(BGMArray) + sizeof(SFXArray)) - 1);
+  AssLogger(0, LoggerDbg);
 }
 
 //Used to keep StopSound from stopping the music we're trying to play - now with support for loop offsets!
