@@ -6,7 +6,16 @@ float Return[3] = {
   67.0,
   -252.0
 };
+Handle cvarSNDDefault = INVALID_HANDLE;
 int soundPreference[MAXPLAYERS + 1];
+//Bomb states
+enum struct BOMBSTATE {
+  bool canSENTShark;
+  bool ready;
+  char identifier[64];
+  char name[64];
+}
+BOMBSTATE bombState[9];
 //Default values per wave
 enum struct DEFAULTS {
   bool defCanHWBoss;
@@ -74,6 +83,32 @@ COREDATA core;
 //Configure all variables
 void SetupCoreData(){
   AssLogger(0, "Setting up core data...");
+  bombState[0].canSENTShark = false;
+  bombState[1].canSENTShark = false;
+  bombState[2].canSENTShark = false;
+  bombState[3].canSENTShark = false;
+  bombState[4].canSENTShark = false;
+  bombState[5].canSENTShark = false;
+  bombState[6].canSENTShark = true;
+  bombState[7].canSENTShark = false;
+  bombState[8].canSENTShark = false;
+  bombState[1].identifier = "Bombs.FreedomBomb";
+  bombState[2].identifier = "Bombs.ElonBust";
+  bombState[3].identifier = "Bombs.BathSalts";
+  bombState[4].identifier = "Bombs.FallingStar";
+  bombState[5].identifier = "Bombs.MajorKong";
+  bombState[6].identifier = "Bombs.SharkTorpedo";
+  bombState[7].identifier = "Bombs.FatMan";
+  bombState[8].identifier = "Bombs.Hydrogen";
+  bombState[0].ready = false;
+  bombState[1].name = "{red}FREEDOM BOMB{white}";
+  bombState[2].name = "{red}ELON BUST{white}";
+  bombState[3].name = "{orange}BATH SALTS{white}";
+  bombState[4].name = "{gold}FALLING STAR{white}";
+  bombState[5].name = "{red}MAJOR KONG{white}";
+  bombState[6].name = "{aqua}SHARK{white}";
+  bombState[7].name = "{orange}FAT MAN{white}";
+  bombState[8].name = "{red}HYDROGEN{white}";
   DefaultsArray[0].defCanHWBoss = false;
   DefaultsArray[1].defCanHWBoss = false;
   DefaultsArray[2].defCanHWBoss = false;
@@ -203,18 +238,6 @@ public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast) {
   event.BroadcastDisabled = true;
   return Plugin_Handled;
 }
-//Names of our bombs
-char bombNames[][64] = {
-  "", // 0 (This should NEVER be possible under any circumstance)
-  "{red}FREEDOM BOMB{white}", // 1
-  "{red}ELON BUST{white}", // 2
-  "{red}BATH SALTS{white}",
-  "{red}FALLING STAR{white}",
-  "{red}MAJOR KONG{white}",
-  "{red}SHARK{white}",
-  "{red}FAT MAN{white}",
-  "{red}HYDROGEN{white}"
-};
 //All sound effects
 char SFXArray[][64] = {
   "fartsy/misc/bell.wav", // 0

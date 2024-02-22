@@ -1,7 +1,7 @@
 /*                         WELCOME TO FARTSY'S ASS ROTTENBURG.
  *
  *   A FEW THINGS TO KNOW: ONE.... THIS IS INTENDED TO BE USED WITH UBERUPGRADES.
- *   TWO..... THE MUSIC USED WITH THIS MOD MAY OR MAY NOT BE COPYRIGHTED. WE HAVE NO INTENTION ON INFRINGEMENT.
+ *   TWO..... THE MUSIC USED WITH THIS MOD MAY OR MAY NOT BE COPYRIGHTED. WE HAVE NO INTENTION ON INFRINGEMENT. THIS PROJECT IS PURELY NON PROFIT AND JUST FOR FUN. SHOULD COPYRIGHT HOLDERS WISH THIS PROJECT BE TAKEN DOWN, I (Fartsy) SHALL OBLIGE WITHOUT HESITATION.
  *   THREE..... THIS MOD IS INTENDED FOR USE ON THE FIREHOSTREDUX SERVERS ONLY. SUPPORT IS LIMITED.
  *   FOUR..... THIS WAS A NIGHTMARE TO FIGURE OUT AND BUG FIX. I HOPE IT WAS WORTH IT.
  *   FIVE..... PLEASE HAVE FUN AND ENJOY YOURSELF!
@@ -21,9 +21,7 @@
 #include <ass_helper>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.0.0-pre5";
-Handle cvarSNDDefault = INVALID_HANDLE;
-
+static char PLUGIN_VERSION[8] = "7.0.0-pre7";
 
 public Plugin myinfo = {
   name = "Fartsy's Ass - Framework",
@@ -51,13 +49,12 @@ public void OnPluginStart() {
   HookEvent("mvm_wave_failed", EventWaveFailed);
   HookEvent("mvm_bomb_alarm_triggered", EventWarning);
   HookEventEx("player_hurt", Event_Playerhurt, EventHookMode_Pre);
-  CPrintToChatAll("{darkred}Plugin Loaded.");
+  CPrintToChatAll("{darkred}Plugin Reloaded. If you do not hear music, please do !sounds and configure your preferences.");
   cvarSNDDefault = CreateConVar("sm_fartsysass_sound", "3", "Default sound for new users, 3 = Everything, 2 = Sounds Only, 1 = Music Only, 0 = Nothing");
   SetCookieMenuItem(FartsysSNDSelected, 0, "Fartsys Ass Sound Preferences");
   Format(LoggerInfo, sizeof(LoggerInfo), "####### STARTUP COMPLETE (v%s) #######", PLUGIN_VERSION);
   AssLogger(1, LoggerInfo);
 }
-
 
 //Music system rewrite for the 5th time. Can I ever make a change? Will my code begin to mend? Still everything's the same and it all just fades to math.
 public void OnGameFrame() {
@@ -206,7 +203,7 @@ public void ShowFartsyMenu(int client) {
   menu.ExitButton = true;
 }
 
-//Create menu
+// Create menu
 public Action Command_Sounds(int client, int args) {
   int steamID = GetSteamAccountID(client);
   if (!steamID || steamID <= 10000) return Plugin_Handled;
@@ -220,7 +217,7 @@ public Action Command_Sounds(int client, int args) {
   }
 }
 
-//  This selects or disables the sounds
+// This selects or disables the sounds
 public int MenuHandlerFartsy(Menu menu, MenuAction action, int param1, int param2) {
   if (action == MenuAction_Select) {
     char query[256];
@@ -314,12 +311,11 @@ public int MenuHandlerFartsysAss(Menu menu, MenuAction action, int param1, int p
 
 //Now that command definitions are done, lets make some things happen.
 public void OnMapStart() {
+  CreateTimer(1.0, SelectAdminTimer);
   FireEntityInput("rain", "Alpha", "0", 0.0);
   sudo(1002);
-  CreateTimer(1.0, SelectAdminTimer);
 }
 
-//Repeating Timers
 //Adverts for tips/tricks
 public Action PerformAdverts(Handle timer) {
   if (!core.isWave) {
@@ -339,7 +335,7 @@ public Action PerformWaveAdverts(Handle timer) {
     int tPos = RoundToFloor(core.refireTime/66.6666666666);
     Format(buffer, 16, "%02d:%02d", sPos / 60, sPos % 60);
     Format(tbuffer, 16, "%02d:%02d", tPos / 60, tPos % 60);
-    Format (HintText, sizeof(HintText), (core.bombProgression ? "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : core.bombReady ? "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : "Payload: PREPARING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)"), core.bombStatus, core.bombStatusMax, core.sacPoints, core.sacPointsMax, core.songName, buffer, tbuffer);
+    Format (HintText, sizeof(HintText), (core.bombProgression ? "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : bombState[0].ready ? "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : "Payload: PREPARING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)"), core.bombStatus, core.bombStatusMax, core.sacPoints, core.sacPointsMax, core.songName, buffer, tbuffer);
     CreateTimer(2.5, PerformWaveAdverts);
     for (int i = 1; i <= MaxClients; i++) {
       if(IsValidClient(i)){
@@ -494,10 +490,9 @@ public Action RefireStorm(Handle timer) {
     CreateTimer(GetRandomFloat(7.0, 17.0), RefireStorm);
     sudo(1003);
     int StrikePos = GetRandomInt(0, 15);
-    int Thunder = GetRandomInt(27, 34);
     FireEntityInput(StrikeAt[StrikePos], "Enable", "", 0.0);
     FireEntityInput(StrikeAt[StrikePos], "Disable", "", 0.07);
-    CustomSoundEmitter(SFXArray[Thunder], 65, false, 0, 1.0, 100);
+    CustomSoundEmitter(SFXArray[GetRandomInt(27, 34)], 65, false, 0, 1.0, 100);
   }
   return Plugin_Stop;
 }
@@ -505,9 +500,8 @@ public Action RefireStorm(Handle timer) {
 //SpecTimer
 public Action SpecTimer(Handle timer) {
   if (core.isWave) {
-    int i = GetRandomInt(0, 5);
     FireEntityInput("Spec*", "Disable", "", 0.0);
-    FireEntityInput(SpecEnt[i], "Enable", "", 0.1);
+    FireEntityInput(SpecEnt[GetRandomInt(0, 5)], "Enable", "", 0.1);
   }
   CreateTimer(GetRandomFloat(10.0, 30.0), SpecTimer);
   return Plugin_Stop;
@@ -649,7 +643,7 @@ public Action SacrificePointsUpdater(Handle timer) {
 //BombStatus (Add points to Bomb Status occasionally)
 public Action BombStatusAddTimer(Handle timer) {
   if (core.isWave && (core.bombStatus < core.bombStatusMax)) {
-    core.bombReady = false;
+    bombState[0].ready = false;
     core.bombStatus++;
     CreateTimer(GetRandomFloat(10.0, 45.0), BombStatusAddTimer);
   }
@@ -662,94 +656,16 @@ public Action BombStatusUpdater(Handle timer) {
     CreateTimer(0.1, BombStatusUpdater);
     if (core.bombStatus < core.bombStatusMax) {
       switch (core.bombStatus) {
-        case 8: {
-          core.bombStatusMax = 8;
-          core.canSENTShark = false;
-          core.bombReady = true;
-          FireEntityInput("Bombs*", "Disable", "", 0.0),
-            FireEntityInput("BombExplo*", "Disable", "", 0.0),
-            FireEntityInput("Delivery", "Unlock", "", 0.0),
-            FireEntityInput("Bombs.FreedomBomb", "Enable", "", 0.0),
-            CustomSoundEmitter(SFXArray[56], 65, false, 0, 1.0, 100),
-            CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}FREEDOM BOMB {forestgreen}is now available for deployment!");
-        }
-        case 16: {
-          core.bombStatusMax = 16;
-          core.canSENTShark = false;
-          core.bombReady = true;
-          FireEntityInput("Bombs*", "Disable", "", 0.0),
-            FireEntityInput("BombExplo*", "Disable", "", 0.0),
-            FireEntityInput("Bombs.ElonBust", "Enable", "", 0.0),
-            FireEntityInput("Delivery", "Unlock", "", 0.0),
-            CustomSoundEmitter(SFXArray[56], 65, false, 0, 1.0, 100),
-            CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}ELON BUST {forestgreen}is now available for deployment!");
-        }
-        case 24: {
-          core.bombStatusMax = 24;
-          core.canSENTShark = false;
-          core.bombReady = true;
-          FireEntityInput("Bombs*", "Disable", "", 0.0),
-            FireEntityInput("BombExplo*", "Disable", "", 0.0),
-            FireEntityInput("Bombs.BathSalts", "Enable", "", 0.0),
-            FireEntityInput("Delivery", "Unlock", "", 0.0),
-            CustomSoundEmitter(SFXArray[56], 65, false, 0, 1.0, 100),
-            CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}BATH SALTS {forestgreen}are now available for deployment!");
-        }
-        case 32: {
-          core.bombStatusMax = 32;
-          core.canSENTShark = false;
-          core.bombReady = true;
-          FireEntityInput("Bombs*", "Disable", "", 0.0),
-            FireEntityInput("BombExplo*", "Disable", "", 0.0),
-            FireEntityInput("Bombs.FallingStar", "Enable", "", 0.0),
-            FireEntityInput("Delivery", "Unlock", "", 0.0),
-            CustomSoundEmitter(SFXArray[56], 65, false, 0, 1.0, 100),
-            CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {gold}FALLING STAR{forestgreen} is now available for deployment!");
-        }
-        case 40: {
-          core.bombStatusMax = 40;
-          core.canSENTShark = false;
-          core.bombReady = true;
-          FireEntityInput("Bombs*", "Disable", "", 0.0),
-            FireEntityInput("BombExplo*", "Disable", "", 0.0),
-            FireEntityInput("Bombs.MajorKong", "Enable", "", 0.0),
-            FireEntityInput("Delivery", "Unlock", "", 0.0),
-            CustomSoundEmitter(SFXArray[56], 65, false, 0, 1.0, 100),
-            CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}MAJOR KONG {forestgreen}is now available for deployment!");
-        }
-        case 48: {
-          core.bombStatusMax = 48;
-          core.canSENTShark = true;
-          core.bombReady = true;
-          FireEntityInput("Bombs*", "Disable", "", 0.0),
-            FireEntityInput("BombExplo*", "Disable", "", 0.0),
-            FireEntityInput("Bombs.SharkTorpedo", "Enable", "", 0.0),
-            FireEntityInput("BombExploShark", "Enable", "", 0.0),
-            FireEntityInput("Delivery", "Unlock", "", 0.0),
-            CustomSoundEmitter(SFXArray[56], 65, false, 0, 1.0, 100),
-            CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {aqua}SHARK {forestgreen}is now available for deployment!");
-        }
-        case 56: {
-          core.bombStatusMax = 56;
-          core.canSENTShark = false;
-          core.bombReady = true;
-          FireEntityInput("Bombs*", "Disable", "", 0.0),
-            FireEntityInput("BombExplo*", "Disable", "", 0.0),
-            FireEntityInput("Bombs.FatMan", "Enable", "", 0.0),
-            FireEntityInput("Delivery", "Unlock", "", 0.0),
-            CustomSoundEmitter(SFXArray[56], 65, false, 0, 1.0, 100),
-            CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {orange}FAT MAN {forestgreen}is now available for deployment!");
-        }
-        case 64: {
-          core.bombStatusMax = 64;
-          core.canSENTShark = false;
-          core.bombReady = true;
-          FireEntityInput("Bombs*", "Disable", "", 0.0),
-            FireEntityInput("BombExplo*", "Disable", "", 0.0),
-            FireEntityInput("Bombs.Hydrogen", "Enable", "", 0.0),
-            FireEntityInput("Delivery", "Unlock", "", 0.0),
-            CustomSoundEmitter(SFXArray[56], 65, false, 0, 1.0, 100),
-            CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's {red}HYDROGEN {forestgreen}is now available for deployment!");
+        case 8,16,24,32,40,48,56,64: {
+          int curBomb = RoundToFloor(core.bombStatus / 8.0);
+          core.bombStatusMax = core.bombStatus;
+          core.canSENTShark = bombState[curBomb].canSENTShark; //false until 48 (6)
+          bombState[0].ready = true;
+          FireEntityInput("Bombs*", "Disable", "", 0.0);
+          FireEntityInput("Delivery", "Unlock", "", 0.0);
+          FireEntityInput(bombState[curBomb].identifier, "Enable", "", 0.0);
+          CustomSoundEmitter(SFXArray[56], 65, false, 0, 1.0, 100);
+          CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's %s {forestgreen}is now available for deployment!", bombState[curBomb].name);
         }
       }
     } else if (core.bombStatus > core.bombStatusMax) {
@@ -786,7 +702,7 @@ public Action Command_GetCurrentSong(int client, int args) {
 //Determine which bomb has been recently pushed and tell the client if a bomb is ready or not.
 public Action Command_FBBombStatus(int client, int args) {
   char bombStatusMsg[256];
-  Format(bombStatusMsg, sizeof(bombStatusMsg), (core.bombProgression ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team is currently pushing a %s!" : core.bombReady ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team's %s is ready!" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team recently deployed a %s! Please wait for the next bomb."), core.bombStatus, core.bombStatusMax, bombNames[RoundToFloor(core.bombStatus / 8.0)]);
+  Format(bombStatusMsg, sizeof(bombStatusMsg), (core.bombProgression ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team is currently pushing a %s!" : bombState[0].ready ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team's %s is ready!" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team recently deployed a %s! Please wait for the next bomb."), core.bombStatus, core.bombStatusMax, bombState[RoundToFloor(core.bombStatus / 8.0)].name);
   CPrintToChat(client, bombStatusMsg);
   return Plugin_Handled;
 }
@@ -1923,7 +1839,7 @@ void sudo(int task){
       core.bombStatus = 5;
       core.sephiroth = false;
       core.waveFlags = 0;
-      core.bombReady = false;
+      bombState[0].ready = false;
       FireEntityInput("rain", "Alpha", "0", 0.0);
       FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0);
       FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
