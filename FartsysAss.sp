@@ -243,69 +243,27 @@ public Action Command_SacrificePointShop(int client, int args) {
 //Fartsy's A.S.S
 public void ShowFartsysAss(int client) {
   CPrintToChat(client, (!core.isWave ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}The sacrificial points counter is currently at %i of %i maximum for this wave." :  core.sacPoints <= 9 ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {red}You do not have enough sacrifice points to use this shop. You have %i / 10 required." : ""), core.sacPoints, core.sacPointsMax);
-  if (!core.isWave) return;
+  if (!core.isWave || core.sacPoints < 10) return;
   else {
     Menu menu = new Menu(MenuHandlerFartsysAss, MENU_ACTIONS_DEFAULT);
     char buffer[100];
     menu.SetTitle("Fartsy's Annihilation Supply Shop");
     menu.ExitButton = true;
     for (int i = 0; i < RoundToFloor(core.sacPoints / 10.0); i++)
-      menu.AddItem(buffer, ASS[i]);
+      menu.AddItem(buffer, ass[i].name);
     menu.Display(client, 20);
   }
 }
 
 //Also Fartsy's A.S.S
-public int MenuHandlerFartsysAss(Menu menu, MenuAction action, int param1, int param2) {
+public int MenuHandlerFartsysAss(Menu menu, MenuAction action, int client, int item) {
   if (action == MenuAction_Select) {
-    //PrintToChatAll("Got %i", param2);
-    switch (param2) {
-      case 0: {
-        if (core.sacPoints <= 9) return 0;
-        else sudo(30); // bath salts
-      }
-      case 1: {
-        if (core.sacPoints <= 19) return 0;
-        else sudo(31); // goobbue
-      }
-      case 2: {
-        if (core.sacPoints <= 29 || core.doFailsafe) return 0;
-        else sudo(32); // failsafe
-      }
-      case 3: {
-        if (core.sacPoints <= 39) return 0;
-        else sudo(33); //explosive paradise
-      }
-      case 4: {
-        if (core.sacPoints <= 49) return 0;
-        else sudo(34); //Banish tornadoes
-      }
-      case 5: {
-        if (core.sacPoints <= 59) return 0;
-        else sudo(35); //Ass Gas
-      }
-      case 6: {
-        if (core.sacPoints <= 69) return 0;
-        else sudo (36); //Instant fat man
-      }
-      case 7: {
-        if (core.sacPoints <= 79) return 0;
-        else sudo(37);
-      }
-      case 8: {
-        if (core.sacPoints <= 74) return 0;
-        else sudo(38);
-      }
-      case 9: {
-        if (core.sacPoints <= 99) return 0;
-        else sudo(39);
-      }
-    }
-    Format (LoggerInfo, sizeof(LoggerInfo), "%N opted for %s via the A.S.S.", param1, ASS[param2]);
+    if(core.sacPoints < ass[item].price) return 0;
+    else sudo(ass[item].purchase);
+    Format (LoggerInfo, sizeof(LoggerInfo), "%N opted for %s via the A.S.S.", client, ass[item].name);
     AssLogger(1, LoggerInfo);
   }
-  else if (action == MenuAction_End)
-    CloseHandle(menu);
+  else if (action == MenuAction_End) CloseHandle(menu);
   return 0;
 }
 
@@ -335,7 +293,7 @@ public Action PerformWaveAdverts(Handle timer) {
     int tPos = RoundToFloor(core.refireTime/66.6666666666);
     Format(buffer, 16, "%02d:%02d", sPos / 60, sPos % 60);
     Format(tbuffer, 16, "%02d:%02d", tPos / 60, tPos % 60);
-    Format (HintText, sizeof(HintText), (core.bombProgression ? "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : bombState[0].ready ? "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : "Payload: PREPARING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)"), core.bombStatus, core.bombStatusMax, core.sacPoints, core.sacPointsMax, core.songName, buffer, tbuffer);
+    Format (HintText, sizeof(HintText), (bombState[0].isMoving ? "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : bombState[0].isReady ? "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : "Payload: PREPARING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)"), bombState[0].state, bombState[0].stateMax, core.sacPoints, core.sacPointsMax, core.songName, buffer, tbuffer);
     CreateTimer(2.5, PerformWaveAdverts);
     for (int i = 1; i <= MaxClients; i++) {
       if(IsValidClient(i)){
@@ -642,25 +600,25 @@ public Action SacrificePointsUpdater(Handle timer) {
 
 //BombStatus (Add points to Bomb Status occasionally)
 public Action BombStatusAddTimer(Handle timer) {
-  if (core.isWave && (core.bombStatus < core.bombStatusMax)) {
-    bombState[0].ready = false;
-    core.bombStatus++;
+  if (core.isWave && (bombState[0].state < bombState[0].stateMax)) {
+    bombState[0].isReady = false;
+    bombState[0].state++;
     CreateTimer(GetRandomFloat(10.0, 45.0), BombStatusAddTimer);
   }
   return Plugin_Stop;
 }
 
-//Track core.bombStatus and update entities every 0.1 seconds
+//Track bombState[0].state and update entities every 0.1 seconds
 public Action BombStatusUpdater(Handle timer) {
   if (core.isWave) {
     CreateTimer(0.1, BombStatusUpdater);
-    if (core.bombStatus < core.bombStatusMax) {
-      switch (core.bombStatus) {
+    if (bombState[0].state < bombState[0].stateMax) {
+      switch (bombState[0].state) {
         case 8,16,24,32,40,48,56,64: {
-          int curBomb = RoundToFloor(core.bombStatus / 8.0);
-          core.bombStatusMax = core.bombStatus;
-          core.canSENTShark = bombState[curBomb].canSENTShark; //false until 48 (6)
-          bombState[0].ready = true;
+          int curBomb = bombState[0].getCurBomb();
+          bombState[0].stateMax = bombState[0].state;
+          bombState[0].isReady = true;
+          core.canSENTShark = bombState[curBomb].canSENTShark;
           FireEntityInput("Bombs*", "Disable", "", 0.0);
           FireEntityInput("Delivery", "Unlock", "", 0.0);
           FireEntityInput(bombState[curBomb].identifier, "Enable", "", 0.0);
@@ -668,8 +626,8 @@ public Action BombStatusUpdater(Handle timer) {
           CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's %s {forestgreen}is now available for deployment!", bombState[curBomb].name);
         }
       }
-    } else if (core.bombStatus > core.bombStatusMax) {
-      core.bombStatus = core.bombStatusMax - 4;
+    } else if (bombState[0].state > bombState[0].stateMax) {
+      bombState[0].state = bombState[0].upperLimit();
     }
     return Plugin_Continue;
   }
@@ -702,7 +660,7 @@ public Action Command_GetCurrentSong(int client, int args) {
 //Determine which bomb has been recently pushed and tell the client if a bomb is ready or not.
 public Action Command_FBBombStatus(int client, int args) {
   char bombStatusMsg[256];
-  Format(bombStatusMsg, sizeof(bombStatusMsg), (core.bombProgression ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team is currently pushing a %s!" : bombState[0].ready ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team's %s is ready!" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team recently deployed a %s! Please wait for the next bomb."), core.bombStatus, core.bombStatusMax, bombState[RoundToFloor(core.bombStatus / 8.0)].name);
+  Format(bombStatusMsg, sizeof(bombStatusMsg), (bombState[0].isMoving ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team is currently pushing a %s!" : bombState[0].isReady ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team's %s is ready!" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}(%i/%i) Your team recently deployed a %s! Please wait for the next bomb."), bombState[0].state, bombState[0].stateMax, bombState[RoundToFloor(bombState[0].state / 8.0)].name);
   CPrintToChat(client, bombStatusMsg);
   return Plugin_Handled;
 }
@@ -736,7 +694,6 @@ public Action Command_Discord(int client, int args) {
   return Plugin_Handled;
 }
 
-//Events
 //Check who died by what and announce it to chat.
 public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast) {
   int client = GetClientOfUserId(Spawn_Event.GetInt("userid"));
@@ -1132,9 +1089,8 @@ void sudo(int task){
   AssLogger(0, LoggerDbg);
   switch (task) {
     case 20000:{
-      for (int i = 1; i < sizeof(BGMArray); i++){
-        PrintToServer("Real Path: %s Song Name: %s", BGMArray[i].realPath, BGMArray[i].songName);
-      }
+      Format(LoggerDbg, sizeof(LoggerDbg), "BombState: canSENTShark: %d isMoving: %d isReady: %d Identifier: %s Name: %s State: %i/%i ", bombState[0].canSENTShark, bombState[0].isMoving, bombState[0].isReady, bombState[bombState[0].getCurBomb()].identifier, bombState[bombState[0].getCurBomb()].name, bombState[0].state, bombState[0].stateMax);
+      AssLogger(0, LoggerDbg);
     }
     //When the map is complete
     case 0: {
@@ -1194,8 +1150,8 @@ void sudo(int task){
           FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
         }
       }
-      core.bombStatus = DefaultsArray[core.curWave].defBombStatus;
-      core.bombStatusMax = DefaultsArray[core.curWave].defBombStatusMax;
+      bombState[0].state = DefaultsArray[core.curWave].defBombStatus;
+      bombState[0].stateMax = DefaultsArray[core.curWave].defBombStatusMax;
       core.canHWBoss = DefaultsArray[core.curWave].defCanHWBoss;
       core.canTornado = DefaultsArray[core.curWave].defCanTornado;
       core.sacPointsMax = DefaultsArray[core.curWave].defSacPointsMax;
@@ -1367,171 +1323,22 @@ void sudo(int task){
     //Bomb Deployed
     case 15: {
       FireEntityInput("FB.PayloadWarning", "Disable", "", 0.0);
-      switch (core.bombStatus) {
-        //Invalid
-      case 0: {
-        PrintToServer("Tried to detonate with a bomb size of zero!");
-      }
-      //Small Explosion
-      case 8: {
-        FireEntityInput("RareSpells", "Enable", "", 0.0);
-        EmitSoundToAll(SFXArray[1]),
-          FireEntityInput("SmallExplosion", "Explode", "", 0.0),
-          FireEntityInput("SmallExploShake", "StartShake", "", 0.0),
-          CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Small Bomb successfully pushed! ({limegreen}+2 pts{white})");
-        core.sacPoints += 2,
-          core.bombStatusMax += 10,
-          CreateTimer(3.0, BombStatusAddTimer);
-        CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
-        if (core.bombStatus >= core.bombStatusMax) {
-          return;
-        } else {
-          core.bombStatus += 2;
+      switch (bombState[0].state) {
+        case 8, 16, 24, 32, 40, 48, 56, 64:{
+          bombState[bombState[0].getCurBomb()].explode(true);
+          bombState[0].stateMax += 10;
+          if (bombState[0].state >= bombState[0].stateMax) return;
+          else bombState[0].state += 2;
         }
-      }
-      //Medium Explosion
-      case 16: {
-        FireEntityInput("RareSpells", "Enable", "", 0.0);
-        EmitSoundToAll(SFXArray[2]),
-          FireEntityInput("MediumExplosion", "Explode", "", 0.0),
-          FireEntityInput("MedExploShake", "StartShake", "", 0.0),
-          CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Medium Bomb successfully pushed! ({limegreen}+5 pts{white})");
-        core.sacPoints += 5,
-          core.bombStatusMax += 10,
-          CreateTimer(3.0, BombStatusAddTimer);
-        CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
-        if (core.bombStatus >= core.bombStatusMax) {
-          return;
-        } else {
-          core.bombStatus += 2;
-        }
-      }
-      //Medium Explosion (Bath salts)
-      case 24: {
-        FireEntityInput("RareSpells", "Enable", "", 0.0);
-        EmitSoundToAll(SFXArray[2]),
-          FireEntityInput("MediumExplosion", "Explode", "", 0.0),
-          FireEntityInput("MedExploShake", "StartShake", "", 0.0),
-          ServerCommand("sm_freeze @blue 10");
-        CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Medium Bomb successfully pushed! Bots froze for 10 seconds. ({limegreen}+5 pts{white})");
-        core.sacPoints += 5,
-          core.bombStatusMax += 10,
-          CreateTimer(3.0, BombStatusAddTimer);
-        CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
-        if (core.bombStatus >= core.bombStatusMax) {
-          return;
-        } else {
-          core.bombStatus += 2;
-        }
-      }
-      //Falling Star
-      case 32: {
-        FireEntityInput("RareSpells", "Enable", "", 0.0);
-        core.canSENTStars = true,
-          EmitSoundToAll(SFXArray[2]),
-          FireEntityInput("MediumExplosion", "Explode", "", 0.0),
-          FireEntityInput("MedExploShake", "StartShake", "", 0.0),
-          CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Large Bomb successfully pushed! ({limegreen}+10 pts{white})");
-        core.sacPoints += 10,
-          core.bombStatusMax += 10,
-          CreateTimer(3.0, BombStatusAddTimer);
-        CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100),
-          CreateTimer(1.0, SENTStarTimer),
-          CreateTimer(60.0, TimedOperator, 14);
-        if (core.bombStatus >= core.bombStatusMax) {
-          return;
-        } else {
-          core.bombStatus += 2;
-        }
-      }
-      //Major Kong
-      case 40: {
-        FireEntityInput("RareSpells", "Enable", "", 0.0);
-        EmitSoundToAll(SFXArray[4]),
-          FireEntityInput("FB.Fade", "Fade", "", 1.7),
-          FireEntityInput("LargeExplosion", "Explode", "", 1.7),
-          FireEntityInput("LargeExplosionSound", "PlaySound", "", 1.7),
-          FireEntityInput("LargeExploShake", "StartShake", "", 1.7),
-          FireEntityInput("NukeAll", "Enable", "", 1.7),
-          FireEntityInput("NukeAll", "Disable", "", 3.0),
-          CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}NUCLEAR WARHEAD {white}successfully pushed! ({limegreen}+25 pts{white})");
-        core.sacPoints += 25,
-          core.bombStatusMax += 10,
-          CreateTimer(3.0, BombStatusAddTimer);
-        CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
-        if (core.bombStatus >= core.bombStatusMax) {
-          return;
-        } else {
-          core.bombStatus += 4;
-        }
-      }
-      //Large (shark)
-      case 48: {
-        FireEntityInput("RareSpells", "Enable", "", 0.0);
-        EmitSoundToAll(SFXArray[3]),
-          FireEntityInput("LargeExplosion", "Explode", "", 0.0),
-          FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
-          CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Heavy Bomb successfully pushed! ({limegreen}+15 pts{white})");
-        core.sacPoints += 15,
-          core.bombStatusMax += 10,
-          CreateTimer(3.0, BombStatusAddTimer);
-        CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
-        if (core.bombStatus >= core.bombStatusMax) {
-          return;
-        } else {
-          core.bombStatus += 4;
-        }
-      }
-      //FatMan
-      case 56: {
-        FireEntityInput("RareSpells", "Enable", "", 0.0);
-        EmitSoundToAll(SFXArray[35]);
-        FireEntityInput("LargeExplosion", "Explode", "", 0.0);
-        FireEntityInput("LargeExploShake", "StartShake", "", 0.0);
-        FireEntityInput("HurtAll", "AddOutput", "damagetype 262144", 0.0);
-        FireEntityInput("HurtAll", "AddOutput", "damage 2000000", 0.0);
-        FireEntityInput("HurtAll", "Enable", "", 0.1);
-        FireEntityInput("FB.Fade", "Fade", "", 0.0);
-        FireEntityInput("HurtAll", "Disable", "", 3.0);
-        CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}NUCLEAR WARHEAD{white}successfully pushed! ({limegreen}+25 pts{white})");
-        core.sacPoints += 25,
-        core.bombStatusMax += 10,
-        CreateTimer(3.0, BombStatusAddTimer);
-        CreateTimer(15.0, SpecTimer);
-        CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
-        if (core.bombStatus >= core.bombStatusMax) {
-          return;
-        } else {
-          core.bombStatus += 4;
-        }
-      }
-      //Hydrogen
-      case 64: {
-        FireEntityInput("RareSpells", "Enable", "", 0.0);
-        EmitSoundToAll(SFXArray[35]);
-        FireEntityInput("LargeExplosion", "Explode", "", 0.0),
-          FireEntityInput("LargeExploShake", "StartShake", "", 0.0),
-          FireEntityInput("LargeExplosionSND", "PlaySound", "", 0.0),
+        //Fartsy of the Seventh Taco Bell
+        case 69: {
           FireEntityInput("NukeAll", "Enable", "", 0.0),
-          FireEntityInput("FB.Fade", "Fade", "", 0.0),
-          FireEntityInput("NukeAll", "Disable", "", 3.0),
-          CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {red}HINDENBURG {white}successfully fueled! ({limegreen}+30 pts{white})");
-        CPrintToChatAll("The {red}HINDENBURG {forestgreen}is now ready for flight!");
-        FireEntityInput("DeliveryBurg", "Unlock", "", 0.0);
-        core.bombStatus = 0;
-        core.canHindenburg = true;
-        CreateTimer(3.0, BombStatusAddTimer);
-        CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
-      }
-      //Fartsy of the Seventh Taco Bell
-      case 69: {
-        FireEntityInput("NukeAll", "Enable", "", 0.0),
           EmitSoundToAll(SFXArray[35]);
-        FireEntityInput("FB.Fade", "Fade", "", 0.0),
+          FireEntityInput("FB.Fade", "Fade", "", 0.0),
           FireEntityInput("NukeAll", "Disable", "", 2.0),
-          core.bombStatusMax = 64;
-        CreateTimer(5.0, TimedOperator, 99);
-      }
+          bombState[0].stateMax = 64;
+          CreateTimer(5.0, TimedOperator, 99);
+        }
       }
       return;
     }
@@ -1541,14 +1348,14 @@ void sudo(int task){
     }
     //Shark Enable & notify bomb push began
     case 20: {
-      core.bombProgression = true;
+      bombState[0].isMoving = true;
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Bomb push in progress.");
       FireEntityInput("FB.PayloadWarning", "Enable", "", 0.0);
       CreateTimer(3.0, SharkTimer);
     }
     //Shark Disable
     case 21: {
-      core.bombProgression = false;
+      bombState[0].isMoving = false;
       core.canSENTShark = false;
     }
     //HINDENBOOM ACTIVATION
@@ -1575,8 +1382,8 @@ void sudo(int task){
       FireEntityInput("HindenTrain", "TeleportToPathTrack", "Hinden01", 7.0);
       FireEntityInput("HindenTrain", "Stop", "", 7.0);
       CreateTimer(8.0, TimedOperator, 99);
-      core.bombStatus = 4;
-      core.bombStatusMax = 8;
+      bombState[0].state = 4;
+      bombState[0].stateMax = 8;
     }
     //Bath Salts spend
     case 30: {
@@ -1640,14 +1447,7 @@ void sudo(int task){
     case 36: {
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}INSTANT FAT MAN DETONATION! ({red}-70 pts{white})");
       core.sacPoints -= 70;
-      FireEntityInput("LargeExplosion", "Explode", "", 0.0);
-      FireEntityInput("LargeExploShake", "StartShake", "", 0.0);
-      FireEntityInput("HurtAll", "AddOutput", "damagetype 262144", 0.0);
-      FireEntityInput("HurtAll", "AddOutput", "damage 2000000", 0.0);
-      FireEntityInput("HurtAll", "Enable", "", 0.1);
-      EmitSoundToAll(SFXArray[35]);
-      FireEntityInput("FB.Fade", "Fade", "", 0.0);
-      FireEntityInput("HurtAll", "Disable", "", 2.0);
+      bombState[7].explode(false);
     }
     //Meteor shower spend
     case 37: {
@@ -1667,8 +1467,8 @@ void sudo(int task){
     case 39: {
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}NOW PRESENTING... PROFESSOR FARTSALOT OF THE SEVENTH TACO BELL! ({red}-100 points{white})");
       core.sacPoints -= 100;
-      core.bombStatusMax = 69;
-      core.bombStatus = 69;
+      bombState[0].stateMax = 69;
+      bombState[0].state = 69;
       FireEntityInput("Delivery", "Unlock", "", 0.0),
       FireEntityInput("BombExplo*", "Disable", "", 0.0),
       FireEntityInput("Bombs*", "Disable", "", 0.0),
@@ -1744,10 +1544,7 @@ void sudo(int task){
     //Prev wave
     case 98: {
       int prev_wave = GetCurWave() - 1;
-      if (prev_wave < 1) {
-        CPrintToChatAll("{red}[ERROR] {white}WE CAN'T JUMP TO WAVE 0, WHY WOULD YOU TRY THAT??");
-        return;
-      }
+      if (prev_wave < 1) return;
       JumpToWave(prev_wave);
     }
     //Next wave
@@ -1835,11 +1632,11 @@ void sudo(int task){
       core.canSephNuke = false;
       core.canTornado = false;
       core.isWave = false;
-      core.bombStatusMax = 7;
-      core.bombStatus = 5;
+      bombState[0].stateMax = 7;
+      bombState[0].state = 5;
       core.sephiroth = false;
       core.waveFlags = 0;
-      bombState[0].ready = false;
+      bombState[0].isReady = false;
       FireEntityInput("rain", "Alpha", "0", 0.0);
       FireEntityInput("BTN.Sacrificial*", "Disable", "", 0.0);
       FireEntityInput("BTN.Sacrificial*", "Color", "0", 0.0);
@@ -2435,8 +2232,8 @@ public Action TimedOperator(Handle timer, int job) {
   }
   case 6973: {
     if (core.isWave) {
-      core.bombStatus = 8;
-      core.bombStatusMax = 10;
+      bombState[0].state = 8;
+      bombState[0].stateMax = 10;
       sudo(15);
       CreateTimer(1.0, TimedOperator, 6974);
     } 
@@ -2446,8 +2243,8 @@ public Action TimedOperator(Handle timer, int job) {
   }
   case 6974: {
     if (core.isWave) {
-      core.bombStatus = 16,
-      core.bombStatusMax = 18,
+      bombState[0].state = 16,
+      bombState[0].stateMax = 18,
       ServerCommand("fb_operator 15;fb_operator 15"),
       CreateTimer(1.0, TimedOperator, 6975);
     }
@@ -2457,8 +2254,8 @@ public Action TimedOperator(Handle timer, int job) {
   }
   case 6975: {
     if (core.isWave) {
-      core.bombStatus = 24,
-      core.bombStatusMax = 26,
+      bombState[0].state = 24,
+      bombState[0].stateMax = 26,
       ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15");
       CreateTimer(1.0, TimedOperator, 6976);
     }
@@ -2468,8 +2265,8 @@ public Action TimedOperator(Handle timer, int job) {
   }
   case 6976: {
     if (core.isWave) {
-      core.bombStatus = 32,
-      core.bombStatusMax = 34,
+      bombState[0].state = 32,
+      bombState[0].stateMax = 34,
         ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15"),
         CreateTimer(1.0, TimedOperator, 6977);
     }
@@ -2479,8 +2276,8 @@ public Action TimedOperator(Handle timer, int job) {
   }
   case 6977: {
     if (core.isWave) {
-      core.bombStatus = 40,
-      core.bombStatusMax = 42,
+      bombState[0].state = 40,
+      bombState[0].stateMax = 42,
         ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15"),
         CreateTimer(1.0, TimedOperator, 6978);
     }
@@ -2490,8 +2287,8 @@ public Action TimedOperator(Handle timer, int job) {
   }
   case 6978: {
     if (core.isWave) {
-      core.bombStatus = 48,
-      core.bombStatusMax = 50,
+      bombState[0].state = 48,
+      bombState[0].stateMax = 50,
         ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15"),
         ServerCommand("fb_operator 30"),
         CreateTimer(1.0, TimedOperator, 6979);
@@ -2502,7 +2299,7 @@ public Action TimedOperator(Handle timer, int job) {
   }
   case 6979: {
     if (core.isWave) {
-      core.bombStatus = 5,
+      bombState[0].state = 5,
       ServerCommand("fb_operator 31"),
         CreateTimer(1.0, TimedOperator, 6980);
     }
@@ -2584,8 +2381,8 @@ public Action TimedOperator(Handle timer, int job) {
   }
   case 6988: {
     if (core.isWave) {
-      core.bombStatus = 48;
-      core.bombStatusMax = 50;
+      bombState[0].state = 48;
+      bombState[0].stateMax = 50;
       ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15");
       for (int i = 0; i < 12; i++){
         sudo(GetRandomInt(30,37));
@@ -2662,6 +2459,7 @@ public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int client, int 
   return 0;
 }
 
+//Track and update client health
 public Action TickClientHealth(Handle timer) {
   for (int i = 1; i <= MaxClients; i++) {
     if (IsValidClient(i) && (GetClientTeam(i) == 2)) {

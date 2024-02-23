@@ -1,243 +1,6 @@
-char LoggerDbg[256];
+char LoggerDbg[512];
 char LoggerInfo[256];
 Database FB_Database;
-float Return[3] = {
-  -3730.0,
-  67.0,
-  -252.0
-};
-Handle cvarSNDDefault = INVALID_HANDLE;
-int soundPreference[MAXPLAYERS + 1];
-//Bomb states
-enum struct BOMBSTATE {
-  bool canSENTShark;
-  bool ready;
-  char identifier[64];
-  char name[64];
-}
-BOMBSTATE bombState[9];
-//Default values per wave
-enum struct DEFAULTS {
-  bool defCanHWBoss;
-  bool defCanTornado;
-  int defBGMIndex;
-  int defBombStatus;
-  int defBombStatusMax;
-  int defSacPointsMax;
-}
-DEFAULTS DefaultsArray[9];
-//Core values
-enum struct COREDATA {
-  bool bgmPlaying;
-  bool bombProgression;
-  bool bombReady;
-  bool bombReset;
-  bool brawler_emergency;
-  bool canCrusaderNuke;
-  bool canHindenburg;
-  bool canHWBoss;
-  bool canSENTMeteors;
-  bool canSENTShark;
-  bool canSENTStars;
-  bool canSephNuke;
-  bool canTornado;
-  bool crusader;
-  bool doFailsafe;
-  bool isWave;
-  bool monitorOn;
-  bool monitorColor;
-  bool sacrificedByClient;
-  bool sephiroth;
-  bool shouldStopMusic;
-  bool tornado;
-  bool tacobell;
-  bool tickingClientHealth;
-  bool tickMusic;
-  bool tickOffset;
-  bool TornadoWarningIssued;
-  char realPath[64];
-  char cachedPath[64];
-  char songName[64];
-  float HWNMin;
-  float HWNMax;
-  int BGMINDEX;
-  int FailedCount;
-  int INCOMINGDISPLAYED;
-  int camSel;
-  int CodeEntry;
-  int bombStatus;
-  int bombStatusMax;
-  int curWave;
-  int failsafeCount;
-  int lastAdmin;
-  int refireTime;
-  int sacPoints;
-  int sacPointsMax;
-  int SNDCHAN;
-  int ticksMusic;
-  int VIPBGM;
-  int VIPIndex;
-  int waveFlags;
-}
-COREDATA core;
-//Configure all variables
-void SetupCoreData(){
-  AssLogger(0, "Setting up core data...");
-  bombState[0].canSENTShark = false;
-  bombState[1].canSENTShark = false;
-  bombState[2].canSENTShark = false;
-  bombState[3].canSENTShark = false;
-  bombState[4].canSENTShark = false;
-  bombState[5].canSENTShark = false;
-  bombState[6].canSENTShark = true;
-  bombState[7].canSENTShark = false;
-  bombState[8].canSENTShark = false;
-  bombState[1].identifier = "Bombs.FreedomBomb";
-  bombState[2].identifier = "Bombs.ElonBust";
-  bombState[3].identifier = "Bombs.BathSalts";
-  bombState[4].identifier = "Bombs.FallingStar";
-  bombState[5].identifier = "Bombs.MajorKong";
-  bombState[6].identifier = "Bombs.SharkTorpedo";
-  bombState[7].identifier = "Bombs.FatMan";
-  bombState[8].identifier = "Bombs.Hydrogen";
-  bombState[0].ready = false;
-  bombState[1].name = "{red}FREEDOM BOMB{white}";
-  bombState[2].name = "{red}ELON BUST{white}";
-  bombState[3].name = "{orange}BATH SALTS{white}";
-  bombState[4].name = "{gold}FALLING STAR{white}";
-  bombState[5].name = "{red}MAJOR KONG{white}";
-  bombState[6].name = "{aqua}SHARK{white}";
-  bombState[7].name = "{orange}FAT MAN{white}";
-  bombState[8].name = "{red}HYDROGEN{white}";
-  DefaultsArray[0].defCanHWBoss = false;
-  DefaultsArray[1].defCanHWBoss = false;
-  DefaultsArray[2].defCanHWBoss = false;
-  DefaultsArray[3].defCanHWBoss = true;
-  DefaultsArray[4].defCanHWBoss = true;
-  DefaultsArray[5].defCanHWBoss = true;
-  DefaultsArray[6].defCanHWBoss = true;
-  DefaultsArray[7].defCanHWBoss = true;
-  DefaultsArray[8].defCanHWBoss = true;
-  DefaultsArray[0].defCanTornado = false;
-  DefaultsArray[1].defCanTornado = false;
-  DefaultsArray[2].defCanTornado = false;
-  DefaultsArray[3].defCanTornado = true;
-  DefaultsArray[4].defCanTornado = true;
-  DefaultsArray[5].defCanTornado = true;
-  DefaultsArray[6].defCanTornado = true;
-  DefaultsArray[7].defCanTornado = true;
-  DefaultsArray[8].defCanTornado = true;
-  DefaultsArray[0].defBGMIndex = 1;
-  DefaultsArray[1].defBGMIndex = 5;
-  DefaultsArray[2].defBGMIndex = 6;
-  DefaultsArray[3].defBGMIndex = 7;
-  DefaultsArray[4].defBGMIndex = 8;
-  DefaultsArray[5].defBGMIndex = 12;
-  DefaultsArray[6].defBGMIndex = 13;
-  DefaultsArray[7].defBGMIndex = 14;
-  DefaultsArray[8].defBGMIndex = 15;
-  DefaultsArray[0].defBombStatus = 0;
-  DefaultsArray[1].defBombStatus = 4;
-  DefaultsArray[2].defBombStatus = 7;
-  DefaultsArray[3].defBombStatus = 8;
-  DefaultsArray[4].defBombStatus = 12;
-  DefaultsArray[5].defBombStatus = 14;
-  DefaultsArray[6].defBombStatus = 20;
-  DefaultsArray[7].defBombStatus = 28;
-  DefaultsArray[8].defBombStatus = 30;
-  DefaultsArray[0].defBombStatusMax = 0;
-  DefaultsArray[1].defBombStatusMax = 10;
-  DefaultsArray[2].defBombStatusMax = 18;
-  DefaultsArray[3].defBombStatusMax = 26;
-  DefaultsArray[4].defBombStatusMax = 34;
-  DefaultsArray[5].defBombStatusMax = 42;
-  DefaultsArray[6].defBombStatusMax = 50;
-  DefaultsArray[7].defBombStatusMax = 58;
-  DefaultsArray[8].defBombStatusMax = 66;
-  DefaultsArray[0].defSacPointsMax = 0;
-  DefaultsArray[1].defSacPointsMax = 50;
-  DefaultsArray[2].defSacPointsMax = 60;
-  DefaultsArray[3].defSacPointsMax = 70;
-  DefaultsArray[4].defSacPointsMax = 80;
-  DefaultsArray[5].defSacPointsMax = 90;
-  DefaultsArray[6].defSacPointsMax = 100;
-  DefaultsArray[7].defSacPointsMax = 100;
-  DefaultsArray[8].defSacPointsMax = 100;
-  core.bgmPlaying = false;
-  core.bombProgression = false;
-  core.bombReady = false;
-  core.bombReset = false;
-  core.brawler_emergency = false;
-  core.canCrusaderNuke = false;
-  core.canHindenburg = false;
-  core.canHWBoss = false;
-  core.canSENTMeteors = false;
-  core.canSENTShark = false;
-  core.canSENTStars = false;
-  core.canSephNuke = false;
-  core.canTornado = false;
-  core.crusader = false;
-  core.doFailsafe = false;
-  core.isWave = false;
-  core.monitorOn = false;
-  core.monitorColor = true;
-  core.sacrificedByClient = false;
-  core.sephiroth = false;
-  core.shouldStopMusic = false;
-  core.tornado = false;
-  core.tacobell = false;
-  core.tickingClientHealth = false;
-  core.tickMusic = false;
-  core.tickOffset = false;
-  core.TornadoWarningIssued = false;
-  core.realPath = "null";
-  core.cachedPath = "null";
-  core.songName = "null";
-  core.BGMINDEX = 1;
-  core.FailedCount = 0;
-  core.INCOMINGDISPLAYED = 0;
-  core.camSel = 0;
-  core.CodeEntry = 0;
-  core.bombStatus = 0;
-  core.bombStatusMax = 0;
-  core.curWave = 0;
-  core.failsafeCount = -1;
-  core.lastAdmin = 0;
-  core.refireTime = 0;
-  core.sacPoints = 0;
-  core.sacPointsMax = 60;
-  core.SNDCHAN = 6;
-  core.ticksMusic = 0;
-  core.VIPBGM = -1;
-  core.VIPIndex = 0;
-  core.waveFlags = 0;
-  core.HWNMin = 210.0;
-  core.HWNMax = 380.0;
-  AssLogger(0, "Core data setup complete!");
-}
-//Messages to be printed when the fail safe has been triggered.
-char failsafe[][256] = {
-  "{orange}Phoenix♥ {white}: FAILSAFE HAS BEEN TRIGGERED. ROBOT EXTERMINATION IN PROGRESS. [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Nice try. You think this is funny? How about THIS instead? [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: (╯°□°）╯︵ ¡¡¡pƎ⅄O˥ԀƎp Ǝq O┴ ┴∩Oq∀ SI SS∀ S,ɹOSSƎℲOɹԀ [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Flips a coin and... HEADS! [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Pwofessow's b-butt is a-about to be depwoyed!!! JUST KIDDING - GET FUCKED. [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: We aren't so different, you and I. Oh wait, yes we are. You're a pile of scrap and I'm actually useful! :> [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: *BZZT* Sorry, time's up! [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: It's only me and you, who is gonna save you now? [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Nope. [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Sometimes I even amaze myself. [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Some disassembly required. [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Oops, I did it again! [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Not on my watch! [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Sometimes you scare me! [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: You know, I never really thought about it. [Failsafe Activated]"
-};
-//Silence cvar changes to minimize chat spam.
-public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast) {
-  event.BroadcastDisabled = true;
-  return Plugin_Handled;
-}
 //All sound effects
 char SFXArray[][64] = {
   "fartsy/misc/bell.wav", // 0
@@ -307,6 +70,380 @@ char SFXArray[][64] = {
   "ambient/sawblade_impact1.wav", // 64
   "vo/sandwicheat09.mp3" // 65
 };
+//Return position
+float Return[3] = {
+  -3730.0,
+  67.0,
+  -252.0
+};
+Handle cvarSNDDefault = INVALID_HANDLE;
+int soundPreference[MAXPLAYERS + 1];
+//Default values per wave
+enum struct DEFAULTS {
+  bool defCanHWBoss;
+  bool defCanTornado;
+  int defBGMIndex;
+  int defBombStatus;
+  int defBombStatusMax;
+  int defSacPointsMax;
+}
+DEFAULTS DefaultsArray[9];
+//Core values
+enum struct COREDATA {
+  bool bgmPlaying;
+  bool bombReset;
+  bool brawler_emergency;
+  bool canCrusaderNuke;
+  bool canHindenburg;
+  bool canHWBoss;
+  bool canSENTMeteors;
+  bool canSENTShark;
+  bool canSENTStars;
+  bool canSephNuke;
+  bool canTornado;
+  bool crusader;
+  bool doFailsafe;
+  bool isWave;
+  bool monitorOn;
+  bool monitorColor;
+  bool sacrificedByClient;
+  bool sephiroth;
+  bool shouldStopMusic;
+  bool tornado;
+  bool tacobell;
+  bool tickingClientHealth;
+  bool tickMusic;
+  bool tickOffset;
+  bool TornadoWarningIssued;
+  char realPath[64];
+  char cachedPath[64];
+  char songName[64];
+  float HWNMin;
+  float HWNMax;
+  int BGMINDEX;
+  int FailedCount;
+  int INCOMINGDISPLAYED;
+  int camSel;
+  int CodeEntry;
+  int curWave;
+  int failsafeCount;
+  int lastAdmin;
+  int refireTime;
+  int sacPoints;
+  int sacPointsMax;
+  int SNDCHAN;
+  int ticksMusic;
+  int VIPBGM;
+  int VIPIndex;
+  int waveFlags;
+}
+COREDATA core;
+//Annihilation supply shop entries
+enum struct ASShop {
+  char name[64];
+  int price;
+  int purchase;
+}
+ASShop ass[10];
+//Bomb states
+enum struct BOMBSTATE {
+  bool canHindenburg;
+  bool canSENTStars;
+  bool canSENTShark;
+  bool isMoving;
+  bool isNuclear;
+  bool isReady;
+  bool shouldFreezeBots;
+  char explEnt[64];
+  char explShake[64];
+  char explSnd[64];
+  char identifier[64];
+  char name[64];
+  float explDly;
+  float explShakeDly;
+  float FadeDly;
+  float NukeStart;
+  int sacVal;
+  int state;
+  int stateMax;
+  int getCurBomb() {
+    return RoundToFloor(this.state / 8.0);
+  }
+  int upperLimit() {
+    return (this.state - 4);
+  }
+  void explode(bool realExplosion){
+    Format(LoggerDbg, sizeof(LoggerDbg), "Exploding a %s - isRealExplosion: %d canHinden: %d, canStars: %d, canShark: %d, isNuclear: %d, shouldFreezeBots: %d, explEnt: %s, explShake: %s, explSnd: %s, identifier: %s, explDly: %f, explShakeDly: %f, fadeDly: %f, NukeStart: %f, sacVal: %i...", this.name, realExplosion, this.canHindenburg, this.canSENTStars, this.canSENTShark, this.isNuclear, this.shouldFreezeBots, this.explEnt, this.explShake, this.explSnd, this.identifier, this.explDly, this.explShakeDly, this.FadeDly, this.NukeStart, this.sacVal);
+    AssLogger(0, LoggerDbg);
+    //Freeze bots?
+    if(this.shouldFreezeBots){
+      ServerCommand("sm_freeze @blue 10");
+      CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] Bots frozen by Bath Salts for 10 seconds.");
+    }
+    //Summon star storm
+    if(this.canSENTStars){
+      core.canSENTStars = true;
+      CreateTimer(1.0, SENTStarTimer);
+      CreateTimer(60.0, TimedOperator, 14);
+    }
+    //Holy jesus, it's a nuke!
+    if(this.isNuclear){
+      FireEntityInput("LargeExplosionSND", "PlaySound", "", this.NukeStart);
+      FireEntityInput("NukeAll", "Enable", "", this.NukeStart);
+      FireEntityInput("HurtAll", "AddOutput", "damagetype 262144", this.NukeStart);
+      FireEntityInput("HurtAll", "AddOutput", "damage 2000000", this.NukeStart);
+      FireEntityInput("HurtAll", "Enable", "", this.NukeStart+0.1);
+      FireEntityInput("FB.Fade", "Fade", "", this.FadeDly);
+      FireEntityInput("NukeAll", "Disable", "", 3.0);
+      FireEntityInput("HurtAll", "Disable", "", 3.0);
+      if(this.sacVal == 25){
+        CreateTimer(15.0, SpecTimer);
+        ResetBombState();
+      }
+      if(this.canHindenburg){
+        core.canHindenburg = true;
+        FireEntityInput("DeliveryBurg", "Unlock", "", 0.0);
+        CPrintToChatAll("The {red}HINDENBURG {forestgreen}is now ready for flight!");
+      }
+    }
+    FireEntityInput(this.explEnt, "Explode", "", this.explDly);
+    CustomSoundEmitter(this.explSnd, 65, false, 0, 1.0, 100);
+    FireEntityInput(this.explShake, "StartShake", "", this.explShakeDly);
+    if(realExplosion){
+      CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] %s {forestgreen}successfully deployed! {white}({limegreen}+%i pts{white})", this.name, this.sacVal);
+      core.sacPoints += this.sacVal;
+      CreateTimer(3.0, BombStatusAddTimer);
+      CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
+      FireEntityInput("RareSpells", "Enable", "", 0.0);
+    }
+  }
+}
+BOMBSTATE bombState[9];
+void ResetBombState(){
+  bombState[0].state = 0;
+}
+//Configure all variables
+void SetupCoreData(){
+  AssLogger(0, "Setting up core data...");
+  ass[0].name = "[10] Kissone Bath Salts";
+  ass[1].name = "[20] Summon Goobbue or Kirby";
+  ass[2].name = "[30] Robot Trap (Wave Fail-safe)";
+  ass[3].name = "[40] Explosives Paradise";
+  ass[4].name = "[50] Banish Tornadoes";
+  ass[5].name = "[60] Ass Gas";
+  ass[6].name = "[70] Instant Fat Man";
+  ass[7].name = "[80] Meteorites";
+  ass[8].name = "[90) 300,000 UbUp Cash";
+  ass[9].name = "[100] Professor Fartsalot";
+  ass[0].price = 10;
+  ass[1].price = 20;
+  ass[2].price = 30;
+  ass[3].price = 40;
+  ass[4].price = 50;
+  ass[5].price = 60;
+  ass[6].price = 70;
+  ass[7].price = 80;
+  ass[8].price = 90;
+  ass[9].price = 100;
+  ass[0].purchase = 30;
+  ass[1].purchase = 31;
+  ass[2].purchase = 32;
+  ass[3].purchase = 33;
+  ass[4].purchase = 34;
+  ass[5].purchase = 35;
+  ass[6].purchase = 36;
+  ass[7].purchase = 37;
+  ass[8].purchase = 38;
+  ass[9].purchase = 39;
+  bombState[8].canHindenburg = true;
+  bombState[4].canSENTStars = true;
+  bombState[6].canSENTShark = true;
+  bombState[5].explDly = 1.7;
+  bombState[1].explEnt = "SmallExplosion";
+  bombState[2].explEnt = "MediumExplosion";
+  bombState[3].explEnt = "MediumExplosion";
+  bombState[4].explEnt = "MediumExplosion";
+  bombState[5].explEnt = "LargeExplosion";
+  bombState[6].explEnt = "LargeExplosion";
+  bombState[7].explEnt = "LargeExplosion";
+  bombState[8].explEnt = "LargeExplosion";
+  bombState[1].explShake = "SmallExploShake";
+  bombState[2].explShake = "MedExploShake";
+  bombState[3].explShake = "MedExploShake";
+  bombState[4].explShake = "MedExploShake";
+  bombState[5].explShake = "LargeExploShake";
+  bombState[6].explShake = "LargeExploShake";
+  bombState[7].explShake = "LargeExploShake";
+  bombState[8].explShake = "LargeExploShake";
+  bombState[5].explShakeDly = 1.7;
+  bombState[1].explSnd = SFXArray[1];
+  bombState[2].explSnd = SFXArray[2];
+  bombState[3].explSnd = SFXArray[2];
+  bombState[4].explSnd = SFXArray[2];
+  bombState[5].explSnd = SFXArray[4];
+  bombState[6].explSnd = SFXArray[3];
+  bombState[7].explSnd = SFXArray[35];
+  bombState[8].explSnd = SFXArray[35];
+  bombState[1].identifier = "Bombs.FreedomBomb";
+  bombState[2].identifier = "Bombs.ElonBust";
+  bombState[3].identifier = "Bombs.BathSalts";
+  bombState[4].identifier = "Bombs.FallingStar";
+  bombState[5].identifier = "Bombs.MajorKong";
+  bombState[6].identifier = "Bombs.SharkTorpedo";
+  bombState[7].identifier = "Bombs.FatMan";
+  bombState[8].identifier = "Bombs.Hydrogen";
+  bombState[0].isMoving = false;
+  bombState[5].isNuclear = true;
+  bombState[7].isNuclear = true;
+  bombState[8].isNuclear = true;
+  bombState[5].NukeStart = 1.7;
+  bombState[0].isReady = false;
+  bombState[1].name = "{red}FREEDOM BOMB{white}";
+  bombState[2].name = "{red}ELON BUST{white}";
+  bombState[3].name = "{orange}BATH SALTS{white}";
+  bombState[4].name = "{gold}FALLING STAR{white}";
+  bombState[5].name = "{red}MAJOR KONG{white}";
+  bombState[6].name = "{aqua}SHARK{white}";
+  bombState[7].name = "{orange}FAT MAN{white}";
+  bombState[8].name = "{red}HYDROGEN{white}";
+  bombState[1].sacVal = 5;
+  bombState[2].sacVal = 5;
+  bombState[3].sacVal = 5;
+  bombState[4].sacVal = 10;
+  bombState[5].sacVal = 15;
+  bombState[6].sacVal = 20;
+  bombState[7].sacVal = 25;
+  bombState[8].sacVal = 50;
+  bombState[3].shouldFreezeBots = true;
+  bombState[0].state = 0;
+  bombState[0].stateMax = 0;
+  //Per Wave options
+  DefaultsArray[0].defCanHWBoss = false;
+  DefaultsArray[1].defCanHWBoss = false;
+  DefaultsArray[2].defCanHWBoss = false;
+  DefaultsArray[3].defCanHWBoss = true;
+  DefaultsArray[4].defCanHWBoss = true;
+  DefaultsArray[5].defCanHWBoss = true;
+  DefaultsArray[6].defCanHWBoss = true;
+  DefaultsArray[7].defCanHWBoss = true;
+  DefaultsArray[8].defCanHWBoss = true;
+  DefaultsArray[0].defCanTornado = false;
+  DefaultsArray[1].defCanTornado = false;
+  DefaultsArray[2].defCanTornado = false;
+  DefaultsArray[3].defCanTornado = true;
+  DefaultsArray[4].defCanTornado = true;
+  DefaultsArray[5].defCanTornado = true;
+  DefaultsArray[6].defCanTornado = true;
+  DefaultsArray[7].defCanTornado = true;
+  DefaultsArray[8].defCanTornado = true;
+  DefaultsArray[0].defBGMIndex = 1;
+  DefaultsArray[1].defBGMIndex = 5;
+  DefaultsArray[2].defBGMIndex = 6;
+  DefaultsArray[3].defBGMIndex = 7;
+  DefaultsArray[4].defBGMIndex = 8;
+  DefaultsArray[5].defBGMIndex = 12;
+  DefaultsArray[6].defBGMIndex = 13;
+  DefaultsArray[7].defBGMIndex = 14;
+  DefaultsArray[8].defBGMIndex = 15;
+  DefaultsArray[0].defBombStatus = 0;
+  DefaultsArray[1].defBombStatus = 4;
+  DefaultsArray[2].defBombStatus = 7;
+  DefaultsArray[3].defBombStatus = 8;
+  DefaultsArray[4].defBombStatus = 12;
+  DefaultsArray[5].defBombStatus = 14;
+  DefaultsArray[6].defBombStatus = 20;
+  DefaultsArray[7].defBombStatus = 28;
+  DefaultsArray[8].defBombStatus = 30;
+  DefaultsArray[0].defBombStatusMax = 0;
+  DefaultsArray[1].defBombStatusMax = 10;
+  DefaultsArray[2].defBombStatusMax = 18;
+  DefaultsArray[3].defBombStatusMax = 26;
+  DefaultsArray[4].defBombStatusMax = 34;
+  DefaultsArray[5].defBombStatusMax = 42;
+  DefaultsArray[6].defBombStatusMax = 50;
+  DefaultsArray[7].defBombStatusMax = 58;
+  DefaultsArray[8].defBombStatusMax = 66;
+  DefaultsArray[0].defSacPointsMax = 0;
+  DefaultsArray[1].defSacPointsMax = 50;
+  DefaultsArray[2].defSacPointsMax = 60;
+  DefaultsArray[3].defSacPointsMax = 70;
+  DefaultsArray[4].defSacPointsMax = 80;
+  DefaultsArray[5].defSacPointsMax = 90;
+  DefaultsArray[6].defSacPointsMax = 100;
+  DefaultsArray[7].defSacPointsMax = 100;
+  DefaultsArray[8].defSacPointsMax = 100;
+  core.bgmPlaying = false;
+  core.bombReset = false;
+  core.brawler_emergency = false;
+  core.canCrusaderNuke = false;
+  core.canHindenburg = false;
+  core.canHWBoss = false;
+  core.canSENTMeteors = false;
+  core.canSENTShark = false;
+  core.canSENTStars = false;
+  core.canSephNuke = false;
+  core.canTornado = false;
+  core.crusader = false;
+  core.doFailsafe = false;
+  core.isWave = false;
+  core.monitorOn = false;
+  core.monitorColor = true;
+  core.sacrificedByClient = false;
+  core.sephiroth = false;
+  core.shouldStopMusic = false;
+  core.tornado = false;
+  core.tacobell = false;
+  core.tickingClientHealth = false;
+  core.tickMusic = false;
+  core.tickOffset = false;
+  core.TornadoWarningIssued = false;
+  core.realPath = "null";
+  core.cachedPath = "null";
+  core.songName = "null";
+  core.BGMINDEX = 1;
+  core.FailedCount = 0;
+  core.INCOMINGDISPLAYED = 0;
+  core.camSel = 0;
+  core.CodeEntry = 0;
+  core.curWave = 0;
+  core.failsafeCount = -1;
+  core.lastAdmin = 0;
+  core.refireTime = 0;
+  core.sacPoints = 0;
+  core.sacPointsMax = 60;
+  core.SNDCHAN = 6;
+  core.ticksMusic = 0;
+  core.VIPBGM = -1;
+  core.VIPIndex = 0;
+  core.waveFlags = 0;
+  core.HWNMin = 210.0;
+  core.HWNMax = 380.0;
+  AssLogger(0, "Core data setup complete!");
+}
+//Messages to be printed when the fail safe has been triggered.
+char failsafe[][256] = {
+  "{orange}Phoenix♥ {white}: FAILSAFE HAS BEEN TRIGGERED. ROBOT EXTERMINATION IN PROGRESS. [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Nice try. You think this is funny? How about THIS instead? [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: (╯°□°）╯︵ ¡¡¡pƎ⅄O˥ԀƎp Ǝq O┴ ┴∩Oq∀ SI SS∀ S,ɹOSSƎℲOɹԀ [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Flips a coin and... HEADS! [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Pwofessow's b-butt is a-about to be depwoyed!!! JUST KIDDING - GET FUCKED. [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: We aren't so different, you and I. Oh wait, yes we are. You're a pile of scrap and I'm actually useful! :> [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: *BZZT* Sorry, time's up! [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: It's only me and you, who is gonna save you now? [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Nope. [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Sometimes I even amaze myself. [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Some disassembly required. [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Oops, I did it again! [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Not on my watch! [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: Sometimes you scare me! [Failsafe Activated]",
+  "{orange}Phoenix♥ {white}: You know, I never really thought about it. [Failsafe Activated]"
+};
+//Silence cvar changes to minimize chat spam.
+public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast) {
+  event.BroadcastDisabled = true;
+  return Plugin_Handled;
+}
+
 //Idle advertisements in chat
 char AdvMessage[][256] = {
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}We have a Discord server: {forestgreen}https://discord.com/invite/SkHaeMH",
@@ -318,19 +455,6 @@ char AdvMessage[][256] = {
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}Remember, if someone is being abusive, you may always invoke {forestgreen}!calladmin{white}.",
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}You may always invoke {forestgreen}!return{white} to be returned to spawn.",
   ""
-};
-//Annihilation supply shop entries
-char ASS[][64] = {
-  "[10] Kissone Bath Salts", //0 (10)
-  "[20] Summon Goobbue or Kirby", //1 (20)
-  "[30] Robot Trap (Wave Fail-safe)", //2 (30) 
-  "[40] Explosives Paradise", //3 (40)
-  "[50] Banish Tornadoes", //4 (50)
-  "[60] Ass Gas", //5 (60) 
-  "[70] Instant Fat Man", //6 (70)
-  "[80] Meteorites", //7 (80)
-  "[90) 300,000 UbUp Cash",//8 (90)
-  "[100] Professor Fartsalot" //9 (100)
 };
 //Registry of all playable classes, used for stats module
 char ClassDefinitions[][32] = {
@@ -605,7 +729,7 @@ void RegisterAndPrecacheAllFiles(){
   BGMArray[16].refireTime = 20592;
   BGMArray[17].refireTime = 8120;
   BGMArray[18].refireTime = 8475;
-  BGMArray[19].refireTime = 19240;
+  BGMArray[19].refireTime = 19270;
   BGMArray[0].ticksOffset = 0;
   BGMArray[1].ticksOffset = 0;
   BGMArray[2].ticksOffset = 0;
