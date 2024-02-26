@@ -418,6 +418,14 @@ void SetupCoreData(){
   core.waveFlags = 0;
   core.HWNMin = 210.0;
   core.HWNMax = 380.0;
+  AssLogger(0, "Hooking game events...");
+  HookEvent("player_death", EventDeath);
+  HookEvent("player_spawn", EventSpawn);
+  HookEvent("server_cvar", Event_Cvar, EventHookMode_Pre);
+  HookEvent("mvm_wave_complete", EventWaveComplete);
+  HookEvent("mvm_wave_failed", EventWaveFailed);
+  HookEvent("mvm_bomb_alarm_triggered", EventWarning);
+  HookEventEx("player_hurt", Event_Playerhurt, EventHookMode_Pre);
   AssLogger(0, "Core data setup complete!");
 }
 //Messages to be printed when the fail safe has been triggered.
@@ -763,6 +771,13 @@ void RegisterAndPrecacheAllFiles(){
   }
   Format(LoggerDbg, sizeof(LoggerDbg), "Done! BGM Count: %i, SFX Count: %i, Total: %i files loaded to RAM.", sizeof(BGMArray) - 1, sizeof(SFXArray), (sizeof(BGMArray) + sizeof(SFXArray)) - 1);
   AssLogger(0, LoggerDbg);
+  //Todo: These files are not part of the base pakfile, they are slated for install in a future update, when that update is ready, these files will eventually become one with the map.
+  PrecacheSound(TBGM0, true);
+  PrecacheSound(TBGM2, true);
+  PrecacheSound(TBGM3, true);
+  PrecacheSound(TBGM4, true);
+  PrecacheSound(TBGM5, true);
+  PrecacheSound(TBGM6, true);
 }
 
 //Used to keep StopSound from stopping the music we're trying to play - now with support for loop offsets!

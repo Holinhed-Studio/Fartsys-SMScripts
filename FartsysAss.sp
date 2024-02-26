@@ -21,7 +21,7 @@
 #include <ass_helper>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.0.0-pre8";
+static char PLUGIN_VERSION[8] = "7.0.0-pre9";
 
 public Plugin myinfo = {
   name = "Fartsy's Ass - Framework",
@@ -36,19 +36,6 @@ public void OnPluginStart() {
   RegisterAndPrecacheAllFiles();
   RegisterAllCommands();
   SetupCoreData();
-  PrecacheSound(TBGM0, true);
-  PrecacheSound(TBGM2, true);
-  PrecacheSound(TBGM3, true);
-  PrecacheSound(TBGM4, true);
-  PrecacheSound(TBGM5, true);
-  PrecacheSound(TBGM6, true);
-  HookEvent("player_death", EventDeath);
-  HookEvent("player_spawn", EventSpawn);
-  HookEvent("server_cvar", Event_Cvar, EventHookMode_Pre);
-  HookEvent("mvm_wave_complete", EventWaveComplete);
-  HookEvent("mvm_wave_failed", EventWaveFailed);
-  HookEvent("mvm_bomb_alarm_triggered", EventWarning);
-  HookEventEx("player_hurt", Event_Playerhurt, EventHookMode_Pre);
   CPrintToChatAll("{darkred}Plugin Reloaded. If you do not hear music, please do !sounds and configure your preferences.");
   cvarSNDDefault = CreateConVar("sm_fartsysass_sound", "3", "Default sound for new users, 3 = Everything, 2 = Sounds Only, 1 = Music Only, 0 = Nothing");
   SetCookieMenuItem(FartsysSNDSelected, 0, "Fartsys Ass Sound Preferences");
@@ -80,10 +67,8 @@ public void OnGameFrame() {
 //Restart music for the new client
 public Action RefireMusicForClient(Handle timer, int client){
   if(IsValidClient(client)){
-    if(GetClientTeam(client) == 0)
-      CreateTimer(1.0, RefireMusicForClient, client);
-    else if (GetClientTeam(client) == 2)
-      CSEClient(client, BGMArray[core.BGMINDEX].realPath, BGMArray[core.BGMINDEX].SNDLVL, true, 1, 1.0, 100);
+    if(GetClientTeam(client) == 0) CreateTimer(1.0, RefireMusicForClient, client);
+    else if (GetClientTeam(client) == 2) CSEClient(client, BGMArray[core.BGMINDEX].realPath, BGMArray[core.BGMINDEX].SNDLVL, true, 1, 1.0, 100);
   }
   return Plugin_Stop;
 }
@@ -1088,10 +1073,6 @@ void sudo(int task){
   Format(LoggerDbg, sizeof(LoggerDbg), "Calling sudo with %i", task);
   AssLogger(0, LoggerDbg);
   switch (task) {
-    case 20000:{
-      Format(LoggerDbg, sizeof(LoggerDbg), "BombState: canSENTShark: %d isMoving: %d isReady: %d Identifier: %s Name: %s State: %i/%i ", bombState[0].canSENTShark, bombState[0].isMoving, bombState[0].isReady, bombState[bombState[0].getCurBomb()].identifier, bombState[bombState[0].getCurBomb()].name, bombState[0].state, bombState[0].stateMax);
-      AssLogger(0, LoggerDbg);
-    }
     //When the map is complete
     case 0: {
       CPrintToChatAll(core.tacobell ? "WOWIE YOU DID IT! The server will restart in 30 seconds, prepare to do it again! LULW" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}YOU HAVE SUCCESSFULLY COMPLETED PROF'S ASS ! THE SERVER WILL RESTART IN 10 SECONDS.");
@@ -1111,8 +1092,8 @@ void sudo(int task){
       switch (core.curWave) {
         case 3, 10, 17: {
           core.HWNMax = 360.0;
-          FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
-          FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
+          FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+          FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
           float f = GetRandomFloat(60.0, 180.0);
           CreateTimer(f, TimedOperator, 70);
         }
@@ -1133,12 +1114,16 @@ void sudo(int task){
         case 6, 13, 20: {
           core.HWNMax = 260.0;
           core.HWNMin = 140.0;
+          FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+          FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
           FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
           FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
         }
         case 7, 14, 21: {
           core.HWNMax = 240.0;
           core.HWNMin = 120.0;
+          FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
+          FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
           FireEntityInput("Classic_Mode_Intel5", "Enable", "", 0.0);
           FireEntityInput("Classic_Mode_Intel6", "Enable", "", 0.0);
           FireEntityInput("w5_engie_hints", "Trigger", "", 3.0);
@@ -1158,8 +1143,8 @@ void sudo(int task){
       float hwn = GetRandomFloat(core.HWNMin, core.HWNMax);
       CreateTimer(hwn, HWBosses);
       FireEntityInput("rain", "Alpha", "200", 0.0);
-      FireEntityInput("Classic_Mode_Intel3", "Enable", "", 0.0);
-      FireEntityInput("Classic_Mode_Intel4", "Enable", "", 0.0);
+      FireEntityInput("Classic_Mode_Intel1", "Enable", "", 0.0);
+      FireEntityInput("Classic_Mode_Intel2", "Enable", "", 0.0);
       SetupMusic(core.tacobell ? tacoBellBGMIndex[core.curWave] : DefaultsArray[core.curWave].defBGMIndex);
       return;
     }
@@ -1187,41 +1172,35 @@ void sudo(int task){
         }
         case 1: {
           //PrintToChatAll("Got 1. Spawning Onslaughter."),
-          FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.0),
-          FireEntityInput("FB.BruteJustice", "Enable", "", 3.0),
-          FireEntityInput("FB.BruteJusticeTrain", "StartForward", "", 3.0),
-          FireEntityInput("FB.BruteJusticeParticles", "Start", "", 3.0),
-          CreateTimer(5.0, OnslaughterATK),
-          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 3.0),
-          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 4.0),
-          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 5.0),
-          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 6.0),
-          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 7.0),
+          FireEntityInput("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.0);
+          FireEntityInput("FB.BruteJustice", "Enable", "", 3.0);
+          FireEntityInput("FB.BruteJusticeTrain", "StartForward", "", 3.0);
+          FireEntityInput("FB.BruteJusticeParticles", "Start", "", 3.0);
+          CreateTimer(5.0, OnslaughterATK);
+          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 3.0);
+          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 4.0);
+          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 5.0);
+          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 6.0);
+          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 7.0);
           FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 8.0);
           CreateTimer(10.0, BossHPTimer);
         }
         case 2: {
-          FireEntityInput("FB.Sephiroth", "Enable", "", 0.0),
-          FireEntityInput("SephMeteor", "SetParent", "FB.Sephiroth", 0.0),
-          FireEntityInput("SephTrain", "SetSpeedReal", "12", 0.0),
-          FireEntityInput("SephTrain", "TeleportToPathTrack", "Seph01", 0.0),
-          FireEntityInput("SephTrain", "StartForward", "", 0.1),
-          FireEntityInput("SephTrain", "SetSpeedReal", "12", 20.5),
-          FireEntityInput("FB.SephParticles", "Start", "", 3.0),
-          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 3.0),
-          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 4.0),
-          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 5.0),
-          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 6.0),
-          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 7.0),
-          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 8.0),
+          FireEntityInput("FB.Sephiroth", "Enable", "", 0.0);
+          FireEntityInput("SephMeteor", "SetParent", "FB.Sephiroth", 0.0);
+          FireEntityInput("SephTrain", "SetSpeedReal", "12", 0.0);
+          FireEntityInput("SephTrain", "TeleportToPathTrack", "Seph01", 0.0);
+          FireEntityInput("SephTrain", "StartForward", "", 0.1);
+          FireEntityInput("SephTrain", "SetSpeedReal", "12", 20.5);
+          FireEntityInput("FB.SephParticles", "Start", "", 3.0);
+          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 3.0);
+          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 4.0);
+          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 5.0);
+          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 6.0);
+          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 7.0);
+          FireEntityInput("tank_boss", "AddOutput", "rendermode 10", 8.0);
           FireEntityInput("FB.BruteJusticeDMGRelay", "Kill", "", 0.0);
-          int players = 0;
-          for (int i = 1; i <= MaxClients; i++) {
-            if (IsValidClient(i))
-              players++;
-          }
-          PrintToServer("We have %i player(s), setting boss attributes accordingly!", players);
-          switch (players) {
+          switch (GetClientCount(true)) {
             case 1: {
               FireEntityInput("SephTrain", "SetSpeedReal", "40", 23.0);
               FireEntityInput("tank_boss", "SetHealth", "409600", 1.0);
@@ -1243,9 +1222,9 @@ void sudo(int task){
               FireEntityInput("FB.SephDMGRelay", "SetHealth", "262144000", 1.0);
             }
             case 5, 6, 7, 8, 9, 10: {
-              FireEntityInput("SephTrain", "SetSpeedReal", "25", 23.0),
-                FireEntityInput("tank_boss", "SetHealth", "819200", 1.0),
-                FireEntityInput("FB.SephDMGRelay", "SetHealth", "655360000", 1.0);
+              FireEntityInput("SephTrain", "SetSpeedReal", "25", 23.0);
+              FireEntityInput("tank_boss", "SetHealth", "819200", 1.0);
+              FireEntityInput("FB.SephDMGRelay", "SetHealth", "655360000", 1.0);
             }
           }
           CreateTimer(30.0, BossHPTimer);
@@ -1323,23 +1302,16 @@ void sudo(int task){
     //Bomb Deployed
     case 15: {
       FireEntityInput("FB.PayloadWarning", "Disable", "", 0.0);
-      switch (bombState[0].state) {
-        case 8, 16, 24, 32, 40, 48, 56, 64:{
-          bombState[bombState[0].getCurBomb()].explode(true);
-          bombState[0].stateMax += 10;
-          if (bombState[0].state >= bombState[0].stateMax) return;
-          else bombState[0].state += 2;
-        }
-        //Fartsy of the Seventh Taco Bell
-        case 69: {
-          FireEntityInput("NukeAll", "Enable", "", 0.0),
-          EmitSoundToAll(SFXArray[35]);
-          FireEntityInput("FB.Fade", "Fade", "", 0.0),
-          FireEntityInput("NukeAll", "Disable", "", 2.0),
+      if(!core.isWave) return;
+      bombState[bombState[0].getCurBomb()].explode(true);
+      bombState[0].stateMax += 10;
+      if (bombState[0].state >= bombState[0].stateMax) return;
+      else bombState[0].state += 2;
+      if(bombState[0].state == 69){
+          bombState[7].explode(false);
           bombState[0].stateMax = 64;
           CreateTimer(5.0, TimedOperator, 99);
         }
-      }
       return;
     }
     //Tank deployed its bomb
