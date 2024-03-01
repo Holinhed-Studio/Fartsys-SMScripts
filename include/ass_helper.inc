@@ -115,7 +115,6 @@ enum struct COREDATA {
   bool tickMusic;
   bool tickOffset;
   bool TornadoWarningIssued;
-  char realPath[64];
   char cachedPath[64];
   char songName[64];
   float HWNMin;
@@ -145,7 +144,7 @@ enum struct ASShop {
   int purchase;
 }
 ASShop ass[10];
-//Bomb states
+//Bomb states (note to self, any additions made to this array for custom things like shop purchases or boss events should be at the END of the array, prioritize actual bombs first so as not to break anything in the event we add more bombs.. and remember to adjust bombstate[x].explode(false) in the .sp file)
 enum struct BOMBSTATE {
   bool canHindenburg;
   bool canSENTStars;
@@ -194,15 +193,15 @@ enum struct BOMBSTATE {
       FireEntityInput("HurtAll", "AddOutput", "damage 2000000", this.NukeStart);
       FireEntityInput("HurtAll", "Enable", "", this.NukeStart+0.1);
       FireEntityInput("FB.Fade", "Fade", "", this.FadeDly);
-      FireEntityInput("NukeAll", "Disable", "", 3.0);
-      FireEntityInput("HurtAll", "Disable", "", 3.0);
-      if(this.sacVal == 25){
+      FastFire("OnUser1 NukeAll:Disable::3.0:1");
+      FastFire("OnUser1 HurtAll:Disable::3.0:1");
+      if(this.state == 64){
         CreateTimer(15.0, SpecTimer);
         ResetBombState();
       }
       if(this.canHindenburg){
         core.canHindenburg = true;
-        FireEntityInput("DeliveryBurg", "Unlock", "", 0.0);
+        FastFire("OnUser1 DeliveryBurg:Unlock::0.0:1");
         CPrintToChatAll("The {red}HINDENBURG {forestgreen}is now ready for flight!");
       }
     }
@@ -221,10 +220,37 @@ enum struct BOMBSTATE {
 BOMBSTATE bombState[9];
 void ResetBombState(){
   bombState[0].state = 0;
+  bombState[0].stateMax = 10;
 }
+//Bomb paths
+char BOMBPATH[][32] = {
+  "bombpath_right_prefer_flankers",
+  "bombpath_left_prefer_flankers"
+}
+//Custom Bosses - For Sephiroth, index may vary because we don't want to be able to execute code that shouldn't be executed. Example SephBoss[5].attack would run code that's part of SephBoss[4].attack. Also, this.fireCount is how many times FastFire should run, as well being added to this.index to determine what it does.
+enum struct CUSTOMBOSS {
+  bool shouldNuke;
+  char ChatMessage[128];
+  char fireString[128];
+  char sound[64];
+  int index;
+  int fireCount;
+  void attack(){
+    if(this.shouldNuke) {
+      CreateTimer(1.0, NukeTimer);
+      CreateTimer(7.0, TimedOperator, 11);
+      core.canSephNuke = true;
+    }
+    if (!StrEqual(this.ChatMessage, "")) CPrintToChatAll(this.ChatMessage);
+    for (int i = 0; i < this.fireCount; i++) FastFire(this.fireString[this.index+i]);
+  }
+}
+CUSTOMBOSS SephBoss[12];
+CUSTOMBOSS HWBoss[12];
+CUSTOMBOSS Onslaughter[10];
 //Configure all variables
 void SetupCoreData(){
-  AssLogger(0, "Setting up core data...");
+  AssLogger(1, "Setting up core data...");
   ass[0].name = "[10] Kissone Bath Salts";
   ass[1].name = "[20] Summon Goobbue or Kirby";
   ass[2].name = "[30] Robot Trap (Wave Fail-safe)";
@@ -235,26 +261,8 @@ void SetupCoreData(){
   ass[7].name = "[80] Meteorites";
   ass[8].name = "[90) 300,000 UbUp Cash";
   ass[9].name = "[100] Professor Fartsalot";
-  ass[0].price = 10;
-  ass[1].price = 20;
-  ass[2].price = 30;
-  ass[3].price = 40;
-  ass[4].price = 50;
-  ass[5].price = 60;
-  ass[6].price = 70;
-  ass[7].price = 80;
-  ass[8].price = 90;
-  ass[9].price = 100;
-  ass[0].purchase = 30;
-  ass[1].purchase = 31;
-  ass[2].purchase = 32;
-  ass[3].purchase = 33;
-  ass[4].purchase = 34;
-  ass[5].purchase = 35;
-  ass[6].purchase = 36;
-  ass[7].purchase = 37;
-  ass[8].purchase = 38;
-  ass[9].purchase = 39;
+  for (int i = 0; i < sizeof(ass); i++) ass[i].price = 10 + (10 * i);
+  for (int i = 0; i < sizeof(ass); i++) ass[i].purchase = 30 + i;
   bombState[8].canHindenburg = true;
   bombState[4].canSENTStars = true;
   bombState[6].canSENTShark = true;
@@ -397,7 +405,6 @@ void SetupCoreData(){
   core.tickMusic = false;
   core.tickOffset = false;
   core.TornadoWarningIssued = false;
-  core.realPath = "null";
   core.cachedPath = "null";
   core.songName = "null";
   core.BGMINDEX = 1;
@@ -418,15 +425,83 @@ void SetupCoreData(){
   core.waveFlags = 0;
   core.HWNMin = 210.0;
   core.HWNMax = 380.0;
-  AssLogger(0, "Hooking game events...");
+  AssLogger(1, "Setting up bosses...");
+  HWBoss[0].index = 0;
+  HWBoss[0].fireCount = 2;
+  HWBoss[0].fireString = "OnUser1 hhh_maker:ForceSpawn::0.0:1";
+  HWBoss[1].index = 2;
+  HWBoss[1].fireString = "OnUser1 hhh_maker2:ForceSpawn:0.0:1";
+  HWBoss[2].index = 3;
+  HWBoss[2].fireCount = 1;
+  HWBoss[2].fireString = "OnUser1 monoculus_maker:ForceSpawn:0.0:1";
+  HWBoss[3].index = 4;
+  HWBoss[3].fireCount = 3;
+  HWBoss[3].fireString = "OnUser1 hhh_maker2:ForceSpawn:0.0:1";
+  HWBoss[4].index = 7;
+  HWBoss[4].fireString = "OnUser1 SkeleSpawner:Enable:0.0:1";
+  HWBoss[5].index = 8; 
+  HWBoss[5].fireString = "OnUser1 SkeleSpawner:Disable:20.0:1";
+  HWBoss[6].index = 5; //Does this access HWBoss[4]?
+  HWBoss[6].fireCount=2;//Does this disable skelespawner after enabling it?...
+  HWBoss[7].index = 8;
+  HWBoss[7].fireString = "OnUser1 merasmus_maker:ForceSpawn::0.0:1";
+  HWBoss[7].fireCount = 3;
+  HWBoss[8].index = 11;
+  HWBoss[8].fireCount = 2;
+  HWBoss[8].fireString = "OnUser1 hhh_maker2:ForceSpawn:0.0:1";
+  HWBoss[9].index = 12;
+  HWBoss[9].fireString = "OnUser1 monoculus_maker:ForceSpawn:0.0:1";
+  HWBoss[10].index = 0;
+  HWBoss[10].fireCount = 2;
+  HWBoss[10].fireString = "OnUser1 merasmus_maker:ForceSpawn::0.0:1";
+  HWBoss[11].index = 2;
+  HWBoss[11].fireString = "OnUser1 monoculus_maker:ForceSpawn:0.0:1";
+  HWBoss[11].fireCount = 1;
+  SephBoss[0].index = 0;
+  SephBoss[0].fireCount = 0;
+  SephBoss[0].shouldNuke = true;
+  SephBoss[1].fireString = "OnUser1 SephMeteor:ForceSpawn::0.0:1";
+  SephBoss[1].ChatMessage = "{blue}Sephiroth: Say goodbye!";
+  SephBoss[1].index = 2;
+  SephBoss[1].fireCount = 1;
+  SephBoss[2].fireString = "OnUser1 SephNuke:ForceSpawn::0.0:1";
+  SephBoss[2].index = 3;
+  SephBoss[2].fireCount = 1;
+  SephBoss[2].sound = SFXArray[8];
+  SephBoss[3].fireString = "OnUser1 SephRocketSpammer:FireMultiple:50:0.0:1";
+  SephBoss[3].index = 4;
+  SephBoss[3].fireCount = 4;
+  SephBoss[4].index = 3;
+  SephBoss[4].fireCount = 3;
+  SephBoss[4].fireString = "OnUser1 SephRocketSpammer:FireMultiple:10:3.0:1";
+  SephBoss[5].index = 9;
+  SephBoss[5].fireCount = 2;
+  SephBoss[5].fireString = "OnUser1 SephRocketSpammer:FireMultiple:10:5.0:1";
+  SephBoss[6].index = 9;
+  SephBoss[6].fireCount = 2;
+  SephBoss[6].fireString = "OnUser1 SkeleSpawner:Enable::0.0:1";
+  SephBoss[7].index = 3;
+  SephBoss[7].fireCount = 3;
+  SephBoss[7].fireString = "OnUser1 SkeleSpawner:Disable::20.0:1";
+  SephBoss[8].index = 4;
+  SephBoss[8].fireCount = 1;
+  SephBoss[9].index = 11;
+  SephBoss[9].fireCount = 2;
+  SephBoss[9].fireString = "OnUser1 SephRocketSpammer:FireOnce::0.0:1";
+  SephBoss[10].index = 12;
+  SephBoss[10].fireCount = 1;
+  SephBoss[10].fireString = "OnUser1 SephRocketSpammer:FireOnce::5.0:1";
+  SephBoss[11].index = 3;
+  SephBoss[11].fireCount = 4;
+  AssLogger(1, "Hooking game events...");
   HookEvent("player_death", EventDeath);
   HookEvent("player_spawn", EventSpawn);
   HookEvent("server_cvar", Event_Cvar, EventHookMode_Pre);
   HookEvent("mvm_wave_complete", EventWaveComplete);
   HookEvent("mvm_wave_failed", EventWaveFailed);
   HookEvent("mvm_bomb_alarm_triggered", EventWarning);
-  HookEventEx("player_hurt", Event_Playerhurt, EventHookMode_Pre);
-  AssLogger(0, "Core data setup complete!");
+  HookEventEx("player_hurt", Event_PlayerHurt, EventHookMode_Pre);
+  AssLogger(1, "Core data setup complete!");
 }
 //Messages to be printed when the fail safe has been triggered.
 char failsafe[][256] = {
@@ -544,23 +619,23 @@ char SpecEnt[][24] = {
   "Spec*"
 };
 //Strike targets for lightning
-char StrikeAt[][32] = {
-  "LightningHurt00",
-  "LightningHurt01",
-  "LightningHurt02",
-  "LightningHurt03",
-  "LightningHurt04",
-  "LightningHurt05",
-  "LightningHurt06",
-  "LightningHurt07",
-  "LightningHurt08",
-  "LightningHurt09",
-  "LightningHurt0A",
-  "LightningHurt0B",
-  "LightningHurt0C",
-  "LightningHurt0D",
-  "LightningHurt0E",
-  "LightningHurt0F"
+char StrikeAt[][40] = {
+  "OnUser1:LightningHurt00:Enable::0.0:1",
+  "OnUser1:LightningHurt01:Enable::0.0:1",
+  "OnUser1:LightningHurt02:Enable::0.0:1",
+  "OnUser1:LightningHurt03:Enable::0.0:1",
+  "OnUser1:LightningHurt04:Enable::0.0:1",
+  "OnUser1:LightningHurt05:Enable::0.0:1",
+  "OnUser1:LightningHurt06:Enable::0.0:1",
+  "OnUser1:LightningHurt07:Enable::0.0:1",
+  "OnUser1:LightningHurt08:Enable::0.0:1",
+  "OnUser1:LightningHurt09:Enable::0.0:1",
+  "OnUser1:LightningHurt0A:Enable::0.0:1",
+  "OnUser1:LightningHurt0B:Enable::0.0:1",
+  "OnUser1:LightningHurt0C:Enable::0.0:1",
+  "OnUser1:LightningHurt0D:Enable::0.0:1",
+  "OnUser1:LightningHurt0E:Enable::0.0:1",
+  "OnUser1:LightningHurt0F:Enable::0.0:1"
 };
 //test code
 char TBGM0[16] = "test/bgm0.mp3";
@@ -576,7 +651,7 @@ stock bool IsValidClient(int client) {
 }
 //Register our commands.
 void RegisterAllCommands(){
-  AssLogger(0, "Registering commands...");
+  AssLogger(1, "Registering commands...");
   RegServerCmd("fb_operator", Command_Operator, "Serverside only. Does nothing when executed as client.");
   RegAdminCmd("sm_music", Command_Music, ADMFLAG_RESERVATION, "Set music to be played for the next wave");
   RegConsoleCmd("sm_bombstatus", Command_FBBombStatus, "Check bomb status");
@@ -589,13 +664,10 @@ void RegisterAllCommands(){
 }
 //Connect to database
 public void OnConfigsExecuted() {
-  if (!FB_Database) {
-    Database.Connect(Database_OnConnect, "ass");
-  }
+  if (!FB_Database) Database.Connect(Database_OnConnect, "ass");
 }
 //Format database if needed
-public void Database_OnConnect(Database db,
-  char[] error, any data) {
+public void Database_OnConnect(Database db, char[] error, any data) {
   if (!db) {
     AssLogger(3, error);
     return;
@@ -604,18 +676,24 @@ public void Database_OnConnect(Database db,
   db.Driver.GetIdentifier(buffer, sizeof(buffer));
   if (!StrEqual(buffer, "mysql", false)) {
     delete db;
-    LogError("Could not connect to the database: expected mysql database.");
+    AssLogger(3, "Could not connect to the database: expected mysql database.");
     return;
   }
   FB_Database = db;
   FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS ass_activity(name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', health TEXT DEFAULT '-1', maxHealth INT UNSIGNED DEFAULT '0', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '3', PRIMARY KEY (steamid));");
+  if (GetClientCount(true) > 0){
+    for (int i = 0; i <= MaxClients; i++){
+      if (!IsValidClient(i)) continue;
+      char query[256];
+      Format(query, sizeof(query), "SELECT soundprefs FROM ass_activity WHERE steamid = '%i';", GetSteamAccountID(i));
+      FB_Database.Query(SQL_SNDPrefs, query, i);
+    }
+  }
 }
 //Database Fastquery Manager
 public void Database_FastQuery(Database db, DBResultSet results,
   const char[] error, any data) {
-  if (!results) {
-    LogError("Failed to query database: %s", error);
-  }
+  if (!results) LogError("Failed to query database: %s", error);
 }
 public void Database_MergeDataError(Database db, any data, int numQueries,
   const char[] error, int failIndex, any[] queryData) {
@@ -658,7 +736,7 @@ enum struct BGM {
 BGM BGMArray[20];
 
 void RegisterAndPrecacheAllFiles(){
-  BGMArray[0].realPath = "ui/system_message_alert.wav";
+  BGMArray[0].realPath = "null";
   BGMArray[1].realPath = "fartsy/music/ffxiv/TheSilentRegardOfStars.wav";
   BGMArray[2].realPath = "fartsy/music/ffxiv/KnowledgeNeverSleeps.wav";
   BGMArray[3].realPath = "fartsy/music/ffxiv/FromMud.wav";
@@ -701,7 +779,7 @@ void RegisterAndPrecacheAllFiles(){
   BGMArray[0].SNDLVL = 0;
   BGMArray[1].SNDLVL = 75;
   BGMArray[2].SNDLVL = 75;
-  BGMArray[3].SNDLVL = 75;
+  BGMArray[3].SNDLVL = 55;
   BGMArray[4].SNDLVL = 75;
   BGMArray[5].SNDLVL = 75;
   BGMArray[6].SNDLVL = 75;
@@ -769,8 +847,8 @@ void RegisterAndPrecacheAllFiles(){
     AssLogger(0, LoggerDbg);
     PrecacheSound(SFXArray[i], true);
   }
-  Format(LoggerDbg, sizeof(LoggerDbg), "Done! BGM Count: %i, SFX Count: %i, Total: %i files loaded to RAM.", sizeof(BGMArray) - 1, sizeof(SFXArray), (sizeof(BGMArray) + sizeof(SFXArray)) - 1);
-  AssLogger(0, LoggerDbg);
+  Format(LoggerInfo, sizeof(LoggerInfo), "Done! BGM Count: %i, SFX Count: %i, Total: %i files loaded to RAM.", sizeof(BGMArray) - 1, sizeof(SFXArray), (sizeof(BGMArray) + sizeof(SFXArray)) - 1);
+  AssLogger(1, LoggerInfo);
   //Todo: These files are not part of the base pakfile, they are slated for install in a future update, when that update is ready, these files will eventually become one with the map.
   PrecacheSound(TBGM0, true);
   PrecacheSound(TBGM2, true);
@@ -782,9 +860,125 @@ void RegisterAndPrecacheAllFiles(){
 
 //Used to keep StopSound from stopping the music we're trying to play - now with support for loop offsets!
 public Action SyncMusic(Handle timer) {
-  core.cachedPath = core.realPath;
+  core.cachedPath = BGMArray[core.BGMINDEX].realPath;
   core.tickOffset = (BGMArray[core.BGMINDEX].ticksOffset > 0 ? true : false);
-  Format(LoggerInfo, sizeof(LoggerInfo), "We are on wave %i, now playing: %s (from %s) for %i ticks. It will start looping at %i ticks.", core.curWave, core.songName, core.realPath, core.refireTime, BGMArray[core.BGMINDEX].ticksOffset);
+  Format(LoggerInfo, sizeof(LoggerInfo), "We are on wave %i, now playing: %s (from %s) for %i ticks. It will start looping at %i ticks.", core.curWave, core.songName, BGMArray[core.BGMINDEX].realPath, core.refireTime, BGMArray[core.BGMINDEX].ticksOffset);
   AssLogger(1, LoggerInfo);
   return Plugin_Stop;
 }
+//Crusader attack script
+char CrusaderBrrr[][] = {
+  "OnUser1 FB.BOOM:StopShake::3.0:1",
+  "OnUser1 FB.CRUSADER:Enable::25.20:1",
+  "OnUser1 CrusaderTrain:StartForward::25.20:1",
+  "OnUser1 CrusaderLaserBase*:StartForward::25.20:1",
+  "OnUser1 CrusaderTrain:SetSpeed:0.9:38.0:1",
+  "OnUser1 CrusaderTrain:SetSpeed:0.7:38.60:1",
+  "OnUser1 CrusaderTrain:SetSpeed:0.5:39.20:1",
+  "OnUser1 CrusaderTrain:SetSpeed:0.3:40.40:1",
+  "OnUser1 CrusaderTrain:SetSpeed:0.1:41.40:1",
+  "OnUser1 CrusaderTrain:Stop::42.60:1",
+  "OnUser1 FB.CrusaderLaserKill01:Disable::42.60:1",
+  "OnUser1 FB.LaserCore:TurnOn::45.80:1",
+  "OnUser1 CrusaderLaserBase*:SetSpeed:0.35:45.80:1",
+  "OnUser1 FB.ShakeCore:StartShake::45.80:1",
+  "OnUser1 CrusaderSprite:Color:255 128 128:45.80:1",
+  "OnUser1 FB.ShakeCore:StopShake::48.80:1",
+  "OnUser1 FB.LaserInnerMost:TurnOn::49.20:1",
+  "OnUser1 FB.ShakeInner:StartShake::49.20:1",
+  "OnUser1 CrusaderSprite:Color:255 230 230:49.20:1",
+  "OnUser1 CrusaderLaserBase*:SetSpeed:0.35:50.20:1",
+  "OnUser1 CrusaderLaserBase*:SetSpeed:0.45:50.60:1",
+  "OnUser1 CrusaderLaserBase*:SetSpeed:0.55:51.0:1",
+  "OnUser1 FB.ShakeInner:StopShake::52.10:1",
+  "OnUser1 FB.ShakeInner:StartShake::52.20:1",
+  "OnUser1 CrusaderLaserBase*:SetSpeed:0.45:54.0:1",
+  "OnUser1 CrusaderLaserBase*:SetSpeed:0.4:54.40:1",
+  "OnUser1 FB.ShakeInner:StopShake::55.0:1",
+  "OnUser1 FB.ShakeInner:StartShake::55.10:1",
+  "OnUser1 CrusaderLaserBase*:SetSpeed:0.75:57.20:1",
+  "OnUser1 FB.CrusaderSideLaser:TurnOn::57.20:1",
+  "OnUser1 FB.ShakeInner:StopShake::58.0:1",
+  "OnUser1 FB.ShakeInner:StartShake::58.10:1",
+  "OnUser1 CrusaderLaserBase*:SetSpeed:1:58.50:1",
+  "OnUser1 CrusaderLaserBase*:SetSpeed:0.75:60.80:1",
+  "OnUser1 CrusaderLaserBase:SetSpeed:0.65:61.10:1",
+  "OnUser1 CrusaderLaserBase:SetSpeed:0.55:61.40:1",
+  "OnUser1 FB.LaserCore:TurnOff::61.40:1",
+  "OnUser1 FB.LaserInnerMost:TurnOff::61.40:1",
+  "OnUser1 CrusaderSprite:Color:0 0 0:61.40:1",
+  "OnUser1 CrusaderLaserBase:SetSpeed:0.45:61.70:1",
+  "OnUser1 CrusaderLaserBase:SetSpeed:0.3:62.0:1",
+  "OnUser1 CrusaderLaserBase:SetSpeed:0.15:62.30:1",
+  "OnUser1 FB.CrusaderSideLaser:TurnOff::62.30:1",
+  "OnUser1 CrusaderLaserBase*:Stop::62.70:1",
+  "OnUser1 FB.Laser*:TurnOn::65.20:1",
+  "OnUser1 CrusaderLaserBase*:StartForward::65.20:1",
+  "OnUser1 CrusaderLaserBase:SetSpeed:1:65.20:1",
+  "OnUser1 FB.ShakeBOOM:StartShake::65.20:1",
+  "OnUser1 FB.Fade:Fade::65.20:1",
+  "OnUser1 HurtAll:AddOutput:damagetype 1024:65.10:1",
+  "OnUser1 HurtAll:AddOutput:damage 2000000:65.10:1",
+  "OnUser1 HurtAll:Enable::65.20:1",
+  "OnUser1 FB.CrusaderSideLaser:TurnOn::65.20:1",
+  "OnUser1 CrusaderSprite:Color:255 230 255:65.20:1",
+  "OnUser1 FB.Laser*:TurnOff::70.0:1",
+  "OnUser1 CrusaderTrain:StartForward::70.0:1",
+  "OnUser1 CrusaderLaserBase*:Stop::70.0:1",
+  "OnUser1 HurtAll:Disable::70.0:1",
+  "OnUser1 FB.CrusaderSideLaser:TurnOff::70.0:1",
+  "OnUser1 CrusaderSprite:Color:0 0 0:70.0:1",
+  "OnUser1 FB.ShakeBOOM:StopShake::70.20:1",
+  "OnUser1 CrusaderTrain:Stop::80.0:1",
+  "OnUser1 FB.CRUSADER:Disable::80.0:1"
+};
+
+char lightning[][] = {
+  "OnUser1 lightning:TurnOn::0.0:1",
+  "OnUser1 value:TurnOff::0.0:1",
+  "OnUser1 weather:Skin:4:0.0:1",
+  "OnUser1 LightningLaser:TurnOn::0.0:1",
+  "OnUser1 lightning:TurnOff::0.1:1",
+  "OnUser1 weather:Skin:3:0.1:1",
+  "OnUser1 LightningLaser:TurnOff::0.1:1",
+  "OnUser1 lightning:TurnOn::0.17:1",
+  "OnUser1 weather:Skin:4:0.17:1",
+  "OnUser1 LightningLaser:TurnOn::0.17:1",
+  "OnUser1 lightning:TurnOff::0.25:1",
+  "OnUser1 LightningLaser:TurnOff::0.25:1",
+  "OnUser1 weather:Skin:3:0.25:1"
+};
+
+char TornadoLogic[][] = {
+  "OnUser1 TornadoKill:Enable::0.0:1",
+  "OnUser1 tornadobutton:Lock::0.0:1",
+  "OnUser1 tornadof1:start::20.0:1",
+  "OnUser1 shaketriggerf1:Enable::20.0:1",
+  "OnUser1 tornadowindf1:PlaySound::20.0:1",
+  "OnUser1 tornadof1wind:Enable::21.50:1",
+  "OnUser1 tornadof1:stop::0.0:1",
+  "OnUser1 TornadoKill:Disable::0.0:1",
+  "OnUser1 tornadof1wind:Disable::0.0:1",
+  "OnUser1 tornadowindf1:StopSound::0.0:1",
+  "OnUser1 shaketriggerf1:Disable::0.0:1",
+  "OnUser1 tornadobutton:Unlock::30.0:1",
+  "OnUser1 FB.FakeTankTank01:Kill::0.0:1",
+  "OnUser1 FB.FakeTankPhys01:Kill::0.0:1"
+};
+char WaveSetup[][] = {
+  "OnUser1 bombpath_right_arrows:Disable::0.1:1", //Disable right arrows
+  "OnUser1 bombpath_left_arrows:Disable::0.1:1", //Disable left arrows
+  "OnUser1 Classic_Mode_Intel1:Enable::0.0:1", //Activate Intel 1
+  "OnUser1 Classic_Mode_Intel2:Enable::0.0:1", //Activate Intel 2
+  "OnUser1 CommonSpells:Enable::0.0:1", // Activate common spells
+  "OnUser1 rain:Alpha:200:0.0:1", //Activate rain
+  "OnUser1 OldSpawn:Enable::0.0:1", //Activate Old Spawn
+  "OnUser1 NewSpawn:Disable::0.0:1", //De-activate New Spawn
+  "OnUser1 rain:Alpha:200::0.0:1", // activate rain
+  "OnUser1 Classic_Mode_Intel1:Enable::0.0:1", //enable intel 1
+  "OnUser1 Classic_Mode_Intel2:Enable::0.0:1", //enable intel 2
+  "OnUser1 Classic_Mode_Intel3:Enable::0.0:1",
+  "OnUser1 Classic_Mode_Intel4:Enable::0.0:1",
+  "OnUser1 Classic_Mode_Intel5:Enable::0.0:1",
+  "OnUser1 Classic_Mode_Intel6:Enable::0.0:1"
+};
