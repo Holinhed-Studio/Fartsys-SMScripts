@@ -245,8 +245,14 @@ void sudo(int task) {
       FastFire(PLR > PLB ? "OnUser1 WinRed:RoundWin::0.0:1" : PLR < PLB ? "OnUser1 WinBlu:RoundWin::0.0:1" : "OnUser1 WinStalemate:RoundWin::0.0:1");
       return;
     }
+    // Setup Begin
     case 1: {
-      // Setup Begin
+      FastFire("OnUser1 PL1.TrackTrain:Stop::0.5:1");
+      PLB = 0;
+      PLL = 0;
+      PLM = false;
+      PLR = 0;
+      PLT = "N/A";
       return;
     }
     case 2: {
@@ -273,8 +279,7 @@ void sudo(int task) {
     }
     // Payload stopped moving
     case 5: {
-      PLT = "N/A";
-      PLL = 0;
+      PLT = "RECEDING";
       PLM = false;
       FastFire("OnUser1 PL1.TrackTrain:Stop::0.0:1");
       RecedeTimer = CreateTimer(45.0, BeginRecede, PLL);
@@ -283,18 +288,16 @@ void sudo(int task) {
     // Payload on blue side of map
     case 6: {
       PLL = 2;
-      if (PLB < 5) PLB = 5;
       return;
     }
     // Payload red side of map
     case 7: {
       PLL = 1;
-      if (PLR < 5) PLR = 5;
       return;
     }
     // Point 1 capture (this would be 75% capture from blue's perspective)
     case 8: {
-      FastFire("OnUser1 PL4.CP:SetOwner:3::0.0:1");
+      FastFire("OnUser1 PL4.CP:SetOwner:3::0.0:1"); //Change this to instead enable a capture area, stop the payload and disable capture area while the CP is capturing.. Re enable it after 15s
       return;
     }
     // Point -1 capture (this would be 75% capture from red's perspective)
@@ -304,9 +307,26 @@ void sudo(int task) {
     }
     // Op codes for payload progression
     case 10: {
-      if (PLL == 1) PLR += 5;
-      else if (PLL == 2) PLB += 5;
+      if (PLM && PLL == 1 && StrEqual(PLT, "BLU")) PLB += 5;
+      else if (PLM && PLL == 2 && StrEqual(PLT, "RED")) PLR += 5;
+      PLT = "N/A";
+      PrintToChatAll("BLU %i% RED %i%, PLM: %b, PLL: %i, PLT: %s", PLB, PLR, PLM, PLL, PLT);
       return;
+    }
+    //Blu reached end of track (FF)
+    case 11: {
+        FastFire("OnUser1 WinBlu:RoundWin::0.0:1"); //Change this to instead enable a capture area, stop the payload, and disable payload capture area while the CP is capturing... Victory after 15s (onCapTeam2)
+    }
+    //Red reached end of track (00)
+    case 12:{
+        FastFire("OnUser1 WinRed:RoundWin::0.0:1"); //Change this, see case 11...
+    }
+    //Payload reached neutral point
+    case 13:{
+        PLT = "N/A";
+        PLL = 0;
+        PLM = false;
+        FastFire("OnUser1 PL1.TrackTrain:Stop::0.0:1");
     }
   }
 }
