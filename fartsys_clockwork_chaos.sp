@@ -8,7 +8,7 @@
 #include <tf2_stocks>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "1.0.0";
+static char PLUGIN_VERSION[8] = "1.0.5";
 
 public Plugin myinfo = {
   name = "Fartsy's Clockwork Chaos - Framework",
@@ -49,6 +49,7 @@ public void OnGameFrame() {
       }
     }*/
 }
+
 
 // Restart music for the new client
 public Action RefireMusicForClient(Handle timer, int client) {
@@ -104,8 +105,8 @@ public Action Command_GetCurrentSong(int client, int args) {
   int tPos = RoundToFloor(core.refireTime / 66.6666666666);
   Format(buffer, 16, "%02d:%02d", sPos / 60, sPos % 60);
   Format(tbuffer, 16, "%02d:%02d", tPos / 60, tPos % 60);
-  CPrintToChat(client, "The current song is: {limegreen}%s {orange}(%s / %s)", core.songName, buffer, tbuffer);
-  return Plugin_Handled;*/
+  CPrintToChat(client, "The current song is: {limegreen}%s {orange}(%s / %s)", core.songName, buffer, tbuffer);*/
+  return Plugin_Handled;
 }
 
 // Command: Return the client to spawn
@@ -232,6 +233,7 @@ public Action Command_Operator(int args) {
   char arg1[16];
   GetCmdArg(1, arg1, sizeof(arg1));
   int x = StringToInt(arg1);
+  PrintToServer("Directly calling sudo with %i", args);
   sudo(x);
   return Plugin_Continue;
 }
@@ -247,16 +249,30 @@ void sudo(int task) {
     }
     // Setup Begin
     case 1: {
+      FccLogger(0, "Setup beginning....");
       FastFire("OnUser1 PL1.TrackTrain:Stop::0.5:1");
+      FastFire("OnUser1 UI.PLCore:SwitchOverlay:1::0.0:1");
+      FastFire("OnUser1 UI.PLBlue00:SwitchOverlay:1::0.0:1");
+      FastFire("OnUser1 UI.PLBlue01:SwitchOverlay:1::0.0:1");
+      FastFire("OnUser1 UI.PLBlue02:SwitchOverlay:1::0.0:1");
+      if(RecedeTimer != INVALID_HANDLE) KillTimer(RecedeTimer);
+      isMatch = true;
       PLB = 0;
       PLL = 0;
       PLM = false;
       PLR = 0;
       PLT = "N/A";
+      PLRL = 20;
+      BLC = false;
+      REC = false;
+      RECEDE = false;
+      CreateTimer(0.5, PayloadUpdateTimer);
+      CPrintToChatAll("{darkgreen} Clockwork Castletown ({lime}v%s{darkgreen}) - Escort the crystal the longest distance to win!", PLUGIN_VERSION);
       return;
     }
+    // Setup End / round start
     case 2: {
-      // Setup End / round start
+      FccLogger(1, "Match started!");
       return;
     }
     case 3: {
@@ -266,6 +282,7 @@ void sudo(int task) {
       FastFire("OnUser1 PL1.TrackTrain:StartForward::0.0:1");
       KillTimer(RecedeTimer);
       RecedeTimer = INVALID_HANDLE;
+      RECEDE = false;
       return;
     }
     // Payload started moving by red
@@ -275,11 +292,12 @@ void sudo(int task) {
       FastFire("OnUser1 PL1.TrackTrain:StartBackward::0.0:1");
       KillTimer(RecedeTimer);
       RecedeTimer = INVALID_HANDLE;
+      RECEDE = false;
       return;
     }
     // Payload stopped moving
     case 5: {
-      PLT = "RECEDING";
+      PLT = "NEUTRAL";
       PLM = false;
       FastFire("OnUser1 PL1.TrackTrain:Stop::0.0:1");
       RecedeTimer = CreateTimer(45.0, BeginRecede, PLL);
@@ -297,36 +315,67 @@ void sudo(int task) {
     }
     // Point 1 capture (this would be 75% capture from blue's perspective)
     case 8: {
-      FastFire("OnUser1 PL4.CP:SetOwner:3::0.0:1"); //Change this to instead enable a capture area, stop the payload and disable capture area while the CP is capturing.. Re enable it after 15s
+      FastFire("OnUser1 PL4.CP:SetOwner:3:0.0:1"); //Change this to instead enable a capture area, stop the payload and disable capture area while the CP is capturing.. Re enable it after 15s. Check if blue is pushing and not receding.
       return;
     }
     // Point -1 capture (this would be 75% capture from red's perspective)
     case 9: {
-      FastFire("OnUser1 PL2.CP:SetOwner:2::0.0:1");
+      FastFire("OnUser1 PL2.CP:SetOwner:2:0.0:1"); // see case 8
       return;
     }
     // Op codes for payload progression
     case 10: {
-      if (PLM && PLL == 1 && StrEqual(PLT, "BLU")) PLB += 5;
-      else if (PLM && PLL == 2 && StrEqual(PLT, "RED")) PLR += 5;
-      PLT = "N/A";
-      PrintToChatAll("BLU %i% RED %i%, PLM: %b, PLL: %i, PLT: %s", PLB, PLR, PLM, PLL, PLT);
+      PrintToServer("Got 10, PLL %i", PLL);
+      switch(PLL){
+        case 1:{
+          PrintToChatAll("DEBUG: Checking if RECEDE: %b STREQUAL PLT RED: %b, PLB %i < PLPOS %i PLRL: %i...", RECEDE, StrEqual(PLT, "RED"), PLB, PLPOS[PLRL], PLRL);
+          if(RECEDE || StrEqual(PLT, "RED")) PLRL--; //If it's receding back to mid or being pushed by red back to mid... This is occuring on red's side of the map.
+          else PLRL++;//It's moving forward by blue to red.
+          if(PLB < PLPOS[PLRL]){
+            PLB+=5;
+            FastFire("OnUser1 test:scorebluepoints::0.0:1");
+          }
+          return;
+        }
+        case 2:{
+          PrintToChatAll("DEBUG: Checking if RECEDE: %b STREQUAL PLT BLU: %b, PLR %i < PLPOS %i PLRL: %i...", RECEDE, StrEqual(PLT, "BLU"), PLR, PLPOS[PLRL], PLRL);
+          if(RECEDE || StrEqual(PLT, "BLU")) PLRL++; //If it's receding back to mid or being pushed by blu back to mid... this is occuring on blu's side of the map.
+          else PLRL--; //It's moving forward by red to blue.
+          if(PLR < PLPOS[PLRL]){
+            PLR+=5;
+            FastFire("OnUser1 test:scoreredpoints::0.0:1");
+          }
+          return;
+        }
+      }
+//      PrintToChatAll("BLU %i% RED %i%, PLM: %b, PLL: %i, PLT: %s", PLB, PLR, PLM, PLL, PLT);
       return;
     }
     //Blu reached end of track (FF)
     case 11: {
-        FastFire("OnUser1 WinBlu:RoundWin::0.0:1"); //Change this to instead enable a capture area, stop the payload, and disable payload capture area while the CP is capturing... Victory after 15s (onCapTeam2)
+        //FastFire("OnUser1 WinBlu:RoundWin::0.0:1"); //Change this to instead enable a capture area, stop the payload, and disable payload capture area while the CP is capturing... Victory after 15s (onCapTeam2)
     }
     //Red reached end of track (00)
     case 12:{
-        FastFire("OnUser1 WinRed:RoundWin::0.0:1"); //Change this, see case 11...
+        //FastFire("OnUser1 WinRed:RoundWin::0.0:1"); //Change this, see case 11...
     }
     //Payload reached neutral point
     case 13:{
         PLT = "N/A";
         PLL = 0;
         PLM = false;
+        RECEDE = false;
+        PLRL = 20;
         FastFire("OnUser1 PL1.TrackTrain:Stop::0.0:1");
+    }
+    //Debug
+    case 42:{
+      PLR+=5;
+      return;
+    }
+    case 69:{
+      PLB +=5;
+      return;
     }
   }
 }
@@ -334,5 +383,19 @@ void sudo(int task) {
 // Recede payload after 45 seconds
 public Action BeginRecede(Handle timer, int side) {
   if (side > 0) FastFire(side == 1 ? "OnUser1 PL1.TrackTrain:StartBackward::0.0:1" : "OnUser1 PL1.TrackTrain:StartForward::0.0:1");
+  RECEDE = true;
+  return Plugin_Stop;
+}
+
+// Show payload state
+public Action PayloadUpdateTimer(Handle timer){
+  if(!isMatch) return Plugin_Stop;
+  CCH[30].BLU = BLC ? "hud/cconflict/cc_blu0B" : "hud/cconflict/cc_blu0A";
+  CCH[10].RED = REC ? "hud/cconflict/cc_red20" : "hud/cconflict/cc_red1F";
+  char state[64];
+  Format(state, sizeof(state), StrEqual(PLT, "BLU") ? CCH[PLRL].BLU : StrEqual(PLT, "RED") ? CCH[PLRL].RED :  RECEDE ? CCH[PLRL].NEUTRAL : CCH[PLRL].IDLE);
+  ShowOverlayAll(state);
+  PrintToServer(state);
+  CreateTimer(0.5, PayloadUpdateTimer);
   return Plugin_Stop;
 }
