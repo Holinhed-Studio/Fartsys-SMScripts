@@ -399,3 +399,41 @@ public Action PayloadUpdateTimer(Handle timer){
   CreateTimer(0.5, PayloadUpdateTimer);
   return Plugin_Stop;
 }
+
+// Recede payload after 45 seconds
+public Action BeginRecede(Handle timer, int side) {
+  if (side > 0) FastFire(side == 1 ? "OnUser1 PL1.TrackTrain:StartBackward::0.0:1" : "OnUser1 PL1.TrackTrain:StartForward::0.0:1");
+  RECEDE = true;
+  return Plugin_Stop;
+}
+
+// Show payload state
+public Action PayloadUpdateTimer(Handle timer){
+  if(!isMatch) return Plugin_Stop;
+  CCH[30].BLU = BLC ? "hud/cconflict/cc_blu0B" : "hud/cconflict/cc_blu0A";
+  CCH[10].RED = REC ? "hud/cconflict/cc_red20" : "hud/cconflict/cc_red1F";
+  char state[64];
+  Format(state, sizeof(state), StrEqual(PLT, "BLU") ? CCH[PLRL].BLU : StrEqual(PLT, "RED") ? CCH[PLRL].RED :  RECEDE ? CCH[PLRL].NEUTRAL : CCH[PLRL].IDLE);
+  ShowOverlayAll(state);
+  PrintToServer(state);
+  CreateTimer(0.5, PayloadUpdateTimer);
+  return Plugin_Stop;
+}
+
+//Finish adding idle huds
+//Add real spawn points and collisions
+
+//Fix payload not going to final blue point...
+
+//Finish adding map collisions, use Invisible for areas that are blocked by mesh...
+//Finish fixing up clipping flag models and investigate clipping fence at spawns
+
+//Music system and mini status hud
+//Add back the %score% variable to hud. Make sure to use the actual score entry from base playerdestruction...
+//Add capture point logic, each point taking 30 seconds to cap
+//Add map easter eggs and other hazards...
+
+//Brainstorming...
+/* Crystal: MOVING (Team) //or Crystal: RECEDING (in 45s)?
+* Song: FFXIV - Locus (XX:XX/XX:XX)
+*/
