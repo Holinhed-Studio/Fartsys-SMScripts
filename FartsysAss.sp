@@ -21,7 +21,7 @@
 #include <ass_helper>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.0.0";
+static char PLUGIN_VERSION[8] = "7.1.0";
 
 public Plugin myinfo = {
   name = "Fartsy's Ass - Framework",
@@ -1392,7 +1392,7 @@ void sudo(int task) {
   }
   //Debug, somethingsomething aoe blah blah blah
   case 200: {
-    DispatchCircleAOE(1613.101929, -1490.457520, -532.186646);
+    DispatchCircleAOE(GetRandomFloat(1350.0, 1620.0), GetRandomFloat(-1350.0, -1520.0), -580.0);
   }
   //Taco Bell Edition
   case 210: {
@@ -1545,19 +1545,11 @@ void sudo(int task) {
   }
   //Monitor power up/down!
   case 1008: {
-    if (!core.monitorOn) {
-      core.monitorOn = true;
-      if (!core.monitorColor) FastFire("OnUser1 FB.MonitorSprite:Color:0 0 255:0.0:1");
-      else FastFire("OnUser1 FB.MonitorSprite:Color:0 255 0:0.0:1");
-      FastFire("OnUser1 FB.MonitorBlank:Disable:0.0:1");
-      FastFire("OnUser1 FB.MonitorBW:Enable:0.0:1");
-    } else {
-      core.monitorOn = false;
-      FastFire("OnUser1 FB.MonitorSprite:Color:255 0 0:0.0:1");
-      FastFire("OnUser1 FB.Monitor:Disable:0.0:1");
-      FastFire("OnUser1 FB.MonitorBW:Disable:0.0:1");
-      FastFire("OnUser1 FB.MonitorBlank:Enable:0.0:1");
-    }
+    core.monitorOn = (!core.monitorOn ? true : false);
+    FastFire(!core.monitorColor && core.monitorOn ? "OnUser1 FB.MonitorSprite:Color:0 0 255:0.0:1" : core.monitorOn ? "OnUser1 FB.MonitorSprite:Color:0 255 0:0.0:1" : "OnUser1 FB.MonitorSprite:Color:255 0 0:0.0:1");
+    FastFire(!core.monitorColor && core.monitorOn ? "OnUser1 FB.MonitorBW:Enable:0.0:1" : core.monitorOn ? "OnUser1 FB.Monitor:Enable:0.0:1" : "OnUser1 FB.Monitor:Disable:0.0:1");
+    FastFire(!core.monitorColor && core.monitorOn ? "OnUser1 FB.Monitor:Disable:0.0:1" : core.monitorOn ? "OnUser1 FB.MonitorBW:Disable:0.0:1" : "OnUser1 FB.MonitorBlank:Enable:0.0:1");
+    FastFire(core.monitorOn ? "OnUser1 FB.MonitorBlank:Disable:0.0:1" : "OnUser1 FB.MonitorBlank:Enable:0.2:1");
   }
   //Cycle monitor forward
   case 1009: {
@@ -1576,42 +1568,19 @@ void sudo(int task) {
   //Enable black and white.
   case 1011: {
     if (!core.monitorOn) return;
-    else {
-      if (!core.monitorColor) {
-        core.monitorColor = true;
-        FastFire("OnUser1 FB.MonitorSprite:Color:0 255 0:0.0:1");
-        FastFire("OnUser1 FB.Monitor:Enable:0.0:1");
-        FastFire("OnUser1 FB.MonitorBW:Disable:0.0:1");
-      } else {
-        core.monitorColor = false;
-        FastFire("OnUser1 FB.MonitorSprite:Color:0 0 255:0.0:1");
-        FastFire("OnUser1 FB.Monitor:Disable:0.0:1");
-        FastFire("OnUser1 FB.MonitorBW:Enable:0.0:1");
-      }
-    }
+    core.monitorColor = (!core.monitorColor ? true : false);
+    FastFire(!core.monitorColor ? "OnUser1 FB.MonitorSprite:Color:0 255 0:0.0:1": "OnUser1 FB.MonitorSprite:Color:0 0 255:0.0:1");
+    FastFire(!core.monitorColor ? "OnUser1 FB.Monitor:Enable:0.0:1" : "OnUser1 FB.MonitorBW:Disable:0.0:1");
+    FastFire(!core.monitorColor ? "OnUser1 FB.Monitor:Disable:0.0:1" : "OnUser1 FB.MonitorBW:Enable:0.0:1");
   }
   case 6942: {
     core.sacPoints = 2147483647;
   }
   //Do not EVER EVER execute this unless it's an emergency...
   case 6969: {
-    if (!core.isWave) {
-      CPrintToChatAll("{darkred} [CORE] ERROR, attempted to invoke function without an active wave.");
-      return;
-    } else {
-      if (!core.brawler_emergency) {
-        core.brawler_emergency = true;
-        EmitSoundToAll(SFXArray[55]);
-        CreateTimer(1.0, TimedOperator, 6969);
-        CPrintToChatAll("{darkred}EMERGENCY MODE ACTIVE.");
-        core.sacPoints = 0;
-        ServerCommand("sm_addcash @red 2000000");
-        ServerCommand("sm_god @red 1");
-      } else {
-        CPrintToChatAll("{darkred}[CORE] Failed to enter emergency mode, it is already active.");
-        return;
-      }
-    }
+    CPrintToChatAll(!core.isWave ? "{darkred} [CORE] ERROR, attempted to invoke function without an active wave." : core.brawler_emergency ? "{darkred}[CORE] Failed to enter emergency mode, it is already active." : "{darkred}[CORE] EMERGENCY MODE ACTIVATED...");
+    if (!core.isWave || core.brawler_emergency) return;
+    Emerge(0);
   }
   //DEBUG
   case 8000: {
@@ -1854,204 +1823,16 @@ public Action TimedOperator(Handle timer, int job) {
       ServerCommand("_restart");
     }
     case 6969: {
-      if (core.isWave) {
-        ServerCommand("sm_freeze @blue; sm_smash @blue; sm_evilrocket @blue");
-        sudo(2);
-        CreateTimer(4.0, TimedOperator, 6970);
-      } else
+      if (!core.isWave){
         ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6970: {
-      if (core.isWave) {
-        EmitSoundToAll(SFXArray[6]);
-        CreateTimer(7.0, TimedOperator, 6971);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6971: {
-      if (core.isWave) {
-        ServerCommand("fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40");
-        CreateTimer(1.0, TimedOperator, 6972);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6972: {
-      if (core.isWave) {
-        ServerCommand("fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42");
-        sudo(1006);
-        CreateTimer(1.0, TimedOperator, 6973);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6973: {
-      if (core.isWave) {
-        bombState[0].state = 8;
-        bombState[0].stateMax = 10;
-        sudo(15);
-        CreateTimer(1.0, TimedOperator, 6974);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6974: {
-      if (core.isWave) {
-        bombState[0].state = 16,
-          bombState[0].stateMax = 18,
-          ServerCommand("fb_operator 15;fb_operator 15"),
-          CreateTimer(1.0, TimedOperator, 6975);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6975: {
-      if (core.isWave) {
-        bombState[0].state = 24,
-          bombState[0].stateMax = 26,
-          ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15");
-        CreateTimer(1.0, TimedOperator, 6976);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6976: {
-      if (core.isWave) {
-        bombState[0].state = 32,
-          bombState[0].stateMax = 34,
-          ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15"),
-          CreateTimer(1.0, TimedOperator, 6977);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6977: {
-      if (core.isWave) {
-        bombState[0].state = 40,
-          bombState[0].stateMax = 42,
-          ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15"),
-          CreateTimer(1.0, TimedOperator, 6978);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6978: {
-      if (core.isWave) {
-        bombState[0].state = 48,
-          bombState[0].stateMax = 50,
-          ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15"),
-          ServerCommand("fb_operator 30"),
-          CreateTimer(1.0, TimedOperator, 6979);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6979: {
-      if (core.isWave) {
-        bombState[0].state = 5,
-          ServerCommand("fb_operator 31"),
-          CreateTimer(1.0, TimedOperator, 6980);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6980: {
-      if (core.isWave) {
-        ServerCommand("fb_operator 32"),
-          CreateTimer(1.0, TimedOperator, 6981);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6981: {
-      if (core.isWave) {
-        ServerCommand("fb_operator 33"),
-          CreateTimer(1.0, TimedOperator, 6982);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6982: {
-      if (core.isWave) {
-        ServerCommand("fb_operator 34"),
-          CreateTimer(1.0, TimedOperator, 6983);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6983: {
-      if (core.isWave) {
-        ServerCommand("fb_operator 35"),
-          CreateTimer(1.0, TimedOperator, 6984);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6984: {
-      if (core.isWave) {
-        ServerCommand("fb_operator 36"),
-          CreateTimer(1.0, TimedOperator, 6985);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6985: {
-      if (core.isWave) {
-        sudo(37);
-        CreateTimer(1.0, TimedOperator, 6986);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6986: {
-      if (core.isWave) {
-        ServerCommand("sm_freeze @blue -1; sm_smash @blue"),
-          CreateTimer(3.0, TimedOperator, 6987);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6987: {
-      if (core.isWave) {
-        ServerCommand("fb_operator 40; fb_operator 42; fb_operator 30; fb_operator 32; fb_operator 34; fb_operator 32; fb_operator 31; fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 31;fb_operator 32;fb_operator 32;fb_operator 31;fb_operator 32;fb_operator 32");
-        CreateTimer(1.0, TimedOperator, 6988);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6988: {
-      if (core.isWave) {
-        bombState[0].state = 48;
-        bombState[0].stateMax = 50;
-        ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15");
-        for (int i = 0; i < 12; i++) {
-          sudo(GetRandomInt(30, 37));
-          sudo(GetRandomInt(40, 44));
-          sudo(1003);
-        }
-        CreateTimer(1.0, TimedOperator, 6989);
-      } else
-        ExitEmergencyMode();
-      return Plugin_Stop;
-    }
-    case 6989: {
-      CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode."),
-        core.brawler_emergency = false;
-      ServerCommand("sm_god @red 0");
+        return Plugin_Stop;
+      }
+      BEM++;
+      Emerge(BEM);
       return Plugin_Stop;
     }
     }
     return Plugin_Stop;
-}
-
-//Exit emergency mode!
-public void ExitEmergencyMode() {
-  CPrintToChatAll("{darkgreen}[CORE] Exiting emergency mode, the wave has ended.");
-  core.brawler_emergency = false;
-  core.sacPoints = 0;
-  ServerCommand("sm_god @red 0");
 }
 
 //Setup music, this allows us to change it with VIP access...

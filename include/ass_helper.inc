@@ -1,6 +1,9 @@
 char LoggerDbg[512];
 char LoggerInfo[256];
 Database FB_Database;
+float CircleAOEs[][3] = {
+
+};
 //All sound effects
 char SFXArray[][64] = {
   "fartsy/misc/bell.wav", // 0
@@ -982,3 +985,155 @@ char WaveSetup[][] = {
   "OnUser1 Classic_Mode_Intel5:Enable::0.0:1",
   "OnUser1 Classic_Mode_Intel6:Enable::0.0:1"
 };
+int BEM = 0;
+//Brawler Emergency Mode Rewrite
+void Emerge(int stage){
+  switch(stage){
+    case 0:{
+      BEM = 0;
+      core.brawler_emergency = true;
+      EmitSoundToAll(SFXArray[55]);
+      CreateTimer(1.0, TimedOperator, 6969);
+      core.sacPoints = 0;
+      ServerCommand("sm_addcash @red 2000000");
+      ServerCommand("sm_god @red 1");
+      return;
+    }
+    case 1:{
+      ServerCommand("sm_freeze @blue; sm_smash @blue; sm_evilrocket @blue");
+      sudo(2);
+      CreateTimer(4.0, TimedOperator, 6969);
+      return;
+    }
+    case 2:{
+      EmitSoundToAll(SFXArray[6]);
+      CreateTimer(7.0, TimedOperator, 6969);
+      return;
+    }
+    case 3:{
+      ServerCommand("fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40;fb_operator 40");
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 4:{
+      ServerCommand("fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 42");
+      sudo(1006);
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 5:{
+      bombState[0].state = 8;
+      bombState[0].stateMax = 10;
+      sudo(15);
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 6:{
+      bombState[0].state = 16;
+      bombState[0].stateMax = 18;
+      ServerCommand("fb_operator 15;fb_operator 15");
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 7:{
+      bombState[0].state = 24;
+      bombState[0].stateMax = 26;
+      ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15");
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 8:{
+      bombState[0].state = 32;
+      bombState[0].stateMax = 34;
+      ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15");
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 9:{
+      bombState[0].state = 40;
+      bombState[0].stateMax = 42;
+      ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15");
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 10:{
+      bombState[0].state = 48;
+      bombState[0].stateMax = 50;
+      ServerCommand("fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15");
+      ServerCommand("fb_operator 30");
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 11:{
+      bombState[0].state = 5,
+      ServerCommand("fb_operator 31");
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 12:{
+      ServerCommand("fb_operator 32");
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 13:{
+      ServerCommand("fb_operator 33");
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 14:{
+      ServerCommand("fb_operator 34");
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 15:{
+      ServerCommand("fb_operator 35");
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 16:{
+      ServerCommand("fb_operator 36");
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 17:{
+      sudo(37);
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 18:{
+      ServerCommand("sm_freeze @blue -1; sm_smash @blue");
+      CreateTimer(3.0, TimedOperator, 6969);
+      return;
+    }
+    case 19:{
+      ServerCommand("fb_operator 40; fb_operator 42; fb_operator 30; fb_operator 32; fb_operator 34; fb_operator 32; fb_operator 31; fb_operator 42;fb_operator 42;fb_operator 42;fb_operator 31;fb_operator 32;fb_operator 32;fb_operator 31;fb_operator 32;fb_operator 32");
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 20:{
+      bombState[0].state = 48;
+      bombState[0].stateMax = 50;
+      ServerCommand("fb_operator 15;fb_operator15;fb_operator 15;fb_operator 15;fb_operator 15;fb_operator 15");
+      for (int i = 0; i < 12; i++) {
+        sudo(GetRandomInt(30, 37));
+        sudo(GetRandomInt(40, 44));
+        sudo(1003);
+      }
+      CreateTimer(1.0, TimedOperator, 6969);
+      return;
+    }
+    case 21:{
+      ExitEmergencyMode();
+      return;
+    }
+  }
+}
+
+//Exit emergency mode!
+public void ExitEmergencyMode() {
+  CPrintToChatAll(!core.isWave ? "{darkgreen}[CORE] Exiting emergency mode with CODE -1/WAVE_END (the wave has ended). %i actions executed." : "{darkgreen}[CORE] Exiting emergency mode with CODE 0/SUCCESS. %i actions executed.", BEM+1); //BEM+1 because BEM actually executes on 0.
+  core.brawler_emergency = false;
+  core.sacPoints = 0;
+  ServerCommand("sm_god @red 0");
+  return;
+}
