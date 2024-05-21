@@ -1,7 +1,10 @@
 char LoggerDbg[512];
 char LoggerInfo[256];
 Database FB_Database;
-float CircleAOEs[][3] = {
+float CircleAOEpos[][3] = {
+  
+};
+float CircleAOErot[][3] = {
 
 };
 //All sound effects
@@ -736,114 +739,56 @@ enum struct BGM {
   int ticksOffset;
   int SNDLVL;
 }
-BGM BGMArray[20];
+BGM BGMArray[32];
 
 void RegisterAndPrecacheAllFiles(){
-  BGMArray[0].realPath = "null";
-  BGMArray[1].realPath = "fartsy/music/ffxiv/TheSilentRegardOfStars.wav";
-  BGMArray[2].realPath = "fartsy/music/ffxiv/KnowledgeNeverSleeps.wav";
-  BGMArray[3].realPath = "fartsy/music/ffxiv/FromMud.wav";
-  BGMArray[4].realPath = "fartsy/music/ffxiv/AndLoveYouShallFind.wav";
-  BGMArray[5].realPath = "fartsy/music/ffxiv/locus.wav";
-  BGMArray[6].realPath = "fartsy/music/ffxiv/metal.wav";
-  BGMArray[7].realPath = "fartsy/music/ffxiv/exponentialentropy.wav";
-  BGMArray[8].realPath = "fartsy/music/ffxiv/fromtheheavens_loop1.wav";
-  BGMArray[9].realPath = "fartsy/music/ffxiv/fromtheheavens_loop2.wav";
-  BGMArray[10].realPath = "fartsy/music/ffxiv/fromtheheavens_loop3.wav";
-  BGMArray[11].realPath = "fartsy/music/ffxiv/fromtheheavens_loop4.wav";
-  BGMArray[12].realPath = "fartsy/music/ffxiv/metalbrutejusticemode.wav";
-  BGMArray[13].realPath = "fartsy/music/ffxiv/penitus.wav";
-  BGMArray[14].realPath = "fartsy/music/ffxiv/revengetwofold.wav";
-  BGMArray[15].realPath = "fartsy/music/ffxiv/landslide.wav";
-  BGMArray[16].realPath = "fartsy/music/brawler/onewingedangel.wav";
-  BGMArray[17].realPath = "fartsy/music/brawler/xbc2/battle.wav";
-  BGMArray[18].realPath = "fartsy/music/brawler/xbc/youwillknowournames.mp3";
-  BGMArray[19].realPath = "fartsy/music/demetori/unowen.mp3";
-  BGMArray[0].songName = "Restore Defaults";
-  BGMArray[1].songName = "FFXIV - The Silent Regard of Stars";
-  BGMArray[2].songName = "FFXIV - Knowledge Never Sleeps";
-  BGMArray[3].songName = "FFXIV - From Mud";
-  BGMArray[4].songName = "FFXIV - And Love You Shall Find";
-  BGMArray[5].songName = "FFXIV - Locus";
-  BGMArray[6].songName = "FFXIV - Metal";
-  BGMArray[7].songName = "FFXIV - Exponential Entropy";
-  BGMArray[8].songName = "FFXIV - From the Heavens (P1)";
-  BGMArray[9].songName = "FFXIV - From the Heavens (P2)";
-  BGMArray[10].songName = "FFXIV - From the Heavens (P3)";
-  BGMArray[11].songName = "FFXIV - From the Heavens (P4)";
-  BGMArray[12].songName = "FFXIV - Metal: Brute Justice Mode";
-  BGMArray[13].songName = "FFXIV - Penitus";
-  BGMArray[14].songName = "FFXIV - Revenge Twofold";
-  BGMArray[15].songName = "FFXIV - Landslide";
-  BGMArray[16].songName = "FF Advent Children - One Winged Angel";
-  BGMArray[17].songName = "Xenoblade Chronicles 2 - Battle!!";
-  BGMArray[18].songName = "Xenoblade Chronicles - You Will Know Our Names";
-  BGMArray[19].songName = "Demetori - U.N. Owen Was Her?";
-  BGMArray[0].SNDLVL = 0;
-  BGMArray[1].SNDLVL = 75;
-  BGMArray[2].SNDLVL = 75;
-  BGMArray[3].SNDLVL = 55;
-  BGMArray[4].SNDLVL = 75;
-  BGMArray[5].SNDLVL = 75;
-  BGMArray[6].SNDLVL = 75;
-  BGMArray[7].SNDLVL = 75;
-  BGMArray[8].SNDLVL = 75;
-  BGMArray[9].SNDLVL = 75;
-  BGMArray[10].SNDLVL = 75;
-  BGMArray[11].SNDLVL = 75;
-  BGMArray[12].SNDLVL = 75;
-  BGMArray[13].SNDLVL = 75;
-  BGMArray[14].SNDLVL = 75;
-  BGMArray[15].SNDLVL = 75;
-  BGMArray[16].SNDLVL = 75;
-  BGMArray[17].SNDLVL = 75;
-  BGMArray[18].SNDLVL = 75;
-  BGMArray[19].SNDLVL = 75;
-  BGMArray[0].refireTime = 0;
-  BGMArray[1].refireTime = 9190;
-  BGMArray[2].refireTime = 15690;
-  BGMArray[3].refireTime = 9190;
-  BGMArray[4].refireTime = 10490;
-  BGMArray[5].refireTime = 15270;
-  BGMArray[6].refireTime = 10250;
-  BGMArray[7].refireTime = 11110;
-  BGMArray[8].refireTime = 4250;
-  BGMArray[9].refireTime = 5492;
-  BGMArray[10].refireTime = 3947;
-  BGMArray[11].refireTime = 2508;
-  BGMArray[12].refireTime = 8702;
-  BGMArray[13].refireTime = 28476;
-  BGMArray[14].refireTime = 8805;
-  BGMArray[15].refireTime = 14160;
-  BGMArray[16].refireTime = 20592;
-  BGMArray[17].refireTime = 8120;
-  BGMArray[18].refireTime = 8475;
-  BGMArray[19].refireTime = 19270;
-  BGMArray[0].ticksOffset = 0;
-  BGMArray[1].ticksOffset = 0;
-  BGMArray[2].ticksOffset = 0;
-  BGMArray[3].ticksOffset = 0;
-  BGMArray[4].ticksOffset = 0;
-  BGMArray[5].ticksOffset = 429;
-  BGMArray[6].ticksOffset = 226;
-  BGMArray[7].ticksOffset = 11;
-  BGMArray[8].ticksOffset = 1078;
-  BGMArray[9].ticksOffset = 0;
-  BGMArray[10].ticksOffset = 0;
-  BGMArray[11].ticksOffset = 0;
-  BGMArray[12].ticksOffset = 0;
-  BGMArray[13].ticksOffset = 0;
-  BGMArray[14].ticksOffset = 0;
-  BGMArray[15].ticksOffset = 0;
-  BGMArray[16].ticksOffset = 2753;
-  BGMArray[17].ticksOffset = 749;
-  BGMArray[18].ticksOffset = 0;
-  BGMArray[19].ticksOffset = 0;
   AssLogger(0, "Loading EVERYTHING to RAM...");
+  Handle confBGM = OpenFile("addons/sourcemod/configs/FartsysAss/Files/music.ini", "rt", false);
+  char bufferBGM[256];
+  int bgmIndex;
+  int bgmNameIndex = -1;
+  int bgmRefire;
+  int bgmOffset;
+  int bgmVol;
+  if(confBGM == INVALID_HANDLE) return;
+  while (ReadFileLine(confBGM, bufferBGM, sizeof(bufferBGM))){
+    TrimString(bufferBGM);
+    if (!StrContains(bufferBGM, "fartsy/music")){
+      bgmIndex++;
+      Format(BGMArray[bgmIndex].realPath, 64, bufferBGM);
+    }
+    else if (!StrContains(bufferBGM, "Title:")){
+      bgmNameIndex++;
+      ReplaceString(bufferBGM, sizeof(bufferBGM), "Title:", "", true);
+      Format(BGMArray[bgmNameIndex].songName, 128, bufferBGM);
+    }
+    else if (!StrContains(bufferBGM, "RefireTime:")){
+      bgmRefire++;
+      ReplaceString(bufferBGM, sizeof(bufferBGM), "RefireTime:", "", true);
+      BGMArray[bgmRefire].refireTime = StringToInt(bufferBGM);
+    }
+    else if (!StrContains(bufferBGM, "OffsetTicks:")){
+      bgmOffset++;
+      ReplaceString(bufferBGM, sizeof(bufferBGM), "OffsetTicks:", "", true);
+      BGMArray[bgmOffset].ticksOffset = StringToInt(bufferBGM);
+    }
+    else if (!StrContains(bufferBGM, "Volume:")){
+      bgmVol++;
+      ReplaceString(bufferBGM, sizeof(bufferBGM), "Volume:", "", true);
+      BGMArray[bgmVol].SNDLVL = StringToInt(bufferBGM);
+    }
+    if (IsEndOfFile(confBGM)) break;
+  }
+  PrintToServer("Precaching BGMs...");
+  if(confBGM != INVALID_HANDLE){
+		CloseHandle(confBGM);
+	}
   for (int i = 1; i < sizeof(BGMArray); i++){ //We start at index 1 because index 0 is used for restoring default bgm in the VIP music menu...
-    Format(LoggerDbg, sizeof(LoggerDbg), "Precaching %s (%s), Duration %i ticks, Start Loop Point %i ticks, Volume %i   @ %i", BGMArray[i].songName, BGMArray[i].realPath, BGMArray[i].refireTime, BGMArray[i].ticksOffset, BGMArray[i].SNDLVL, i);
+   if(!StrEqual(BGMArray[i].realPath, "")){ 
+    Format(LoggerDbg, sizeof(LoggerDbg), "Precaching BGM: %s (%s), Duration %i ticks, Start Loop Point %i ticks, Volume %i   @ %i", BGMArray[i].songName, BGMArray[i].realPath, BGMArray[i].refireTime, BGMArray[i].ticksOffset, BGMArray[i].SNDLVL, i);
     AssLogger(0, LoggerDbg);
     PrecacheSound(BGMArray[i].realPath, true);
+   }
   }
   for (int i = 0; i < sizeof(SFXArray); i++){
     Format(LoggerDbg, sizeof(LoggerDbg), "Precaching SFX: %s in position %i", SFXArray[i], i);
@@ -859,6 +804,7 @@ void RegisterAndPrecacheAllFiles(){
   PrecacheSound(TBGM4, true);
   PrecacheSound(TBGM5, true);
   PrecacheSound(TBGM6, true);
+  
 }
 
 //Used to keep StopSound from stopping the music we're trying to play - now with support for loop offsets!
@@ -1135,5 +1081,21 @@ public void ExitEmergencyMode() {
   core.brawler_emergency = false;
   core.sacPoints = 0;
   ServerCommand("sm_god @red 0");
+  BEM = 0;
   return;
+}
+
+public bool IsStringNumeric(const char[] str)
+{
+    int len = strlen(str);
+    
+    for (int i=0; i < len; i++)
+    {
+        if (!IsCharNumeric(str[i]))
+        {
+            return false;
+        }
+    }
+    
+    return true;
 }

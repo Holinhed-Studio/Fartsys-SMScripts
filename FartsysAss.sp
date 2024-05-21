@@ -21,7 +21,7 @@
 #include <ass_helper>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.1.0";
+static char PLUGIN_VERSION[8] = "7.1.5";
 
 public Plugin myinfo = {
   name = "Fartsy's Ass - Framework",
@@ -807,16 +807,11 @@ public Action FastFire(char[] input) {
   return Plugin_Continue;
 }
 //Dispatch a circle AOE
-public Action DispatchCircleAOE(float posX, float posY, float posZ) {
+public Action DispatchCircleAOE(float pos[3], float rot[3]) {
   int ent = FindEntityByTargetname("CircleTemplate", "point_template");
   if (ent != -1) {
-    float dest[3];
-    dest[0] = posX;
-    dest[1] = posY;
-    dest[2] = posZ;
-    float destAng[3];
-    float destVel[3];
-    TeleportEntity(ent, dest, destAng, destVel);
+    float v[3];
+    TeleportEntity(ent, pos, rot, v);
     FastFire("OnUser1 CircleTemplate:ForceSpawn::0.0:1");
   }
   return Plugin_Stop;
@@ -1392,7 +1387,8 @@ void sudo(int task) {
   }
   //Debug, somethingsomething aoe blah blah blah
   case 200: {
-    DispatchCircleAOE(GetRandomFloat(1350.0, 1620.0), GetRandomFloat(-1350.0, -1520.0), -580.0);
+    int i = GetRandomInt(0,2);
+    DispatchCircleAOE(CircleAOEpos[i], CircleAOErot[i]);
   }
   //Taco Bell Edition
   case 210: {
@@ -1481,7 +1477,8 @@ void sudo(int task) {
   }
   //Strike Lightning
   case 1003: {
-    for (int i = 0; i < sizeof(lightning); i++) FastFire(lightning[i]);
+    for (int i = 0; i < sizeof(lightning); i++) FastFire(lightning[i]),
+    PrintToServer("FastFire %s", lightning[i]); 
   }
   //Activate Tornado Timer
   case 1004: {
@@ -1814,9 +1811,7 @@ public Action TimedOperator(Handle timer, int job) {
       return Plugin_Stop;
     }
     case 99: {
-      if (core.isWave) {
-        sudo(99);
-      }
+      if (core.isWave) sudo(99);
       return Plugin_Stop;
     }
     case 100: {
