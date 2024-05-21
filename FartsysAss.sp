@@ -21,7 +21,7 @@
 #include <ass_helper>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.1.5";
+static char PLUGIN_VERSION[8] = "7.1.6";
 
 public Plugin myinfo = {
   name = "Fartsy's Ass - Framework",
@@ -41,6 +41,12 @@ public void OnPluginStart() {
   SetCookieMenuItem(FartsysSNDSelected, 0, "Fartsys Ass Sound Preferences");
   Format(LoggerInfo, sizeof(LoggerInfo), "####### STARTUP COMPLETE (v%s) #######", PLUGIN_VERSION);
   AssLogger(1, LoggerInfo);
+}
+
+public void OnMapStart() {
+  CreateTimer(1.0, SelectAdminTimer);
+  FastFire("OnUser1 rain:Alpha:0:0.0:1");
+  sudo(1002);
 }
 
 //Music system rewrite for the 5th time. Can I ever make a change? Will my code begin to mend? Still everything's the same and it all just fades to math.
@@ -63,6 +69,40 @@ public void OnGameFrame() {
   }
 }
 
+//Queue music for new clients, also track their health.
+public void OnClientPostAdminCheck(int client) {
+  if (!IsFakeClient(client) && core.bgmPlaying) CreateTimer(1.0, RefireMusicForClient, client);
+  int steamID = GetSteamAccountID(client);
+  if (!steamID || steamID <= 10000) return;
+  else {
+    if (!FB_Database) {
+      PrintToServer("No database detected, setting soundPreference for %N to default.", client);
+      soundPreference[client] = GetConVarInt(cvarSNDDefault);
+    }
+    if (!core.tickingClientHealth) {
+      CreateTimer(1.0, TickClientHealth);
+      core.tickingClientHealth = true;
+    }
+    if (!core.bgmPlaying) SetupMusic(GetRandomInt(1, 4));
+    char query[1024];
+    Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
+    FB_Database.Query(Database_FastQuery, query);
+    char queryID[256];
+    Format(queryID, sizeof(queryID), "SELECT soundprefs from ass_activity WHERE steamid = '%d';", steamID);
+    FB_Database.Query(SQL_SNDPrefs, queryID, client);
+  }
+}
+
+//Get client sound prefs
+public void SQL_SNDPrefs(Database db, DBResultSet results, const char[] error, int client) {
+  if (!results) {
+    LogError("Failed to query database: %s", error);
+    return;
+  }
+  if (!IsValidClient(client)) return;
+  if (results.FetchRow()) soundPreference[client] = results.FetchInt(0);
+}
+
 //Restart music for the new client
 public Action RefireMusicForClient(Handle timer, int client) {
   if (IsValidClient(client)) {
@@ -71,6 +111,7 @@ public Action RefireMusicForClient(Handle timer, int client) {
   }
   return Plugin_Stop;
 }
+
 //Get client's stats via command
 public Action Command_MyStats(int client, int args) {
   int steamID = GetSteamAccountID(client);
@@ -136,40 +177,6 @@ public void FartsysSNDSelected(int client, CookieMenuAction action, any info, ch
   if (action == CookieMenuAction_SelectOption) ShowFartsyMenu(client);
 }
 
-//Queue music for new clients, also track their health.
-public void OnClientPostAdminCheck(int client) {
-  if (!IsFakeClient(client) && core.bgmPlaying) CreateTimer(1.0, RefireMusicForClient, client);
-  int steamID = GetSteamAccountID(client);
-  if (!steamID || steamID <= 10000) return;
-  else {
-    if (!FB_Database) {
-      PrintToServer("No database detected, setting soundPreference for %N to default.", client);
-      soundPreference[client] = GetConVarInt(cvarSNDDefault);
-    }
-    if (!core.tickingClientHealth) {
-      CreateTimer(1.0, TickClientHealth);
-      core.tickingClientHealth = true;
-    }
-    if (!core.bgmPlaying) SetupMusic(GetRandomInt(1, 4));
-    char query[1024];
-    Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
-    FB_Database.Query(Database_FastQuery, query);
-    char queryID[256];
-    Format(queryID, sizeof(queryID), "SELECT soundprefs from ass_activity WHERE steamid = '%d';", steamID);
-    FB_Database.Query(SQL_SNDPrefs, queryID, client);
-  }
-}
-
-//Get client sound prefs
-public void SQL_SNDPrefs(Database db, DBResultSet results, const char[] error, int client) {
-  if (!results) {
-    LogError("Failed to query database: %s", error);
-    return;
-  }
-  if (!IsValidClient(client)) return;
-  if (results.FetchRow()) soundPreference[client] = results.FetchInt(0);
-}
-
 //Send client sound menu
 public void ShowFartsyMenu(int client) {
   Menu menu = new Menu(MenuHandlerFartsy, MENU_ACTIONS_DEFAULT);
@@ -197,7 +204,7 @@ public Action Command_Sounds(int client, int args) {
   }
 }
 
-// This selects or disables the sounds
+// Handle client choices for sound preference
 public int MenuHandlerFartsy(Menu menu, MenuAction action, int param1, int param2) {
   if (action == MenuAction_Select) {
     char query[256];
@@ -240,13 +247,6 @@ public int MenuHandlerFartsysAss(Menu menu, MenuAction action, int client, int i
     AssLogger(1, LoggerInfo);
   } else if (action == MenuAction_End) CloseHandle(menu);
   return 0;
-}
-
-//Now that command definitions are done, lets make some things happen.
-public void OnMapStart() {
-  CreateTimer(1.0, SelectAdminTimer);
-  FastFire("OnUser1 rain:Alpha:0:0.0:1");
-  sudo(1002);
 }
 
 //Adverts for tips/tricks
@@ -299,7 +299,7 @@ public Action OnslaughterATK(Handle timer) {
     switch (GetRandomInt(1, 10)) {
     case 1, 6: {
       FastFire("OnUser1 BruteJusticeLaserParticle:Start::0.0:1");
-      CustomSoundEmitter(SFXArray[38], 65, false, 0, 1.0, 100);
+      CustomSoundEmitter(SFXArray[38].realPath, 65, false, 0, 1.0, 100);
       FastFire("OnUser1 BruteJusticeLaser:TurnOn::1.40:1");
       FastFire("OnUser1 BruteJusticeLaserHurtAOE:Enable::1.40:1");
       FastFire("OnUser1 BruteJusticeLaserParticle:Stop::3.00:1");
@@ -312,7 +312,7 @@ public Action OnslaughterATK(Handle timer) {
     case 3, 7: {
       FastFire("OnUser1 BruteJusticeFlameParticle:Start::0.0:1");
       FastFire("OnUser1 BruteJusticeFlamethrowerHurtAOE:Enable::0.0:1");
-      CustomSoundEmitter(SFXArray[39], 65, false, 0, 1.0, 100);
+      CustomSoundEmitter(SFXArray[39].realPath, 65, false, 0, 1.0, 100);
       FastFire("OnUser1 SND.BruteJusticeFlameATK:PlaySound::1.25:1");
       FastFire("OnUser1 BruteJusticeFlamethrowerHurtAOE:Disable::5.0:1");
       FastFire("OnUser1 BruteJusticeFlameParticle:Stop::5.0:1");
@@ -370,7 +370,7 @@ public Action SharkTimer(Handle timer) {
   if (core.canSENTShark) {
     FastFire("OnUser1 SentSharkTorpedo:ForceSpawn::0.0:1");
     CreateTimer(GetRandomFloat(2.0, 5.0), SharkTimer);
-    CustomSoundEmitter(SFXArray[GetRandomInt(43, 50)], 65, false, 0, 1.0, 100);
+    CustomSoundEmitter(SFXArray[GetRandomInt(43, 50)].realPath, 65, false, 0, 1.0, 100);
   }
   return Plugin_Stop;
 }
@@ -380,9 +380,9 @@ public Action RefireStorm(Handle timer) {
   if (core.isWave) {
     CreateTimer(GetRandomFloat(7.0, 17.0), RefireStorm);
     sudo(1003);
-    FastFire(StrikeAt[GetRandomInt(0, sizeof(StrikeAt) - 1)]);
+    FastFire(lightningStrike[GetRandomInt(0, sizeof(lightningStrike)-1)].fireStr);
     FastFire("OnUser1 LightningHurt*:Disable::0.07:1");
-    CustomSoundEmitter(SFXArray[GetRandomInt(27, 34)], 65, false, 0, 1.0, 100);
+    CustomSoundEmitter(SFXArray[GetRandomInt(27, 34)].realPath, 65, false, 0, 1.0, 100);
   }
   return Plugin_Stop;
 }
@@ -409,7 +409,7 @@ public Action SENTMeteorTimer(Handle timer) {
 //Used for nukes, obiviously
 public Action NukeTimer(Handle timer) {
   if (!core.canCrusaderNuke && !core.canSephNuke) return Plugin_Stop;
-  CustomSoundEmitter(SFXArray[8], 65, false, 0, 1.0, 100);
+  CustomSoundEmitter(SFXArray[8].realPath, 65, false, 0, 1.0, 100);
   FastFire(core.canCrusaderNuke ? "OnUser1 FB.CrusaderNuke:ForceSpawn::0.0:1" : core.canSephNuke ? "OnUser1 SephNuke:ForceSpawn::0.0:1" : "OnUser1 SephNuke:FireUser1::0.0:1");
   CreateTimer(GetRandomFloat(1.5, 3.0), NukeTimer);
   return Plugin_Stop;
@@ -493,7 +493,7 @@ public Action BombStatusUpdater(Handle timer) {
         FastFire("OnUser1 Bombs*:Disable::0.0:1");
         FastFire("OnUser1 Delivery:Unlock::0.0:1");
         FireEntityInput(bombState[curBomb].identifier, "Enable", "", 0.0);
-        CustomSoundEmitter(SFXArray[56], 65, false, 0, 1.0, 100);
+        CustomSoundEmitter(SFXArray[56].realPath, 65, false, 0, 1.0, 100);
         CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's %s {forestgreen}is now available for deployment!", bombState[curBomb].name);
       }
       }
@@ -541,7 +541,7 @@ public Action Command_Return(int client, int args) {
   char name[128];
   GetClientName(client, name, sizeof(name));
   CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%s {white}began casting {darkviolet}/return{white}.", name);
-  CustomSoundEmitter(SFXArray[41], 65, false, 0, 1.0, 100);
+  CustomSoundEmitter(SFXArray[41].realPath, 65, false, 0, 1.0, 100);
   CreateTimer(5.0, ReturnClient, client);
   return Plugin_Handled;
 }
@@ -549,7 +549,7 @@ public Action Command_Return(int client, int args) {
 //Return the client to spawn
 public Action ReturnClient(Handle timer, int clientID) {
   TeleportEntity(clientID, Return, NULL_VECTOR, NULL_VECTOR);
-  CSEClient(clientID, SFXArray[42], 65, false, 0, 1.0, 100);
+  CSEClient(clientID, SFXArray[42].realPath, 65, false, 0, 1.0, 100);
   return Plugin_Handled;
 }
 
@@ -595,7 +595,7 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
           case 3: {
             CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was {red}%s{white}! ({limegreen}+1 pt{white})", client, DeathMessage[GetRandomInt(0, 5)]);
             core.sacPoints++;
-            CustomSoundEmitter(SFXArray[GetRandomInt(11, 26)], 65, false, 0, 1.0, 100);
+            CustomSoundEmitter(SFXArray[GetRandomInt(11, 26)].realPath, 65, false, 0, 1.0, 100);
           }
           }
         } else {
@@ -745,8 +745,8 @@ public Action EventWarning(Event Spawn_Event,
   if (core.doFailsafe) {
     core.failsafeCount++;
     CPrintToChatAll("%s Counter: %i", failsafe[GetRandomInt(0, sizeof(failsafe) - 1)], core.failsafeCount);
-    EmitSoundToAll(SFXArray[55]);
-    ServerCommand("sm_freeze @blue; wait 180; sm_smash @blue;sm_evilrocket @blue");
+    EmitSoundToAll(SFXArray[55].realPath);
+    PerformWaveFailsafe(GetRandomInt(0,1));
     core.doFailsafe = false;
   } else CPrintToChatAll("{darkviolet}[{red}WARN{darkviolet}] {darkred}PROFESSOR'S ASS IS ABOUT TO BE DEPLOYED!!!");
   return Plugin_Handled;
@@ -779,7 +779,7 @@ public void Event_PlayerHurt(Handle event, const char[] name, bool dontBroadcast
 }
 
 //Functions
-/* Create a temp entity and fire an input - DEPRECATED */
+/* Create a temp entity and fire an input - LEGACY */
 public Action FireEntityInput(char[] strTargetname, char[] strInput, char[] strParameter, float flDelay) {
   char strBuffer[255];
   Format(strBuffer, sizeof(strBuffer), "OnUser1 %s:%s:%s:%f:1", strTargetname, strInput, strParameter, flDelay);
@@ -805,6 +805,11 @@ public Action FastFire(char[] input) {
   AcceptEntityInput(entity, "FireUser1");
   CreateTimer(0.0, DeleteEdict, entity);
   return Plugin_Continue;
+}
+//Remove edict allocated by temp entity
+public Action DeleteEdict(Handle timer, any entity) {
+  if (IsValidEdict(entity)) RemoveEdict(entity);
+  return Plugin_Stop;
 }
 //Dispatch a circle AOE
 public Action DispatchCircleAOE(float pos[3], float rot[3]) {
@@ -848,11 +853,6 @@ public Action JumpToWave(int wave_number) {
   SetCommandFlags("tf_mvm_jump_to_wave", flags | FCVAR_CHEAT);
   return Plugin_Handled;
 }
-//Remove edict allocated by temp entity
-public Action DeleteEdict(Handle timer, any entity) {
-  if (IsValidEdict(entity)) RemoveEdict(entity);
-  return Plugin_Stop;
-}
 //Sacrifice target and grant bonus points
 public Action SacrificeClient(int client, int attacker, bool wasBombReset) {
   if (attacker <= MaxClients && IsClientInGame(attacker)) {
@@ -889,8 +889,7 @@ void AssLogger(int logLevel, char[] logData) {
 public Action Command_Operator(int args) {
   char arg1[16];
   GetCmdArg(1, arg1, sizeof(arg1));
-  int x = StringToInt(arg1);
-  sudo(x);
+  sudo(StringToInt(arg1));
   return Plugin_Continue;
 }
 void sudo(int task) {
@@ -1136,7 +1135,7 @@ void sudo(int task) {
   }
   //HINDENBOOM ACTIVATION
   case 28: {
-    EmitSoundToAll(SFXArray[5]);
+    EmitSoundToAll(SFXArray[5].realPath);
     FastFire("OnUser1 HindenTrain:StartForward:0.0:1");
     FastFire("OnUser1 DeliveryBurg:Lock:0.0:1");
     FastFire("OnUser1 Boom:Enable:0.0:1");
@@ -1146,7 +1145,7 @@ void sudo(int task) {
   //HINDENBOOM!!!
   case 29: {
     CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}OH GOD, THEY'RE {red}CRASHING THE HINDENBURG{white}!!!");
-    EmitSoundToAll(SFXArray[36]);
+    EmitSoundToAll(SFXArray[36].realPath);
     CreateTimer(4.0, TimedOperator, 21);
     CreateTimer(7.0, TimedOperator, 37);
     FastFire("OnUser1 LargeExplosion:Explode:7.0:1");
@@ -1174,7 +1173,7 @@ void sudo(int task) {
     if (i == 1) CreateTimer(1.5, TimedOperator, 21);
     FastFire(i == 1 ? "OnUser1 FB.GiantGoobTemplate:ForceSpawn::0.0:1" : "OnUser1 FB.BlueKirbTemplate:ForceSpawn::0.0:1");
     CPrintToChatAll(i == 1 ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}GOOBBUE COMING IN FROM ORBIT! ({red}-20 pts{white})" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}BLUE KIRBY FALLING OUT OF THE SKY! ({red}-20 pts{white})");
-    CustomSoundEmitter(i == 1 ? SFXArray[51] : SFXArray[21], 65, false, 0, 1.0, 100);
+    CustomSoundEmitter(i == 1 ? SFXArray[51].realPath : SFXArray[21].realPath, 65, false, 0, 1.0, 100);
     core.sacPoints -= 20;
   }
   //35K ubup cash spend
@@ -1187,7 +1186,7 @@ void sudo(int task) {
   }
   //Explosive paradise spend
   case 33: {
-    CustomSoundEmitter(SFXArray[10], 65, false, 0, 1.0, 100);
+    CustomSoundEmitter(SFXArray[10].realPath, 65, false, 0, 1.0, 100);
     FastFire("OnUser1 FB.FadeBLCK:Fade:0.0:1");
     ServerCommand("sm_evilrocket @blue");
     CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {white}We're spending most our lives living in an EXPLOSIVE PARADISE! Robots will be launched into orbit, too! ({red}-40 pts{white})");
@@ -1251,7 +1250,7 @@ void sudo(int task) {
   //Found blue ball
   case 40: {
     CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}What on earth IS that? It appears to be a... \x075050FFBLUE BALL{white}!");
-    CustomSoundEmitter(SFXArray[21], 65, false, 0, 1.0, 100);
+    CustomSoundEmitter(SFXArray[21].realPath, 65, false, 0, 1.0, 100);
     FastFire("OnUser1 FB.BlueKirbTemplate:ForceSpawn:4.0:1");
     CreateTimer(4.0, TimedOperator, 21);
   }
@@ -1266,19 +1265,19 @@ void sudo(int task) {
   }
   //Found goobbue
   case 42: {
-    CustomSoundEmitter(SFXArray[51], 65, false, 0, 1.0, 100);
+    CustomSoundEmitter(SFXArray[51].realPath, 65, false, 0, 1.0, 100);
     CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}ALL HAIL \x07FF00FFGOOBBUE{forestgreen}!");
     CreateTimer(4.0, TimedOperator, 21);
     FastFire("OnUser1 FB.GiantGoobTemplate:ForceSpawn::4.0:1");
   }
   //Found Mario
   case 43: {
-    CustomSoundEmitter(SFXArray[52], 65, false, 0, 1.0, 100);
+    CustomSoundEmitter(SFXArray[52].realPath, 65, false, 0, 1.0, 100);
     CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Welp, someone is playing \x0700FF00Mario{white}...");
   }
   //Found Waffle
   case 44: {
-    CustomSoundEmitter(SFXArray[53], 65, false, 0, 1.0, 100);
+    CustomSoundEmitter(SFXArray[53].realPath, 65, false, 0, 1.0, 100);
     CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Oh no, someone has found and (probably) consumed a {red}WAFFLE OF MASS DESTRUCTION{white}!");
     //Yup, another one for the explosion array
     FastFire("OnUser1 HurtAll:AddOutput:damagetype 262144:10.0:1");
@@ -1291,11 +1290,11 @@ void sudo(int task) {
   }
   //Medium Explosion (defined again, but we aren't using a bomb this time)
   case 51: {
-    CustomSoundEmitter(SFXArray[3], 65, false, 0, 1.0, 100);
+    CustomSoundEmitter(SFXArray[3].realPath, 65, false, 0, 1.0, 100);
   }
   //Probably for the hindenburg... EDIT: NOPE. THIS IS FOR KIRB LANDING ON THE GROUND
   case 52: {
-    EmitSoundToAll(SFXArray[35]);
+    EmitSoundToAll(SFXArray[35].realPath);
     FastFire("OnUser1 FB.BOOM:StartShake:0.0:1");
     FastFire("OnUser1 BlueBall*:Kill:0.0:1");
     FastFire("OnUser1 HUGEExplosion:Explode:0.0:1");
@@ -1307,7 +1306,7 @@ void sudo(int task) {
   }
   //Giant Goobbue
   case 53: {
-    EmitSoundToAll(SFXArray[35]);
+    EmitSoundToAll(SFXArray[35].realPath);
     FastFire("OnUser1 FB.BOOM:StartShake:0.0:1");
     FastFire("OnUser1 GiantGoob*:Kill:0.0:1");
     FastFire("OnUser1 HUGEExplosion:Explode:0.0:1");
@@ -1347,7 +1346,7 @@ void sudo(int task) {
   case 100: {
     if (core.CodeEntry == 17) {
       FastFire("OnUser1 FB.BOOM:StartShake:0.0:1");
-      CustomSoundEmitter(SFXArray[3], 65, false, 0, 1.0, 100);
+      CustomSoundEmitter(SFXArray[3].realPath, 65, false, 0, 1.0, 100);
       FastFire("OnUser1 FB.CodeCorrectKill:Enable:0.0:1");
       FastFire("OnUser1 FB.KP*:Lock:0.0:1");
       FastFire("OnUser1 FB.CodeCorrectKill:Disable:1.0:1");
@@ -1475,10 +1474,10 @@ void sudo(int task) {
     core.lastAdmin = i;
     return;
   }
-  //Strike Lightning
+  //Flash Lightning
   case 1003: {
-    for (int i = 0; i < sizeof(lightning); i++) FastFire(lightning[i]),
-    PrintToServer("FastFire %s", lightning[i]); 
+    for (int i = 0; i < sizeof(lightningFlash); i++) FastFire(lightningFlash[i].fireStr),
+    PrintToServer("FastFire %s", lightningFlash[i].fireStr); 
   }
   //Activate Tornado Timer
   case 1004: {
@@ -1506,7 +1505,7 @@ void sudo(int task) {
     PrintToServer("Starting Crusader via plugin!");
     EmitSoundToAll("fartsy/misc/fartsyscrusader_bgm_locus.mp3");
     CreateTimer(80.0, TimedOperator, 79);
-    for (int i = 0; i < sizeof(CrusaderBrrr); i++) FastFire(CrusaderBrrr[i]);
+    for (int i = 0; i < sizeof(crusaderAtk); i++) FastFire(crusaderAtk[i].fireStr);
   }
   //Choose bomb path
   case 1007: {
@@ -1517,7 +1516,6 @@ void sudo(int task) {
     FastFire("OnUser1 bombpath_right_navavoid:Disable:0.0:1");
     FastFire("OnUser1 bombpath_right_arrows:Disable:0.0:1");
     FastFire("OnUser1 bombpath_left_arrows:Disable:0.0:1");
-    //BombPath[GetRandomInt(0, 2)].activate(); // Currently doesn't work because we act on 4 different targets minimum...
     switch (GetRandomInt(1, 3)) {
     case 1: {
       FastFire("OnUser1 Nest_R*:Enable:0.25:1");
@@ -1695,18 +1693,18 @@ public Action TimedOperator(Handle timer, int job) {
     }
     //Boss script pt 3
     case 4: {
-      CustomSoundEmitter(SFXArray[9], 65, false, 0, 1.0, 100);
+      CustomSoundEmitter(SFXArray[9].realPath, 65, false, 0, 1.0, 100);
       CreateTimer(4.1, TimedOperator, 5);
     }
     //Boss script pt 4
     case 5: {
-      CustomSoundEmitter(SFXArray[58], 65, false, 0, 1.0, 100);
+      CustomSoundEmitter(SFXArray[58].realPath, 65, false, 0, 1.0, 100);
       FastFire("OnUser1 SephNuke:ForceSpawn:3.0:1");
       CreateTimer(3.2, TimedOperator, 6);
     }
     //Boss script pt 5
     case 6: {
-      CustomSoundEmitter(SFXArray[35], 65, false, 0, 1.0, 100);
+      CustomSoundEmitter(SFXArray[35].realPath, 65, false, 0, 1.0, 100);
       FastFire("OnUser1 FB.Fade:Fade:0.0:1");
       CreateTimer(1.0, SephATK);
       CreateTimer(1.7, TimedOperator, 7);
@@ -1719,7 +1717,7 @@ public Action TimedOperator(Handle timer, int job) {
     }
     //Signal boss to actually spawn after delay.
     case 8: {
-      CustomSoundEmitter(SFXArray[57], 65, false, 0, 1.0, 100);
+      CustomSoundEmitter(SFXArray[57].realPath, 65, false, 0, 1.0, 100);
       CPrintToChatAll("{darkgreen}[CORE] You did it!!! {darkred}Or... did you...?");
       FastFire("OnUser1 FB.FadeBLCK:Fade::0.0:1");
       CreateTimer(4.8, TimedOperator, 2);
@@ -1751,11 +1749,11 @@ public Action TimedOperator(Handle timer, int job) {
     }
     //Incoming
     case 21: {
-      CustomSoundEmitter(SFXArray[37], 65, false, 0, 1.0, 100);
+      CustomSoundEmitter(SFXArray[37].realPath, 65, false, 0, 1.0, 100);
       return Plugin_Stop;
     }
     case 37: {
-      EmitSoundToAll(SFXArray[35]);
+      EmitSoundToAll(SFXArray[35].realPath);
       return Plugin_Stop;
     }
     case 40: {
@@ -1780,13 +1778,13 @@ public Action TimedOperator(Handle timer, int job) {
       ServerCommand("fb_operator 1004");
     }
     case 60: {
-      CustomSoundEmitter(SFXArray[40], 65, false, 0, 1.0, 100);
+      CustomSoundEmitter(SFXArray[40].realPath, 65, false, 0, 1.0, 100);
       return Plugin_Stop;
     }
     case 70: {
       if (core.isWave) {
         FireEntityInput("FB.KP*", "Unlock", "", 0.0);
-        CustomSoundEmitter(SFXArray[0], 65, false, 0, 1.0, 100);
+        CustomSoundEmitter(SFXArray[0].realPath, 65, false, 0, 1.0, 100);
       }
       return Plugin_Stop;
     }
@@ -1795,7 +1793,7 @@ public Action TimedOperator(Handle timer, int job) {
       return Plugin_Stop;
     }
     case 78: {
-      EmitSoundToAll(SFXArray[7]);
+      EmitSoundToAll(SFXArray[7].realPath);
       return Plugin_Handled;
     }
     case 79: {
@@ -1807,7 +1805,7 @@ public Action TimedOperator(Handle timer, int job) {
       return Plugin_Stop;
     }
     case 80: {
-      EmitSoundToAll(SFXArray[59]);
+      EmitSoundToAll(SFXArray[59].realPath);
       return Plugin_Stop;
     }
     case 99: {

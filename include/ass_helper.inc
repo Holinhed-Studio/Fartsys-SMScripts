@@ -8,74 +8,11 @@ float CircleAOErot[][3] = {
 
 };
 //All sound effects
-char SFXArray[][64] = {
-  "fartsy/misc/bell.wav", // 0
-  "fartsy/misc/murica.mp3", // 1
-  "fartsy/bl2/grenade_detonate.mp3", // 2
-  "fartsy/gbombs5/t_12.mp3", // 3
-  "fartsy/misc/majorkong.mp3", // 4
-  "fartsy/vo/spongebob/boom.mp3", // 5
-  "fartsy/misc/countdown.wav", // 6
-  "fartsy/misc/fartsyscrusader_attack.mp3", // 7
-  "items/cart_warning_single.wav", // 8 (DROPNUKE)
-  "fartsy/ffxiv/bossfatejoin.mp3", // 9 (EVENTSTART)
-  "fartsy/misc/explosiveparadise.mp3", // 10 (EXPLOSIVEPARADISE)
-  "fartsy/vo/l4d2/billfall02.mp3", // 11 (FALLSND01-10)
-  "fartsy/vo/l4d2/coachfall02.mp3",// 12
-  "fartsy/vo/l4d2/ellisfall01.mp3", // 13
-  "fartsy/vo/l4d2/francisfall02.mp3", // 14
-  "fartsy/vo/l4d2/louisfall01.mp3", // 15
-  "fartsy/vo/l4d2/louisfall03.mp3", // 16
-  "fartsy/vo/l4d2/nickfall01.mp3", // 17
-  "fartsy/vo/l4d2/zoeyfall01.mp3", // 18
-  "fartsy/vo/ddd/woahhh.mp3", // 19
-  "fartsy/vo/jigglypuff/jigglypuff.mp3", // 20
-  "fartsy/vo/kirby/eeeahhhh.mp3", // 21
-  "fartsy/vo/luigi/ohohohohoo.mp3", // 22
-  "fartsy/vo/mario/wahahahaha.mp3", // 23
-  "fartsy/vo/pika/pikapika.mp3", // 24
-  "fartsy/vo/wario/wheee.mp3", // 25
-  "fartsy/vo/mario/wowww.mp3", // 26
-  "fartsy/weather/thunder1.wav", // 27 (GlobalThunder01-08)
-  "fartsy/weather/thunder2.wav", // 28
-  "fartsy/weather/thunder3.wav", // 29
-  "fartsy/weather/thunder4.wav", // 30
-  "fartsy/weather/thunder5.wav", // 31
-  "fartsy/weather/thunder6.wav", // 32
-  "fartsy/weather/thunder7.wav", // 33
-  "fartsy/weather/thunder8.wav", // 34
-  "fartsy/gbombs5/tsar_detonate.mp3", // 35 (HINDENBURGBOOM)
-  "fartsy/vo/jeffy/hinden.wav", // 36 (HINDENCRASH)
-  "fartsy/vo/ddo/koboldincoming.wav", // 37 (INCOMING)
-  "fartsy/misc/antimatter.mp3", // 38 (OnslaughterLaserSND)
-  "weapons/flame_thrower_start.wav", // 39 OnslaughterFlamePreATK
-  "weapons/flame_thrower_end.wav", // 40 OnslaughterFlamePostATK
-  "fartsy/ffxiv/return.mp3", // 41 RETURNSND
-  "fartsy/ffxiv/returnsuccess.mp3", // 42 RETURNSUCCESS
-  "fartsy/memes/babyshark/baby.mp3", // 43 SHARKSND01-08
-  "fartsy/memes/babyshark/baby02.mp3", // 44
-  "fartsy/memes/babyshark/doot01.mp3", // 45
-  "fartsy/memes/babyshark/doot02.mp3", // 46
-  "fartsy/memes/babyshark/doot03.mp3", // 47
-  "fartsy/memes/babyshark/doot04.mp3", // 48
-  "fartsy/memes/babyshark/shark.mp3", // 49
-  "fartsy/memes/babyshark/shark02.mp3", // 50
-  "fartsy/vo/fartsy/goobbue.mp3", // 51 SPEC01
-  "fartsy/misc/shroom.mp3", // 52 SPEC02
-  "fartsy/vo/inurat/nuclearwaffle.mp3", // 53 SPEC03
-  "fartsy/misc/strongman_bell.wav", // 54 STRONGMAN
-  "amongus/emergency.mp3", // 55 SUS
-  "fartsy/misc/triggerscore.wav", // 56 TRIGGERSCORE
-  "fartsy/ffxivvictoryedit.mp3", // 57 VICTORY
-  "fartsy/vo/sephiroth/memory.mp3", // 58 VO_SEPHMEMORY
-  "fartsy/misc/wtfboom.mp3", // 59 WTFBOOM
-  "mvm/ambient_mp3/mvm_siren.mp3", // 60
-  "fartsy/memes/priceisright_fail.wav", // 61
-  "fartsy/eee/the_horn.wav", // 62
-  "fartsy/misc/fartsyscrusader_bgm_locus.mp3", // 63
-  "ambient/sawblade_impact1.wav", // 64
-  "vo/sandwicheat09.mp3" // 65
-};
+enum struct SFXARRAY {
+  char realPath[64];
+  int SNDLVL;
+}
+SFXARRAY SFXArray[72];
 //Return position
 float Return[3] = {
   -3730.0,
@@ -218,7 +155,7 @@ enum struct BOMBSTATE {
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] %s {forestgreen}successfully deployed! {white}({limegreen}+%i pts{white})", this.name, this.sacVal);
       core.sacPoints += this.sacVal;
       CreateTimer(3.0, BombStatusAddTimer);
-      CustomSoundEmitter(SFXArray[6], 65, false, 0, 1.0, 100);
+      CustomSoundEmitter(SFXArray[6].realPath, 65, false, 0, 1.0, 100);
       FireEntityInput("RareSpells", "Enable", "", 0.0);
     }
   }
@@ -254,6 +191,13 @@ enum struct CUSTOMBOSS {
 CUSTOMBOSS SephBoss[12];
 CUSTOMBOSS HWBoss[12];
 CUSTOMBOSS Onslaughter[10];
+//Used for any time we need to fo a LOT of things in quick succession... Or when we want to do something at random.
+enum struct BULKFIRE {
+  char fireStr[256];
+}
+BULKFIRE crusaderAtk[64];
+BULKFIRE lightningStrike[16];
+BULKFIRE lightningFlash[13];
 //Configure all variables
 void SetupCoreData(){
   AssLogger(1, "Setting up core data...");
@@ -290,14 +234,14 @@ void SetupCoreData(){
   bombState[7].explShake = "LargeExploShake";
   bombState[8].explShake = "LargeExploShake";
   bombState[5].explShakeDly = 1.7;
-  bombState[1].explSnd = SFXArray[1];
-  bombState[2].explSnd = SFXArray[2];
-  bombState[3].explSnd = SFXArray[2];
-  bombState[4].explSnd = SFXArray[2];
-  bombState[5].explSnd = SFXArray[4];
-  bombState[6].explSnd = SFXArray[3];
-  bombState[7].explSnd = SFXArray[35];
-  bombState[8].explSnd = SFXArray[35];
+  bombState[1].explSnd = SFXArray[1].realPath;
+  bombState[2].explSnd = SFXArray[2].realPath;
+  bombState[3].explSnd = SFXArray[2].realPath;
+  bombState[4].explSnd = SFXArray[2].realPath;
+  bombState[5].explSnd = SFXArray[4].realPath;
+  bombState[6].explSnd = SFXArray[3].realPath;
+  bombState[7].explSnd = SFXArray[35].realPath;
+  bombState[8].explSnd = SFXArray[35].realPath;
   bombState[1].identifier = "Bombs.FreedomBomb";
   bombState[2].identifier = "Bombs.ElonBust";
   bombState[3].identifier = "Bombs.BathSalts";
@@ -331,61 +275,6 @@ void SetupCoreData(){
   bombState[3].shouldFreezeBots = true;
   bombState[0].state = 0;
   bombState[0].stateMax = 0;
-  //Per Wave options
-  DefaultsArray[0].defCanHWBoss = false;
-  DefaultsArray[1].defCanHWBoss = false;
-  DefaultsArray[2].defCanHWBoss = false;
-  DefaultsArray[3].defCanHWBoss = true;
-  DefaultsArray[4].defCanHWBoss = true;
-  DefaultsArray[5].defCanHWBoss = true;
-  DefaultsArray[6].defCanHWBoss = true;
-  DefaultsArray[7].defCanHWBoss = true;
-  DefaultsArray[8].defCanHWBoss = true;
-  DefaultsArray[0].defCanTornado = false;
-  DefaultsArray[1].defCanTornado = false;
-  DefaultsArray[2].defCanTornado = false;
-  DefaultsArray[3].defCanTornado = true;
-  DefaultsArray[4].defCanTornado = true;
-  DefaultsArray[5].defCanTornado = true;
-  DefaultsArray[6].defCanTornado = true;
-  DefaultsArray[7].defCanTornado = true;
-  DefaultsArray[8].defCanTornado = true;
-  DefaultsArray[0].defBGMIndex = 1;
-  DefaultsArray[1].defBGMIndex = 5;
-  DefaultsArray[2].defBGMIndex = 6;
-  DefaultsArray[3].defBGMIndex = 7;
-  DefaultsArray[4].defBGMIndex = 8;
-  DefaultsArray[5].defBGMIndex = 12;
-  DefaultsArray[6].defBGMIndex = 13;
-  DefaultsArray[7].defBGMIndex = 14;
-  DefaultsArray[8].defBGMIndex = 15;
-  DefaultsArray[0].defBombStatus = 0;
-  DefaultsArray[1].defBombStatus = 4;
-  DefaultsArray[2].defBombStatus = 7;
-  DefaultsArray[3].defBombStatus = 8;
-  DefaultsArray[4].defBombStatus = 12;
-  DefaultsArray[5].defBombStatus = 14;
-  DefaultsArray[6].defBombStatus = 20;
-  DefaultsArray[7].defBombStatus = 28;
-  DefaultsArray[8].defBombStatus = 30;
-  DefaultsArray[0].defBombStatusMax = 0;
-  DefaultsArray[1].defBombStatusMax = 10;
-  DefaultsArray[2].defBombStatusMax = 18;
-  DefaultsArray[3].defBombStatusMax = 26;
-  DefaultsArray[4].defBombStatusMax = 34;
-  DefaultsArray[5].defBombStatusMax = 42;
-  DefaultsArray[6].defBombStatusMax = 50;
-  DefaultsArray[7].defBombStatusMax = 58;
-  DefaultsArray[8].defBombStatusMax = 66;
-  DefaultsArray[0].defSacPointsMax = 0;
-  DefaultsArray[1].defSacPointsMax = 50;
-  DefaultsArray[2].defSacPointsMax = 60;
-  DefaultsArray[3].defSacPointsMax = 70;
-  DefaultsArray[4].defSacPointsMax = 80;
-  DefaultsArray[5].defSacPointsMax = 90;
-  DefaultsArray[6].defSacPointsMax = 100;
-  DefaultsArray[7].defSacPointsMax = 100;
-  DefaultsArray[8].defSacPointsMax = 100;
   core.bgmPlaying = false;
   core.bombReset = false;
   core.brawler_emergency = false;
@@ -473,7 +362,7 @@ void SetupCoreData(){
   SephBoss[2].fireString = "OnUser1 SephNuke:ForceSpawn::0.0:1";
   SephBoss[2].index = 3;
   SephBoss[2].fireCount = 1;
-  SephBoss[2].sound = SFXArray[8];
+  SephBoss[2].sound = SFXArray[8].realPath;
   SephBoss[3].fireString = "OnUser1 SephRocketSpammer:FireMultiple:50:0.0:1";
   SephBoss[3].index = 4;
   SephBoss[3].fireCount = 4;
@@ -499,6 +388,79 @@ void SetupCoreData(){
   SephBoss[10].fireString = "OnUser1 SephRocketSpammer:FireOnce::5.0:1";
   SephBoss[11].index = 3;
   SephBoss[11].fireCount = 4;
+  AssLogger(1, "[BULKFIRE] Setting up Crusader...");
+  Handle confCoreData = OpenFile("addons/sourcemod/configs/FartsysAss/BulkFire/crusader.ini", "rt", false);
+  char bufCoreData[256];
+  int crusaderIndex = -1;
+  if(confCoreData == INVALID_HANDLE) return;
+  while (ReadFileLine(confCoreData, bufCoreData, sizeof(bufCoreData))){
+    TrimString(bufCoreData);
+    if (!StrContains(bufCoreData, "OnUser1")){
+      crusaderIndex++;
+      Format(crusaderAtk[crusaderIndex].fireStr, 256, bufCoreData);
+    }
+    if (IsEndOfFile(confCoreData)) break;
+  }
+  AssLogger(1, "[BULKFIRE] Setting up Lightning Flashes...");
+  confCoreData = OpenFile("addons/sourcemod/configs/FartsysAss/BulkFire/lightning_flash.ini", "rt", false);
+  int lightningFlashIndex = -1;
+  if(confCoreData == INVALID_HANDLE) return;
+  while (ReadFileLine(confCoreData, bufCoreData, sizeof(bufCoreData))){
+    TrimString(bufCoreData);
+    if (!StrContains(bufCoreData, "OnUser1")){
+      lightningFlashIndex++;
+      Format(lightningFlash[lightningFlashIndex].fireStr, 256, bufCoreData);
+    }
+    if (IsEndOfFile(confCoreData)) break;
+  }
+  AssLogger(1, "[BULKFIRE] Setting up Lightning Strikes...");
+  confCoreData = OpenFile("addons/sourcemod/configs/FartsysAss/BulkFire/lightning_strike.ini", "rt", false);
+  int lightningStrikeIndex = -1;
+  if(confCoreData == INVALID_HANDLE) return;
+  while (ReadFileLine(confCoreData, bufCoreData, sizeof(bufCoreData))){
+    TrimString(bufCoreData);
+    if (!StrContains(bufCoreData, "OnUser1")){
+      lightningStrikeIndex++;
+      Format(lightningStrike[lightningStrikeIndex].fireStr, 256, bufCoreData);
+    }
+    if (IsEndOfFile(confCoreData)) break;
+  }
+  AssLogger(1, "[CORE] Setting up Wave Defaults...");
+  confCoreData = OpenFile("addons/sourcemod/configs/FartsysAss/Core/WaveDefaults.ini", "rt", false);
+  int defIndexHW, defIndexTornado, defIndexBGM, defIndexBS, defIndexBSM, defIndexSPM; // Start at 0 because we don't have a wave 0
+  if(confCoreData == INVALID_HANDLE) return;
+  while (ReadFileLine(confCoreData, bufCoreData, sizeof(bufCoreData))){
+    TrimString(bufCoreData);
+    if (!StrContains(bufCoreData, "Wave.defCanHWBoss:")){
+      defIndexHW++;
+      DefaultsArray[defIndexHW].defCanHWBoss = CharToBool(bufCoreData);
+    }
+    else if(!StrContains(bufCoreData, "Wave.defCanTornado:")){
+      defIndexTornado++;
+      DefaultsArray[defIndexTornado].defCanTornado = CharToBool(bufCoreData);
+    }
+    else if(!StrContains(bufCoreData, "Wave.defBGMIndex:")){
+      defIndexBGM++;
+      ReplaceString(bufCoreData, sizeof(bufCoreData), "Wave.defBGMIndex:", "", true);
+      DefaultsArray[defIndexBGM].defBGMIndex = StringToInt(bufCoreData);
+    }
+    else if(!StrContains(bufCoreData, "Wave.defBombStatus:")){
+      defIndexBS++;
+      ReplaceString(bufCoreData, sizeof(bufCoreData), "Wave.defBombStatus:", "", true);
+      DefaultsArray[defIndexBS].defBombStatus = StringToInt(bufCoreData);
+    }
+    else if(!StrContains(bufCoreData, "Wave.defBombStatusMax:")){
+      defIndexBSM++;
+      ReplaceString(bufCoreData, sizeof(bufCoreData), "Wave.defBombStatusMax:", "", true);
+      DefaultsArray[defIndexBSM].defBombStatusMax = StringToInt(bufCoreData);
+    }
+    else if(!StrContains(bufCoreData, "Wave.defSacPointsMax:")){
+      defIndexSPM++;
+      ReplaceString(bufCoreData, sizeof(bufCoreData), "Wave.defSacPointsMax:", "", true);
+      DefaultsArray[defIndexSPM].defSacPointsMax = StringToInt(bufCoreData);
+    }
+  }
+  CloseHandle(confCoreData);
   AssLogger(1, "Hooking game events...");
   HookEvent("player_death", EventDeath);
   HookEvent("player_spawn", EventSpawn);
@@ -624,25 +586,6 @@ char SpecEnt[][24] = {
   "Spec.BlueBall",
   "Spec*"
 };
-//Strike targets for lightning
-char StrikeAt[][40] = {
-  "OnUser1:LightningHurt00:Enable::0.0:1",
-  "OnUser1:LightningHurt01:Enable::0.0:1",
-  "OnUser1:LightningHurt02:Enable::0.0:1",
-  "OnUser1:LightningHurt03:Enable::0.0:1",
-  "OnUser1:LightningHurt04:Enable::0.0:1",
-  "OnUser1:LightningHurt05:Enable::0.0:1",
-  "OnUser1:LightningHurt06:Enable::0.0:1",
-  "OnUser1:LightningHurt07:Enable::0.0:1",
-  "OnUser1:LightningHurt08:Enable::0.0:1",
-  "OnUser1:LightningHurt09:Enable::0.0:1",
-  "OnUser1:LightningHurt0A:Enable::0.0:1",
-  "OnUser1:LightningHurt0B:Enable::0.0:1",
-  "OnUser1:LightningHurt0C:Enable::0.0:1",
-  "OnUser1:LightningHurt0D:Enable::0.0:1",
-  "OnUser1:LightningHurt0E:Enable::0.0:1",
-  "OnUser1:LightningHurt0F:Enable::0.0:1"
-};
 //test code
 char TBGM0[16] = "test/bgm0.mp3";
 char TBGM1[16] = "test/bgm1.mp3";
@@ -744,13 +687,17 @@ BGM BGMArray[32];
 void RegisterAndPrecacheAllFiles(){
   AssLogger(0, "Loading EVERYTHING to RAM...");
   Handle confBGM = OpenFile("addons/sourcemod/configs/FartsysAss/Files/music.ini", "rt", false);
+  Handle confSFX = OpenFile("addons/sourcemod/configs/FartsysAss/Files/sfx.ini", "rt", false);
   char bufferBGM[256];
+  char bufferSFX[128];
   int bgmIndex;
   int bgmNameIndex = -1;
   int bgmRefire;
   int bgmOffset;
   int bgmVol;
+  int sfxIndex = -1;
   if(confBGM == INVALID_HANDLE) return;
+  if(confSFX == INVALID_HANDLE) return;
   while (ReadFileLine(confBGM, bufferBGM, sizeof(bufferBGM))){
     TrimString(bufferBGM);
     if (!StrContains(bufferBGM, "Path:")){
@@ -784,6 +731,18 @@ void RegisterAndPrecacheAllFiles(){
   if(confBGM != INVALID_HANDLE){
 		CloseHandle(confBGM);
 	}
+  while (ReadFileLine(confSFX, bufferSFX, sizeof(bufferSFX))){
+    TrimString(bufferSFX);
+    if (!StrContains(bufferSFX, "Path:")){
+      sfxIndex++;
+      ReplaceString(bufferSFX, sizeof(bufferSFX), "Path:", "", true);
+      Format(SFXArray[sfxIndex].realPath, 128, bufferSFX);
+    }
+    if (IsEndOfFile(confSFX)) break;
+  }
+  if(confSFX != INVALID_HANDLE){
+		CloseHandle(confSFX);
+	}
   for (int i = 1; i < sizeof(BGMArray); i++){ //We start at index 1 because index 0 is used for restoring default bgm in the VIP music menu...
    if(!StrEqual(BGMArray[i].realPath, "")){ 
     Format(LoggerDbg, sizeof(LoggerDbg), "Precaching BGM: %s (%s), Duration %i ticks, Start Loop Point %i ticks, Volume %i   @ %i", BGMArray[i].songName, BGMArray[i].realPath, BGMArray[i].refireTime, BGMArray[i].ticksOffset, BGMArray[i].SNDLVL, i);
@@ -792,11 +751,13 @@ void RegisterAndPrecacheAllFiles(){
    }
   }
   for (int i = 0; i < sizeof(SFXArray); i++){
-    Format(LoggerDbg, sizeof(LoggerDbg), "Precaching SFX: %s in position %i", SFXArray[i], i);
+    if(!StrEqual(SFXArray[i].realPath, "")){
+    Format(LoggerDbg, sizeof(LoggerDbg), "Precaching SFX: %s in position %i", SFXArray[i].realPath, i);
     AssLogger(0, LoggerDbg);
-    PrecacheSound(SFXArray[i], true);
+    PrecacheSound(SFXArray[i].realPath, true);
+    }
   }
-  Format(LoggerInfo, sizeof(LoggerInfo), "Done! BGM Count: %i, SFX Count: %i, Total: %i files loaded to RAM.", sizeof(BGMArray) - 1, sizeof(SFXArray), (sizeof(BGMArray) + sizeof(SFXArray)) - 1);
+  Format(LoggerInfo, sizeof(LoggerInfo), "Done! BGM Count: %i, SFX Count: %i, Total: %i files loaded to RAM.", bgmIndex, sfxIndex, bgmIndex + sfxIndex+1);
   AssLogger(1, LoggerInfo);
   //Todo: These files are not part of the base pakfile, they are slated for install in a future update, when that update is ready, these files will eventually become one with the map.
   PrecacheSound(TBGM0, true);
@@ -805,7 +766,6 @@ void RegisterAndPrecacheAllFiles(){
   PrecacheSound(TBGM4, true);
   PrecacheSound(TBGM5, true);
   PrecacheSound(TBGM6, true);
-  
 }
 
 //Used to keep StopSound from stopping the music we're trying to play - now with support for loop offsets!
@@ -816,88 +776,6 @@ public Action SyncMusic(Handle timer) {
   AssLogger(1, LoggerInfo);
   return Plugin_Stop;
 }
-//Crusader attack script
-char CrusaderBrrr[][] = {
-  "OnUser1 FB.BOOM:StopShake::3.0:1",
-  "OnUser1 FB.CRUSADER:Enable::25.20:1",
-  "OnUser1 CrusaderTrain:StartForward::25.20:1",
-  "OnUser1 CrusaderLaserBase*:StartForward::25.20:1",
-  "OnUser1 CrusaderTrain:SetSpeed:0.9:38.0:1",
-  "OnUser1 CrusaderTrain:SetSpeed:0.7:38.60:1",
-  "OnUser1 CrusaderTrain:SetSpeed:0.5:39.20:1",
-  "OnUser1 CrusaderTrain:SetSpeed:0.3:40.40:1",
-  "OnUser1 CrusaderTrain:SetSpeed:0.1:41.40:1",
-  "OnUser1 CrusaderTrain:Stop::42.60:1",
-  "OnUser1 FB.CrusaderLaserKill01:Disable::42.60:1",
-  "OnUser1 FB.LaserCore:TurnOn::45.80:1",
-  "OnUser1 CrusaderLaserBase*:SetSpeed:0.35:45.80:1",
-  "OnUser1 FB.ShakeCore:StartShake::45.80:1",
-  "OnUser1 CrusaderSprite:Color:255 128 128:45.80:1",
-  "OnUser1 FB.ShakeCore:StopShake::48.80:1",
-  "OnUser1 FB.LaserInnerMost:TurnOn::49.20:1",
-  "OnUser1 FB.ShakeInner:StartShake::49.20:1",
-  "OnUser1 CrusaderSprite:Color:255 230 230:49.20:1",
-  "OnUser1 CrusaderLaserBase*:SetSpeed:0.35:50.20:1",
-  "OnUser1 CrusaderLaserBase*:SetSpeed:0.45:50.60:1",
-  "OnUser1 CrusaderLaserBase*:SetSpeed:0.55:51.0:1",
-  "OnUser1 FB.ShakeInner:StopShake::52.10:1",
-  "OnUser1 FB.ShakeInner:StartShake::52.20:1",
-  "OnUser1 CrusaderLaserBase*:SetSpeed:0.45:54.0:1",
-  "OnUser1 CrusaderLaserBase*:SetSpeed:0.4:54.40:1",
-  "OnUser1 FB.ShakeInner:StopShake::55.0:1",
-  "OnUser1 FB.ShakeInner:StartShake::55.10:1",
-  "OnUser1 CrusaderLaserBase*:SetSpeed:0.75:57.20:1",
-  "OnUser1 FB.CrusaderSideLaser:TurnOn::57.20:1",
-  "OnUser1 FB.ShakeInner:StopShake::58.0:1",
-  "OnUser1 FB.ShakeInner:StartShake::58.10:1",
-  "OnUser1 CrusaderLaserBase*:SetSpeed:1:58.50:1",
-  "OnUser1 CrusaderLaserBase*:SetSpeed:0.75:60.80:1",
-  "OnUser1 CrusaderLaserBase:SetSpeed:0.65:61.10:1",
-  "OnUser1 CrusaderLaserBase:SetSpeed:0.55:61.40:1",
-  "OnUser1 FB.LaserCore:TurnOff::61.40:1",
-  "OnUser1 FB.LaserInnerMost:TurnOff::61.40:1",
-  "OnUser1 CrusaderSprite:Color:0 0 0:61.40:1",
-  "OnUser1 CrusaderLaserBase:SetSpeed:0.45:61.70:1",
-  "OnUser1 CrusaderLaserBase:SetSpeed:0.3:62.0:1",
-  "OnUser1 CrusaderLaserBase:SetSpeed:0.15:62.30:1",
-  "OnUser1 FB.CrusaderSideLaser:TurnOff::62.30:1",
-  "OnUser1 CrusaderLaserBase*:Stop::62.70:1",
-  "OnUser1 FB.Laser*:TurnOn::65.20:1",
-  "OnUser1 CrusaderLaserBase*:StartForward::65.20:1",
-  "OnUser1 CrusaderLaserBase:SetSpeed:1:65.20:1",
-  "OnUser1 FB.ShakeBOOM:StartShake::65.20:1",
-  "OnUser1 FB.Fade:Fade::65.20:1",
-  "OnUser1 HurtAll:AddOutput:damagetype 1024:65.10:1",
-  "OnUser1 HurtAll:AddOutput:damage 2000000:65.10:1",
-  "OnUser1 HurtAll:Enable::65.20:1",
-  "OnUser1 FB.CrusaderSideLaser:TurnOn::65.20:1",
-  "OnUser1 CrusaderSprite:Color:255 230 255:65.20:1",
-  "OnUser1 FB.Laser*:TurnOff::70.0:1",
-  "OnUser1 CrusaderTrain:StartForward::70.0:1",
-  "OnUser1 CrusaderLaserBase*:Stop::70.0:1",
-  "OnUser1 HurtAll:Disable::70.0:1",
-  "OnUser1 FB.CrusaderSideLaser:TurnOff::70.0:1",
-  "OnUser1 CrusaderSprite:Color:0 0 0:70.0:1",
-  "OnUser1 FB.ShakeBOOM:StopShake::70.20:1",
-  "OnUser1 CrusaderTrain:Stop::80.0:1",
-  "OnUser1 FB.CRUSADER:Disable::80.0:1"
-};
-
-char lightning[][] = {
-  "OnUser1 lightning:TurnOn::0.0:1",
-  "OnUser1 value:TurnOff::0.0:1",
-  "OnUser1 weather:Skin:4:0.0:1",
-  "OnUser1 LightningLaser:TurnOn::0.0:1",
-  "OnUser1 lightning:TurnOff::0.1:1",
-  "OnUser1 weather:Skin:3:0.1:1",
-  "OnUser1 LightningLaser:TurnOff::0.1:1",
-  "OnUser1 lightning:TurnOn::0.17:1",
-  "OnUser1 weather:Skin:4:0.17:1",
-  "OnUser1 LightningLaser:TurnOn::0.17:1",
-  "OnUser1 lightning:TurnOff::0.25:1",
-  "OnUser1 LightningLaser:TurnOff::0.25:1",
-  "OnUser1 weather:Skin:3:0.25:1"
-};
 
 char TornadoLogic[][] = {
   "OnUser1 TornadoKill:Enable::0.0:1",
@@ -939,7 +817,7 @@ void Emerge(int stage){
     case 0:{
       BEM = 0;
       core.brawler_emergency = true;
-      EmitSoundToAll(SFXArray[55]);
+      EmitSoundToAll(SFXArray[55].realPath);
       CreateTimer(1.0, TimedOperator, 6969);
       core.sacPoints = 0;
       ServerCommand("sm_addcash @red 2000000");
@@ -953,7 +831,7 @@ void Emerge(int stage){
       return;
     }
     case 2:{
-      EmitSoundToAll(SFXArray[6]);
+      EmitSoundToAll(SFXArray[6].realPath);
       CreateTimer(7.0, TimedOperator, 6969);
       return;
     }
@@ -1086,17 +964,19 @@ public void ExitEmergencyMode() {
   return;
 }
 
-public bool IsStringNumeric(const char[] str)
-{
-    int len = strlen(str);
-    
-    for (int i=0; i < len; i++)
-    {
-        if (!IsCharNumeric(str[i]))
-        {
-            return false;
-        }
+//Converts chars to bool by checking if it's a bool statement
+public bool CharToBool(const char[] str){
+  return (StrContains(str, "true") > 0 ? true : false);
+}
+
+//Wave failsafe system - To be implemented better by making an enum struct and doing failSafe[x].execute(); in FartsysAss.sp
+void PerformWaveFailsafe(int x){
+  switch(x){
+    case 0:{
+      ServerCommand("sm_freeze @blue; wait 180; sm_smash @blue;sm_evilrocket @blue");
     }
-    
-    return true;
+    case 1:{
+      ServerCommand("sm_smite @blue");
+    }
+  }
 }
