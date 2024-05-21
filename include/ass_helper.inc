@@ -753,8 +753,9 @@ void RegisterAndPrecacheAllFiles(){
   if(confBGM == INVALID_HANDLE) return;
   while (ReadFileLine(confBGM, bufferBGM, sizeof(bufferBGM))){
     TrimString(bufferBGM);
-    if (!StrContains(bufferBGM, "fartsy/music")){
+    if (!StrContains(bufferBGM, "Path:")){
       bgmIndex++;
+      ReplaceString(bufferBGM, sizeof(bufferBGM), "Path:", "", true);
       Format(BGMArray[bgmIndex].realPath, 64, bufferBGM);
     }
     else if (!StrContains(bufferBGM, "Title:")){
