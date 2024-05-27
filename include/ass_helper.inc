@@ -1,10 +1,86 @@
+// To do, first make cluster AOEs
+// second fix line aoes so we can have the AOEs similar to livia's aoes
+// third, show line aoes on onslaughter just before the lasers fire. We can do this by parenting line aoe particles to onslaughter.
+// also, adjust damage dealt by aoes to scale depending what wave we're on / dmgTotal waves
+// Make AOEs spawn location more precise using three trigger multiple entities
+// Spawn fewer aoes early game, spawn more late game and faster.
+// Add in tank buster, AOE tank buster, tank stack, party stack, raid wides, dps checks
+// wipe mechanic: Sentry nut, giant buster head, must be destroyed within 45 seconds, else it explodes and kills everyone and fails the wave. Wave 6 or 7.
+//
+//Upload lightning from phone
+int dmgTotal;
+float waveStartTime;
 char LoggerDbg[512];
 char LoggerInfo[256];
 Database FB_Database;
-float CircleAOEpos[][3] = {
-  
+int attemptSpawn = 0;
+int damageClient[12];
+bool isGoobbue = false;
+bool CircleAOEenabled[] = {
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true
 };
-float CircleAOErot[][3] = {
+float CircleAOEpos[][3] = {
+  {2370.0, -1670.0, -645.0},
+  {1050.0, -1790.0, -535.0},
+  {1150.0, -1520.0, -535.0},
+  {1830.0, -1550.0, -600.0},
+  {1925.0, -1875.0, -580.0},
+  {1485.0, -1460.0, -585.0},
+  {1630.0, -1680.0, -590.0},
+  {1370.0, -1360.0, -570.0},
+  {1350.0, -1690.0, -570.0},
+  {2270.0, -900.0, -400.0},
+  {1920.0, -490.0, -400.0},
+  {1825.0, -650.0, -400.0},
+  {980.0, -560.0, -400.0},
+  {650.0, -880.0, -400.0},
+  {1690.0, -870.0, -500.0},
+  {1400.0, -870.0, -500.0},
+  {1050.0, -980.0, -500.0},
+  {1500.0, -480.0, -480.0},
+  {800.0, -1100.0, -480.0},
+  {520.0, -1400.0, -470.0},
+  {550.0, -1730.0, -500.0},
+  {1030.0, -1740.0, -530.0}
+};
+//Grouped AOEs
+float g1AOEpos[][3] = {
+
+};
+float g2AOEpos[][3] = {
+
+};
+float g3AOEpos[][3] = {
+
+};
+float g4AOEpos[][3] = {
+
+};
+float g5AOEpos[][3] = {
 
 };
 //All sound effects
@@ -19,6 +95,20 @@ float Return[3] = {
   67.0,
   -252.0
 };
+enum struct DPSCOUNTER {
+  int damage;
+  char name[128];
+  float emnity(){
+    PrintToServer("Attempting emnity using %i / %i, result %f", this.damage, dmgTotal, ((this.damage * 1.0) /(dmgTotal * 1.0)* 100.0));
+    return ((this.damage * 1.0) / (dmgTotal * 1.0) * 100.0);
+  }
+  float dps(){
+    return this.damage / (GetGameTime() - waveStartTime);
+  }
+}
+DPSCOUNTER dps[MAXPLAYERS+1];
+DPSCOUNTER bossdps[MAXPLAYERS+1];
+
 Handle cvarSNDDefault = INVALID_HANDLE;
 int soundPreference[MAXPLAYERS + 1];
 //Default values per wave
@@ -308,7 +398,7 @@ void SetupCoreData(){
   core.camSel = 0;
   core.CodeEntry = 0;
   core.curWave = 0;
-  core.failsafeCount = -1;
+  core.failsafeCount = 0;
   core.lastAdmin = 0;
   core.refireTime = 0;
   core.sacPoints = 0;
@@ -757,7 +847,7 @@ void RegisterAndPrecacheAllFiles(){
     PrecacheSound(SFXArray[i].realPath, true);
     }
   }
-  Format(LoggerInfo, sizeof(LoggerInfo), "Done! BGM Count: %i, SFX Count: %i, Total: %i files loaded to RAM.", bgmIndex, sfxIndex, bgmIndex + sfxIndex+1);
+  Format(LoggerInfo, sizeof(LoggerInfo), "Done! BGM Count: %i, SFX Count: %i, Total: %i files loaded to RAM.", bgmIndex, sfxIndex, bgmIndex + sfxIndex);
   AssLogger(1, LoggerInfo);
   //Todo: These files are not part of the base pakfile, they are slated for install in a future update, when that update is ready, these files will eventually become one with the map.
   PrecacheSound(TBGM0, true);

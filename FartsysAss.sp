@@ -21,7 +21,7 @@
 #include <ass_helper>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.1.6";
+static char PLUGIN_VERSION[8] = "7.2.0";
 
 public Plugin myinfo = {
   name = "Fartsy's Ass - Framework",
@@ -41,8 +41,19 @@ public void OnPluginStart() {
   SetCookieMenuItem(FartsysSNDSelected, 0, "Fartsys Ass Sound Preferences");
   Format(LoggerInfo, sizeof(LoggerInfo), "####### STARTUP COMPLETE (v%s) #######", PLUGIN_VERSION);
   AssLogger(1, LoggerInfo);
+  //Testing commands
+  RegConsoleCmd("sm_aoe", Command_AOE, "[TESTING] Dispatch AOE Effect");
 }
 
+public Action Command_AOE(int client, int args){
+ float pos[3];
+ pos[0] = GetCmdArgFloat(1);
+ pos[1] = GetCmdArgFloat(2);
+ pos[2] = GetCmdArgFloat(3);
+ PrintToChat(client, "pos %f %f %f", pos[0], pos[1], pos[2]);
+ DispatchCircleAOE(pos);
+ return Plugin_Handled;
+}
 public void OnMapStart() {
   CreateTimer(1.0, SelectAdminTimer);
   FastFire("OnUser1 rain:Alpha:0:0.0:1");
@@ -85,7 +96,7 @@ public void OnClientPostAdminCheck(int client) {
     }
     if (!core.bgmPlaying) SetupMusic(GetRandomInt(1, 4));
     char query[1024];
-    Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
+    Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', date = CURRENT_DATE, damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
     FB_Database.Query(Database_FastQuery, query);
     char queryID[256];
     Format(queryID, sizeof(queryID), "SELECT soundprefs from ass_activity WHERE steamid = '%d';", steamID);
@@ -262,6 +273,7 @@ public Action PerformAdverts(Handle timer) {
 public Action PerformWaveAdverts(Handle timer) {
   if (core.isWave) {
     char buffer[16];
+    int emnity;
     char tbuffer[16];
     char HintText[256];
     int sPos = RoundToFloor(core.ticksMusic / 66.6666666666);
@@ -269,13 +281,15 @@ public Action PerformWaveAdverts(Handle timer) {
     Format(buffer, 16, "%02d:%02d", sPos / 60, sPos % 60);
     Format(tbuffer, 16, "%02d:%02d", tPos / 60, tPos % 60);
     Format(HintText, sizeof(HintText), (bombState[0].isMoving ? "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : bombState[0].isReady ? "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : "Payload: PREPARING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)"), bombState[0].state, bombState[0].stateMax, core.sacPoints, core.sacPointsMax, core.songName, buffer, tbuffer);
-    CreateTimer(2.5, PerformWaveAdverts);
     for (int i = 1; i <= MaxClients; i++) {
       if (IsValidClient(i)) {
-        PrintHintText(i, (core.TornadoWarningIssued ? "%s \n\n[TORNADO WARNING]" : "%s"), HintText, HintText);
+        emnity = RoundToFloor(dps[i].emnity());
+        PrintToServer("%i", emnity);
+        PrintHintText(i, (core.TornadoWarningIssued ? "%s \n\n[TORNADO WARNING]" : "%s\n\nEmnity: %i٪"), HintText, emnity >= 0 ? emnity : 0);
         StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
       }
     }
+    CreateTimer(2.5, PerformWaveAdverts);
   }
   return Plugin_Stop;
 }
@@ -564,6 +578,7 @@ public Action Command_Discord(int client, int args) {
 public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_Broadcast) {
   int client = GetClientOfUserId(Spawn_Event.GetInt("userid"));
   int attacker = GetClientOfUserId(Spawn_Event.GetInt("attacker"));
+  dps[attacker].damage = 0;
   char name[64];
   char weapon[32];
   Format(name, sizeof(name), attacker == 0 ? "[INTENTIONAL GAME DESIGN]" : "%N", IsValidClient(attacker) ? client : attacker);
@@ -693,8 +708,8 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
         weapon = "Taco Bell";
       }
       case 1048576: { //ACID
-        CPrintToChatAll("{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been crushed by a {forestgreen}FALLING GOOBBUE FROM OUTER SPACE{white}!", client);
-        weapon = "Falling Goobbue";
+        CPrintToChatAll( isGoobbue ? "{darkviolet}[{red}CORE{darkviolet}] {white}Client %N has been crushed by a {forestgreen}FALLING GOOBBUE FROM OUTER SPACE{white}!" : "{darkviolet}[{red}CORE{darkviolet}] {white}Client %N was deleted by {orange}AN AREA OF EFFECT{white}!", client);
+        weapon = isGoobbue ? "Falling Goobbue" : "AREA_EFFECT";
       }
       }
     }
@@ -770,11 +785,16 @@ public void Event_PlayerHurt(Handle event, const char[] name, bool dontBroadcast
   int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
   int damage = GetEventInt(event, "damageamount");
   if (IsValidClient(attacker) && attacker != client) {
+    dps[attacker].damage += damage;
     int steamID = GetSteamAccountID(attacker);
     if (!FB_Database || !steamID) return;
     char query[256];
     Format(query, sizeof(query), "UPDATE ass_activity SET damagedealt = damagedealt + %i, damagedealtsession = damagedealtsession + %i WHERE steamid = %i;", damage, damage, steamID);
     FB_Database.Query(Database_FastQuery, query);
+    dmgTotal = 0;
+    for (int i = 0; i < sizeof(dps); i++){
+      dmgTotal += dps[i].damage;
+    }
   }
 }
 
@@ -812,10 +832,11 @@ public Action DeleteEdict(Handle timer, any entity) {
   return Plugin_Stop;
 }
 //Dispatch a circle AOE
-public Action DispatchCircleAOE(float pos[3], float rot[3]) {
+public Action DispatchCircleAOE(float pos[3]) {
   int ent = FindEntityByTargetname("CircleTemplate", "point_template");
   if (ent != -1) {
     float v[3];
+    float rot[3];
     TeleportEntity(ent, pos, rot, v);
     FastFire("OnUser1 CircleTemplate:ForceSpawn::0.0:1");
   }
@@ -913,6 +934,9 @@ void sudo(int task) {
     core.curWave = GetCurWave();
     PerformWaveSetup();
     switch (core.curWave) {
+    case 2: {
+      CreateTimer(GetRandomFloat(10.0, 45.0), TimedAOEs);
+    }
     case 3, 10, 17: {
       core.HWNMax = 360.0;
       for (int i = 8; i < sizeof(WaveSetup) - 3; i++) FastFire(WaveSetup[i]);
@@ -1265,6 +1289,7 @@ void sudo(int task) {
   }
   //Found goobbue
   case 42: {
+    isGoobbue = true;
     CustomSoundEmitter(SFXArray[51].realPath, 65, false, 0, 1.0, 100);
     CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}ALL HAIL \x07FF00FFGOOBBUE{forestgreen}!");
     CreateTimer(4.0, TimedOperator, 21);
@@ -1303,6 +1328,7 @@ void sudo(int task) {
     FastFire("OnUser1 HurtAll:AddOutput:damage 666666.667:0.0:1");
     FastFire("OnUser1 HurtAll:Enable:0.1:1");
     FastFire("OnUser1 HurtAll:Disable:2.1:1");
+    isGoobbue = false;
   }
   //Giant Goobbue
   case 53: {
@@ -1386,8 +1412,11 @@ void sudo(int task) {
   }
   //Debug, somethingsomething aoe blah blah blah
   case 200: {
-    int i = GetRandomInt(0,2);
-    DispatchCircleAOE(CircleAOEpos[i], CircleAOErot[i]);
+    CreateTimer(0.1, TimedOperator, 201);
+  }
+  //Debug, somethingsomething player aoe explosion thingy
+  case 201:{
+
   }
   //Taco Bell Edition
   case 210: {
@@ -1397,6 +1426,9 @@ void sudo(int task) {
   }
   //Reset Map
   case 300: {
+    waveStartTime = 0.0;
+    for (int i = 0; i < sizeof(dps); i++) dps[i].damage = 0;
+    dmgTotal = 0;
     core.shouldStopMusic = true;
     core.BGMINDEX = GetRandomInt(1, 4);
     core.ticksMusic = -2;
@@ -1644,12 +1676,20 @@ void sudo(int task) {
     CustomSoundEmitter(TBGM0, 65, true, 1, 0.05, 100);
     CustomSoundEmitter(TBGM1, 65, true, 1, 1.0, 100);
   }
+  //Test
+  case 10000:{
+    int ent = FindEntityByClassname(-1, "tf_objective_resource");
+    if (ent != -1){
+      PrintToChatAll("%i / 3", GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nFlagCarrierUpgradeLevel")));
+    }
+  }
   }
   return;
 }
 
 //Perform Wave Setup
 public Action PerformWaveSetup() {
+  waveStartTime = GetGameTime();
   core.isWave = true; //It's a wave!
   core.FailedCount = 0; //Reset fail count to zero. (See EventWaveFailed, where we play the BGM.)
   ServerCommand("fb_operator 1001"); //Stop any playing BGM
@@ -1815,6 +1855,26 @@ public Action TimedOperator(Handle timer, int job) {
     case 100: {
       ServerCommand("_restart");
     }
+    case 200:{
+      for (int i = 0; i < sizeof(CircleAOEenabled); i++){
+        CircleAOEenabled[i] = true;
+      }
+    }
+    case 201:{
+    int i = GetRandomInt(0, sizeof(CircleAOEpos)-1);
+    if (!CircleAOEenabled[i]){
+      if (attemptSpawn >= sizeof(CircleAOEpos)) return Plugin_Stop;
+      attemptSpawn++;
+      ServerCommand("fb_operator 200");
+      return Plugin_Stop;
+    }
+    attemptSpawn = 0;
+    CircleAOEenabled[i] = false;
+    DispatchCircleAOE(CircleAOEpos[i]);
+    PrintToChatAll("Got %i, CircleAOEen[i] = %b, attempt %i, sizeof %i", i, CircleAOEenabled[i], attemptSpawn, sizeof(CircleAOEpos));
+    CreateTimer(3.0, TimedOperator, 200);
+    return Plugin_Stop;
+    }
     case 6969: {
       if (!core.isWave){
         ExitEmergencyMode();
@@ -1904,4 +1964,37 @@ public int GetCurWave() {
   if (ent != -1) return GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
   AssLogger(3, "tf_objective_resource not found");
   return -1;
+}
+
+//Place random AOE barrage
+void GroupedAOE(){
+  int ent = FindEntityByClassname(-1, "tf_objective_resource");
+  int bombBotLevel = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nFlagCarrierUpgradeLevel"));
+  switch(GetRandomInt(0, bombBotLevel+1)){
+    case 0:{
+
+    }
+    case 1:{
+
+    }
+    case 2:{
+
+    }
+    case 3:{
+
+    }
+    case 4:{
+
+    }
+  }
+}
+
+public Action TimedAOEs(Handle timer){
+  if (core.isWave){
+    for (int i = 0; i < GetRandomInt(1, 10); i++){
+      CreateTimer(i/10.0, TimedOperator, 201);
+    }
+    CreateTimer(GetRandomFloat(10.0, 45.0), TimedAOEs);
+  }
+  return Plugin_Stop;
 }
