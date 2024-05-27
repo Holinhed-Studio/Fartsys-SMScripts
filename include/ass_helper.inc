@@ -97,7 +97,6 @@ float Return[3] = {
 };
 enum struct DPSCOUNTER {
   int damage;
-  char name[128];
   float emnity(){
     PrintToServer("Attempting emnity using %i / %i, result %f", this.damage, dmgTotal, ((this.damage * 1.0) /(dmgTotal * 1.0)* 100.0));
     return ((this.damage * 1.0) / (dmgTotal * 1.0) * 100.0);

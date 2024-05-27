@@ -21,7 +21,7 @@
 #include <ass_helper>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.2.0";
+static char PLUGIN_VERSION[8] = "7.2.1";
 
 public Plugin myinfo = {
   name = "Fartsy's Ass - Framework",
