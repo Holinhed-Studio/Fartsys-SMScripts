@@ -1,3 +1,4 @@
+//Make aoes more frequent depending where we are in wave. CreateTimer(float, TimerName, maxRefireTime);
 // To do, first make cluster AOEs
 // second fix line aoes so we can have the AOEs similar to livia's aoes
 // third, show line aoes on onslaughter just before the lasers fire. We can do this by parenting line aoe particles to onslaughter.

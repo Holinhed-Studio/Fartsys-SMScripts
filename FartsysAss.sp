@@ -19,9 +19,10 @@
 #include <regex>
 #include <tf2_stocks>
 #include <ass_helper>
+#include <ass_enhancer>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.2.1";
+static char PLUGIN_VERSION[8] = "7.2.2";
 
 public Plugin myinfo = {
   name = "Fartsy's Ass - Framework",
