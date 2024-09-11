@@ -8,7 +8,6 @@
 // Add in tank buster, AOE tank buster, tank stack, party stack, raid wides, dps checks
 // wipe mechanic: Sentry nut, giant buster head, must be destroyed within 45 seconds, else it explodes and kills everyone and fails the wave. Wave 6 or 7.
 //
-//Upload lightning from phone
 int dmgTotal;
 float waveStartTime;
 char LoggerDbg[512];
