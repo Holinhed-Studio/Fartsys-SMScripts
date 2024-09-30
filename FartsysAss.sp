@@ -22,7 +22,7 @@
 #include <ass_bosshandler>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.3.0";
+static char PLUGIN_VERSION[8] = "7.3.1";
 
 public Plugin myinfo = {
   name = "Fartsy's Ass - Framework",
@@ -368,7 +368,12 @@ public Action OnslaughterATK(Handle timer) {
       FastFire2("BruteJusticeLaserHurtAOE", "Disable", "", 3.25, false);
     }
     case 2, 8: {
-      FastFire2("BruteJustice", "FireUser1", "", 0.0, false);
+      FastFire2("BruteJusticeJarateSpawner00", "ForceSpawn", "", 0.0, false);
+      FastFire2("BruteJusticeJarateSpawner01", "ForceSpawn", "", 2.5, false);
+      FastFire2("BruteJusticeJarateSpawner02", "ForceSpawn", "", 5.0, false);
+      FastFire2("BruteJusticeJarateSpawner00", "ForceSpawn", "", 9.0, false);
+      FastFire2("BruteJusticeJarateSpawner01", "ForceSpawn", "", 12.0, false);
+      FastFire2("BruteJusticeJarateSpawner02", "ForceSpawn", "", 15.0, false);
     }
     case 3, 7: {
       FastFire2("BruteJusticeFlameParticle", "Start", "", 0.0, false);
