@@ -1,20 +1,100 @@
-//Make aoes more frequent depending where we are in wave. CreateTimer(float, TimerName, maxRefireTime);
-// To do, first make cluster AOEs
-// second fix line aoes so we can have the AOEs similar to livia's aoes
-// third, show line aoes on onslaughter just before the lasers fire. We can do this by parenting line aoe particles to onslaughter.
-// also, adjust damage dealt by aoes to scale depending what wave we're on / dmgTotal waves
-// Make AOEs spawn location more precise using three trigger multiple entities
-// Spawn fewer aoes early game, spawn more late game and faster.
-// Add in tank buster, AOE tank buster, tank stack, party stack, raid wides, dps checks
-// wipe mechanic: Sentry nut, giant buster head, must be destroyed within 45 seconds, else it explodes and kills everyone and fails the wave. Wave 6 or 7.
-//
-int dmgTotal;
-float waveStartTime;
-char LoggerDbg[512];
-char LoggerInfo[256];
+//ASS_HELPER - Contains the config loaders and all the plugin core data entries as well as some stocks required for base functionality.
+//Log debug info
+enum {
+  LOGLVL_DEBUG = 0,
+  LOGLVL_INFO = 1,
+  LOGLVL_WARN = 2,
+  LOGLVL_ERROR = 3
+};
+void AssLogger(int logLevel, const char[] logData, any...) {
+  char buffer[256];
+  VFormat(buffer, sizeof(buffer), logData, 3);
+  switch (logLevel) {
+    case LOGLVL_DEBUG: {
+      LogMessage("[DEBUG]: %s", buffer);
+    }
+    case LOGLVL_INFO: {
+      LogMessage("[INFO]: %s", buffer);
+    }
+    case LOGLVL_WARN: {
+      LogMessage("[WARN]: %s", buffer);
+    }
+    case LOGLVL_ERROR: {
+      LogMessage("[ERROR]: %s", buffer);
+    }
+  }
+}
+//Default values per wave
+enum struct DEFAULTS {
+  bool defCanHWBoss;
+  bool defCanTornado;
+  int defBGMIndex;
+  int defBombStatus;
+  int defBombStatusMax;
+  int defSacPointsMax;
+}
+DEFAULTS DefaultsArray[9];
+//Core values
+enum struct COREDATA {
+  bool bgmPlaying;
+  bool bombReset;
+  bool brawler_emergency;
+  bool canCrusaderNuke;
+  bool canHindenburg;
+  bool canHWBoss;
+  bool canSENTMeteors;
+  bool canSENTShark;
+  bool canSENTStars;
+  bool canSephNuke;
+  bool canTornado;
+  bool crusader;
+  bool doFailsafe;
+  bool isWave;
+  bool monitorOn;
+  bool monitorColor;
+  bool sacrificedByClient;
+  bool sephiroth;
+  bool shouldStopMusic;
+  bool tornado;
+  bool tacobell;
+  bool tickingClientHealth;
+  bool tickMusic;
+  bool tickBGMOffset;
+  char cachedPath[64];
+  char songName[64];
+  float HWNMin;
+  float HWNMax;
+  int BGMINDEX;
+  int FailedCount;
+  int INCOMINGDISPLAYED;
+  int camSel;
+  int CodeEntry;
+  int curWave;
+  int failsafeCount;
+  int lastAdmin;
+  int refireTime;
+  int sacPoints;
+  int sacPointsMax;
+  int SNDCHAN;
+  int ticksMusic;
+  int VIPBGM;
+  int VIPIndex;
+  int waveFlags;
+  void Reset(){
+    this.canCrusaderNuke = false;
+    this.canHindenburg = false;
+    this.canHWBoss = false;
+    this.canSephNuke = false;
+    this.isWave = false;
+    this.sephiroth = false;
+    this.waveFlags = 0;
+  }
+}
+COREDATA core;
+bool tickOnslaughter;
+
 Database FB_Database;
 int attemptSpawn = 0;
-int damageClient[12];
 bool isGoobbue = false;
 bool CircleAOEenabled[] = {
   true,
@@ -83,18 +163,14 @@ float g4AOEpos[][3] = {
 float g5AOEpos[][3] = {
 
 };
-//All sound effects
-enum struct SFXARRAY {
-  char realPath[64];
-  int SNDLVL;
-}
-SFXARRAY SFXArray[72];
+
 //Return position
 float Return[3] = {
   -3730.0,
   67.0,
   -252.0
 };
+/*
 enum struct DPSCOUNTER {
   int damage;
   float emnity(){
@@ -107,68 +183,107 @@ enum struct DPSCOUNTER {
 }
 DPSCOUNTER dps[MAXPLAYERS+1];
 DPSCOUNTER bossdps[MAXPLAYERS+1];
+*/
+public int iDmgHealingTotal;
+enum struct EMNITYMANAGER {
+  int iBossDamage;
+  int iDamage;
+  int iHealing;
+  int InitHealingValue;
+  int getClientEmnity() {
+    //PrintToConsoleAll ("Getting emnity returned Damage %i + Healing %i / %i Total, or %i Emnity ", this.iDamage, this.iHealing, iDmgHealingTotal, RoundToFloor(((this.iDamage * 1.0 + this.iHealing * 1.0) / ((iDmgHealingTotal == 0) ? 1 : iDmgHealingTotal) * 100)));
+    return RoundToFloor((((this.iDamage + this.iHealing) * 1.0) / (iDmgHealingTotal * 1.0)) * 100.0);
+  }
+  bool IsAboveEmnityThreshold(int value) {
+    if (RoundToFloor(((this.iDamage + this.iHealing) * 1.0) / (iDmgHealingTotal * 1.0)) > value) return true;
+    return false;
+  }
+  void Reset() {
+    this.iBossDamage = 0;
+    this.iDamage = 0;
+    this.iHealing = 0;
+  }
+}
+EMNITYMANAGER EmnityManager[MAXPLAYERS+1];
+
+stock int GetEmnityMax() {
+  int result = 0;
+  int score = -1;
+  int tempscore = 0;
+  for(int i = 0; i < MaxClients; ++i) {
+    if(!IsValidClient(i)) { //replace IsValidClient(i) with whatever you need to validate your clients
+      continue;
+    }
+    tempscore = EmnityManager[i].getClientEmnity();
+    if(score == - 1 || tempscore > score) {
+      result = i;
+      score = tempscore;
+    }
+  }
+  return result;
+}
+
+public int GetHealerOfClient(int client){
+  for (int i = 1; i <= MaxClients; ++i){
+    if(!IsValidClient(i) || GetClientTeam(i) == 3) continue;
+    if (TF2_GetPlayerClass(i) == TFClass_Medic){
+      int medigun = GetPlayerWeaponSlot(i, TFWeaponSlot_Secondary);
+      if (!IsValidEdict(medigun) || !IsValidEntity(medigun)){
+        PrintToServer("medigun returned null");
+        return -1;
+      }
+      char s[32];
+      GetEdictClassname(medigun, s, sizeof(s));
+      if (!strcmp(s, "tf_weapon_medigun", false)) {
+        if (GetEntProp(medigun, Prop_Send, "m_bHealing") && core.isWave){
+          if(GetEntPropEnt(medigun, Prop_Send, "m_hHealingTarget") == client) return i;
+        }
+      }
+    }
+  }
+  return -1;
+}
+
+public Action UpdateMedicHealing(Handle timer){
+  int CurHealVal[MAXPLAYERS+1];
+  for (int i = 1; i <= MaxClients; ++i){
+    if(!IsValidClient(i) || GetClientTeam(i) == 3) continue;
+    if (TF2_GetPlayerClass(i) == TFClass_Medic){
+      int medigun = GetPlayerWeaponSlot(i, TFWeaponSlot_Secondary);
+      if (!IsValidEdict(medigun) || !IsValidEntity(medigun)){
+        PrintToServer("medigun returned null");
+        return Plugin_Stop;
+      }
+      CurHealVal[i] = GetEntProp(i, Prop_Send, "m_iHealPoints");
+      char s[32];
+      GetEdictClassname(medigun, s, sizeof(s));
+      if (!strcmp(s, "tf_weapon_medigun", false)) {
+        if (GetEntProp(medigun, Prop_Send, "m_bHealing") && core.isWave){
+          int hOffset = (CurHealVal[i] - EmnityManager[i].InitHealingValue);
+          PrintToServer("%N is healing %N with %i HP since last check", i, GetEntPropEnt(medigun, Prop_Send, "m_hHealingTarget"), hOffset);
+          EmnityManager[i].iHealing += hOffset;
+          iDmgHealingTotal += hOffset;
+        }
+      }
+      EmnityManager[i].InitHealingValue = CurHealVal[i];
+    }
+  }
+  CreateTimer(1.0, UpdateMedicHealing);
+  return Plugin_Stop;
+}
+
+public void UpdateAllHealers() {
+  for (int i = 1; i <= MaxClients; ++i){
+    if(!IsValidClient(i) || GetClientTeam(i) == 3) continue;
+    if (TF2_GetPlayerClass(i) == TFClass_Medic){
+      EmnityManager[i].InitHealingValue = ((TF2_GetPlayerClass(i) == TFClass_Medic)) ? GetEntProp(i, Prop_Send, "m_iHealPoints") : 0;
+    }
+  }
+}
 
 Handle cvarSNDDefault = INVALID_HANDLE;
 int soundPreference[MAXPLAYERS + 1];
-//Default values per wave
-enum struct DEFAULTS {
-  bool defCanHWBoss;
-  bool defCanTornado;
-  int defBGMIndex;
-  int defBombStatus;
-  int defBombStatusMax;
-  int defSacPointsMax;
-}
-DEFAULTS DefaultsArray[9];
-//Core values
-enum struct COREDATA {
-  bool bgmPlaying;
-  bool bombReset;
-  bool brawler_emergency;
-  bool canCrusaderNuke;
-  bool canHindenburg;
-  bool canHWBoss;
-  bool canSENTMeteors;
-  bool canSENTShark;
-  bool canSENTStars;
-  bool canSephNuke;
-  bool canTornado;
-  bool crusader;
-  bool doFailsafe;
-  bool isWave;
-  bool monitorOn;
-  bool monitorColor;
-  bool sacrificedByClient;
-  bool sephiroth;
-  bool shouldStopMusic;
-  bool tornado;
-  bool tacobell;
-  bool tickingClientHealth;
-  bool tickMusic;
-  bool tickOffset;
-  bool TornadoWarningIssued;
-  char cachedPath[64];
-  char songName[64];
-  float HWNMin;
-  float HWNMax;
-  int BGMINDEX;
-  int FailedCount;
-  int INCOMINGDISPLAYED;
-  int camSel;
-  int CodeEntry;
-  int curWave;
-  int failsafeCount;
-  int lastAdmin;
-  int refireTime;
-  int sacPoints;
-  int sacPointsMax;
-  int SNDCHAN;
-  int ticksMusic;
-  int VIPBGM;
-  int VIPIndex;
-  int waveFlags;
-}
-COREDATA core;
+
 //Annihilation supply shop entries
 enum struct ASShop {
   char name[64];
@@ -204,8 +319,7 @@ enum struct BOMBSTATE {
     return (this.state - 4);
   }
   void explode(bool realExplosion){
-    Format(LoggerDbg, sizeof(LoggerDbg), "Exploding a %s - isRealExplosion: %d canHinden: %d, canStars: %d, canShark: %d, isNuclear: %d, shouldFreezeBots: %d, explEnt: %s, explShake: %s, explSnd: %s, identifier: %s, explDly: %f, explShakeDly: %f, fadeDly: %f, NukeStart: %f, sacVal: %i...", this.name, realExplosion, this.canHindenburg, this.canSENTStars, this.canSENTShark, this.isNuclear, this.shouldFreezeBots, this.explEnt, this.explShake, this.explSnd, this.identifier, this.explDly, this.explShakeDly, this.FadeDly, this.NukeStart, this.sacVal);
-    AssLogger(0, LoggerDbg);
+    AssLogger(LOGLVL_DEBUG, "Exploding a %s - isRealExplosion: %d canHinden: %d, canStars: %d, canShark: %d, isNuclear: %d, shouldFreezeBots: %d, explEnt: %s, explShake: %s, explSnd: %s, identifier: %s, explDly: %f, explShakeDly: %f, fadeDly: %f, NukeStart: %f, sacVal: %i...", this.name, realExplosion, this.canHindenburg, this.canSENTStars, this.canSENTShark, this.isNuclear, this.shouldFreezeBots, this.explEnt, this.explShake, this.explSnd, this.identifier, this.explDly, this.explShakeDly, this.FadeDly, this.NukeStart, this.sacVal);
     //Freeze bots?
     if(this.shouldFreezeBots){
       ServerCommand("sm_freeze @blue 10");
@@ -219,33 +333,33 @@ enum struct BOMBSTATE {
     }
     //Holy jesus, it's a nuke!
     if(this.isNuclear){
-      FireEntityInput("LargeExplosionSND", "PlaySound", "", this.NukeStart);
-      FireEntityInput("NukeAll", "Enable", "", this.NukeStart);
-      FireEntityInput("HurtAll", "AddOutput", "damagetype 262144", this.NukeStart);
-      FireEntityInput("HurtAll", "AddOutput", "damage 2000000", this.NukeStart);
-      FireEntityInput("HurtAll", "Enable", "", this.NukeStart+0.1);
-      FireEntityInput("FB.Fade", "Fade", "", this.FadeDly);
-      FastFire("OnUser1 NukeAll:Disable::3.0:1");
-      FastFire("OnUser1 HurtAll:Disable::3.0:1");
+      FastFire2("LargeExplosionSND", "PlaySound", "", this.NukeStart, false);
+      FastFire2("NukeAll", "Enable", "", this.NukeStart, false);
+      FastFire2("HurtAll", "AddOutput", "damagetype 262144", this.NukeStart, false);
+      FastFire2("HurtAll", "AddOutput", "damage 2000000", this.NukeStart, false);
+      FastFire2("HurtAll", "Enable", "", this.NukeStart+0.1, false);
+      FastFire2("FB.Fade", "Fade", "", this.FadeDly, false);
+      FastFire2("NukeAll", "Disable", "", 3.0, false);
+      FastFire2("HurtAll", "Disable", "", 3.0, false);
       if(this.state == 64){
         CreateTimer(15.0, SpecTimer);
         ResetBombState();
       }
       if(this.canHindenburg){
         core.canHindenburg = true;
-        FastFire("OnUser1 DeliveryBurg:Unlock::0.0:1");
+        FastFire2("DeliveryBurg", "Unlock", "", 0.0, false);
         CPrintToChatAll("The {red}HINDENBURG {forestgreen}is now ready for flight!");
       }
     }
-    FireEntityInput(this.explEnt, "Explode", "", this.explDly);
+    FastFire2(this.explEnt, "Explode", "", this.explDly, false);
     CustomSoundEmitter(this.explSnd, 65, false, 0, 1.0, 100);
-    FireEntityInput(this.explShake, "StartShake", "", this.explShakeDly);
+    FastFire2(this.explShake, "StartShake", "", this.explShakeDly, false);
     if(realExplosion){
       CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] %s {forestgreen}successfully deployed! {white}({limegreen}+%i pts{white})", this.name, this.sacVal);
       core.sacPoints += this.sacVal;
       CreateTimer(3.0, BombStatusAddTimer);
       CustomSoundEmitter(SFXArray[6].realPath, 65, false, 0, 1.0, 100);
-      FireEntityInput("RareSpells", "Enable", "", 0.0);
+      FastFire2("RareSpells", "Enable", "", 0.0, false);
     }
   }
 }
@@ -269,27 +383,52 @@ enum struct CUSTOMBOSS {
   int fireCount;
   void attack(){
     if(this.shouldNuke) {
-      CreateTimer(1.0, NukeTimer);
+      CreateTimer(1.0, NukeTimer, 2);
       CreateTimer(7.0, TimedOperator, 11);
       core.canSephNuke = true;
     }
     if (!StrEqual(this.ChatMessage, "")) CPrintToChatAll(this.ChatMessage);
-    for (int i = 0; i < this.fireCount; i++) FastFire(this.fireString[this.index+i]);
+    for (int i = 0; i < this.fireCount; i++) FastFire2(this.fireString[this.index+i], "", "", 0.0, true);
   }
 }
 CUSTOMBOSS SephBoss[12];
 CUSTOMBOSS HWBoss[12];
-CUSTOMBOSS Onslaughter[10];
+//CUSTOMBOSS Onslaughter[10];
 //Used for any time we need to fo a LOT of things in quick succession... Or when we want to do something at random.
 enum struct BULKFIRE {
   char fireStr[256];
 }
 BULKFIRE crusaderAtk[64];
-BULKFIRE lightningStrike[16];
-BULKFIRE lightningFlash[13];
+
+//FastFire2 System Setup
+int ff2Ref;
+void InjectFastFire2(){
+  int ff2 = FindEntityByTargetname("FastFire2", "info_target");
+  AssLogger(LOGLVL_INFO, "Injecting FastFire2!");
+  if (!IsValidEntity(ff2)){
+    ff2 = CreateEntityByName("info_target");
+    if (!IsValidEdict(ff2)) SetFailState("Could not inject FastFire2, aborting!!!");
+    DispatchSpawn(ff2);
+    DispatchKeyValue(ff2, "targetname", "FastFire2");
+    ActivateEntity(ff2);
+    AssLogger(LOGLVL_INFO, "Injected info_target FastFire2 to map!")
+  }
+  ff2Ref = EntIndexToEntRef(ff2);
+  OnFastFire2Ready();
+}
+//Execute inputs - EXPERT MODE
+public void FastFire2(const char[] target, const char[] input, const char[] param, const float delay, bool isLegacy) {
+  int ff2 = EntRefToEntIndex(ff2Ref);
+  char FireStr[128];
+  FormatEx(FireStr, sizeof(FireStr), (isLegacy ? target : "OnUser1 %s,%s,%s,%f,1"), target, input, param, delay);
+  SetVariantString(FireStr);
+  AcceptEntityInput(ff2, "AddOutput");
+  AcceptEntityInput(ff2, "FireUser1");
+}
+
 //Configure all variables
 void SetupCoreData(){
-  AssLogger(1, "Setting up core data...");
+  AssLogger(LOGLVL_INFO, "Setting up core data...");
   ass[0].name = "[10] Kissone Bath Salts";
   ass[1].name = "[20] Summon Goobbue or Kirby";
   ass[2].name = "[30] Robot Trap (Wave Fail-safe)";
@@ -302,6 +441,116 @@ void SetupCoreData(){
   ass[9].name = "[100] Professor Fartsalot";
   for (int i = 0; i < sizeof(ass); i++) ass[i].price = 10 + (10 * i);
   for (int i = 0; i < sizeof(ass); i++) ass[i].purchase = 30 + i;
+  //This is not in the config files yet...
+  WeatherManager.defFogStartDist = "300";
+  WeatherManager.defFogEndDist = "3000";
+  WeatherManager.defFogDensity = 0.55;
+  WeatherManager.fogChangeRate = 0.001;
+  WeatherManager.hasTornado = false;
+  MapLighting[0].arcs = "MapLighting.StreetLamp00.arcs";
+  MapLighting[1].arcs = "MapLighting.StreetLamp01.arcs";
+  MapLighting[2].arcs = "MapLighting.StreetLamp02.arcs";
+  MapLighting[3].arcs = "MapLighting.StreetLamp03.arcs";
+  MapLighting[4].arcs = "MapLighting.StreetLamp04.arcs";
+  MapLighting[5].arcs = "MapLighting.StreetLamp05.arcs";
+  MapLighting[6].arcs = "MapLighting.StreetLamp06.arcs";
+  MapLighting[7].arcs = "MapLighting.StreetLamp07.arcs";
+  MapLighting[8].arcs = "MapLighting.StreetLamp08.arcs";
+  MapLighting[9].arcs = "MapLighting.StreetLamp09.arcs";
+  MapLighting[10].arcs = "MapLighting.StreetLamp0A.arcs";
+  MapLighting[11].arcs = "MapLighting.StreetLamp0B.arcs";
+  MapLighting[12].arcs = "MapLighting.StreetLamp0C.arcs";
+  MapLighting[0].beam = "MapLighting.StreetLamp00.beam";
+  MapLighting[1].beam = "MapLighting.StreetLamp01.beam";
+  MapLighting[2].beam = "MapLighting.StreetLamp02.beam";
+  MapLighting[3].beam = "MapLighting.StreetLamp03.beam";
+  MapLighting[4].beam = "MapLighting.StreetLamp04.beam";
+  MapLighting[5].beam = "MapLighting.StreetLamp05.beam";
+  MapLighting[6].beam = "MapLighting.StreetLamp06.beam";
+  MapLighting[7].beam = "MapLighting.StreetLamp07.beam";
+  MapLighting[8].beam = "MapLighting.StreetLamp08.beam";
+  MapLighting[9].beam = "MapLighting.StreetLamp09.beam";
+  MapLighting[10].beam = "MapLighting.StreetLamp0A.beam";
+  MapLighting[11].beam = "MapLighting.StreetLamp0B.beam";
+  MapLighting[12].beam = "MapLighting.StreetLamp0C.beam";
+  MapLighting[0].buzz = "MapLighting.StreetLamp00.buzz";
+  MapLighting[1].buzz = "MapLighting.StreetLamp01.buzz";
+  MapLighting[2].buzz = "MapLighting.StreetLamp02.buzz";
+  MapLighting[3].buzz = "MapLighting.StreetLamp03.buzz";
+  MapLighting[4].buzz = "MapLighting.StreetLamp04.buzz";
+  MapLighting[5].buzz = "MapLighting.StreetLamp05.buzz";
+  MapLighting[6].buzz = "MapLighting.StreetLamp06.buzz";
+  MapLighting[7].buzz = "MapLighting.StreetLamp07.buzz";
+  MapLighting[8].buzz = "MapLighting.StreetLamp08.buzz";
+  MapLighting[9].buzz = "MapLighting.StreetLamp09.buzz";
+  MapLighting[10].buzz = "MapLighting.StreetLamp0A.buzz";
+  MapLighting[11].buzz = "MapLighting.StreetLamp0B.buzz";
+  MapLighting[12].buzz = "MapLighting.StreetLamp0C.buzz";
+  MapLighting[0].explosion = "MapLighting.StreetLamp00.explosion";
+  MapLighting[1].explosion = "MapLighting.StreetLamp01.explosion";
+  MapLighting[2].explosion = "MapLighting.StreetLamp02.explosion";
+  MapLighting[3].explosion = "MapLighting.StreetLamp03.explosion";
+  MapLighting[4].explosion = "MapLighting.StreetLamp04.explosion";
+  MapLighting[5].explosion = "MapLighting.StreetLamp05.explosion";
+  MapLighting[6].explosion = "MapLighting.StreetLamp06.explosion";
+  MapLighting[7].explosion = "MapLighting.StreetLamp07.explosion";
+  MapLighting[8].explosion = "MapLighting.StreetLamp08.explosion";
+  MapLighting[9].explosion = "MapLighting.StreetLamp09.explosion";
+  MapLighting[10].explosion = "MapLighting.StreetLamp0A.explosion";
+  MapLighting[11].explosion = "MapLighting.StreetLamp0B.explosion";
+  MapLighting[12].explosion = "MapLighting.StreetLamp0C.explosion";
+  MapLighting[0].light = "MapLighting.StreetLamp00.light";
+  MapLighting[1].light = "MapLighting.StreetLamp01.light";
+  MapLighting[2].light = "MapLighting.StreetLamp02.light";
+  MapLighting[3].light = "MapLighting.StreetLamp03.light";
+  MapLighting[4].light = "MapLighting.StreetLamp04.light";
+  MapLighting[5].light = "MapLighting.StreetLamp05.light";
+  MapLighting[6].light = "MapLighting.StreetLamp06.light";
+  MapLighting[7].light = "MapLighting.StreetLamp07.light";
+  MapLighting[8].light = "MapLighting.StreetLamp08.light";
+  MapLighting[9].light = "MapLighting.StreetLamp09.light";
+  MapLighting[10].light = "MapLighting.StreetLamp0A.light";
+  MapLighting[11].light = "MapLighting.StreetLamp0B.light";
+  MapLighting[12].light = "MapLighting.StreetLamp0C.light";
+  MapLighting[0].status = "MapLighting.StreetLamp00.status";
+  MapLighting[1].status = "MapLighting.StreetLamp01.status";
+  MapLighting[2].status = "MapLighting.StreetLamp02.status";
+  MapLighting[3].status = "MapLighting.StreetLamp03.status";
+  MapLighting[4].status = "MapLighting.StreetLamp04.status";
+  MapLighting[5].status = "MapLighting.StreetLamp05.status";
+  MapLighting[6].status = "MapLighting.StreetLamp06.status";
+  MapLighting[7].status = "MapLighting.StreetLamp07.status";
+  MapLighting[8].status = "MapLighting.StreetLamp08.status";
+  MapLighting[9].status = "MapLighting.StreetLamp09.status";
+  MapLighting[10].status = "MapLighting.StreetLamp0A.status";
+  MapLighting[11].status = "MapLighting.StreetLamp0B.status";
+  MapLighting[12].status = "MapLighting.StreetLamp0C.status";
+  MapLighting[0].stun = "MapLighting.StreetLamp00.stun";
+  MapLighting[1].stun = "MapLighting.StreetLamp01.stun";
+  MapLighting[2].stun = "MapLighting.StreetLamp02.stun";
+  MapLighting[3].stun = "MapLighting.StreetLamp03.stun";
+  MapLighting[4].stun = "MapLighting.StreetLamp04.stun";
+  MapLighting[5].stun = "MapLighting.StreetLamp05.stun";
+  MapLighting[6].stun = "MapLighting.StreetLamp06.stun";
+  MapLighting[7].stun = "MapLighting.StreetLamp07.stun";
+  MapLighting[8].stun = "MapLighting.StreetLamp08.stun";
+  MapLighting[9].stun = "MapLighting.StreetLamp09.stun";
+  MapLighting[10].stun = "MapLighting.StreetLamp0A.stun";
+  MapLighting[11].stun = "MapLighting.StreetLamp0B.stun";
+  MapLighting[12].stun = "MapLighting.StreetLamp0C.stun";
+  MapLighting[0].zap = "MapLighting.StreetLamp00.zap";
+  MapLighting[1].zap = "MapLighting.StreetLamp01.zap";
+  MapLighting[2].zap = "MapLighting.StreetLamp02.zap";
+  MapLighting[3].zap = "MapLighting.StreetLamp03.zap";
+  MapLighting[4].zap = "MapLighting.StreetLamp04.zap";
+  MapLighting[5].zap = "MapLighting.StreetLamp05.zap";
+  MapLighting[6].zap = "MapLighting.StreetLamp06.zap";
+  MapLighting[7].zap = "MapLighting.StreetLamp07.zap";
+  MapLighting[8].zap = "MapLighting.StreetLamp08.zap";
+  MapLighting[9].zap = "MapLighting.StreetLamp09.zap";
+  MapLighting[10].zap = "MapLighting.StreetLamp0A.zap";
+  MapLighting[11].zap = "MapLighting.StreetLamp0B.zap";
+  MapLighting[12].zap = "MapLighting.StreetLamp0C.zap";
   bombState[8].canHindenburg = true;
   bombState[4].canSENTStars = true;
   bombState[6].canSENTShark = true;
@@ -364,7 +613,7 @@ void SetupCoreData(){
   bombState[3].shouldFreezeBots = true;
   bombState[0].state = 0;
   bombState[0].stateMax = 0;
-  core.bgmPlaying = false;
+  AudioManager.bgmPlaying = false;
   core.bombReset = false;
   core.brawler_emergency = false;
   core.canCrusaderNuke = false;
@@ -374,7 +623,6 @@ void SetupCoreData(){
   core.canSENTShark = false;
   core.canSENTStars = false;
   core.canSephNuke = false;
-  core.canTornado = false;
   core.crusader = false;
   core.doFailsafe = false;
   core.isWave = false;
@@ -382,16 +630,15 @@ void SetupCoreData(){
   core.monitorColor = true;
   core.sacrificedByClient = false;
   core.sephiroth = false;
-  core.shouldStopMusic = false;
-  core.tornado = false;
+  AudioManager.stopBGM = false;
   core.tacobell = false;
   core.tickingClientHealth = false;
-  core.tickMusic = false;
-  core.tickOffset = false;
-  core.TornadoWarningIssued = false;
-  core.cachedPath = "null";
-  core.songName = "null";
-  core.BGMINDEX = 1;
+  AudioManager.shouldTick = false;
+  AudioManager.tickBGMOffset = false;
+  WeatherManager.TornadoWarning = false;
+  AudioManager.cachedPath = "null";
+  AudioManager.songName = "null";
+  AudioManager.indexBGM = 1;
   core.FailedCount = 0;
   core.INCOMINGDISPLAYED = 0;
   core.camSel = 0;
@@ -399,12 +646,12 @@ void SetupCoreData(){
   core.curWave = 0;
   core.failsafeCount = 0;
   core.lastAdmin = 0;
-  core.refireTime = 0;
+  AudioManager.refireBGM = 0;
   core.sacPoints = 0;
   core.sacPointsMax = 60;
-  core.SNDCHAN = 6;
-  core.ticksMusic = 0;
-  core.VIPBGM = -1;
+  AudioManager.chanBGM = 6;
+  AudioManager.ticksBGM = 0;
+  AudioManager.VIPBGM = -1;
   core.VIPIndex = 0;
   core.waveFlags = 0;
   core.HWNMin = 210.0;
@@ -412,69 +659,69 @@ void SetupCoreData(){
   AssLogger(1, "Setting up bosses...");
   HWBoss[0].index = 0;
   HWBoss[0].fireCount = 2;
-  HWBoss[0].fireString = "OnUser1 hhh_maker:ForceSpawn::0.0:1";
+  HWBoss[0].fireString = "OnUser1 hhh_maker,ForceSpawn,,0.0,1";
   HWBoss[1].index = 2;
-  HWBoss[1].fireString = "OnUser1 hhh_maker2:ForceSpawn:0.0:1";
+  HWBoss[1].fireString = "OnUser1 hhh_maker2,ForceSpawn,,0.0,1";
   HWBoss[2].index = 3;
   HWBoss[2].fireCount = 1;
-  HWBoss[2].fireString = "OnUser1 monoculus_maker:ForceSpawn:0.0:1";
+  HWBoss[2].fireString = "OnUser1 monoculus_maker,ForceSpawn,,0.0,1";
   HWBoss[3].index = 4;
   HWBoss[3].fireCount = 3;
-  HWBoss[3].fireString = "OnUser1 hhh_maker2:ForceSpawn:0.0:1";
+  HWBoss[3].fireString = "OnUser1 hhh_maker2,ForceSpawn,,0.0,1";
   HWBoss[4].index = 7;
-  HWBoss[4].fireString = "OnUser1 SkeleSpawner:Enable:0.0:1";
+  HWBoss[4].fireString = "OnUser1 SkeleSpawner,Enable,,0.0,1";
   HWBoss[5].index = 8; 
-  HWBoss[5].fireString = "OnUser1 SkeleSpawner:Disable:20.0:1";
+  HWBoss[5].fireString = "OnUser1 SkeleSpawner,Disable,,20.0,1";
   HWBoss[6].index = 5; //Does this access HWBoss[4]?
   HWBoss[6].fireCount=2;//Does this disable skelespawner after enabling it?...
   HWBoss[7].index = 8;
-  HWBoss[7].fireString = "OnUser1 merasmus_maker:ForceSpawn::0.0:1";
+  HWBoss[7].fireString = "OnUser1 merasmus_maker,ForceSpawn,,0.0,1";
   HWBoss[7].fireCount = 3;
   HWBoss[8].index = 11;
   HWBoss[8].fireCount = 2;
-  HWBoss[8].fireString = "OnUser1 hhh_maker2:ForceSpawn:0.0:1";
+  HWBoss[8].fireString = "OnUser1 hhh_maker2,ForceSpawn,,0.0,1";
   HWBoss[9].index = 12;
-  HWBoss[9].fireString = "OnUser1 monoculus_maker:ForceSpawn:0.0:1";
+  HWBoss[9].fireString = "OnUser1 monoculus_maker,ForceSpawn,,0.0,1";
   HWBoss[10].index = 0;
   HWBoss[10].fireCount = 2;
-  HWBoss[10].fireString = "OnUser1 merasmus_maker:ForceSpawn::0.0:1";
+  HWBoss[10].fireString = "OnUser1 merasmus_maker,ForceSpawn,,0.0,1";
   HWBoss[11].index = 2;
-  HWBoss[11].fireString = "OnUser1 monoculus_maker:ForceSpawn:0.0:1";
+  HWBoss[11].fireString = "OnUser1 monoculus_maker,ForceSpawn,,0.0,1";
   HWBoss[11].fireCount = 1;
   SephBoss[0].index = 0;
   SephBoss[0].fireCount = 0;
   SephBoss[0].shouldNuke = true;
-  SephBoss[1].fireString = "OnUser1 SephMeteor:ForceSpawn::0.0:1";
+  SephBoss[1].fireString = "OnUser1 SephMeteor,ForceSpawn,,0.0,1";
   SephBoss[1].ChatMessage = "{blue}Sephiroth: Say goodbye!";
   SephBoss[1].index = 2;
   SephBoss[1].fireCount = 1;
-  SephBoss[2].fireString = "OnUser1 SephNuke:ForceSpawn::0.0:1";
+  SephBoss[2].fireString = "OnUser1 SephNuke,ForceSpawn,,0.0,1";
   SephBoss[2].index = 3;
   SephBoss[2].fireCount = 1;
   SephBoss[2].sound = SFXArray[8].realPath;
-  SephBoss[3].fireString = "OnUser1 SephRocketSpammer:FireMultiple:50:0.0:1";
+  SephBoss[3].fireString = "OnUser1 SephRocketSpammer,FireMultiple,50,0.0,1";
   SephBoss[3].index = 4;
   SephBoss[3].fireCount = 4;
   SephBoss[4].index = 3;
   SephBoss[4].fireCount = 3;
-  SephBoss[4].fireString = "OnUser1 SephRocketSpammer:FireMultiple:10:3.0:1";
+  SephBoss[4].fireString = "OnUser1 SephRocketSpammer,FireMultiple,10,3.0,1";
   SephBoss[5].index = 9;
   SephBoss[5].fireCount = 2;
-  SephBoss[5].fireString = "OnUser1 SephRocketSpammer:FireMultiple:10:5.0:1";
+  SephBoss[5].fireString = "OnUser1 SephRocketSpammer,FireMultiple,10,5.0,1";
   SephBoss[6].index = 9;
   SephBoss[6].fireCount = 2;
-  SephBoss[6].fireString = "OnUser1 SkeleSpawner:Enable::0.0:1";
+  SephBoss[6].fireString = "OnUser1 SkeleSpawner,Enable,,0.0,1";
   SephBoss[7].index = 3;
   SephBoss[7].fireCount = 3;
-  SephBoss[7].fireString = "OnUser1 SkeleSpawner:Disable::20.0:1";
+  SephBoss[7].fireString = "OnUser1 SkeleSpawner,Disable,,20.0,1";
   SephBoss[8].index = 4;
   SephBoss[8].fireCount = 1;
   SephBoss[9].index = 11;
   SephBoss[9].fireCount = 2;
-  SephBoss[9].fireString = "OnUser1 SephRocketSpammer:FireOnce::0.0:1";
+  SephBoss[9].fireString = "OnUser1 SephRocketSpammer,FireOnce,,0.0,1";
   SephBoss[10].index = 12;
   SephBoss[10].fireCount = 1;
-  SephBoss[10].fireString = "OnUser1 SephRocketSpammer:FireOnce::5.0:1";
+  SephBoss[10].fireString = "OnUser1 SephRocketSpammer,FireOnce,,5.0,1";
   SephBoss[11].index = 3;
   SephBoss[11].fireCount = 4;
   AssLogger(1, "[BULKFIRE] Setting up Crusader...");
@@ -586,7 +833,7 @@ public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast) {
 
 //Idle advertisements in chat
 char AdvMessage[][256] = {
-  "{darkviolet}[{aqua}CORE{darkviolet}] {white}We have a Discord server: {forestgreen}https://discord.com/invite/SkHaeMH",
+  "{darkviolet}[{aqua}CORE{darkviolet}] {white}We have a Discord server: {forestgreen}https://discord.com/invite/ZfUUQWxCmw",
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}Remember to buy your upgrades using {forestgreen}!buy",
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}You may invoke {forestgreen}!sounds {white}to configure what sounds you hear from the plugin, or {forestgreen}!stats{white} to see your stats.",
   "{darkviolet}[{aqua}CORE{darkviolet}] {white}Advanced users may quick buy upgrades using {forestgreen}!qbuy",
@@ -754,7 +1001,7 @@ int FindEntityByTargetname(char[] targetname, char[] classname)
  
   while(strcmp(namebuf, targetname) != 0 && (index = FindEntityByClassname(index, classname)) != -1){
     GetEntPropString(index, Prop_Data, "m_iName", namebuf, sizeof(namebuf));
-    PrintToServer("Found %s, index %i", namebuf, index);
+    //PrintToServer("Found %s, index %i", namebuf, index);
   }
   return(index);
 }
@@ -763,15 +1010,6 @@ int FindEntityByTargetname(char[] targetname, char[] classname)
 stock int TF2_GetPlayerMaxHealth(int client) {
   return GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client);
 }
-
-enum struct BGM {
-  char realPath[64];
-  char songName[64];
-  int refireTime;
-  int ticksOffset;
-  int SNDLVL;
-}
-BGM BGMArray[32];
 
 void RegisterAndPrecacheAllFiles(){
   AssLogger(0, "Loading EVERYTHING to RAM...");
@@ -834,20 +1072,17 @@ void RegisterAndPrecacheAllFiles(){
 	}
   for (int i = 1; i < sizeof(BGMArray); i++){ //We start at index 1 because index 0 is used for restoring default bgm in the VIP music menu...
    if(!StrEqual(BGMArray[i].realPath, "")){ 
-    Format(LoggerDbg, sizeof(LoggerDbg), "Precaching BGM: %s (%s), Duration %i ticks, Start Loop Point %i ticks, Volume %i   @ %i", BGMArray[i].songName, BGMArray[i].realPath, BGMArray[i].refireTime, BGMArray[i].ticksOffset, BGMArray[i].SNDLVL, i);
-    AssLogger(0, LoggerDbg);
+    AssLogger(LOGLVL_DEBUG, "Precaching BGM: %s (%s), Duration %i ticks, Start Loop Point %i ticks, Volume %i   @ %i", BGMArray[i].songName, BGMArray[i].realPath, BGMArray[i].refireTime, BGMArray[i].ticksOffset, BGMArray[i].SNDLVL, i);
     PrecacheSound(BGMArray[i].realPath, true);
    }
   }
   for (int i = 0; i < sizeof(SFXArray); i++){
     if(!StrEqual(SFXArray[i].realPath, "")){
-    Format(LoggerDbg, sizeof(LoggerDbg), "Precaching SFX: %s in position %i", SFXArray[i].realPath, i);
-    AssLogger(0, LoggerDbg);
+    AssLogger(LOGLVL_DEBUG, "Precaching SFX: %s in position %i", SFXArray[i].realPath, i);
     PrecacheSound(SFXArray[i].realPath, true);
     }
   }
-  Format(LoggerInfo, sizeof(LoggerInfo), "Done! BGM Count: %i, SFX Count: %i, Total: %i files loaded to RAM.", bgmIndex, sfxIndex, bgmIndex + sfxIndex);
-  AssLogger(1, LoggerInfo);
+  AssLogger(LOGLVL_INFO, "Done! BGM Count: %i, SFX Count: %i, Total: %i files loaded to RAM.", bgmIndex, sfxIndex, bgmIndex + sfxIndex);
   //Todo: These files are not part of the base pakfile, they are slated for install in a future update, when that update is ready, these files will eventually become one with the map.
   PrecacheSound(TBGM0, true);
   PrecacheSound(TBGM2, true);
@@ -858,48 +1093,31 @@ void RegisterAndPrecacheAllFiles(){
 }
 
 //Used to keep StopSound from stopping the music we're trying to play - now with support for loop offsets!
-public Action SyncMusic(Handle timer) {
-  core.cachedPath = BGMArray[core.BGMINDEX].realPath;
-  core.tickOffset = (BGMArray[core.BGMINDEX].ticksOffset > 0 ? true : false);
-  Format(LoggerInfo, sizeof(LoggerInfo), "We are on wave %i, now playing: %s (from %s) for %i ticks. It will start looping at %i ticks.", core.curWave, core.songName, BGMArray[core.BGMINDEX].realPath, core.refireTime, BGMArray[core.BGMINDEX].ticksOffset);
-  AssLogger(1, LoggerInfo);
+public Action SyncMusic(Handle timer, int index) {
+  AudioManager.cachedPath = BGMArray[index].realPath;
+  AudioManager.tickBGMOffset = (BGMArray[index].ticksOffset > 0 ? true : false);
+  AssLogger(LOGLVL_INFO, "We are on wave %i, now playing: %s (from %s) for %i ticks. It will start looping at %i ticks.", core.curWave, AudioManager.songName, BGMArray[index].realPath, AudioManager.refireBGM, BGMArray[index].ticksOffset);
   return Plugin_Stop;
 }
 
-char TornadoLogic[][] = {
-  "OnUser1 TornadoKill:Enable::0.0:1",
-  "OnUser1 tornadobutton:Lock::0.0:1",
-  "OnUser1 tornadof1:start::20.0:1",
-  "OnUser1 shaketriggerf1:Enable::20.0:1",
-  "OnUser1 tornadowindf1:PlaySound::20.0:1",
-  "OnUser1 tornadof1wind:Enable::21.50:1",
-  "OnUser1 tornadof1:stop::0.0:1",
-  "OnUser1 TornadoKill:Disable::0.0:1",
-  "OnUser1 tornadof1wind:Disable::0.0:1",
-  "OnUser1 tornadowindf1:StopSound::0.0:1",
-  "OnUser1 shaketriggerf1:Disable::0.0:1",
-  "OnUser1 tornadobutton:Unlock::30.0:1",
-  "OnUser1 FB.FakeTankTank01:Kill::0.0:1",
-  "OnUser1 FB.FakeTankPhys01:Kill::0.0:1"
-};
+//Wave Setup
 char WaveSetup[][] = {
-  "OnUser1 bombpath_right_arrows:Disable::0.1:1", //Disable right arrows
-  "OnUser1 bombpath_left_arrows:Disable::0.1:1", //Disable left arrows
-  "OnUser1 Classic_Mode_Intel1:Enable::0.0:1", //Activate Intel 1
-  "OnUser1 Classic_Mode_Intel2:Enable::0.0:1", //Activate Intel 2
-  "OnUser1 CommonSpells:Enable::0.0:1", // Activate common spells
-  "OnUser1 rain:Alpha:200:0.0:1", //Activate rain
-  "OnUser1 OldSpawn:Enable::0.0:1", //Activate Old Spawn
-  "OnUser1 NewSpawn:Disable::0.0:1", //De-activate New Spawn
-  "OnUser1 rain:Alpha:200::0.0:1", // activate rain
-  "OnUser1 Classic_Mode_Intel1:Enable::0.0:1", //enable intel 1
-  "OnUser1 Classic_Mode_Intel2:Enable::0.0:1", //enable intel 2
-  "OnUser1 Classic_Mode_Intel3:Enable::0.0:1",
-  "OnUser1 Classic_Mode_Intel4:Enable::0.0:1",
-  "OnUser1 Classic_Mode_Intel5:Enable::0.0:1",
-  "OnUser1 Classic_Mode_Intel6:Enable::0.0:1"
+  "OnUser1 bombpath_right_arrows,Disable,,0.1,1", //Disable right arrows
+  "OnUser1 bombpath_left_arrows,Disable,,0.1,1", //Disable left arrows
+  "OnUser1 Classic_Mode_Intel1,Enable,,0.0,1", //Activate Intel 1
+  "OnUser1 Classic_Mode_Intel2,Enable,,0.0,1", //Activate Intel 2
+  "OnUser1 CommonSpells,Enable,,0.0,1", // Activate common spells
+  "OnUser1 OldSpawn,Enable,,0.0,1", //Activate Old Spawn
+  "OnUser1 NewSpawn,Disable,,0.0,1", //De-activate New Spawn
+  "OnUser1 Classic_Mode_Intel1,Enable,,0.0,1", //enable intel 1
+  "OnUser1 Classic_Mode_Intel2,Enable,,0.0,1", //enable intel 2
+  "OnUser1 Classic_Mode_Intel3,Enable,,0.0,1",
+  "OnUser1 Classic_Mode_Intel4,Enable,,0.0,1",
+  "OnUser1 Classic_Mode_Intel5,Enable,,0.0,1",
+  "OnUser1 Classic_Mode_Intel6,Enable,,0.0,1"
 };
 int BEM = 0;
+
 //Brawler Emergency Mode Rewrite
 void Emerge(int stage){
   switch(stage){
@@ -1068,4 +1286,10 @@ void PerformWaveFailsafe(int x){
       ServerCommand("sm_smite @blue");
     }
   }
+}
+stock float FloatMin(float a, float b) {
+  return a <= b ? a : b;
+}
+stock float FloatMax(float a, float b) { 
+  return a >= b ? a : b;
 }
