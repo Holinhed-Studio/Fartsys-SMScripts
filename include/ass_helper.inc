@@ -809,21 +809,21 @@ void SetupCoreData(){
 }
 //Messages to be printed when the fail safe has been triggered.
 char failsafe[][256] = {
-  "{orange}Phoenix♥ {white}: FAILSAFE HAS BEEN TRIGGERED. ROBOT EXTERMINATION IN PROGRESS. [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Nice try. You think this is funny? How about THIS instead? [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: (╯°□°）╯︵ ¡¡¡pƎ⅄O˥ԀƎp Ǝq O┴ ┴∩Oq∀ SI SS∀ S,ɹOSSƎℲOɹԀ [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Flips a coin and... HEADS! [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Pwofessow's b-butt is a-about to be depwoyed!!! JUST KIDDING - GET FUCKED. [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: We aren't so different, you and I. Oh wait, yes we are. You're a pile of scrap and I'm actually useful! :> [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: *BZZT* Sorry, time's up! [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: It's only me and you, who is gonna save you now? [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Nope. [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Sometimes I even amaze myself. [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Some disassembly required. [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Oops, I did it again! [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Not on my watch! [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: Sometimes you scare me! [Failsafe Activated]",
-  "{orange}Phoenix♥ {white}: You know, I never really thought about it. [Failsafe Activated]"
+  "{orange}🔥Burnt Mocha🍵 {white}: FAILSAFE HAS BEEN TRIGGERED. ROBOT EXTERMINATION IN PROGRESS. [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: Nice try. You think this is funny? How about THIS instead? [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: (╯°□°）╯︵ ¡¡¡pƎ⅄O˥ԀƎp Ǝq O┴ ┴∩Oq∀ SI SS∀ S,ɹOSSƎℲOɹԀ [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: Flips a coin and... HEADS! [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: Pwofessow's b-butt is a-about to be depwoyed!!! JUST KIDDING - GET FUCKED. [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: We aren't so different, you and I. Oh wait, yes we are. You're a pile of scrap and I'm actually useful! :> [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: *BZZT* Sorry, time's up! [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: It's only me and you, who is gonna save you now? [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: Nope. [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: Sometimes I even amaze myself. [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: Some disassembly required. [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: Oops, I did it again! [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: Not on my watch! [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: Sometimes you scare me! [Failsafe Activated]",
+  "{orange}🔥Burnt Mocha🍵 {white}: You know, I never really thought about it. [Failsafe Activated]"
 };
 //Silence cvar changes to minimize chat spam.
 public Action Event_Cvar(Event event, const char[] name, bool dontBroadcast) {

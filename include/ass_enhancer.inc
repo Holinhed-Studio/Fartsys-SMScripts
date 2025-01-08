@@ -207,7 +207,7 @@ enum struct WEATHERMANAGER {
         flStormMax = 35.0;
         this.fogTarget = 0.55;
         FastFire2("rain", "Alpha", "15", 0.0, false);
-        CustomSoundEmitter(SFXArray[108].realPath, 65, true, 1, 0.1, 100); //Rain, no wind, reduced volume
+        CustomSoundEmitter(SFXArray[108].realPath, 65, false, 1, 0.1, 100); //Rain, no wind, reduced volume
       }
       case 1:{
         this.SetFogStartQueued("500");
@@ -217,7 +217,7 @@ enum struct WEATHERMANAGER {
         flStormMax = 32.0;
         this.fogTarget = 0.60;
         FastFire2("rain", "Alpha", "30", 0.0, false);
-        CustomSoundEmitter(SFXArray[108].realPath, 65, true, 1, 0.25, 100); //Rain, no wind, reduced volume
+        CustomSoundEmitter(SFXArray[108].realPath, 65, false, 1, 0.1, 100); //Rain, no wind, reduced volume
       }
       case 2:{
         this.SetFogStartQueued("500");
@@ -227,7 +227,7 @@ enum struct WEATHERMANAGER {
         flStormMin = 12.0;
         flStormMax = 30.0;
         FastFire2("rain", "Alpha", "50", 0.0, false);
-        CustomSoundEmitter(SFXArray[108].realPath, 65, true, 1, 0.35, 100); //Rain, no wind, increased volume
+        CustomSoundEmitter(SFXArray[108].realPath, 65, false, 1, 0.1, 100); //Rain, no wind, increased volume
       }
       case 3:{
         this.SetFogStartQueued("500");
@@ -237,15 +237,15 @@ enum struct WEATHERMANAGER {
         flStormMax = 28.5;
         this.fogTarget = 0.70;
         FastFire2("rain", "Alpha", "65", 0.0, false);
-        CustomSoundEmitter(SFXArray[108].realPath, 65, true, 1, 0.6, 100); //Rain, no wind, increased volume
+        CustomSoundEmitter(SFXArray[108].realPath, 65, false, 1, 0.1, 100); //Rain, no wind, increased volume
       }
       case 4:{
         flStormMin = 9.0;
         flStormMax = 26.5;
         FastFire2("rain", "Alpha", "75", 0.0, false);
-        CustomSoundEmitter(SFXArray[108].realPath, 65, true, 1, 1.0, 100); //Rain, no wind, increased volume
-        CustomSoundEmitter(SFXArray[107].realPath, 65, true, 1, 0.05, 100); //Rain, wind, decreased volume
-        CustomSoundEmitter(SFXArray[109].realPath, 65, true, 1, 0.01, 100); //Extra wind
+        CustomSoundEmitter(SFXArray[108].realPath, 65, false, 1, 1.0, 100); //Rain, no wind, increased volume
+        CustomSoundEmitter(SFXArray[107].realPath, 65, false, 1, 0.1, 100); //Rain, wind, decreased volume
+        CustomSoundEmitter(SFXArray[109].realPath, 65, false, 1, 0.01, 100); //Extra wind
       }
       case 5:{
         this.SetFogStartQueued("500");
@@ -256,18 +256,18 @@ enum struct WEATHERMANAGER {
         flStormMax = 25.0;
         this.fogTarget = 0.75;
         FastFire2("rain", "Alpha", "95", 0.0, false);
-        CustomSoundEmitter(SFXArray[108].realPath, 65, true, 1, 0.1, 100); //Rain, no wind, decreased volume
-        CustomSoundEmitter(SFXArray[107].realPath, 65, true, 1, 0.25, 100); //Rain, wind
-        CustomSoundEmitter(SFXArray[109].realPath, 65, true, 1, 0.05, 100); //Extra wind
+        CustomSoundEmitter(SFXArray[108].realPath, 65, false, 1, 0.1, 100); //Rain, no wind, decreased volume
+        CustomSoundEmitter(SFXArray[107].realPath, 65, false, 1, 0.15, 100); //Rain, wind
+        CustomSoundEmitter(SFXArray[109].realPath, 65, false, 1, 0.05, 100); //Extra wind
       }
       case 6:{
         this.mIntensity = 4;
         flStormMin = 7.0;
         flStormMax = 23.5;
         FastFire2("rain", "Alpha", "125", 0.0, false);
-        CustomSoundEmitter(SFXArray[108].realPath, 65, true, 1, 0.05, 100); //Rain, no wind, decreased volume
-        CustomSoundEmitter(SFXArray[107].realPath, 65, true, 1, 0.42, 100); //Rain, wind, increased volume
-        CustomSoundEmitter(SFXArray[109].realPath, 65, true, 1, 0.125, 100); //Extra wind
+        CustomSoundEmitter(SFXArray[108].realPath, 65, false, 1, 0.05, 100); //Rain, no wind, decreased volume
+        CustomSoundEmitter(SFXArray[107].realPath, 65, false, 1, 0.21, 100); //Rain, wind, increased volume
+        CustomSoundEmitter(SFXArray[109].realPath, 65, false, 1, 0.125, 100); //Extra wind
       }
       case 7:{
         this.SetFogStartQueued("500");
@@ -278,12 +278,12 @@ enum struct WEATHERMANAGER {
         this.fogTarget = 0.80;
         FastFire2("rain", "Alpha", "155", 0.0, false);
         CreateTimer(GetRandomFloat(0.1, 1.25), GetRandomWind, 0);
-        CustomSoundEmitter(SFXArray[108].realPath, 65, true, 1, 0.05, 100); //Rain, no wind, decreased volume
-        CustomSoundEmitter(SFXArray[107].realPath, 65, true, 1, 0.6, 100); //Rain, wind, increased volume
-        CustomSoundEmitter(SFXArray[109].realPath, 65, true, 1, 0.25, 100); //Extra wind
+        CustomSoundEmitter(SFXArray[108].realPath, 65, false, 1, 0.05, 100); //Rain, no wind, decreased volume
+        CustomSoundEmitter(SFXArray[107].realPath, 65, false, 1, 0.26, 100); //Rain, wind, increased volume
+        CustomSoundEmitter(SFXArray[109].realPath, 65, false, 1, 0.25, 100); //Extra wind
       }
       case 8:{
-        this.mIntensity = 5;
+        this.mIntensity = 6;
         this.SetFogStartQueued("470");
         this.SetFogEndQueued("2000");
         this.StartFogTransition();
@@ -292,20 +292,20 @@ enum struct WEATHERMANAGER {
         this.fogTarget = 0.875;
         FastFire2("rain", "Alpha", "175", 0.0, false);
         CreateTimer(GetRandomFloat(0.1, 1.25), GetRandomWind, 1);
-        CustomSoundEmitter(SFXArray[107].realPath, 65, true, 1, 0.76, 100); //Rain, wind, increased volume
-        CustomSoundEmitter(SFXArray[109].realPath, 65, true, 1, 0.35, 100); //Extra wind
+        CustomSoundEmitter(SFXArray[107].realPath, 65, false, 1, 0.37, 100); //Rain, wind, increased volume
+        CustomSoundEmitter(SFXArray[109].realPath, 65, false, 1, 0.35, 100); //Extra wind
       }
       case 9:{
         this.SetFogStartQueued("425");
         this.SetFogEndQueued("1500");
         this.StartFogTransition();
-        this.mIntensity = 5;
+        this.mIntensity = 7;
         flStormMin = 5.0;
         flStormMax = 19.0;
         FastFire2("rain", "Alpha", "200", 0.0, false);
         CreateTimer(GetRandomFloat(0.1, 1.25), GetRandomWind, 2);
-        CustomSoundEmitter(SFXArray[107].realPath, 65, true, 1, 1.0, 100); //Rain, wind, increased volume
-        CustomSoundEmitter(SFXArray[109].realPath, 65, true, 1, 0.42, 100); //Extra wind
+        CustomSoundEmitter(SFXArray[107].realPath, 65, false, 1, 0.41, 100); //Rain, wind, increased volume
+        CustomSoundEmitter(SFXArray[109].realPath, 65, false, 1, 0.42, 100); //Extra wind
       }
       case 10:{
         this.SetFogStartQueued("375");
@@ -316,19 +316,20 @@ enum struct WEATHERMANAGER {
         this.fogTarget = 0.925;
         FastFire2("rain", "Alpha", "215", 0.0, false);
         CreateTimer(GetRandomFloat(0.1, 1.25), GetRandomWind, 3);
-        CustomSoundEmitter(SFXArray[107].realPath, 65, true, 1, 1.0, 100); //Rain, wind, increased volume
-        CustomSoundEmitter(SFXArray[109].realPath, 65, true, 1, 0.56, 100); //Extra wind
+        CustomSoundEmitter(SFXArray[107].realPath, 65, false, 1, 0.45, 100); //Rain, wind, increased volume
+        CustomSoundEmitter(SFXArray[109].realPath, 65, false, 1, 0.56, 100); //Extra wind
       }
       case 11:{
-        this.mIntensity = 7;
+        this.mIntensity = 9;
         flStormMin = 5.0;
         flStormMax = 17.0;
         FastFire2("rain", "Alpha", "235", 0.0, false);
         CreateTimer(GetRandomFloat(0.1, 1.25), GetRandomWind, 4);
-        CustomSoundEmitter(SFXArray[109].realPath, 65, true, 1, 0.69, 100); //Extra wind
+        CustomSoundEmitter(SFXArray[107].realPath, 65, false, 1, 0.63, 100); //Rain, wind, increased volume
+        CustomSoundEmitter(SFXArray[109].realPath, 65, false, 1, 0.69, 100); //Extra wind
       }
       case 12:{
-        this.mIntensity = 9;
+        this.mIntensity = 10;
         flStormMin = 5.0;
         flStormMax = 15.0;
         this.fogTarget = 1.0;
@@ -337,7 +338,8 @@ enum struct WEATHERMANAGER {
         this.StartFogTransition();
         FastFire2("rain", "Alpha", "255", 0.0, false);
         CreateTimer(GetRandomFloat(0.1, 1.25), GetRandomWind, 5);
-        CustomSoundEmitter(SFXArray[109].realPath, 65, true, 1, 0.76, 100); //Extra wind
+        CustomSoundEmitter(SFXArray[107].realPath, 65, false, 1, 0.72, 100); //Rain, wind, increased volume
+        CustomSoundEmitter(SFXArray[109].realPath, 65, false, 1, 0.76, 100); //Extra wind
         if (!this.TornadoTimerActive) sudo(1004);
       }
       case 13:{
@@ -350,7 +352,8 @@ enum struct WEATHERMANAGER {
         this.fogTarget = 1.0;
         FastFire2("rain", "Alpha", "255", 0.0, false);
         CreateTimer(GetRandomFloat(0.1, 1.25), GetRandomWind, 6);
-        CustomSoundEmitter(SFXArray[109].realPath, 65, true, 1, 0.83, 100); //Extra wind
+        CustomSoundEmitter(SFXArray[107].realPath, 65, false, 1, 0.85, 100); //Rain, wind, increased volume
+        CustomSoundEmitter(SFXArray[109].realPath, 65, false, 1, 0.83, 100); //Extra wind
         if (!this.TornadoTimerActive) sudo(1004);
       }
       case 14:{
@@ -363,7 +366,8 @@ enum struct WEATHERMANAGER {
         this.fogTarget = 1.0;
         FastFire2("rain", "Alpha", "255", 0.0, false);
         CreateTimer(GetRandomFloat(0.1, 1.25), GetRandomWind, 7);
-        CustomSoundEmitter(SFXArray[109].realPath, 65, true, 1, 0.92, 100); //Extra wind
+        CustomSoundEmitter(SFXArray[107].realPath, 65, false, 1, 0.9, 100); //Rain, wind, increased volume
+        CustomSoundEmitter(SFXArray[109].realPath, 65, false, 1, 0.92, 100); //Extra wind
         if (!this.TornadoTimerActive) sudo(1004);
       }
       case 15:{
@@ -376,7 +380,8 @@ enum struct WEATHERMANAGER {
         this.fogTarget = 1.0;
         FastFire2("rain", "Alpha", "255", 0.0, false);
         CreateTimer(GetRandomFloat(0.1, 1.25), GetRandomWind, 7);
-        CustomSoundEmitter(SFXArray[109].realPath, 65, true, 1, 1.0, 100); //Extra wind
+        CustomSoundEmitter(SFXArray[107].realPath, 65, false, 1, 1.0, 100); //Rain, wind, increased volume
+        CustomSoundEmitter(SFXArray[109].realPath, 65, false, 1, 1.0, 100); //Extra wind
         if (!this.TornadoTimerActive) sudo(1004);
       }
       default:{
@@ -410,7 +415,7 @@ enum struct WEATHERMANAGER {
   }
   void TickSiren(){
     if(this.TornadoWarning){
-      if(!this.sirenExploded && (this.sirenPitch > 150.0)){
+      if(!this.sirenExploded && (this.sirenPitch > 165.0)){
         FastFire2("Weather.Siren", "Pitch", "50", 0.0, false);
         FastFire2("Weather.Siren", "Pitch", "40", 0.1, false);
         FastFire2("Weather.Siren", "Pitch", "30", 0.2, false);
@@ -419,6 +424,7 @@ enum struct WEATHERMANAGER {
         FastFire2("Weather.Siren", "Pitch", "0", 0.5, false);
         FastFire2("Weather.Siren.ExplodeParticle", "Start", "", 0.0, false);
         FastFire2("Weather.Siren.ExplodeSND", "PlaySound", "", 0.0, false);
+        FastFire2("Weather.Siren", "StopSound", "", 5.0, false);
         FastFire2("Weather.Siren.ExplodeParticle", "Stop", "", 5.0, false);
         FastFire2("Weather.Siren.ExplodeParticle", "Start", "", 5.1, false);
         this.sirenExploded = true;
@@ -504,8 +510,8 @@ public Action GetRandomWind(Handle timer, int intensity){
 }
 public Action ModulateSiren(Handle timer){
   if(WeatherManager.TornadoWarning && !WeatherManager.sirenExplode){
-    WeatherManager.sirenPitchTarget = WeatherManager.powerSurging ? GetRandomFloat(75.0, 210.0) : GetRandomFloat(65.0, 125.0);
-    WeatherManager.sirenPitchRate = WeatherManager.powerSurging ? GetRandomFloat(0.125, 0.40) : GetRandomFloat(0.01, 0.25);
+    WeatherManager.sirenPitchTarget = WeatherManager.powerSurging ? GetRandomFloat(95.0, 210.0) : GetRandomFloat(85.0, 125.0);
+    WeatherManager.sirenPitchRate = WeatherManager.powerSurging ? GetRandomFloat(0.0525, 0.20) : GetRandomFloat(0.01, 0.125);
     CreateTimer(GetRandomFloat(1.0, 3.0), ModulateSiren);
   }
   return Plugin_Stop;
@@ -611,13 +617,14 @@ enum struct AUDIOMANAGER {
     this.tickBGMOffset = BGMArray[this.indexBGM].ticksOffset > 0 ? true : false;
     this.stopBGM = (!StrEqual(this.cachedPath, BGMArray[this.indexBGM].realPath) ? true : false);
     this.bgmPlaying = true;
-    if (this.indexBGM >= 20) for (int i = 0; i < MaxClients; i++) for (int s = 20; s < bgm; s++) StopSound(i, this.chanBGM, BGMArray[s].realPath); //Very quick, very dirty, very suboptimal, but gets the job done... This stops all boss music.
+    if (this.indexBGM >= 20) for (int i = 0; i < MaxClients; i++) for (int s = 19; s < bgm; s++) StopSound(i, this.chanBGM, BGMArray[s].realPath); //Very quick, very dirty, very suboptimal, but gets the job done... This stops all boss music.
   }
   void Reset() {
     this.stopBGM = true;
     this.indexBGM = GetRandomInt(1, 4);
     this.ticksBGM = -2;
     this.refireBGM = 2;
+    for (int i = 0; i < MaxClients; i++) for (int s = this.indexBGM; s < sizeof(BGMArray); s++) StopSound(i, this.chanBGM, BGMArray[s].realPath); //Very quick, very dirty, very suboptimal, but gets the job done... This stops all boss music.
     AssLogger(LOGLVL_DEBUG, "AudioManager has been reset!");
   }
   void Stop() {

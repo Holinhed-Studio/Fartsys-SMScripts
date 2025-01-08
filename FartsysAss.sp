@@ -22,7 +22,7 @@
 #include <ass_bosshandler>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.3.1";
+static char PLUGIN_VERSION[8] = "7.3.2";
 
 public Plugin myinfo = {
   name = "Fartsy's Ass - Framework",
@@ -393,6 +393,12 @@ public Action OnslaughterATK(Handle timer) {
     }
     case 5: {
       FastFire2("BruteJusticeGrenadeSpammer", "FireMultiple", "50", 0.0, false);
+      FastFire2("BruteJusticeJarateSpawner00", "ForceSpawn", "", 0.0, false);
+      FastFire2("BruteJusticeJarateSpawner01", "ForceSpawn", "", 2.5, false);
+      FastFire2("BruteJusticeJarateSpawner02", "ForceSpawn", "", 5.0, false);
+      FastFire2("BruteJusticeJarateSpawner00", "ForceSpawn", "", 9.0, false);
+      FastFire2("BruteJusticeJarateSpawner01", "ForceSpawn", "", 12.0, false);
+      FastFire2("BruteJusticeJarateSpawner02", "ForceSpawn", "", 15.0, false);
     }
     case 9: {
       FastFire2("BruteJusticeRocketSpammer", "FireOnce", "", 0.0, false);
@@ -953,6 +959,7 @@ void sudo(int task) {
       return;
     }
     case 1: {
+      FastFire2("FB.OnslaughterBase", "SetModelScale", "0.19", 0.0, false);
       FastFire2("FB.BruteJusticeTrain", "TeleportToPathTrack", "tank_path_a_10", 0.0, false);
       FastFire2("FB.BruteJustice", "Enable", "", 3.0, false);
       FastFire2("FB.BruteJusticeTrain", "StartForward", "", 3.0, false);
@@ -1415,6 +1422,12 @@ void sudo(int task) {
 //    if(MetalFaceDidIt){
       //Force phase 4 metal face here
 //    }
+    switch(BossHandler.bossID){
+      // brute justice
+      case 0:{
+        FastFire2("bots_win", "roundwin", "", 0.0, false);
+      }
+    }
   }
   //Metal Face reached spawn point
   case 133:{
@@ -1461,6 +1474,7 @@ void sudo(int task) {
     FastFire2("FB.MetalFace.GigaBuster.Explosion", "Kill", "", 0.0, false);
     FastFire2("FB.MetalFace.GigaBusterMDL", "Kill", "", 0.0, false);
     FastFire2("FB.MetalFace.GigaBusterSND", "Kill", "", 0.0, false);
+    BossHandler.TriggerDeath();
   }
   //Debug, somethingsomething aoe blah blah blah
   case 200: {
@@ -1488,7 +1502,7 @@ void sudo(int task) {
     AudioManager.Reset();
     BossHandler.shouldTick = false;
     core.Reset();
-    EmnityManager[0].Reset();
+    for (int i = 0; i < sizeof(EmnityManager); i++) EmnityManager[i].Reset();
     for (int i = 0; i < sizeof(MapLighting); i++) MapLighting[i].Repair();
     WeatherManager.Reset();
     bombState[0].isReady = false;

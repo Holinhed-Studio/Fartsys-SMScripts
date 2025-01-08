@@ -38,6 +38,7 @@ enum struct BOSSHANDLER {
     }
     //For tracking model and skipping player ready check if boss is alive
     void Tick(){
+        //PrintToServer("Boss %i, hp %i/%i", this.bossID, this.iBossEntHealth, this.iBossEntMaxHealth);
         if (this.shouldTickBGM) (this.TickBGM());
         if(this.isAlive && !core.isWave){
             PrintToChatAll("PLACEHOLDER -- FORCE PLAYERS TO BE READY IF NOT IN WAVE.");
@@ -52,20 +53,23 @@ enum struct BOSSHANDLER {
             }
             case 2:{
                 this.iBossEnt = FindEntityByTargetname("FB.MetalBase", "base_boss");
-                this.iBossEntHealth = GetEntProp(this.iBossEnt, Prop_Data, "m_iHealth");
-                this.iBossEntMaxHealth = GetEntProp(this.iBossEnt, Prop_Data, "m_iMaxHealth");
-                this.iBossEntTarget = FindEntityByTargetname("FB.MetalFace.Train", "func_tracktrain");
-                GetEntPropVector(this.iBossEntTarget, Prop_Send, "m_vecOrigin", this.fPos);
-                GetEntPropVector(this.iBossEntTarget, Prop_Data, "m_angRotation", this.fAng);
-                float vel[3];
-                float newPos[3];
-                vel[0] = 0.0;
-                vel[1] = 0.0;
-                vel[2] = 0.0;
-                newPos[0] = this.fPos[0];
-                newPos[1] = this.fPos[1];
-                newPos[2] = this.fPos[2] - 50.0;
-                TeleportEntity(this.iBossEnt, newPos, this.fAng, vel);
+                if (!IsValidEntity(this.iBossEnt)) this.iBossPhase = 4;
+                else {
+                    this.iBossEntHealth = GetEntProp(this.iBossEnt, Prop_Data, "m_iHealth");
+                    this.iBossEntMaxHealth = GetEntProp(this.iBossEnt, Prop_Data, "m_iMaxHealth");
+                    this.iBossEntTarget = FindEntityByTargetname("FB.MetalFace.Train", "func_tracktrain");
+                    GetEntPropVector(this.iBossEntTarget, Prop_Send, "m_vecOrigin", this.fPos);
+                    GetEntPropVector(this.iBossEntTarget, Prop_Data, "m_angRotation", this.fAng);
+                    float vel[3];
+                    float newPos[3];
+                    vel[0] = 0.0;
+                    vel[1] = 0.0;
+                    vel[2] = 0.0;
+                    newPos[0] = this.fPos[0];
+                    newPos[1] = this.fPos[1];
+                    newPos[2] = this.fPos[2] - 50.0;
+                    TeleportEntity(this.iBossEnt, newPos, this.fAng, vel);
+                }
                 //Also need to set entity angles to its target... we can use this.bustTarget for the index of the client to get the angles...
                 //Do phase changes
                 switch(RoundToFloor((this.iBossEntHealth * 1.0/this.iBossEntMaxHealth * 1.0) * 10.0)){
@@ -98,16 +102,35 @@ enum struct BOSSHANDLER {
                         }
                         case 1:{
                             //PrintToChatAll("Recognized 0 -> 1, the boss must have just spawned!");
+                            FastFire2("FB.MetalBase", "SetHealth", "320000", 0.0, false);
+                            FastFire2("FB.MetalBase", "SetMaxHealth", "320000", 0.0, false);
+                            FastFire2("FB.MetalBase", "AddOutput", "health 320000", 0.0, false);
                         }
                         case 2:{
                             //PrintToChatAll("Recognized 1 -> 2, things are heating up!");
                             AudioManager.ChangeBGM(22);
                             FastFire2("FB.MetalFace.Train", "TeleportToPathTrack", "MFT1x0", 3.00, false);
+                            FastFire2("FB.MetalFace.SkeleSpawner", "Enable", "", 0.0, false);
+                            FastFire2("FB.MetalFace.SkeleSpawner", "Disable", "", 120.0, false);
+                            FastFire2("mfTelefect", "Start", "", 120.0, false);
+                            FastFire2("FB.MetalFace.ReturnSND", "PlaySound", "", 120.0, false);
+                            FastFire2("FB.MetalFace.Train", "TeleportToPathTrack", "MFTHOME", 120.25, false);
+                            FastFire2("FB.MetalFace.Invuln", "Disable", "", 123.0, false);
+                            FastFire2("FB.MetalFace.Train", "TeleportToPathTrack", "tank_path_a_100", 126.85, false);
+                            FastFire2("mfTelefect", "Start", "", 127.0, false);
+                            FastFire2("FB.MetalFace.ReturnSND", "PlaySound", "", 127.0, false);
                         }
                         case 3:{
                             //PrintToChatAll("Recognized 2 -> 3, oh boi");
                             AudioManager.ChangeBGM(24);
                             FastFire2("FB.MetalFace.Train", "TeleportToPathTrack", "MFT2x0", 3.00, false);
+                            FastFire2("FB.MetalFace.MerasmusSpawner", "ForceSpawn", "", 5.0, false); //Spawn halloween bosses at MetalFace's location
+                            FastFire2("FB.MetalFace.MonoculusSpawner", "ForceSpawn", "", 7.0, false); //Spawn halloween bosses at MetalFace's location
+                            FastFire2("FB.MetalFace.HHHSpawner", "ForceSpawn", "", 9.0, false); //Spawn halloween bosses at MetalFace's location
+                            FastFire2("FB.MetalFace.Invuln", "Disable", "", 123.0, false);
+                            FastFire2("FB.MetalFace.Train", "TeleportToPathTrack", "tank_path_a_250", 126.85, false);
+                            FastFire2("mfTelefect", "Start", "", 127.0, false);
+                            FastFire2("FB.MetalFace.ReturnSND", "PlaySound", "", 127.0, false);
                         }
                         case 4:{
                             //PrintToChatAll("Recognized 3 -> 4, OHSHITOHFUCKOHNO");
