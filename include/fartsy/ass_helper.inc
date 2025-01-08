@@ -93,7 +93,7 @@ enum struct COREDATA {
 COREDATA core;
 bool tickOnslaughter;
 
-Database FB_Database;
+Database Ass_Database;
 int attemptSpawn = 0;
 bool isGoobbue = false;
 bool CircleAOEenabled[] = {
@@ -281,8 +281,8 @@ public void UpdateAllHealers() {
   }
 }
 
-Handle cvarSNDDefault = INVALID_HANDLE;
-int soundPreference[MAXPLAYERS + 1];
+
+
 
 //Annihilation supply shop entries
 enum struct ASShop {
@@ -400,31 +400,7 @@ enum struct BULKFIRE {
 }
 BULKFIRE crusaderAtk[64];
 
-//FastFire2 System Setup
-int ff2Ref;
-void InjectFastFire2(){
-  int ff2 = FindEntityByTargetname("FastFire2", "info_target");
-  AssLogger(LOGLVL_INFO, "Injecting FastFire2!");
-  if (!IsValidEntity(ff2)){
-    ff2 = CreateEntityByName("info_target");
-    if (!IsValidEdict(ff2)) SetFailState("Could not inject FastFire2, aborting!!!");
-    DispatchSpawn(ff2);
-    DispatchKeyValue(ff2, "targetname", "FastFire2");
-    ActivateEntity(ff2);
-    AssLogger(LOGLVL_INFO, "Injected info_target FastFire2 to map!")
-  }
-  ff2Ref = EntIndexToEntRef(ff2);
-  OnFastFire2Ready();
-}
-//Execute inputs - EXPERT MODE
-public void FastFire2(const char[] target, const char[] input, const char[] param, const float delay, bool isLegacy) {
-  int ff2 = EntRefToEntIndex(ff2Ref);
-  char FireStr[128];
-  FormatEx(FireStr, sizeof(FireStr), (isLegacy ? target : "OnUser1 %s,%s,%s,%f,1"), target, input, param, delay);
-  SetVariantString(FireStr);
-  AcceptEntityInput(ff2, "AddOutput");
-  AcceptEntityInput(ff2, "FireUser1");
-}
+
 
 //Configure all variables
 void SetupCoreData(){
@@ -949,7 +925,7 @@ void RegisterAllCommands(){
 }
 //Connect to database
 public void OnConfigsExecuted() {
-  if (!FB_Database) Database.Connect(Database_OnConnect, "ass");
+  if (!Ass_Database) Database.Connect(Database_OnConnect, "ass");
 }
 //Format database if needed
 public void Database_OnConnect(Database db, char[] error, any data) {
@@ -964,14 +940,14 @@ public void Database_OnConnect(Database db, char[] error, any data) {
     AssLogger(3, "Could not connect to the database: expected mysql database.");
     return;
   }
-  FB_Database = db;
-  FB_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS ass_activity(name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', health TEXT DEFAULT '-1', maxHealth INT UNSIGNED DEFAULT '0', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '3', PRIMARY KEY (steamid));");
+  Ass_Database = db;
+  Ass_Database.Query(Database_FastQuery, "CREATE TABLE IF NOT EXISTS ass_activity(name TEXT, steamid INT UNSIGNED, date DATE, seconds INT UNSIGNED DEFAULT '0', class TEXT DEFAULT 'na', health TEXT DEFAULT '-1', maxHealth INT UNSIGNED DEFAULT '0', damagedealt INT UNSIGNED DEFAULT '0', damagedealtsession INT UNSIGNED DEFAULT '0', kills INT UNSIGNED DEFAULT '0', killssession INT UNSIGNED DEFAULT '0', deaths INT UNSIGNED DEFAULT '0', deathssession INT UNSIGNED DEFAULT '0', bombsreset INT UNSIGNED DEFAULT '0', bombsresetsession INT UNSIGNED DEFAULT '0', sacrifices INT UNSIGNED DEFAULT '0', sacrificessession INT UNSIGNED DEFAULT '0', lastkilledname TEXT DEFAULT 'na', lastweaponused TEXT DEFAULT 'na', killedbyname TEXT DEFAULT 'na', killedbyweapon TEXT DEFAULT 'na', soundprefs INT UNSIGNED DEFAULT '3', PRIMARY KEY (steamid));");
   if (GetClientCount(true) > 0){
     for (int i = 0; i <= MaxClients; i++){
       if (!IsValidClient(i)) continue;
       char query[256];
       Format(query, sizeof(query), "SELECT soundprefs FROM ass_activity WHERE steamid = '%i';", GetSteamAccountID(i));
-      FB_Database.Query(SQL_SNDPrefs, query, i);
+      Ass_Database.Query(SQL_SNDPrefs, query, i);
     }
   }
 }

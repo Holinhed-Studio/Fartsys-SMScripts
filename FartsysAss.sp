@@ -17,12 +17,17 @@
 #include <morecolors>
 #include <regex>
 #include <tf2_stocks>
-#include <ass_enhancer>
-#include <ass_helper>
-#include <ass_bosshandler>
+#include <fartsy/ass_enhancer>
+#include <fartsy/ass_helper>
+#include <fartsy/ass_bosshandler>
+#include <fartsy/ass_commands>
+#include <fartsy/fastfire2>
 #pragma newdecls required
 #pragma semicolon 1
-static char PLUGIN_VERSION[8] = "7.3.2";
+static char PLUGIN_VERSION[8] = "8.0.0";
+public Database Get_Ass_Database(){
+  return Ass_Database;
+}
 
 public Plugin myinfo = {
   name = "Fartsy's Ass - Framework",
@@ -46,38 +51,6 @@ public void OnPluginStart() {
   RegConsoleCmd("sm_aoe", Command_AOE, "[TESTING] Dispatch AOE Effect");
   RegConsoleCmd("sm_fogsetdensity", Command_SetFogDensity, "[TESTING] Set fog density");
   RegConsoleCmd("sm_fogstartendupdate", Command_SetFogSEU, "[TESTING] Set fog start end with optional flag");
-}
-
-public Action Command_AOE(int client, int args){
- float pos[3];
- pos[0] = GetCmdArgFloat(1);
- pos[1] = GetCmdArgFloat(2);
- pos[2] = GetCmdArgFloat(3);
- PrintToChat(client, "pos %f %f %f", pos[0], pos[1], pos[2]);
- DispatchCircleAOE(pos);
- return Plugin_Handled;
-}
-
-public Action Command_SetFogDensity(int client, int args){
-  tickOnslaughter = true;
-  char arg1[5];
-  GetCmdArg(1, arg1, sizeof(arg1));
-  WeatherManager.fogTarget = StringToFloat(arg1);
-  PrintToChatAll("Changing fog density to %s", arg1);
-  return Plugin_Handled;
-}
-public Action Command_SetFogSEU(int client, int args){
-  char arg01[5];
-  char arg02[5];
-  char arg03[5];
-  GetCmdArg(1, arg01, sizeof(arg01));
-  GetCmdArg(2, arg02, sizeof(arg02));
-  GetCmdArg(3, arg03, sizeof(arg03));
-  WeatherManager.SetFogStartQueued(arg01);
-  WeatherManager.SetFogEndQueued(arg02);
-  if (StringToInt(arg03) == 1) WeatherManager.StartFogTransition();
-  PrintToChatAll("Received fog start: %s, fog end: %s, begin transition: %s", arg01, arg02, arg03);
-  return Plugin_Handled;
 }
 //Inject entity IO logic
 public void OnMapStart() {
@@ -122,13 +95,13 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
   if (BossHandler.shouldTick) BossHandler.TickForClient(client);
   return Plugin_Continue;
 }
-//Queue music for new clients, also track their health.
+//Queue music for new clients, also track their stats.
 public void OnClientPostAdminCheck(int client) {
   if (!IsFakeClient(client) && AudioManager.bgmPlaying) CreateTimer(1.0, RefireMusicForClient, client);
   int steamID = GetSteamAccountID(client);
   if (!steamID || steamID <= 10000) return;
   else {
-    if (!FB_Database) {
+    if (!Ass_Database) {
       PrintToServer("No database detected, setting soundPreference for %N to default.", client);
       soundPreference[client] = GetConVarInt(cvarSNDDefault);
     }
@@ -139,41 +112,14 @@ public void OnClientPostAdminCheck(int client) {
     if (!AudioManager.bgmPlaying) AudioManager.ChangeBGM(GetRandomInt(1, 4));
     char query[1024];
     Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', date = CURRENT_DATE, damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
-    FB_Database.Query(Database_FastQuery, query);
+    Ass_Database.Query(Database_FastQuery, query);
     char queryID[256];
     Format(queryID, sizeof(queryID), "SELECT soundprefs from ass_activity WHERE steamid = '%d';", steamID);
-    FB_Database.Query(SQL_SNDPrefs, queryID, client);
+    Ass_Database.Query(SQL_SNDPrefs, queryID, client);
   }
 }
 
-//Get client sound prefs
-public void SQL_SNDPrefs(Database db, DBResultSet results, const char[] error, int client) {
-  if (!results) {
-    LogError("Failed to query database: %s", error);
-    return;
-  }
-  if (!IsValidClient(client)) return;
-  if (results.FetchRow()) soundPreference[client] = results.FetchInt(0);
-}
 
-//Restart music for the new client
-public Action RefireMusicForClient(Handle timer, int client) {
-  if (IsValidClient(client)) {
-    if (GetClientTeam(client) == 0) CreateTimer(1.0, RefireMusicForClient, client);
-    else if (GetClientTeam(client) == 2) CSEClient(client, BGMArray[AudioManager.indexBGM].realPath, BGMArray[AudioManager.indexBGM].SNDLVL, true, 1, 1.0, 100);
-  }
-  return Plugin_Stop;
-}
-
-//Get client's stats via command
-public Action Command_MyStats(int client, int args) {
-  int steamID = GetSteamAccountID(client);
-  if (!FB_Database || !steamID || steamID <= 10000) return Plugin_Stop;
-  char queryID[256];
-  Format(queryID, sizeof(queryID), "SELECT * from ass_activity WHERE steamid = %i;", steamID);
-  FB_Database.Query(MyStats, queryID, client);
-  return Plugin_Continue;
-}
 
 public void MyStats(Database db, DBResultSet results, const char[] error, int client) {
   if (!results) {
@@ -221,12 +167,12 @@ public void OnClientDisconnect(int client) {
     iDmgHealingTotal -= EmnityManager[client].iDamage;
     iDmgHealingTotal -= EmnityManager[client].iHealing;
   }
-  if (!FB_Database || !steamID || steamID <= 10000) return;
+  if (!Ass_Database || !steamID || steamID <= 10000) return;
   char query[256];
   char clientName[128];
   GetClientInfo(client, "name", clientName, 128);
   Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, seconds) VALUES ('%s', %d, CURRENT_DATE, %d) ON DUPLICATE KEY UPDATE name = '%s', seconds = seconds + VALUES(seconds);", clientName, steamID, GetClientMapTime(client), clientName);
-  FB_Database.Query(Database_FastQuery, query);
+  Ass_Database.Query(Database_FastQuery, query);
 }
 
 //Clientprefs built in menu
@@ -234,18 +180,7 @@ public void FartsysSNDSelected(int client, CookieMenuAction action, any info, ch
   if (action == CookieMenuAction_SelectOption) ShowFartsyMenu(client);
 }
 
-//Send client sound menu
-public void ShowFartsyMenu(int client) {
-  Menu menu = new Menu(MenuHandlerFartsy, MENU_ACTIONS_DEFAULT);
-  char buffer[100];
-  menu.SetTitle("FartsysAss Sound Menu");
-  menu.AddItem(buffer, "Disable ALL");
-  menu.AddItem(buffer, "Music Only");
-  menu.AddItem(buffer, "Sound Effects Only");
-  menu.AddItem(buffer, "Enable ALL");
-  menu.Display(client, 20);
-  menu.ExitButton = true;
-}
+
 
 // Create menu
 public Action Command_Sounds(int client, int args) {
@@ -254,28 +189,14 @@ public Action Command_Sounds(int client, int args) {
   else {
     char queryID[256];
     Format(queryID, sizeof(queryID), "SELECT soundprefs from ass_activity WHERE steamid = '%d';", steamID);
-    FB_Database.Query(SQL_SNDPrefs, queryID, client);
+    Ass_Database.Query(SQL_SNDPrefs, queryID, client);
     ShowFartsyMenu(client);
     PrintToChat(client, sndPrefs[soundPreference[client]]);
     return Plugin_Handled;
   }
 }
 
-// Handle client choices for sound preference
-public int MenuHandlerFartsy(Menu menu, MenuAction action, int param1, int param2) {
-  if (action == MenuAction_Select) {
-    char query[256];
-    int steamID = GetSteamAccountID(param1);
-    if (!FB_Database || !steamID) return 0;
-    else {
-      Format(query, sizeof(query), "UPDATE ass_activity SET soundprefs = '%i' WHERE steamid = '%d';", param2, steamID);
-      FB_Database.Query(Database_FastQuery, query);
-      soundPreference[param1] = param2;
-      Command_Sounds(param1, 0);
-    }
-  } else if (action == MenuAction_End) CloseHandle(menu);
-  return 0;
-}
+
 
 //Fartsy's A.S.S
 public Action Command_SacrificePointShop(int client, int args) {
@@ -771,12 +692,12 @@ public Action EventDeath(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
     }
     //Log if a player killed someone or was killed by a robot
     if (attacker != client) {
-      if (!FB_Database) return Plugin_Handled;
+      if (!Ass_Database) return Plugin_Handled;
       char query[256];
       int steamID = (IsValidClient(attacker) ? GetSteamAccountID(attacker) : GetSteamAccountID(client));
       Format(query, sizeof(query), IsValidClient(attacker) && !StrEqual(weapon, "world") ? "UPDATE ass_activity SET kills = kills +1, killssession = killssession + 1, lastkilledname = '%s', lastweaponused = '%s' WHERE steamid = %i;" : !StrEqual(weapon, "world") && !IsValidClient(attacker) ? "UPDATE ass_activity SET deaths = deaths + 1, deathssession = deathssession + 1, killedbyname = '%s', killedbyweapon = '%s' WHERE steamid = %i;" : "RETURN", name, weapon, steamID);
       if (StrEqual(query, "RETURN")) return Plugin_Handled;
-      FB_Database.Query(Database_FastQuery, query);
+      Ass_Database.Query(Database_FastQuery, query);
     }
   }
   return Plugin_Handled;
@@ -788,12 +709,12 @@ public Action EventSpawn(Event Spawn_Event, const char[] Spawn_Name, bool Spawn_
   if (IsValidClient(client)) {
     int class = Spawn_Event.GetInt("class");
     int steamID = GetSteamAccountID(client);
-    if (!FB_Database || !steamID || !class) return Plugin_Handled;
+    if (!Ass_Database || !steamID || !class) return Plugin_Handled;
     char strClass[32];
     char query[256];
     strClass = ClassDefinitions[class - 1];
     Format(query, sizeof(query), "UPDATE ass_activity SET class = '%s' WHERE steamid = %i;", strClass, steamID);
-    FB_Database.Query(Database_FastQuery, query);
+    Ass_Database.Query(Database_FastQuery, query);
   }
   return Plugin_Handled;
 }
@@ -832,7 +753,7 @@ public void Event_PlayerHurt(Handle event, const char[] name, bool dontBroadcast
   int damage = GetEventInt(event, "damageamount");
   if (IsValidClient(attacker) && attacker != client) {
     int steamID = GetSteamAccountID(attacker);
-    if (!FB_Database || !steamID) return;
+    if (!Ass_Database || !steamID) return;
     PrintToServer("Adding Damage %i dealt by %N, with index %i", damage, attacker, attacker);
     int healer = GetHealerOfClient(attacker);
     if (healer != -1){
@@ -843,7 +764,7 @@ public void Event_PlayerHurt(Handle event, const char[] name, bool dontBroadcast
     iDmgHealingTotal += damage;
     char query[256];
     Format(query, sizeof(query), "UPDATE ass_activity SET damagedealt = damagedealt + %i, damagedealtsession = damagedealtsession + %i WHERE steamid = %i;", damage, damage, steamID);
-    FB_Database.Query(Database_FastQuery, query);
+    Ass_Database.Query(Database_FastQuery, query);
   }
 }
 
@@ -898,11 +819,11 @@ public Action SacrificeClient(int client, int attacker, bool wasBombReset) {
     core.sacPoints += wasBombReset ? 5 : 1;
     core.sacrificedByClient = false;
     int steamID = GetSteamAccountID(attacker);
-    if (!FB_Database || !steamID) return Plugin_Handled;
+    if (!Ass_Database || !steamID) return Plugin_Handled;
     char query[256];
     CPrintToChatAll(wasBombReset ? "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%N {white}has reset the ass! ({limegreen}+5 pts{white})" : "{darkviolet}[{forestgreen}CORE{darkviolet}] {white}Client {red}%N {white}has sacrificed {blue}%N {white}for the ass! ({limegreen}+1 pt{white})", attacker, client);
     Format(query, sizeof(query), wasBombReset ? "UPDATE ass_activity SET bombsreset = bombsreset + 1, bombsresetsession = bombsresetsession + 1 WHERE steamid = %i;" : "UPDATE ass_activity SET sacrifices = sacrifices + 1, sacrificessession = sacrificessession + 1 WHERE steamid = %i;", steamID);
-    FB_Database.Query(Database_FastQuery, query);
+    Ass_Database.Query(Database_FastQuery, query);
   }
   return Plugin_Handled;
 }
@@ -1419,9 +1340,9 @@ void sudo(int task) {
   }
   //Determine what boss just deployed.
   case 132:{
-//    if(MetalFaceDidIt){
+  //    if(MetalFaceDidIt){
       //Force phase 4 metal face here
-//    }
+  //    }
     switch(BossHandler.bossID){
       // brute justice
       case 0:{
@@ -2043,12 +1964,12 @@ public Action TickClientHealth(Handle timer) {
     if (IsValidClient(i) && (GetClientTeam(i) == 2)) {
       int health = GetClientHealth(i);
       int healthMax = TF2_GetPlayerMaxHealth(i);
-      if (!FB_Database) return Plugin_Stop;
+      if (!Ass_Database) return Plugin_Stop;
       else {
         char query[256];
         int steamID = GetSteamAccountID(i);
         Format(query, sizeof(query), "UPDATE ass_activity SET health = %i, maxHealth = %i WHERE steamid = %i;", health, healthMax, steamID);
-        FB_Database.Query(Database_FastQuery, query);
+        Ass_Database.Query(Database_FastQuery, query);
       }
     }
   }

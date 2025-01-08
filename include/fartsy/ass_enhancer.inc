@@ -18,6 +18,108 @@ enum struct SFXARRAY {
 }
 SFXARRAY SFXArray[127];
 
+Handle cvarSNDDefault = INVALID_HANDLE;
+int soundPreference[MAXPLAYERS + 1];
+//Get client sound prefs
+public void SQL_SNDPrefs(Database db, DBResultSet results, const char[] error, int client) {
+  if (!results) {
+    LogError("Failed to query database: %s", error);
+    return;
+  }
+  if (!IsValidClient(client)) return;
+  if (results.FetchRow()) soundPreference[client] = results.FetchInt(0);
+}
+//Music system rewrite for the 6th time. I will never make a change. My code will never mend. Still everything's the same and it all just fades to math.
+enum struct AUDIOMANAGER {
+  bool bgmPlaying;
+  bool shouldTick;
+  bool stopBGM;
+  bool tickBGMOffset;
+  char cachedPath[128];
+  char songName[128];
+  int indexBGM;
+  int refireBGM;
+  int chanBGM;
+  int ticksBGM;
+  int VIPBGM;
+  void ChangeBGM(int bgm){
+    this.indexBGM = (this.VIPBGM >= 0 ? this.VIPBGM : bgm);
+    this.ticksBGM = -2;
+    this.refireBGM = 2;
+    this.shouldTick = true;
+    this.tickBGMOffset = BGMArray[this.indexBGM].ticksOffset > 0 ? true : false;
+    this.stopBGM = (!StrEqual(this.cachedPath, BGMArray[this.indexBGM].realPath) ? true : false);
+    this.bgmPlaying = true;
+    if (this.indexBGM >= 20) for (int i = 0; i < MaxClients; i++) for (int s = 19; s < bgm; s++) StopSound(i, this.chanBGM, BGMArray[s].realPath); //Very quick, very dirty, very suboptimal, but gets the job done... This stops all boss music.
+  }
+  void Reset() {
+    this.stopBGM = true;
+    this.indexBGM = GetRandomInt(1, 4);
+    this.ticksBGM = -2;
+    this.refireBGM = 2;
+    for (int i = 0; i < MaxClients; i++) for (int s = this.indexBGM; s < sizeof(BGMArray); s++) StopSound(i, this.chanBGM, BGMArray[s].realPath); //Very quick, very dirty, very suboptimal, but gets the job done... This stops all boss music.
+    AssLogger(LOGLVL_DEBUG, "AudioManager has been reset!");
+  }
+  void Stop() {
+    this.stopBGM = true;
+    this.ticksBGM = -2;
+    this.refireBGM = 2;
+    this.shouldTick = false;
+  }
+  void TickBGM() {
+    this.ticksBGM++;
+    if (this.ticksBGM >= this.refireBGM) {
+      if (this.stopBGM){
+        for (int i = 0; i < MaxClients; ++i) {
+          StopSound(i, this.chanBGM, this.cachedPath);
+          this.stopBGM = false;
+        }
+      }
+      strcopy(this.songName, sizeof(this.songName), BGMArray[this.indexBGM].songName);
+      this.refireBGM = BGMArray[this.indexBGM].refireTime;
+      this.ticksBGM = (this.tickBGMOffset ? BGMArray[this.indexBGM].ticksOffset : 0);
+      CustomSoundEmitter(BGMArray[this.indexBGM].realPath, BGMArray[this.indexBGM].SNDLVL, true, 1, 1.0, 100);
+      CreateTimer(1.0, SyncMusic, this.indexBGM);
+    }
+  }
+}
+AUDIOMANAGER AudioManager;
+//Send client sound menu
+public void ShowFartsyMenu(int client) {
+  Menu menu = new Menu(MenuHandlerFartsy, MENU_ACTIONS_DEFAULT);
+  char buffer[100];
+  menu.SetTitle("FartsysAss Sound Menu");
+  menu.AddItem(buffer, "Disable ALL");
+  menu.AddItem(buffer, "Music Only");
+  menu.AddItem(buffer, "Sound Effects Only");
+  menu.AddItem(buffer, "Enable ALL");
+  menu.Display(client, 20);
+  menu.ExitButton = true;
+}
+// Handle client choices for sound preference
+public int MenuHandlerFartsy(Menu menu, MenuAction action, int param1, int param2) {
+  if (action == MenuAction_Select) {
+    char query[256];
+    int steamID = GetSteamAccountID(param1);
+    if (!Get_Ass_Database() || !steamID) return 0;
+    else {
+      Format(query, sizeof(query), "UPDATE ass_activity SET soundprefs = '%i' WHERE steamid = '%d';", param2, steamID);
+      Get_Ass_Database().Query(Database_FastQuery, query);
+      soundPreference[param1] = param2;
+      Command_Sounds(param1, 0);
+    }
+  } else if (action == MenuAction_End) CloseHandle(menu);
+  return 0;
+}
+//Restart music for the new client
+public Action RefireMusicForClient(Handle timer, int client) {
+  if (IsValidClient(client)) {
+    if (GetClientTeam(client) == 0) CreateTimer(1.0, RefireMusicForClient, client);
+    else if (GetClientTeam(client) == 2) CSEClient(client, BGMArray[AudioManager.indexBGM].realPath, BGMArray[AudioManager.indexBGM].SNDLVL, true, 1, 1.0, 100);
+  }
+  return Plugin_Stop;
+}
+
 //Light Entities
 bool g_PowerOutage;
 enum struct MAPLIGHTING {
@@ -596,58 +698,3 @@ public Action TornadoShaker(Handle timer){
   }
   return Plugin_Stop;
 }
-//Music system rewrite for the 6th time. I will never make a change. My code will never mend. Still everything's the same and it all just fades to math.
-enum struct AUDIOMANAGER {
-  bool bgmPlaying;
-  bool shouldTick;
-  bool stopBGM;
-  bool tickBGMOffset;
-  char cachedPath[128];
-  char songName[128];
-  int indexBGM;
-  int refireBGM;
-  int chanBGM;
-  int ticksBGM;
-  int VIPBGM;
-  void ChangeBGM(int bgm){
-    this.indexBGM = (this.VIPBGM >= 0 ? this.VIPBGM : bgm);
-    this.ticksBGM = -2;
-    this.refireBGM = 2;
-    this.shouldTick = true;
-    this.tickBGMOffset = BGMArray[this.indexBGM].ticksOffset > 0 ? true : false;
-    this.stopBGM = (!StrEqual(this.cachedPath, BGMArray[this.indexBGM].realPath) ? true : false);
-    this.bgmPlaying = true;
-    if (this.indexBGM >= 20) for (int i = 0; i < MaxClients; i++) for (int s = 19; s < bgm; s++) StopSound(i, this.chanBGM, BGMArray[s].realPath); //Very quick, very dirty, very suboptimal, but gets the job done... This stops all boss music.
-  }
-  void Reset() {
-    this.stopBGM = true;
-    this.indexBGM = GetRandomInt(1, 4);
-    this.ticksBGM = -2;
-    this.refireBGM = 2;
-    for (int i = 0; i < MaxClients; i++) for (int s = this.indexBGM; s < sizeof(BGMArray); s++) StopSound(i, this.chanBGM, BGMArray[s].realPath); //Very quick, very dirty, very suboptimal, but gets the job done... This stops all boss music.
-    AssLogger(LOGLVL_DEBUG, "AudioManager has been reset!");
-  }
-  void Stop() {
-    this.stopBGM = true;
-    this.ticksBGM = -2;
-    this.refireBGM = 2;
-    this.shouldTick = false;
-  }
-  void TickBGM() {
-    this.ticksBGM++;
-    if (this.ticksBGM >= this.refireBGM) {
-      if (this.stopBGM){
-        for (int i = 0; i < MaxClients; ++i) {
-          StopSound(i, this.chanBGM, this.cachedPath);
-          this.stopBGM = false;
-        }
-      }
-      strcopy(this.songName, sizeof(this.songName), BGMArray[this.indexBGM].songName);
-      this.refireBGM = BGMArray[this.indexBGM].refireTime;
-      this.ticksBGM = (this.tickBGMOffset ? BGMArray[this.indexBGM].ticksOffset : 0);
-      CustomSoundEmitter(BGMArray[this.indexBGM].realPath, BGMArray[this.indexBGM].SNDLVL, true, 1, 1.0, 100);
-      CreateTimer(1.0, SyncMusic, this.indexBGM);
-    }
-  }
-}
-AUDIOMANAGER AudioManager;
