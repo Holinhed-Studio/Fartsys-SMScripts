@@ -1,5 +1,11 @@
 //Fartsy's FastFire2
 int ff2Ref;
+
+//Inject entity IO logic
+public void OnMapStart() {
+  InjectFastFire2();
+}
+
 void InjectFastFire2(){
   int ff2 = FindEntityByTargetname("FastFire2", "info_target");
   AssLogger(LOGLVL_INFO, "Injecting FastFire2!");

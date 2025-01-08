@@ -861,14 +861,7 @@ char FB_SENT[][64] = {
   "FB.SentStar05",
   ""
 };
-//Sound preference menu
-char sndPrefs[][128] = {
-  "Sounds are currently DISABLED.",
-  "Sounds are currently MUSIC ONLY.",
-  "Sounds are currently SOUND EFFECTS ONLY.",
-  "Sounds are currently ALL ON.",
-  "Somehow your sound preference was stored as non-existent 5... Please configure your sounds."
-};
+
 //Taco bell's default BGM indexes
 int tacoBellBGMIndex[] = {
   1,
@@ -922,6 +915,9 @@ void RegisterAllCommands(){
   RegConsoleCmd("sm_sacpoints", Command_SacrificePointShop, "Fartsy's Annihilation Supply Shop");
   RegConsoleCmd("sm_discord", Command_Discord, "Join our Discord server!");
   RegConsoleCmd("sm_sounds", Command_Sounds, "Toggle sounds on or off via menu");
+  RegConsoleCmd("sm_aoe", Command_AOE, "[TESTING] Dispatch AOE Effect");
+  RegConsoleCmd("sm_fogsetdensity", Command_SetFogDensity, "[TESTING] Set fog density");
+  RegConsoleCmd("sm_fogstartendupdate", Command_SetFogSEU, "[TESTING] Set fog start end with optional flag");
 }
 //Connect to database
 public void OnConfigsExecuted() {
@@ -1263,9 +1259,450 @@ void PerformWaveFailsafe(int x){
     }
   }
 }
+//Get current wave
+public int GetCurWave() {
+  int ent = FindEntityByClassname(-1, "tf_objective_resource");
+  if (ent != -1) return GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nMannVsMachineWaveCount"));
+  AssLogger(LOGLVL_ERROR, "tf_objective_resource not found");
+  return -1;
+}
+//Track and update client health
+public Action TickClientHealth(Handle timer) {
+  for (int i = 1; i <= MaxClients; i++) {
+    if (IsValidClient(i) && (GetClientTeam(i) == 2)) {
+      int health = GetClientHealth(i);
+      int healthMax = TF2_GetPlayerMaxHealth(i);
+      if (!Ass_Database) return Plugin_Stop;
+      else {
+        char query[256];
+        int steamID = GetSteamAccountID(i);
+        Format(query, sizeof(query), "UPDATE ass_activity SET health = %i, maxHealth = %i WHERE steamid = %i;", health, healthMax, steamID);
+        Ass_Database.Query(Database_FastQuery, query);
+      }
+    }
+  }
+  if (GetClientCount(true) == 0) {
+    core.tickingClientHealth = false;
+    return Plugin_Stop;
+  }
+  CreateTimer(1.0, TickClientHealth);
+  return Plugin_Stop;
+}
+public Action TimedAOEs(Handle timer){
+  if (core.isWave){
+    for (int i = 0; i < GetRandomInt(1, 10); i++){
+      CreateTimer(i/10.0, TimedOperator, 201);
+    }
+    CreateTimer(GetRandomFloat(10.0, 45.0), TimedAOEs);
+  }
+  return Plugin_Stop;
+}
+//Place random AOE barrage
+void GroupedAOE(){
+  int ent = FindEntityByClassname(-1, "tf_objective_resource");
+  int bombBotLevel = GetEntData(ent, FindSendPropInfo("CTFObjectiveResource", "m_nFlagCarrierUpgradeLevel"));
+  switch(GetRandomInt(0, bombBotLevel+1)){
+    case 0:{
+
+    }
+    case 1:{
+
+    }
+    case 2:{
+
+    }
+    case 3:{
+
+    }
+    case 4:{
+
+    }
+  }
+}
 stock float FloatMin(float a, float b) {
   return a <= b ? a : b;
 }
 stock float FloatMax(float a, float b) { 
   return a >= b ? a : b;
+}
+// VIP Music Menu Handler
+public int MenuHandlerFartsyMusic(Menu menu, MenuAction action, int client, int bgm) {
+  if (action == MenuAction_Select) {
+    int cWave = GetCurWave();
+    CPrintToChat(client, (bgm == 0 ? "{darkgreen}[CORE] Confirmed. Next song set to {aqua}Default{darkgreen}." : "{limegreen}[CORE] Confirmed. Next song set to {aqua}%s{limegreen}."), BGMArray[bgm].songName);
+    AudioManager.indexBGM = (bgm == 0 ? (core.tacobell ? tacoBellBGMIndex[cWave] : core.sephiroth ? 16 : core.isWave ? DefaultsArray[cWave].defBGMIndex : GetRandomInt(1, 4)) : bgm);
+    AudioManager.stopBGM = (!StrEqual(AudioManager.cachedPath, BGMArray[bgm].realPath) ? true : false);
+    AudioManager.VIPBGM = (bgm == 0 ? -1 : bgm);
+    core.VIPIndex = client;
+  } else if (action == MenuAction_End) CloseHandle(menu);
+  return 0;
+}
+//Perform Wave Setup
+public Action PerformWaveSetup() {
+  UpdateAllHealers();
+  core.isWave = true; //It's a wave!
+  bombState[0].state = DefaultsArray[core.curWave].defBombStatus;
+  bombState[0].stateMax = DefaultsArray[core.curWave].defBombStatusMax;
+  core.canHWBoss = DefaultsArray[core.curWave].defCanHWBoss;
+  WeatherManager.canTornado = DefaultsArray[core.curWave].defCanTornado;
+  core.sacPointsMax = DefaultsArray[core.curWave].defSacPointsMax;
+  core.FailedCount = 0; //Reset fail count to zero. (See EventWaveFailed, where we play the BGM.)
+  WeatherManager.Activate(); //Activate all weather management
+  CreateTimer(0.25, TimedOperator, 0); //Print wave information to global chat
+  CreateTimer(2.5, PerformWaveAdverts); //Activate the mini hud
+  CreateTimer(0.1, BombStatusUpdater); //Activate the bomb status updater
+  CreateTimer(1.0, BombStatusAddTimer); //Activate bomb status timer
+  CreateTimer(1.0, RobotLaunchTimer); //Activate robot launch timer
+  CreateTimer(1.0, SacrificePointsTimer); //Activate sacrifice points add timer
+  CreateTimer(1.0, SacrificePointsUpdater); //Activate sacrifice points updater
+  for (int i = 0; i < sizeof(WaveSetup) - 4; i++) FastFire2(WaveSetup[i], "", "", 0.0, true);
+  sudo(1002); //Feature admin
+  sudo(1007); //Choose bomb path
+  switch (core.curWave) {
+    case 2: {
+      CreateTimer(GetRandomFloat(10.0, 45.0), TimedAOEs);
+    }
+    case 3, 10, 17: {
+      core.HWNMax = 360.0;
+      for (int i = 8; i < sizeof(WaveSetup) - 3; i++) FastFire2(WaveSetup[i], "", "", 0.0, true);
+      float f = GetRandomFloat(60.0, 180.0);
+      CreateTimer(f, TimedOperator, 70);
+    }
+    case 4, 11, 18: {
+      core.HWNMax = 360.0;
+      for (int i = 8; i < sizeof(WaveSetup) - 2; i++) FastFire2(WaveSetup[i], "", "", 0.0, true);
+    }
+    case 5, 12, 19: {
+      tickOnslaughter = true;
+      core.HWNMax = 260.0;
+      core.HWNMin = 140.0;
+      for (int i = 8; i < sizeof(WaveSetup) - 2; i++) FastFire2(WaveSetup[i], "", "", 0.0, true);
+      FastFire2("w5_engie_hints", "Trigger", "", 3.0, false);
+      FastFire2("FB.OnslaughterBase", "SetHealth", "320000", 0.0, false);
+      FastFire2("FB.OnslaughterBase", "SetHealth", "320000", 1.0, false);
+      float f = GetRandomFloat(60.0, 180.0);
+      CreateTimer(f, TimedOperator, 70);
+    }
+    case 6, 13, 20: {
+      core.HWNMax = 260.0;
+      core.HWNMin = 140.0;
+      for (int i = 8; i < sizeof(WaveSetup) - 1; i++) FastFire2(WaveSetup[i], "", "", 0.0, true);
+    }
+    case 7, 14, 21: {
+      core.HWNMax = 240.0;
+      core.HWNMin = 120.0;
+      for (int i = 8; i < sizeof(WaveSetup); i++) FastFire2(WaveSetup[i], "", "", 0.0, true);
+      FastFire2("w5_engie_hints", "Trigger", "", 3.0, false);
+    }
+    case 8, 15: {
+      core.HWNMax = 240.0;
+      core.HWNMin = 120.0;
+      for (int i = 8; i < sizeof(WaveSetup); i++) FastFire2(WaveSetup[i], "", "", 0.0, true);
+    }
+  }
+  return Plugin_Handled;
+}
+//Jump waves.
+public Action JumpToWave(int wave_number) {
+  int flags = GetCommandFlags("tf_mvm_jump_to_wave");
+  SetCommandFlags("tf_mvm_jump_to_wave", flags & ~FCVAR_CHEAT);
+  ServerCommand("tf_mvm_jump_to_wave %d", wave_number);
+  FakeClientCommand(0, "");
+  SetCommandFlags("tf_mvm_jump_to_wave", flags | FCVAR_CHEAT);
+  return Plugin_Handled;
+}
+//Dispatch a circle AOE
+public Action DispatchCircleAOE(float pos[3]) {
+  int ent = FindEntityByTargetname("CircleTemplate", "point_template");
+  if (ent != -1) {
+    float v[3];
+    float rot[3];
+    TeleportEntity(ent, pos, rot, v);
+    FastFire2("CircleTemplate", "ForceSpawn", "", 0.0, false);
+  }
+  return Plugin_Stop;
+}
+//Track bombState[0].state and update entities every 0.1 seconds
+public Action BombStatusUpdater(Handle timer) {
+  if (core.isWave) {
+    CreateTimer(0.1, BombStatusUpdater);
+    if (bombState[0].state < bombState[0].stateMax) {
+      switch (bombState[0].state) {
+      case 8, 16, 24, 32, 40, 48, 56, 64: {
+        int curBomb = bombState[0].getCurBomb();
+        bombState[0].stateMax = bombState[0].state;
+        bombState[0].isReady = true;
+        core.canSENTShark = bombState[curBomb].canSENTShark;
+        FastFire2("Bombs*", "Disable", "", 0.0, false);
+        FastFire2("Delivery", "Unlock", "", 0.0, false);
+        FastFire2(bombState[curBomb].identifier, "Enable", "", 0.0, false);
+        CustomSoundEmitter(SFXArray[56].realPath, 65, false, 0, 1.0, 100);
+        CPrintToChatAll("{darkviolet}[{forestgreen}CORE{darkviolet}] {forestgreen}Your team's %s {forestgreen}is now available for deployment!", bombState[curBomb].name);
+      }
+      }
+    } else if (bombState[0].state > bombState[0].stateMax) bombState[0].state = bombState[0].upperLimit();
+  }
+  return Plugin_Stop;
+}
+
+//RobotLaunchTimer (Randomly fling robots)
+public Action RobotLaunchTimer(Handle timer) {
+  if (!core.isWave) return Plugin_Stop;
+  FastFire2("FB.RobotLauncher", "Enable", "", 0.0, false);
+  FastFire2("FB.RobotLauncher", "Disable", "", 7.5, false);
+  CreateTimer(GetRandomFloat(5.0, 30.0), RobotLaunchTimer);
+  return Plugin_Stop;
+}
+//Track SacPoints and update entities every 0.1 seconds
+public Action SacrificePointsUpdater(Handle timer) {
+  if (!core.isWave) return Plugin_Stop;
+  CreateTimer(0.1, SacrificePointsUpdater);
+  if (core.sacPoints > core.sacPointsMax) core.sacPoints = core.sacPointsMax;
+  return Plugin_Stop;
+}
+
+//BombStatus (Add points to Bomb Status occasionally)
+public Action BombStatusAddTimer(Handle timer) {
+  if (core.isWave && (bombState[0].state < bombState[0].stateMax)) {
+    bombState[0].isReady = false;
+    bombState[0].state++;
+    CreateTimer(GetRandomFloat(10.0, 45.0), BombStatusAddTimer);
+  }
+  return Plugin_Stop;
+}
+//Adverts for tips/tricks
+public Action PerformAdverts(Handle timer) {
+  if (!core.isWave) {
+    CreateTimer(180.0, PerformAdverts);
+    CPrintToChatAll(AdvMessage[GetRandomInt(0, 7)]);
+  }
+  return Plugin_Stop;
+}
+
+//Adverts for wave information
+public Action PerformWaveAdverts(Handle timer) {
+  if (core.isWave) {
+    char buffer[16];
+    int emnity;
+    char tbuffer[16];
+    char HintText[256];
+    int sPos = RoundToFloor(AudioManager.ticksBGM / 66.6666666666);
+    int tPos = RoundToFloor(AudioManager.refireBGM / 66.6666666666);
+    Format(buffer, 16, "%02d:%02d", sPos / 60, sPos % 60);
+    Format(tbuffer, 16, "%02d:%02d", tPos / 60, tPos % 60);
+    Format(HintText, sizeof(HintText), (bombState[0].isMoving ? "Payload: MOVING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : bombState[0].isReady ? "Payload: READY (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)" : "Payload: PREPARING (%i/%i) | !sacpoints: %i/%i \n Music: %s (%s/%s)"), bombState[0].state, bombState[0].stateMax, core.sacPoints, core.sacPointsMax, AudioManager.songName, buffer, tbuffer);
+    for (int i = 0; i <= MaxClients; ++i) { //might need to be i++??
+      if (IsValidClient(i)) {
+        emnity = EmnityManager[i].getClientEmnity();
+        PrintHintText(i, (WeatherManager.TornadoWarning ? "%s \n\n[TORNADO WARNING]" : "%s\n\nEmnity: %i٪"), HintText, emnity >= 0 ? emnity : 0);
+        StopSound(i, SNDCHAN_STATIC, "UI/hint.wav");
+      }
+    }
+    CreateTimer(2.5, PerformWaveAdverts);
+  }
+  return Plugin_Stop;
+}
+
+//Feature admin timer
+public Action SelectAdminTimer(Handle timer) {
+  if (core.isWave) return Plugin_Stop;
+  else {
+    sudo(1002);
+    CreateTimer(GetRandomFloat(40.0, 120.0), SelectAdminTimer);
+  }
+  return Plugin_Stop;
+}
+
+//Brute Justice Timer
+public Action OnslaughterATK(Handle timer) {
+  if (core.waveFlags != 1) return Plugin_Stop;
+  else {
+    CreateTimer(GetRandomFloat(5.0, 7.0), OnslaughterATK);
+    FastFire2("BruteJusticeDefaultATK", "FireMultiple", "3", 5.0, false);
+    switch (GetRandomInt(1, 10)) {
+    case 1, 6: {
+      FastFire2("BruteJusticeLaserParticle", "Start", "", 0.0, false);
+      CustomSoundEmitter(SFXArray[38].realPath, 65, false, 0, 1.0, 100);
+      FastFire2("BruteJusticeLaser", "TurnOn", "", 1.40, false);
+      FastFire2("BruteJusticeLaserHurtAOE", "Enable", "", 1.40, false);
+      FastFire2("BruteJusticeLaserParticle", "Stop", "", 3.00, false);
+      FastFire2("BruteJusticeLaser", "TurnOff", "", 3.25, false);
+      FastFire2("BruteJusticeLaserHurtAOE", "Disable", "", 3.25, false);
+    }
+    case 2, 8: {
+      FastFire2("BruteJusticeJarateSpawner00", "ForceSpawn", "", 0.0, false);
+      FastFire2("BruteJusticeJarateSpawner01", "ForceSpawn", "", 2.5, false);
+      FastFire2("BruteJusticeJarateSpawner02", "ForceSpawn", "", 5.0, false);
+      FastFire2("BruteJusticeJarateSpawner00", "ForceSpawn", "", 9.0, false);
+      FastFire2("BruteJusticeJarateSpawner01", "ForceSpawn", "", 12.0, false);
+      FastFire2("BruteJusticeJarateSpawner02", "ForceSpawn", "", 15.0, false);
+    }
+    case 3, 7: {
+      FastFire2("BruteJusticeFlameParticle", "Start", "", 0.0, false);
+      FastFire2("BruteJusticeFlamethrowerHurtAOE", "Enable", "", 0.0, false);
+      CustomSoundEmitter(SFXArray[39].realPath, 65, false, 0, 1.0, 100);
+      FastFire2("SND.BruteJusticeFlameATK", "PlaySound", "", 1.25, false);
+      FastFire2("BruteJusticeFlamethrowerHurtAOE", "Disable", "", 5.0, false);
+      FastFire2("BruteJusticeFlameParticle", "Stop", "", 5.0, false);
+      FastFire2("SND.BruteJusticeFlameATK", "FadeOut", ".25", 5.0, false);
+      CreateTimer(5.0, TimedOperator, 60);
+      FastFire2("SND.BruteJusticeFlameATK", "StopSound", "", 5.1, false);
+    }
+    case 4: {
+      FastFire2("BruteJusticeGrenadeSpammer", "FireMultiple", "10", 0.0, false);
+      FastFire2("BruteJusticeGrenadeSpammer", "FireMultiple", "10", 3.0, false);
+      FastFire2("BruteJusticeGrenadeSpammer", "FireMultiple", "10", 5.0, false);
+    }
+    case 5: {
+      FastFire2("BruteJusticeGrenadeSpammer", "FireMultiple", "50", 0.0, false);
+      FastFire2("BruteJusticeJarateSpawner00", "ForceSpawn", "", 0.0, false);
+      FastFire2("BruteJusticeJarateSpawner01", "ForceSpawn", "", 2.5, false);
+      FastFire2("BruteJusticeJarateSpawner02", "ForceSpawn", "", 5.0, false);
+      FastFire2("BruteJusticeJarateSpawner00", "ForceSpawn", "", 9.0, false);
+      FastFire2("BruteJusticeJarateSpawner01", "ForceSpawn", "", 12.0, false);
+      FastFire2("BruteJusticeJarateSpawner02", "ForceSpawn", "", 15.0, false);
+    }
+    case 9: {
+      FastFire2("BruteJusticeRocketSpammer", "FireOnce", "", 0.0, false);
+      FastFire2("BruteJusticeRocketSpammer", "FireOnce", "", 5.0, false);
+    }
+    case 10: {
+      FastFire2("BruteJusticeRocketSpammer", "FireMultiple", "10", 0.0, false);
+      FastFire2("BruteJusticeRocketSpammer", "FireMultiple", "10", 3.0, false);
+      FastFire2("BruteJusticeRocketSpammer", "FireMultiple", "10", 5.0, false);
+    }
+    }
+  }
+  return Plugin_Stop;
+}
+
+//Sephiroth Timer
+public Action SephATK(Handle timer) {
+  if (core.waveFlags != 2) {
+    return Plugin_Stop;
+  } else {
+    float f = GetRandomFloat(5.0, 10.0);
+    CreateTimer(f, SephATK);
+    FastFire2("SephArrows", "FireMultiple", "3", 5.0, false);
+    SephBoss[GetRandomInt(0, 11)].attack();
+  }
+  return Plugin_Stop;
+}
+
+//Boss Health Timer
+public Action BossHPTimer(Handle timer) {
+  int BossEntProxy = (core.waveFlags == 1 ? FindEntityByTargetname("OnslaughterTank", "tank_boss") : core.waveFlags == 2 ? FindEntityByTargetname("SephirothTank", "tank_boss") : -1);
+  int BossEnt = (core.waveFlags == 1 ? FindEntityByTargetname("FB.OnslaughterBase", "base_boss") : core.waveFlags == 2 ? FindEntityByTargetname("FB.SephirothDMGRelay", "func_physbox") : -1);
+  if (BossEnt == -1 || BossEntProxy == -1) return Plugin_Stop;
+  SetEntProp(BossEntProxy, Prop_Data, "m_iHealth", GetEntProp(BossEnt, Prop_Data, "m_iHealth"));
+  CPrintToChatAll((core.waveFlags == 1 ? "{blue}Onslaughter's HP: %i (%i)" : core.waveFlags == 2 ? "{blue}Sephiroth's HP: %i (%i)" : "{blue}Error: Boss not found... core.waveFlags was neither 1 nor 2"), GetEntProp(BossEnt, Prop_Data, "m_iHealth"), GetEntProp(BossEntProxy, Prop_Data, "m_iHealth"));
+  CreateTimer(5.0, BossHPTimer);
+  return Plugin_Stop;
+}
+
+//Shark Timer
+public Action SharkTimer(Handle timer) {
+  if (core.canSENTShark) {
+    FastFire2("SentSharkTorpedo", "ForceSpawn", "", 0.0, false);
+    CreateTimer(GetRandomFloat(2.0, 5.0), SharkTimer);
+    CustomSoundEmitter(SFXArray[GetRandomInt(43, 50)].realPath, 65, false, 0, 1.0, 100);
+  }
+  return Plugin_Stop;
+}
+
+//SpecTimer
+public Action SpecTimer(Handle timer) {
+  if (core.isWave) {
+    FastFire2("Spec*","Disable","", 0.0, false);
+    FastFire2(SpecEnt[GetRandomInt(0, 5)], "Enable", "", 0.1, false);
+    CreateTimer(GetRandomFloat(10.0, 30.0), SpecTimer);
+  }
+  return Plugin_Stop;
+}
+
+//SENTMeteor (Scripted Entity Meteors)
+public Action SENTMeteorTimer(Handle timer) {
+  if (core.canSENTMeteors) {
+    CreateTimer(5.0, SENTMeteorTimer);
+    FastFire2(FB_SENT[GetRandomInt(0, 4)], "ForceSpawn", "", 0.0, false); // replace me with teleportEntity eventually then forcespawn...
+  }
+  return Plugin_Stop;
+}
+
+//Used for nukes, obviously
+public Action NukeTimer(Handle timer, int type) {
+  if (!core.canCrusaderNuke && !core.canSephNuke) return Plugin_Stop;
+  CustomSoundEmitter(SFXArray[8].realPath, 65, false, 0, 1.0, 100);
+  FastFire2(type == 1 ? "FB.CrusaderNuke" : "SephNuke", "ForceSpawn", "", 0.0, false);
+  CreateTimer(GetRandomFloat(1.5, 3.0), NukeTimer, type);
+  return Plugin_Stop;
+}
+
+//SENTStars (Scripted Entity Stars)
+public Action SENTStarTimer(Handle timer) {
+  if (core.canSENTStars) {
+    FastFire2(FB_SENT[10], "ForceSpawn", "", 0.0, false); // replace me with teleportEntity eventually then forcespawn...
+    CreateTimer(GetRandomFloat(0.75, 1.5), SENTStarTimer);
+  }
+  return Plugin_Stop;
+}
+
+//Crusader Incoming Timer for Crusader
+public Action CRUSADERINCOMING(Handle timer) {
+  if (!core.crusader || core.INCOMINGDISPLAYED > 17) {
+    core.INCOMINGDISPLAYED = 0;
+    return Plugin_Stop;
+  }
+  core.INCOMINGDISPLAYED++;
+  FastFire2("FB.INCOMING", "Display", "", 0.0, false);
+  CreateTimer(1.75, CRUSADERINCOMING);
+  return Plugin_Stop;
+}
+
+//Halloween Bosses
+public Action HWBosses(Handle timer) {
+  if (core.isWave && core.canHWBoss) {
+    HWBoss[GetRandomInt(0, 11)].attack();
+    core.canHWBoss = false;
+    CreateTimer(60.0, HWBossesRefire);
+  }
+  return Plugin_Stop;
+}
+
+//Repeat HWBosses Timer
+public Action HWBossesRefire(Handle timer) {
+  if (core.isWave) CreateTimer(GetRandomFloat(core.HWNMin, core.HWNMax), HWBosses);
+  return Plugin_Stop;
+}
+
+//SacPoints (Add points to Sacrifice Points occasionally)
+public Action SacrificePointsTimer(Handle timer) {
+  if (core.isWave && (core.sacPoints < core.sacPointsMax)) {
+    core.sacPoints++;
+    CreateTimer(GetRandomFloat(5.0, 30.0), SacrificePointsTimer);
+  }
+  return Plugin_Stop;
+}
+//Queue music for new clients, also track their stats.
+public void OnClientPostAdminCheck(int client) {
+  if (!IsFakeClient(client) && AudioManager.bgmPlaying) CreateTimer(1.0, RefireMusicForClient, client);
+  int steamID = GetSteamAccountID(client);
+  if (!steamID || steamID <= 10000) return;
+  else {
+    if (!Ass_Database) {
+      PrintToServer("No database detected, setting soundPreference for %N to default.", client);
+      soundPreference[client] = GetConVarInt(cvarSNDDefault);
+    }
+    if (!core.tickingClientHealth) {
+      CreateTimer(1.0, TickClientHealth);
+      core.tickingClientHealth = true;
+    }
+    if (!AudioManager.bgmPlaying) AudioManager.ChangeBGM(GetRandomInt(1, 4));
+    char query[1024];
+    Format(query, sizeof(query), "INSERT INTO ass_activity (name, steamid, date, damagedealtsession, killssession, deathssession, bombsresetsession, sacrificessession) VALUES ('%N', %d, CURRENT_DATE, 0, 0, 0, 0, 0) ON DUPLICATE KEY UPDATE name = '%N', date = CURRENT_DATE, damagedealtsession = 0, killssession = 0, deathssession = 0, bombsresetsession = 0, sacrificessession = 0;", client, steamID, client);
+    Ass_Database.Query(Database_FastQuery, query);
+    char queryID[256];
+    Format(queryID, sizeof(queryID), "SELECT soundprefs from ass_activity WHERE steamid = '%d';", steamID);
+    Ass_Database.Query(SQL_SNDPrefs, queryID, client);
+  }
 }

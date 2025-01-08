@@ -17,7 +17,14 @@ enum struct SFXARRAY {
   int SNDLVL;
 }
 SFXARRAY SFXArray[127];
-
+//Sound preference menu
+char sndPrefs[][128] = {
+  "Sounds are currently DISABLED.",
+  "Sounds are currently MUSIC ONLY.",
+  "Sounds are currently SOUND EFFECTS ONLY.",
+  "Sounds are currently ALL ON.",
+  "Somehow your sound preference was stored as non-existent 5... Please configure your sounds."
+};
 Handle cvarSNDDefault = INVALID_HANDLE;
 int soundPreference[MAXPLAYERS + 1];
 //Get client sound prefs
@@ -61,6 +68,7 @@ enum struct AUDIOMANAGER {
     AssLogger(LOGLVL_DEBUG, "AudioManager has been reset!");
   }
   void Stop() {
+    this.bgmPlaying = false;
     this.stopBGM = true;
     this.ticksBGM = -2;
     this.refireBGM = 2;
@@ -75,6 +83,11 @@ enum struct AUDIOMANAGER {
           this.stopBGM = false;
         }
       }
+      if (GetClientCount(true) == 0) {
+        AssLogger(LOGLVL_INFO, "Server is empty. Music queue stopped.");
+        this.indexBGM = GetRandomInt(1, 4);
+        this.Stop();
+      }
       strcopy(this.songName, sizeof(this.songName), BGMArray[this.indexBGM].songName);
       this.refireBGM = BGMArray[this.indexBGM].refireTime;
       this.ticksBGM = (this.tickBGMOffset ? BGMArray[this.indexBGM].ticksOffset : 0);
@@ -84,6 +97,67 @@ enum struct AUDIOMANAGER {
   }
 }
 AUDIOMANAGER AudioManager;
+//Custom sound emitter, I don't know how many fucking times I've rewritten this! See potato.sp
+//int flags:
+//	SND_NOFLAGS= 0,             /**< Nothing */
+//	SND_CHANGEVOL = 1,          /**< Change sound volume */
+//	SND_CHANGEPITCH = 2,        /**< Change sound pitch */
+//	SND_STOP = 3,               /**< Stop the sound */
+//	SND_SPAWNING = 4,           /**< Used in some cases for ambients */
+//	SND_DELAY = 5,              /**< Sound has an initial delay */
+//	SND_STOPLOOPING = 6,        /**< Stop looping all sounds on the entity */
+//	SND_SPEAKER = 7,            /**< Being played by a mic through a speaker */
+//	SND_SHOULDPAUSE = 8         /**< Pause if game is paused */
+void CustomSoundEmitter(char[] sndName, int TSNDLVL, bool isBGM, int flags, float vol, int pitch) {
+  for (int i = 1; i <= MaxClients; i++) {
+    if (!IsValidClient(i)) continue;
+    if (isBGM && (soundPreference[i] == 1 || soundPreference[i] == 3) || !isBGM && soundPreference[i] >= 2) EmitSoundToClient(i, sndName, _, AudioManager.chanBGM, TSNDLVL, flags, vol, pitch, _, _, _, _, _);
+  }
+}
+//Play sound to client. Ripped straight from potato. Allows us to play sounds directly to people when they join.
+void CSEClient(int client, char[] sndName, int TSNDLVL, bool isBGM, int flags, float vol, int pitch) {
+  if (!IsValidClient(client)) return;
+  if (isBGM && (soundPreference[client] == 1 || soundPreference[client] == 3) || !isBGM && soundPreference[client] >= 2) EmitSoundToClient(client, sndName, _, AudioManager.chanBGM, TSNDLVL, flags, vol, pitch, _, _, _, _, _);
+}
+//VIP Music Menu
+public Action Command_Music(int client, int args) {
+  int steamID = GetSteamAccountID(client);
+  if (!steamID || steamID <= 10000) return Plugin_Handled;
+  else ShowFartsyMusicMenu(client);
+  return Plugin_Handled;
+}
+
+//VIP Music Menu
+public void ShowFartsyMusicMenu(int client) {
+  Menu menu = new Menu(MenuHandlerFartsyMusic, MENU_ACTIONS_DEFAULT);
+  char buffer[100];
+  menu.SetTitle("FartsysAss Music Menu");
+  for (int i = 0; i < sizeof(BGMArray); i++) menu.AddItem(buffer, BGMArray[i].songName);
+  menu.Display(client, 20);
+  menu.ExitButton = true;
+}
+
+
+
+//Set Fartsy Sound menu
+public void FartsysSNDSelected(int client, CookieMenuAction action, any info, char[] buffer, int maxlen) {
+  if (action == CookieMenuAction_SelectOption) ShowFartsyMenu(client);
+}
+
+// Get clients sound preferences then send them the menu
+public Action Command_Sounds(int client, int args) {
+  int steamID = GetSteamAccountID(client);
+  if (!steamID || steamID <= 10000) return Plugin_Handled;
+  else {
+    char queryID[256];
+    Format(queryID, sizeof(queryID), "SELECT soundprefs from ass_activity WHERE steamid = '%d';", steamID);
+    Get_Ass_Database().Query(SQL_SNDPrefs, queryID, client);
+    ShowFartsyMenu(client);
+    PrintToChat(client, sndPrefs[soundPreference[client]]);
+    return Plugin_Handled;
+  }
+}
+
 //Send client sound menu
 public void ShowFartsyMenu(int client) {
   Menu menu = new Menu(MenuHandlerFartsy, MENU_ACTIONS_DEFAULT);
@@ -96,6 +170,7 @@ public void ShowFartsyMenu(int client) {
   menu.Display(client, 20);
   menu.ExitButton = true;
 }
+
 // Handle client choices for sound preference
 public int MenuHandlerFartsy(Menu menu, MenuAction action, int param1, int param2) {
   if (action == MenuAction_Select) {
