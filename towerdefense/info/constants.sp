@@ -1,7 +1,7 @@
 #define GAME_DESCRIPTION "Tower Defense"
 
-#define PLAYER_LIMIT 8
-#define METALPACK_LIMIT 100
+#define PLAYER_LIMIT 6
+#define METALPACK_LIMIT 50
 
 #define TEAM_DEFENDER 3
 #define TEAM_ATTACKER 2

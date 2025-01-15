@@ -33,11 +33,7 @@ stock bool GetClientCommunityId(int iClient, char[] sBuffer, int iMaxLength) {
 		IntToString((iSteamAccountId - iSteamAccountId % 2) / 2, sSteamAccountId, sizeof(sSteamAccountId));
 		
 		int iCurrent, iCarryOver = iSteamAccountId % 2;
-		for (int i = (iMaxLength - 2), j = (strlen(sSteamAccountId) - 1), k = (strlen(sBase) - 1); i >= 0; i--, j--, k--) {
-			iCurrent = (j >= 0 ? (2 * (sSteamAccountId[j]-'0')) : 0) + iCarryOver + (k >= 0 ? ((sBase[k]-'0') * 1) : 0);
-			iCarryOver = iCurrent / 10;
-			sSteamId[i] = (iCurrent % 10) + '0';
-		}
+		
 		
 		sSteamId[iMaxLength - 1] = '\0';
 		
