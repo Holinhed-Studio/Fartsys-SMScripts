@@ -9,7 +9,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define UU_VERSION "0.9.6-fartsy-psy"
+#define UU_VERSION "0.9.7-fartsy-psy"
 
 #define RED 0
 #define BLUE 1
@@ -692,6 +692,7 @@ public Action Event_PlayerCollectMoney(Handle event, const char[] name, bool don
 		} 
 	}
 	SetEventInt(event, "currency", 0);
+	return Plugin_Continue;
 }
 public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool &result) // Called whenever you shoot. 
 {
@@ -919,7 +920,7 @@ public Action mvm_CheckPointAdjustCash(Handle timer, int userid)
 
 	if (IsValidClient(client) && client_respawn_checkpoint[client])
 	{
-		int iCash = GetEntProp(client, Prop_Send, "m_nCurrency", iCash);
+		int iCash = GetEntProp(client, Prop_Send, "m_nCurrency");
 		SetEntProp(client, Prop_Send, "m_nCurrency", iCash - (client_spent_money_mvm_chkp[client][0] + client_spent_money_mvm_chkp[client][1] + client_spent_money_mvm_chkp[client][2] + client_spent_money_mvm_chkp[client][3]) );
 		client_respawn_checkpoint[client] = 0;
 		CreateTimer(0.1, WeaponReGiveUpgrades, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -1196,12 +1197,6 @@ public Action Menu_QuickBuyUpgrade(int client, int args)
 								CurrencyOwned[client] -= t_up_cost;
 								check_apply_maxvalue(client, arg1_, inum, upgrade_choice);
 								client_spent_money[client][arg1_] += t_up_cost;
-								int totalmoney = 0;
-							
-								for (int s = 0; s < 5; s++)
-								{
-									totalmoney += client_spent_money[client][s];
-								}
 								GiveNewUpgradedWeapon_(client, arg1_);
 							}
 							else
@@ -1211,12 +1206,6 @@ public Action Menu_QuickBuyUpgrade(int client, int args)
 								currentupgrades_val[client][arg1_][inum] = upgrades_val;
 								check_apply_maxvalue(client, arg1_, inum, upgrade_choice);
 								client_spent_money[client][arg1_] += t_up_cost;
-								int totalmoney = 0;
-							
-								for (int s = 0; s < 5; s++)
-								{
-									totalmoney += client_spent_money[client][s];
-								}
 								GiveNewUpgradedWeapon_(client, arg1_);
 								PrintToChat(client, "You have successfully upgraded %i times!", idx);
 							}
@@ -1553,9 +1542,9 @@ stock bool IsValidClient(int client)
 }
 stock bool TF2_IsPlayerCritBuffed(int client)
 {
-	return (TF2_IsPlayerInCondition(client, TFCond_Kritzkrieged) || TF2_IsPlayerInCondition(client, TFCond_HalloweenCritCandy) || TF2_IsPlayerInCondition(client, TFCond 34)
-	|| TF2_IsPlayerInCondition(client, TFCond 35) || TF2_IsPlayerInCondition(client, TFCond_CritOnFirstBlood) || TF2_IsPlayerInCondition(client, TFCond_CritOnWin)
-	|| TF2_IsPlayerInCondition(client, TFCond_CritOnFlagCapture) || TF2_IsPlayerInCondition(client, TFCond_CritOnKill) || TF2_IsPlayerInCondition(client, TFCond_CritMmmph));
+	return (TF2_IsPlayerInCondition(client, TFCond_Kritzkrieged) || TF2_IsPlayerInCondition(client, TFCond_HalloweenCritCandy) || TF2_IsPlayerInCondition(client, TFCond_CritCanteen)
+	 || TF2_IsPlayerInCondition(client, TFCond_CritDemoCharge) || TF2_IsPlayerInCondition(client, TFCond_CritOnFirstBlood) || TF2_IsPlayerInCondition(client, TFCond_CritOnWin)
+	 || TF2_IsPlayerInCondition(client, TFCond_CritOnFlagCapture) || TF2_IsPlayerInCondition(client, TFCond_CritOnKill) || TF2_IsPlayerInCondition(client, TFCond_CritMmmph));
 }
 
 //Initialize New Weapon menu
@@ -1679,6 +1668,7 @@ int GetUpgrade_CatList(const char[] WCName)
 
 public Action Command_MyMoney(int client, int args){
 	PrintToChat(client, "You have %f", CurrencyOwned[client]); // todo, test this
+	return Plugin_Continue;
 }
 
 public Action Command_ResetUpgrades(int client, int args){
@@ -1697,6 +1687,7 @@ public Action Command_ResetUpgrades(int client, int args){
 		FakeClientCommand(client,"menuselect 0");
 		ChangeClassEffect(client);
 	}
+	return Plugin_Continue;
 }
 public void OnPluginStart()
 {
@@ -1928,7 +1919,7 @@ void GiveNewUpgradedWeapon_(int client, int slot)
 
 bool is_client_got_req(int param1, int upgrade_choice, int slot, int inum)
 {
-	int iCash = GetEntProp(param1, Prop_Send, "m_nCurrency", iCash);
+	int iCash = GetEntProp(param1, Prop_Send, "m_nCurrency");
 	int up_cost = upgrades_costs[upgrade_choice];
 	int max_ups = currentupgrades_number[param1][slot];
 	up_cost /= 2;
@@ -2297,12 +2288,12 @@ public void Menu_SpecialUpgradeChoice(int client, int cat_choice, char TitleStr[
 				tmp_ratio = upgrades_ratio[tmp_up_idx];
 				if (tmp_ratio > 0.0)
 				{
-					plus_sign = "+";
+					Format(plus_sign, 1, "+");
 				}
 				else
 				{
 					tmp_ratio *= -1.0;
-					plus_sign = "-";
+					Format(plus_sign, 1, "-");
 				}
 				char buf[64];
 				Format(buf, sizeof(buf), "%T", upgradesNames[tmp_up_idx], client);
@@ -2559,12 +2550,12 @@ public Action Menu_UpgradeChoice(int client, int cat_choice, char TitleStr[100])
 			}
 			if (tmp_ratio > 0.0)
 			{
-				plus_sign = "+";
+				Format(plus_sign, 1, "+");
 			}
 			else
 			{
 				tmp_ratio *= -1.0;
-				plus_sign = "-";
+				Format(plus_sign, 1, "-");
 			}
 			char buf[64];
 			Format(buf, sizeof(buf), "%T", upgradesNames[tmp_up_idx], client);
@@ -2634,7 +2625,7 @@ public int MenuHandler_BuyNewWeapon(Handle menu, MenuAction action, int param1, 
 {
 	if (action == MenuAction_Select)
 	{
-		int iCash = GetEntProp(param1, Prop_Send, "m_nCurrency", iCash);
+		int iCash = GetEntProp(param1, Prop_Send, "m_nCurrency");
 		if (iCash > 200)
 		{
 			if (currentitem_idx[param1][3])
@@ -2755,12 +2746,12 @@ public int MenuHandler_UpgradeChoice(Handle menu, MenuAction action, int param1,
 		}
 		if (tmp_ratio > 0.0)
 		{
-			plus_sign = "+";
+			Format(plus_sign, 1, "+");
 		}
 		else
 		{
 			tmp_ratio *= -1.0;
-			plus_sign = "-";
+			Format(plus_sign, 1, "-");
 		}
 		char buf[64];
 		Format(buf, sizeof(buf), "%T", upgradesNames[tmp_up_idx], param1);
