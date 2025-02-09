@@ -6,6 +6,11 @@ enum {
   LOGLVL_WARN = 2,
   LOGLVL_ERROR = 3
 };
+enum struct PLAYERDATA {
+  char classname;
+  char name;
+  
+}
 void AssLogger(int logLevel, const char[] logData, any...) {
   char buffer[256];
   VFormat(buffer, sizeof(buffer), logData, 3);
@@ -1055,13 +1060,6 @@ void RegisterAndPrecacheAllFiles(){
     }
   }
   AssLogger(LOGLVL_INFO, "Done! BGM Count: %i, SFX Count: %i, Total: %i files loaded to RAM.", bgmIndex, sfxIndex, bgmIndex + sfxIndex);
-  //Todo: These files are not part of the base pakfile, they are slated for install in a future update, when that update is ready, these files will eventually become one with the map.
-  PrecacheSound(TBGM0, true);
-  PrecacheSound(TBGM2, true);
-  PrecacheSound(TBGM3, true);
-  PrecacheSound(TBGM4, true);
-  PrecacheSound(TBGM5, true);
-  PrecacheSound(TBGM6, true);
 }
 
 //Used to keep StopSound from stopping the music we're trying to play - now with support for loop offsets!
